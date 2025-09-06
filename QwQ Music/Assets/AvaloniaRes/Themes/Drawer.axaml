@@ -28,7 +28,7 @@
                         CornerRadius="{TemplateBinding CornerRadius,
                                                        Converter={iri:CornerRadiusMixerConverter Left}}"
                         Focusable="True"
-                        Effect="{DynamicResource LightColorDropShadowEffect}"
+                        Effect="{DynamicResource LightColor0DropShadowEffect}"
                         IsHitTestVisible="True">
 
                         <Border CornerRadius="{Binding #PART_Root.CornerRadius}">
@@ -129,18 +129,17 @@
         <Setter Property="Template">
             <ControlTemplate TargetType="u:DefaultDrawerControl">
                 <Panel>
-                    <Border
-                        Margin="{TemplateBinding Padding,
+                    <Border Name="PART_Root"
+                            Margin="{TemplateBinding Padding,
                                                  Converter={iri:ThicknessMixerConverter Left}}"
-                        Padding="0"
-                        Background="{DynamicResource SemiColorBackground2}"
-                        BorderThickness="{TemplateBinding BorderThickness,
+                            Background="{DynamicResource SemiColorBackground2}"
+                            BorderThickness="{TemplateBinding BorderThickness,
                                                           Converter={iri:ThicknessMixerConverter Left}}"
-                        CornerRadius="{TemplateBinding CornerRadius,
+                            CornerRadius="{TemplateBinding CornerRadius,
                                                        Converter={iri:CornerRadiusMixerConverter Left}}"
-                        Focusable="True"
-                        Effect="{DynamicResource LightColorDropShadowEffect}"
-                        IsHitTestVisible="True">
+                            Focusable="True"
+                            Effect="{DynamicResource LightColor0DropShadowEffect}"
+                            IsHitTestVisible="True">
 
                         <Grid RowDefinitions="Auto, *, Auto">
 
@@ -179,7 +178,7 @@
                                 Margin="20"
                                 HorizontalAlignment="Right"
                                 Spacing="20"
-                                IsVisible="{TemplateBinding Buttons,Converter={StaticResource StringUnequalConverter},ConverterParameter={x:Static u:DialogButton.None}}"
+                                IsVisible="{TemplateBinding Buttons,Converter={StaticResource StringCompareConverter},ConverterParameter={x:Static u:DialogButton.None}}"
                                 Orientation="Horizontal">
                                 <Button Name="{x:Static u:DefaultDialogControl.PART_CancelButton}" />
                                 <Button Name="{x:Static u:DefaultDialogControl.PART_NoButton}" />

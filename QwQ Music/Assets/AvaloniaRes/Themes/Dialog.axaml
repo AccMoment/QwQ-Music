@@ -185,7 +185,6 @@
                         HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
                         VerticalAlignment="{TemplateBinding VerticalAlignment}"
                         Background="{DynamicResource SemiColorBackground2}"
-                        Effect="{DynamicResource LightColorDropShadowEffect}"
                         Classes="Shadow"
                         ClipToBounds="False"
                         CornerRadius="{TemplateBinding CornerRadius}"
@@ -455,6 +454,10 @@
                     </MenuItem>
                 </MenuFlyout>
             </Setter>
+        </Style>
+        
+        <Style Selector="^:not(:modal) /template/ Border#PART_Border">
+            <Setter Property="Effect" Value="{DynamicResource LightColor1DropShadowEffect}"/>
         </Style>
 
         <Style Selector="^:not(:modal) /template/ Panel#PART_TitleArea">

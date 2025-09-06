@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -21,14 +19,14 @@ public partial class MusicListModel : ObservableObject
 
     [ObservableProperty] public partial string Description { get; set; } = "暂无简介";
 
-    public string? CoverId { get; set; }
+    public bool IsCoverExist { get; set; }
 
     public Bitmap? CoverImage
     {
         get
         {
             // 如果封面路径不存在，返回不存在封面
-            if (string.IsNullOrEmpty(CoverId) || _loadingState == LoadingState.NotExist)
+            if (!IsCoverExist || _loadingState == LoadingState.NotExist)
                 return CacheManager.NotExist;
 
             // 如果正在加载中，返回加载中封面
@@ -36,7 +34,7 @@ public partial class MusicListModel : ObservableObject
                 return CacheManager.Loading;
 
             // 尝试从缓存获取图片
-            if (CacheManager.ImageCache.TryGetValue(CoverId, out var bitmap) && bitmap != null)
+            if (CacheManager.ImageCache.TryGetValue(IdStr, out var bitmap) && bitmap != null)
             {
                 _loadingState = LoadingState.Loaded;
 
@@ -50,7 +48,7 @@ public partial class MusicListModel : ObservableObject
             Task.Run(async () =>
             {
                 var dbBitmap = await MusicExtractor.LoadCompressedBitmapFromFileAsync(
-                    MusicExtractor.GetMusicListCoverFullPath(CoverId));
+                    StaticConfig.GetMusicListCoverFullPath(IdStr));
 
                 if (dbBitmap == null)
                 {
@@ -60,7 +58,7 @@ public partial class MusicListModel : ObservableObject
                     return;
                 }
 
-                CacheManager.ImageCache.Add(CoverId, dbBitmap);
+                CacheManager.ImageCache.Add(IdStr, dbBitmap);
                 _loadingState = LoadingState.Loaded;
                 OnPropertyChanged(); // 通知 UI 更新
             });
@@ -72,24 +70,21 @@ public partial class MusicListModel : ObservableObject
         {
             if (value != null)
             {
-                CoverId ??= Guid.NewGuid().ToString();
-                CacheManager.SetImage(CoverId, value);
-
-                Task.Run(async () =>
-                {
-                    await FileOperationService.SaveImageAsync(value, Path.Combine(StaticConfig.MusicListCoverSavePath, CoverId), true);
-                    OnPropertyChanged();
-                });
+                IsCoverExist = true;
+                _loadingState = LoadingState.Loaded;
+                CacheManager.SetImage(IdStr, value);
             }
             else
             {
-                if (CoverId == null)
+                if (!IsCoverExist)
                     return;
 
-                Task.Run(() => CacheManager.DeleteImage(CoverId));
-                CoverId = null;
-                OnPropertyChanged();
+                CacheManager.DeleteImage(IdStr);
+                IsCoverExist = false;
+                _loadingState = LoadingState.NotExist;
             }
+
+            OnPropertyChanged();
         }
     }
 }

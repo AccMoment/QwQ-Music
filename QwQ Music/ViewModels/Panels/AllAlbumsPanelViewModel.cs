@@ -142,25 +142,52 @@ public partial class AllAlbumsPanelViewModel : ObservableObject
     {
         _allAlbumList.Clear();
 
-        var albumGroups = MusicItemManager.Default
+        var validMusicItems = MusicItemManager.Default
             .MusicItems
-            .Where(music => !string.IsNullOrWhiteSpace(music.Album) && !string.IsNullOrWhiteSpace(music.Artists))
-            .GroupBy(music => new
-            {
-                music.Album,
-                music.Artists,
-            })
+            .Where(music => !string.IsNullOrWhiteSpace(music.Album))
             .ToList();
 
-        foreach (var albumItem
-                 in from @group
-                     in albumGroups
-                 let firstMusic = @group.First()
-                 select new AlbumItemModel(
-                     @group.Key.Album,
-                     @group.Key.Artists,
-                     firstMusic.CoverId))
+        // 按专辑分组（Album + AlbumArtist）
+        // 分组前先 Trim 并归一化
+        var albumGroups = validMusicItems
+            .GroupBy(music => new
+            {
+                Album = music.Album.Trim(),
+                AlbumArtist = music.AlbumArtist.Trim(),
+            })
+            .OrderBy(g => g.Key.Album)
+            .ThenBy(g => g.Key.AlbumArtist)
+            .ToList();
+        
+        foreach (var group in albumGroups)
         {
+            var key = group.Key;
+
+            string albumName = key.Album;
+            string albumArtist = key.AlbumArtist;
+
+            // 智能 fallback：尝试从 Artists 推断
+            if (string.IsNullOrEmpty(albumArtist))
+            {
+                var distinctArtists = group
+                    .Select(m => m.Artists)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                albumArtist = distinctArtists.Count switch
+                {
+                    1 => distinctArtists[0],
+                    > 1 => "群星",
+                    _ => "未知艺术家",
+                };
+            }
+            
+            // 安全获取封面：找第一个有 CoverId 的歌曲
+            string? coverId = group
+                .Select(m => m.CoverId)
+                .FirstOrDefault(id => !string.IsNullOrEmpty(id));
+
+            var albumItem = new AlbumItemModel(albumName, albumArtist, coverId);
             _allAlbumList.Add(albumItem);
         }
     }

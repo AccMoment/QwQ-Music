@@ -4,7 +4,8 @@
       xmlns:dialogs="clr-namespace:QwQ_Music.ViewModels.Dialogs"
       x:DataType="dialogs:KeyGestureInputViewModel"
       x:Class="QwQ_Music.Views.Dialogs.KeyGestureInput"
-      RowDefinitions="Auto,*,Auto"
+      RowDefinitions="Auto,Auto,Auto,Auto"
+      MinHeight="100" MinWidth="250"
       Margin="20" RowSpacing="20">
 
     <StackPanel Orientation="Horizontal" Spacing="10">
@@ -17,26 +18,36 @@
 
     </StackPanel>
 
-    <Grid Grid.Row="1" RowDefinitions="*,Auto" Height="100" Width="300">
 
-        <u:KeyGestureInput
-            Name="GestureInputInDialog"
-            Grid.Row="1"
-            Gesture="{Binding KeyGesture,Mode=TwoWay}"
-            HorizontalAlignment="Center"
-            MinWidth="120"
-            CornerRadius="8"
-            VerticalAlignment="Center" />
+    <u:KeyGestureInput
+        Name="GestureInputInDialog"
+        Grid.Row="1"
+        Gesture="{Binding KeyGesture,Mode=TwoWay}"
+        HorizontalAlignment="Center"
+        MinWidth="120"
+        CornerRadius="8"
+        VerticalAlignment="Center" />
 
-        <TextBlock Grid.Row="1"
-                   HorizontalAlignment="Center"
-                   Classes="Tertiary"
-                   IsVisible="{Binding #GestureInputInDialog.Gesture,Converter={x:Static ObjectConverters.IsNotNull}}"
-                   Text="{Binding #GestureInputInDialog.Gesture,StringFormat=' 你输入了: {0} '}" />
+    <TextBlock Grid.Row="2"
+               HorizontalAlignment="Center"
+               Classes="Tertiary"
+               Classes.GestureIsNull="{Binding #GestureInputInDialog.Gesture,Converter={x:Static ObjectConverters.IsNull}}">
+        
+        <TextBlock.Styles>
+            
+            <Style Selector="TextBlock.GestureIsNull">
+                <Setter Property="Text" Value="请输入按键"/>
+            </Style>
+                     
+            <Style Selector="TextBlock">
+                <Setter Property="Text" Value="{Binding #GestureInputInDialog.Gesture,StringFormat=' 你输入了: {0} '}"/>
+            </Style>
+            
+        </TextBlock.Styles>
+        
+    </TextBlock>
 
-    </Grid>
-
-    <StackPanel Grid.Row="2" Spacing="20" HorizontalAlignment="Right" Orientation="Horizontal">
+    <StackPanel Grid.Row="3" Spacing="20" HorizontalAlignment="Right" Orientation="Horizontal">
 
         <StackPanel.Styles>
             <Style Selector="Button">

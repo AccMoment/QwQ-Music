@@ -71,4 +71,15 @@ public static class CacheManager
             return bitmap;
         }
     }
+
+    /// <summary>
+    ///     清理引用
+    /// </summary>
+    public static void ClearCache()
+    {
+        Default.Dispose();
+        Loading.Dispose();
+        NotExist.Dispose();
+        Damaged.Dispose();
+    }
 }

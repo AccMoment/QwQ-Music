@@ -23,6 +23,8 @@ public partial class MusicItemModel : ObservableObject
 
     [ObservableProperty] public partial string Album { get; set; } = "未知专辑";
 
+    [ObservableProperty] public partial string AlbumArtist { get; set; } = "未知专辑艺术家";
+
     [ObservableProperty] public partial TimeSpan Current { get; set; }
 
     public TimeSpan Duration { get; set; }
@@ -68,7 +70,7 @@ public partial class MusicItemModel : ObservableObject
             Task.Run(async () =>
             {
                 var dbBitmap = await MusicExtractor.LoadBitmapFromFileAsync(
-                    MusicExtractor.GetMusicCoverFullPath(CoverId));
+                    StaticConfig.GetMusicCoverFullPath(CoverId));
 
                 if (dbBitmap == null)
                 {
@@ -92,11 +94,12 @@ public partial class MusicItemModel : ObservableObject
             {
                 Task.Run(async () =>
                 {
-                    CoverId = MusicExtractor.PrepareCoverInfo(Artists, Album, FilePath);
+                    CoverId ??= Guid.NewGuid().ToString();
                     CacheManager.SetImage(CoverId, value);
 
-                    await FileOperationService.SaveImageAsync(value, Path.Combine(StaticConfig.MusicCoverSavePath, CoverId));
+                    await FileOperationService.SaveImageAsync(value, StaticConfig.GetMusicCoverFullPath(CoverId), true);
 
+                    _loadingState = LoadingState.Loaded;
                     OnPropertyChanged();
                 });
             }
@@ -105,9 +108,21 @@ public partial class MusicItemModel : ObservableObject
                 if (CoverId == null)
                     return;
 
-                Task.Run(() => CacheManager.DeleteImage(CoverId));
-                CoverId = null;
-                OnPropertyChanged();
+                Task.Run(() =>
+                {
+                    CacheManager.DeleteImage(CoverId);
+
+                    string coverFullPath = StaticConfig.GetMusicCoverFullPath(CoverId);
+
+                    if (File.Exists(coverFullPath))
+                    {
+                        File.Delete(coverFullPath);
+                    }
+
+                    CoverId = null;
+                    _loadingState = LoadingState.NotExist;
+                    OnPropertyChanged();
+                });
             }
         }
     }
@@ -117,55 +132,6 @@ public partial class MusicItemModel : ObservableObject
     public int LyricOffset { get; set; }
 
     public DateTime InsertTime { get; set; }
+        
+    public DateTime ModificationTime { get; set; }
 }
-
-public readonly record struct MusicTagExtensions(
-    string Genre,
-    int? Year,
-    string Copyright,
-    uint Disc,
-    uint Track,
-    int SamplingRate,
-    int Channels,
-    int Bitrate,
-    int BitsPerSample,
-
-    // 添加更多基本信息
-    string OriginalAlbum,
-    string OriginalArtist,
-    string AlbumArtist,
-    string Publisher,
-    string Description,
-    string Language,
-
-    // 添加技术信息
-    bool IsVbr,
-    string AudioFormat,
-    string EncoderInfo
-);
-
-// 添加扩展结构体用于获取更多详细信息
-public readonly record struct MusicDetailedInfo(
-
-    // 发布信息
-    DateTime? ReleaseDate,
-    DateTime? OriginalReleaseDate,
-    DateTime? PublishingDate,
-
-    // 专业信息
-    string Isrc,
-    string CatalogNumber,
-    string ProductId,
-
-    // 其他信息
-    float? Bpm,
-    float? Popularity,
-    string SeriesTitle,
-    string SeriesPart,
-    string LongDescription,
-    string Group,
-
-    // 技术信息
-    long AudioDataOffset,
-    long AudioDataSize
-);

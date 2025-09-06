@@ -8,8 +8,8 @@ using Irihi.Avalonia.Shared.Contracts;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models;
 using QwQ_Music.ViewModels.Bases;
-using QwQ_Music.Views;
 using QwQ_Music.Views.Dialogs;
+using Ursa.Controls;
 
 namespace QwQ_Music.ViewModels.Dialogs;
 
@@ -44,25 +44,23 @@ public partial class CreateMusicListViewModel
         if (App.TopLevel == null)
             return;
 
-        var options = new ShowWindowOptions
+        var options = new OverlayDialogOptions
         {
-            Title = "裁剪图片",
-            IsRestoreButtonVisible = false,
-            IsFullScreenButtonVisible = false,
+            Title = "图片裁剪",
         };
 
         var bitmap = await FileOperationService.OpenImageFile(App.TopLevel);
 
         if (bitmap == null)
             return;
+        
+        var result = await OverlayDialog.ShowCustomModal<ImageCropping, ImageCroppingViewModel, Bitmap>(
+            new ImageCroppingViewModel(bitmap), options: options);
 
-        var model = new ImageCroppingViewModel(bitmap);
-        bool result = await WindowBox.ShowDialog<ImageCropping, bool>(model, options, App.TopLevel);
-
-        if (!result)
+        if (result == null)
             return;
 
-        Cover = model.CroppedImage;
+        Cover = result;
     }
 
     public MusicListModel CreateMusicListModel()

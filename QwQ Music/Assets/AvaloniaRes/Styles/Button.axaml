@@ -44,4 +44,28 @@
             <Setter Property="Foreground" Value="{DynamicResource ButtonDefaultDisabledForeground}" />
         </Style>
     </Style>
+
+    <Style Selector="Button.FloatButton">
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Width" Value="30" />
+        <Setter Property="Padding" Value="8" />
+        <Setter Property="CornerRadius" Value="15" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Effect" Value="{DynamicResource LightColor1DropShadowEffect}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBlockDefaultForeground}" />
+        <Setter Property="Background" Value="{DynamicResource SemiColorBackground2}" />
+
+        <Style Selector="^:pointerover /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource ButtonDefaultPrimaryForeground}" />
+            <Setter Property="Background" Value="{DynamicResource SemiColorBackground2}" />
+        </Style>
+
+        <Style Selector="^:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SemiColorBackground2}" />
+        </Style>
+
+    </Style>
+
 </Styles>

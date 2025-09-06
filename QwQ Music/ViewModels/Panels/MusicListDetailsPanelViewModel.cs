@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Collections;
+using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -26,7 +27,21 @@ public partial class MusicListDetailsPanelViewModel : DataGridViewModelBase
         IdStr = "$Default",
     };
 
-    public Bitmap CoverImage { get; set; } = CacheManager.Default;
+    public Bitmap? CoverImage
+    {
+        get => field ?? CacheManager.Default;
+        set
+        {
+            if (field == value) return;
+
+            field?.Dispose();
+
+            field = value;
+            OnPropertyChanged();
+        }
+    }
+
+    [ObservableProperty] public partial double DataGridHorizontalScrollValue { get; set; }
 
     protected override void OnSearchTextChanged(string? value)
     {
@@ -59,6 +74,9 @@ public partial class MusicListDetailsPanelViewModel : DataGridViewModelBase
     {
         try
         {
+            if (musicListModel.IdStr == MusicListModel.IdStr)
+                return;
+
             MusicListModel = musicListModel;
             UpdateCoverImage(musicListModel);
 
@@ -87,16 +105,10 @@ public partial class MusicListDetailsPanelViewModel : DataGridViewModelBase
     {
         try
         {
-            if (musicList.CoverId == null)
+            if (!musicList.IsCoverExist)
                 return;
 
-            var bitmap = await MusicExtractor.LoadBitmapFromFileAsync(MusicExtractor.GetMusicListCoverFullPath(musicList.CoverId));
-
-            if (bitmap == null)
-                return;
-
-            CoverImage = bitmap;
-            OnPropertyChanged(nameof(CoverImage));
+            CoverImage = await MusicExtractor.LoadBitmapFromFileAsync(StaticConfig.GetMusicListCoverFullPath(musicList.IdStr));
         }
         catch (Exception e)
         {
@@ -114,6 +126,13 @@ public partial class MusicListDetailsPanelViewModel : DataGridViewModelBase
         MusicPlayList.Toggle(MusicItems);
 
         await MusicPlayerViewModel.PlayThisMusic(MusicPlayList.First());
+    }
+
+    [RelayCommand]
+    private void JumpToTop(DataGrid dataGrid)
+    {
+        // 滚动到第一行（第一行数据）
+        dataGrid.ScrollIntoView(dataGrid.CollectionView.Cast<MusicItemModel>().FirstOrDefault(), null);
     }
 
     [RelayCommand]

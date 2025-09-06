@@ -29,9 +29,6 @@ public static class FileOperationService
 
         Directory.CreateDirectory(directory);
 
-        if (!overwrite && File.Exists(filePath))
-            return false;
-
         try
         {
             await Task.Run(() =>

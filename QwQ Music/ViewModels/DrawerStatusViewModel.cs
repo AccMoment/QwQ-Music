@@ -1,3 +1,4 @@
+using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -131,6 +132,33 @@ public partial class DrawerStatusViewModel : ObservableObject
     private void ShowMusicPlayerPage()
     {
         IsMusicPlayerPanelVisible = !IsMusicPlayerPanelVisible;
+    }
+    
+    
+    [RelayCommand]
+    private void PointerWheelChanged(PointerWheelEventArgs e)
+    {
+        IsMusicPlayerTrayVisible = e.Delta.Y switch
+        {
+            // 检查滚动的方向
+            > 0 =>
+
+                // 向上滚动
+                true,
+            < 0 =>
+
+                // 向下滚动
+                false,
+            _ => IsMusicPlayerTrayVisible,
+        };
+
+        /*
+        // 如果支持水平滚动，则可以检查Delta.X
+        if (e.Delta.X != 0)
+        {
+            Console.WriteLine($"Mouse wheel scrolled horizontally by {e.Delta.X}.");
+        }
+        */
     }
 
     public static bool IsBrightColor(Color color)

@@ -22,11 +22,11 @@
         </Style>
 
     </StackPanel.Styles>
-
+    
     <Panel>
         <StackPanel Orientation="Horizontal" Spacing="10">
-            <TextBlock Text="启用热键" FontWeight="Bold" VerticalAlignment="Center" FontSize="15" />
-            <ToggleSwitch Name="EnableHotkeyChecked"
+            <TextBlock Text="启用热键" FontWeight="Bold" VerticalAlignment="Center" FontSize="18" />
+            <ToggleSwitch Name="EnableHotkeyChecked" 
                           Theme="{StaticResource SimpleToggleSwitch}"
                           OffContent="〇" OnContent="｜"
                           IsChecked="{Binding HotkeyConfig.IsEnableHotkey}" />

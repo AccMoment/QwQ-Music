@@ -16,6 +16,7 @@ public partial class MainWindow : Window
 {
     private bool _isClosing;
     private bool _isOpenClosingDialog;
+    private bool _anExceptionMode;
 
     public MainWindow()
     {
@@ -24,7 +25,14 @@ public partial class MainWindow : Window
         Width = 1200;
         Height = 800;
 
+        AppDomain.CurrentDomain.ProcessExit += CurrentDomain_OnProcessExit;
         MusicPlayerPanel.TopPanel.PointerPressed += MusicCoverPageOnPointerPressed;
+    }
+
+    private void CurrentDomain_OnProcessExit(object? sender, EventArgs e)
+    {
+        MusicPlayerPanel.TopPanel.PointerPressed -= MusicCoverPageOnPointerPressed;
+        AppDomain.CurrentDomain.ProcessExit -= CurrentDomain_OnProcessExit;
     }
 
     public void ShowMainWindow()
@@ -34,12 +42,14 @@ public partial class MainWindow : Window
         WindowState = WindowState.Normal;
     }
 
-    public void CloseMainWindow()
+    public void ShowFatalException(FatalExceptionViewModel fatalExceptionViewModel)
     {
-        _isClosing = true;
+        _anExceptionMode = true;
 
-        MusicPlayerPanel.TopPanel.PointerPressed -= MusicCoverPageOnPointerPressed;
-        Close();
+        SetValue(ContentProperty, new FatalExceptionView
+        {
+            DataContext = fatalExceptionViewModel,
+        });
     }
 
     protected override async void OnClosing(WindowClosingEventArgs e)
@@ -74,7 +84,11 @@ public partial class MainWindow : Window
 
         _isOpenClosingDialog = true;
 
-        if (behavior == Models.Enums.ClosingBehavior.AskAbout)
+        if (_anExceptionMode)
+        {
+            behavior = Models.Enums.ClosingBehavior.Exit;
+        }
+        else if (behavior == Models.Enums.ClosingBehavior.AskAbout)
         {
             behavior = await GetUserClosingBehaviorAsync();
         }
@@ -103,9 +117,8 @@ public partial class MainWindow : Window
     {
         var options = new OverlayDialogOptions
         {
+            Title = "确认关闭?",
             Mode = DialogMode.Question,
-            CanDragMove = true,
-            CanResize = false,
         };
 
         var model = new ExitConfirmViewModel();

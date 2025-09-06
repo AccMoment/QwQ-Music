@@ -50,7 +50,19 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
 
     public static string ShaderCode => ShaderConstants.WaveWarpShader;
 
-    [ObservableProperty] public partial Bitmap CoverImage { get; set; } = CacheManager.Default;
+    public Bitmap? CoverImage
+    {
+        get => field ?? CacheManager.Default;
+        set
+        {
+            if (field == value) return;
+
+            field?.Dispose();
+
+            field = value;
+            OnPropertyChanged();
+        }
+    }
 
     public double SelectLyricsTimePoint
     {
@@ -96,7 +108,7 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
 
         if (coverId != null)
         {
-            var bitmap = await MusicExtractor.LoadBitmapFromFileAsync(coverId);
+            var bitmap = await MusicExtractor.GetCoverFromAudioAsync(musicItem.FilePath);
 
             if (bitmap != null)
             {
@@ -114,7 +126,7 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
         }
 
         // 尝试从音频文件中提取封面
-        CoverImage = await MusicExtractor.GetCoverFromAudioAsync(musicItem.FilePath) ?? CacheManager.Default;
+        CoverImage = await MusicExtractor.GetCoverFromAudioAsync(musicItem.FilePath);
     }
 
     private async Task UpdateColorsList(MusicItemModel musicItem)
@@ -176,7 +188,7 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
     private static async Task<List<Color>?> GetColorPalette(string imagePath, int colorCount = 5)
     {
         // 尝试使用缓存的位图
-        var bitmap = await MusicExtractor.LoadBitmapFromFileAsync(MusicExtractor.GetMusicCoverFullPath(imagePath));
+        var bitmap = await MusicExtractor.LoadBitmapFromFileAsync(StaticConfig.GetMusicCoverFullPath(imagePath));
 
         return bitmap == null
             ? null // 缓存不存在直接返回null

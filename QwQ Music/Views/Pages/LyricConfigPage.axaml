@@ -255,60 +255,66 @@
 
                 <ContentPresenter>
                     <Interaction.Behaviors>
-                        <DataTrigger Binding="{Binding #MainLyricConfig.IsChecked}" Value="True">
-                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentPresenter.ContentProperty}">
-                                <ChangeAvaloniaPropertyAction.Value>
-                                    <StackPanel>
+                        <IfElseTrigger Condition="{Binding #MainLyricConfig.IsChecked}">
+                            
+                            <IfElseTrigger.IfActions>
+                                <ChangeAvaloniaPropertyAction
+                                    TargetProperty="{x:Static ContentPresenter.ContentProperty}">
+                                    <ChangeAvaloniaPropertyAction.Value>
+                                        <StackPanel>
 
-                                        <TextBlock Text="主歌词大小" />
-                                        <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
-                                                            Value="{Binding LyricConfig.DesktopLyric.LyricMainFontSize}" />
+                                            <TextBlock Text="主歌词大小" />
+                                            <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
+                                                                Value="{Binding LyricConfig.DesktopLyric.LyricMainFontSize}" />
 
-                                        <TextBlock Text="主歌词翻译间距" />
-                                        <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
-                                                            Maximum="{Binding #LyricSpacingIntUpDown.Value}"
-                                                            Value="{Binding LyricConfig.DesktopLyric.LyricMainTranslateSpacing}" />
+                                            <TextBlock Text="主歌词翻译间距" />
+                                            <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
+                                                                Maximum="{Binding #LyricSpacingIntUpDown.Value}"
+                                                                Value="{Binding LyricConfig.DesktopLyric.LyricMainTranslateSpacing}" />
 
-                                        <TextBlock Text="主歌词文本间距" />
-                                        <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
-                                                            Value="{Binding LyricConfig.DesktopLyric.LyricMainLetterSpacing}" />
+                                            <TextBlock Text="主歌词文本间距" />
+                                            <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
+                                                                Value="{Binding LyricConfig.DesktopLyric.LyricMainLetterSpacing}" />
 
-                                        <TextBlock Text="主歌词描边粗细" />
-                                        <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
-                                                            Maximum="10"
-                                                            Value="{Binding LyricConfig.DesktopLyric.LyricMainStrokeThickness}" />
+                                            <TextBlock Text="主歌词描边粗细" />
+                                            <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
+                                                                Maximum="10"
+                                                                Value="{Binding LyricConfig.DesktopLyric.LyricMainStrokeThickness}" />
 
-                                    </StackPanel>
-                                </ChangeAvaloniaPropertyAction.Value>
-                            </ChangeAvaloniaPropertyAction>
-                        </DataTrigger>
+                                        </StackPanel>
+                                    </ChangeAvaloniaPropertyAction.Value>
+                                </ChangeAvaloniaPropertyAction>
+                            </IfElseTrigger.IfActions>
 
-                        <DataTrigger Binding="{Binding #AltLyricConfig.IsChecked}" Value="True">
-                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentPresenter.ContentProperty}">
-                                <ChangeAvaloniaPropertyAction.Value>
-                                    <StackPanel>
+                            <IfElseTrigger.ElseActions>
+                                <ChangeAvaloniaPropertyAction
+                                    TargetProperty="{x:Static ContentPresenter.ContentProperty}">
+                                    <ChangeAvaloniaPropertyAction.Value>
+                                        <StackPanel>
 
-                                        <TextBlock Text="副歌词大小" />
-                                        <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
-                                                            Value="{Binding LyricConfig.DesktopLyric.LyricAltFontSize}" />
+                                            <TextBlock Text="副歌词大小" />
+                                            <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
+                                                                Value="{Binding LyricConfig.DesktopLyric.LyricAltFontSize}" />
 
-                                        <TextBlock Text="副歌词翻译间距" />
-                                        <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
-                                                            Maximum="{Binding #LyricSpacingIntUpDown.Value}"
-                                                            Value="{Binding LyricConfig.DesktopLyric.LyricAltTranslateSping}" />
+                                            <TextBlock Text="副歌词翻译间距" />
+                                            <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
+                                                                Maximum="{Binding #LyricSpacingIntUpDown.Value}"
+                                                                Value="{Binding LyricConfig.DesktopLyric.LyricAltTranslateSping}" />
 
-                                        <TextBlock Text="副歌词文本间距" />
-                                        <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
-                                                            Value="{Binding LyricConfig.DesktopLyric.LyricAltLetterSpacing}" />
+                                            <TextBlock Text="副歌词文本间距" />
+                                            <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
+                                                                Value="{Binding LyricConfig.DesktopLyric.LyricAltLetterSpacing}" />
 
-                                        <TextBlock Text="副歌词描边粗细" />
-                                        <u:NumericIntUpDown Minimum="0" InnerRightContent="px" Maximum="10"
-                                                            Value="{Binding LyricConfig.DesktopLyric.LyricAltStrokeThickness}" />
-                                    </StackPanel>
+                                            <TextBlock Text="副歌词描边粗细" />
+                                            <u:NumericIntUpDown Minimum="0" InnerRightContent="px" Maximum="10"
+                                                                Value="{Binding LyricConfig.DesktopLyric.LyricAltStrokeThickness}" />
+                                        </StackPanel>
 
-                                </ChangeAvaloniaPropertyAction.Value>
-                            </ChangeAvaloniaPropertyAction>
-                        </DataTrigger>
+                                    </ChangeAvaloniaPropertyAction.Value>
+                                </ChangeAvaloniaPropertyAction>
+                            </IfElseTrigger.ElseActions>
+                            
+                        </IfElseTrigger>
                     </Interaction.Behaviors>
                 </ContentPresenter>
 

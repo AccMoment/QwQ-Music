@@ -19,7 +19,7 @@
         <Border DockPanel.Dock="Left"
                 CornerRadius="12"
                 Margin="10"
-                Effect="{DynamicResource LightColorDropShadowEffect}">
+                Effect="{DynamicResource LightColor0DropShadowEffect}">
             <Border CornerRadius="12"
                     ClipToBounds="True">
                 <Image
@@ -52,28 +52,27 @@
 
                 </StackPanel.Styles>
 
-                <TextBox
-                    CornerRadius="15"
-                    HorizontalAlignment="Left"
-                    Text="{Binding SearchText, Mode=TwoWay}"
-                    Watermark="搜索音乐"
-                    Width="200" />
+                <TextBox CornerRadius="15"
+                         HorizontalAlignment="Left"
+                         Text="{Binding SearchText, Mode=TwoWay}"
+                         Watermark="搜索音乐"
+                         Width="200">
+                    <TextBox.InnerLeftContent>
+                        <PathIcon Data="{StaticResource SemiIconSearchStroked}" Height="14" Width="14" />
+                    </TextBox.InnerLeftContent>
+                </TextBox>
 
-                <Button
-                    Classes="Icon"
-                    CornerRadius="8"
-                    Command="{Binding PlayMusicListCommand}"
-                    Height="32" Width="32"
-                    Padding="2">
+                <Button ToolTip.Tip="播放此歌单"
+                        Classes="Icon"
+                        CornerRadius="8"
+                        Command="{Binding PlayMusicListCommand}"
+                        IsEnabled="{Binding MusicItems.Count}"
+                        Height="32" Width="32"
+                        Padding="2">
                     <PathIcon Data="{StaticResource PlayIconData}" Margin="0" />
                 </Button>
 
                 <u:IconButton Command="{Binding}" Icon="{StaticResource SemiIconPlus}" />
-
-                <u:IconButton
-                    Command="{Binding SelectedCurrentMusicItemCommand}"
-                    Icon="{StaticResource SemiIconAlignCenterVertical}"
-                    ToolTip.Tip="跳转当前音乐" />
 
                 <u:IconButton Icon="{StaticResource SemiIconMore}" ToolTip.Tip="更多">
 
@@ -89,11 +88,10 @@
 
                 </u:IconButton>
 
-                <u:IconButton
-                    Classes="Icon"
-                    ToolTip.Tip="返回全部歌单页面"
-                    Command="{Binding BackAllAlMusicListCommand}"
-                    Icon="{StaticResource SemiIconReply}" />
+                <u:IconButton Classes="Icon"
+                              ToolTip.Tip="返回全部歌单页面"
+                              Command="{Binding BackAllAlMusicListCommand}"
+                              Icon="{StaticResource SemiIconReply}" />
 
             </StackPanel>
 
@@ -117,15 +115,15 @@
 
     </DockPanel>
 
-    <DataGrid
-        Grid.Row="1" Background="Transparent"
-        CanUserReorderColumns="True"
-        CanUserResizeColumns="True"
-        CanUserSortColumns="True"
-        SelectedItem="{Binding SelectedItem}"
-        IsReadOnly="True"
-        ItemsSource="{Binding MusicItems}"
-        behaviors:ScrollToItemBehavior.ScrollToItem="{Binding SelectedItem}">
+    <DataGrid x:Name="MusicListDataGrid"
+              Grid.Row="1" Background="Transparent"
+              CanUserReorderColumns="True"
+              CanUserResizeColumns="True"
+              CanUserSortColumns="True"
+              SelectedItem="{Binding SelectedItem}"
+              IsReadOnly="True"
+              ItemsSource="{Binding MusicItems}"
+              behaviors:ScrollToItemBehavior.ScrollToItem="{Binding SelectedItem}">
 
         <DataGrid.Styles>
 
@@ -399,8 +397,34 @@
                     CommandParameter="{Binding $parent[DataGrid].SelectedItems}" />
             </RoutedEventTriggerBehavior>
 
+            <behaviors:DataGridHorizontalScrollBehavior
+                HorizontalScrollValue="{Binding DataGridHorizontalScrollValue}" />
+
         </Interaction.Behaviors>
 
     </DataGrid>
+
+    <StackPanel Grid.Row="1"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Spacing="10"
+                Margin="20">
+
+        <Button Classes="FloatButton"
+                Command="{Binding JumpToTopCommand}"
+                CommandParameter="{Binding #MusicListDataGrid}"
+                IsVisible="{Binding DataGridHorizontalScrollValue,Converter={StaticResource ValueComparisonConverter},ConverterParameter='@VALUE != 0'}"
+                ToolTip.Tip="跳转到顶部">
+            <PathIcon Data="{StaticResource SemiIconAlignTop}" />
+        </Button>
+
+        <Button Classes="FloatButton"
+                IsVisible="{Binding MusicItems.Count}"
+                Command="{Binding SelectedCurrentMusicItemCommand}"
+                ToolTip.Tip="跳转当前音乐">
+            <PathIcon Data="{StaticResource SemiIconAlignCenterVertical}" />
+        </Button>
+
+    </StackPanel>
 
 </Grid>

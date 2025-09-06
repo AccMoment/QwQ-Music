@@ -4,7 +4,6 @@ using QwQ_Music.Common.Manager;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Utilities;
 using QwQ_Music.ViewModels;
-using QwQ.Avalonia.Utilities.MessageBus;
 
 namespace QwQ_Music;
 
@@ -75,8 +74,7 @@ public static class Program
         MousePenetrate.ClearCache();
         HotkeyService.ClearCache();
         NavigateService.ClearCache();
-
-        MessageBus.Dispose();
+        CacheManager.ClearCache();
     }
 
     private static AppBuilder BuildAvaloniaApp()

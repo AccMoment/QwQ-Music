@@ -8,114 +8,64 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:pages="clr-namespace:QwQ_Music.ViewModels.Pages">
+    xmlns:pages="clr-namespace:QwQ_Music.ViewModels.Pages"
+    xmlns:u="https://irihi.tech/ursa">
 
-    <Grid ColumnDefinitions="Auto,*" Margin="0,10,10,10">
+    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
 
-        <!--
-        <ScrollViewer>
+        <u:SelectionList Name="SoundEffSelectionList" Margin="0,5"
+                         ItemsSource="{Binding SoundModifierManager.SoundModifiers}">
 
-            <u:SelectionList Margin="0,0,10,0" SelectedIndex="{Binding NavigationIndex}">
+            <u:SelectionList.Styles>
 
-                <u:SelectionList.Styles>
-                    <Style Selector="u|SelectionListItem">
-                        <Setter Property="Padding" Value="20,10,5,10" />
+                <Style Selector="u|SelectionListItem">
+                    <Setter Property="Padding" Value="15" />
+                </Style>
+
+                <Style Selector="u|SelectionList CheckBox">
+                    <Setter Property="CornerRadius" Value="10" />
+                    <Style Selector="^:checked /template/ Border#NormalRectangle">
+                        <Setter Property="Background" Value="{DynamicResource SemiBlue4}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource SemiBlue4}"/>
                     </Style>
-                    
-                    <Style Selector="u|SelectionList> Panel">
-                        <Setter Property="Width" Value="80" />
-                    </Style>
+                </Style>
 
-                    <Style Selector="u|SelectionList> Panel > TextBlock">
-                        <Setter Property="HorizontalAlignment" Value="Left" />
-                    </Style>
+            </u:SelectionList.Styles>
 
-                    <Style Selector="u|SelectionList > Panel > CheckBox">
-                        <Setter Property="CornerRadius" Value="10" />
-                        <Setter Property="HorizontalAlignment" Value="Right" />
-                    </Style>
+            <!--<u:SelectionList.Indicator>
+                <PathIcon
+                    Data="{StaticResource RoundedTriangle}"
+                    Foreground="{DynamicResource SemiBlue4}"
+                    HorizontalAlignment="Left"
+                    RenderTransform="rotate(-90deg)"
+                    Width="12">
+                    ~1~<PathIcon.Effect>
+                        <DropShadowEffect Color="{DynamicResource SemiBlue2Color}" OffsetX="0" OffsetY="5" />
+                    </PathIcon.Effect>@1@
+                </PathIcon>
+            </u:SelectionList.Indicator>-->
 
-                </u:SelectionList.Styles>
+            <u:SelectionList.ItemTemplate>
+                <DataTemplate>
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <TextBlock Text="{Binding Name}" FontSize="15" />
+                        <CheckBox Grid.Column="1" 
+                                  IsChecked="{Binding Enabled,Mode=TwoWay}" />
+                    </Grid>
+                </DataTemplate>
 
-                <u:SelectionList.Indicator>
-                    ~1~<Border
-                            Width="10" Height="10"
-                            HorizontalAlignment="Left"
-                            Margin="-5,0,0,20"
-                            Background="{DynamicResource SemiBlue5}"
-                            CornerRadius="5" />@1@
+            </u:SelectionList.ItemTemplate>
 
-                    <PathIcon
-                        Data="{StaticResource RoundedTriangle}"
-                        Foreground="{DynamicResource SemiBlue5}"
-                        HorizontalAlignment="Left"
-                        RenderTransform="rotate(-90deg)"
-                        Width="12" />
-                </u:SelectionList.Indicator>
+        </u:SelectionList>
 
+        <ScrollViewer Grid.Column="1" Margin="0,10">
 
-                <Panel>
-                    <TextBlock Text="立体增强" />
-                    <CheckBox IsChecked="{Binding AudioModifierConfig.StereoEnhancementModifier.Enabled}" />
-                </Panel>
-
-                <Panel>
-                    <TextBlock Text="全景效果" />
-                    <CheckBox IsChecked="{Binding AudioModifierConfig.SurroundSoundModifier.Enabled}" />
-                </Panel>
-
-                <Panel>
-                    <TextBlock Text="空间效果" />
-                    <CheckBox IsChecked="{Binding AudioModifierConfig.SpatialModifier.Enabled}" />
-                </Panel>
-
-                <Panel>
-                    <TextBlock Text="声源旋转" />
-                    <CheckBox IsChecked="{Binding AudioModifierConfig.RotatingModifier.Enabled}" />
-                </Panel>
-
-                <Panel>
-                    <TextBlock Text="混响效果" />
-                    <CheckBox IsChecked="{Binding AudioModifierConfig.ReverbModifier.Enabled}" />
-
-                </Panel>
-
-                <Panel>
-                    <TextBlock Text="延迟效果" />
-                    <CheckBox IsChecked="{Binding AudioModifierConfig.DelayModifier.Enabled}" />
-
-                </Panel>
-
-                <Panel>
-                    <TextBlock Text="失真效果" />
-                    <CheckBox IsChecked="{Binding AudioModifierConfig.DistortionModifier.Enabled}" />
-
-                </Panel>
-
-                <Panel>
-                    <TextBlock Text="颤音效果" />
-                    <CheckBox IsChecked="{Binding AudioModifierConfig.TremoloModifier.Enabled}" />
-                </Panel>
-
-                <Panel>
-                    <TextBlock Text="压缩器" />
-                    <CheckBox IsChecked="{Binding AudioModifierConfig.CompressorModifier.Enabled}" />
-                </Panel>
-
-                <Panel>
-                    <TextBlock Text="均衡器" />
-                    <CheckBox IsChecked="{Binding AudioModifierConfig.ParametricEqualizer.Enabled}" />
-                </Panel>
-
-                <Panel>
-                    <TextBlock Text="噪音减少" />
-                    <CheckBox IsChecked="{Binding AudioModifierConfig.NoiseReductionModifier.Enabled}" />
-                </Panel>
-
-            </u:SelectionList>
+            <Carousel Margin="10,0" ItemsSource="{Binding SoundModifierManager.ConfigPanels}"
+                      SelectedIndex="{Binding #SoundEffSelectionList.SelectedIndex}" />
 
         </ScrollViewer>
 
+        <!--
         <ScrollViewer Grid.Column="1">
 
             <control:IndexControl Index="{Binding NavigationIndex}" Margin="10">

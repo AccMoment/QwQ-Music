@@ -77,10 +77,6 @@ public partial class HotkeyItemModel : ObservableObject
         var options = new OverlayDialogOptions
         {
             Title = "修改按键",
-            Mode = DialogMode.Question,
-            Buttons = DialogButton.OKCancel,
-            CanDragMove = true,
-            CanResize = false,
         };
 
         var keyGesture = await OverlayDialog.ShowCustomModal<KeyGestureInput, KeyGestureInputViewModel, KeyGesture>(

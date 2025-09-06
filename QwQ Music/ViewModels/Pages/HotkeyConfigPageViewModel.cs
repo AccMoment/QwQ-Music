@@ -45,20 +45,6 @@ public partial class HotkeyConfigPageViewModel : ViewModelBase
         }
     }
 
-    /*
-    /// <summary>
-    /// 热键配置项属性变化处理
-    /// </summary>
-    private void OnHotkeyItemPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName != nameof(HotkeyItemModel.HasConflict))
-            return;
-
-        OnPropertyChanged(nameof(HasAnyConflict));
-        OnPropertyChanged(nameof(AllConflictMessages));
-    }
-    */
-
     [RelayCommand]
     private async Task AddNewHotkey(HotkeyFunction function)
     {
@@ -70,10 +56,6 @@ public partial class HotkeyConfigPageViewModel : ViewModelBase
         var options = new OverlayDialogOptions
         {
             Title = "添加按键",
-            Mode = DialogMode.Question,
-            Buttons = DialogButton.OKCancel,
-            CanDragMove = true,
-            CanResize = false,
         };
 
         var keyGesture = await OverlayDialog.ShowCustomModal<KeyGestureInput, KeyGestureInputViewModel, KeyGesture>(

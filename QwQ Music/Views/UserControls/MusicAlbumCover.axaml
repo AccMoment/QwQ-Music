@@ -8,7 +8,7 @@
         <ControlTemplate>
             <Border
                 Background="Black"
-                BorderBrush="White"
+                BorderBrush="{DynamicResource SemiColorBackground4}"
                 BorderThickness="3"
                 BoxShadow="0 0 10 0 DarkGray"
                 Margin="10"

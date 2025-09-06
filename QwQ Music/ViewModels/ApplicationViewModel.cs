@@ -5,18 +5,17 @@ using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Manager;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models.ConfigModels;
-using QwQ_Music.Views;
 
 namespace QwQ_Music.ViewModels;
 
 public partial class ApplicationViewModel : ObservableObject
 {
-    public ThemeConfig ThemeConfig { get; set; } = ConfigManager.UiConfig.ThemeConfig;
+    public ThemeConfig ThemeConfig { get; } = ConfigManager.UiConfig.ThemeConfig;
 
     [RelayCommand]
     private static void ShowMainWindow()
     {
-        if (App.TopLevel is not MainWindow mainWindow)
+        if (App.TopLevel is not { } mainWindow)
             return;
 
         if (mainWindow.IsVisible)
@@ -36,11 +35,6 @@ public partial class ApplicationViewModel : ObservableObject
     [RelayCommand]
     public static void ExitApplication()
     {
-        if (App.TopLevel is MainWindow mainWindow)
-        {
-            mainWindow.CloseMainWindow();
-        }
-
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
             return;
 

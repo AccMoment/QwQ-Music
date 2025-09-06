@@ -16,6 +16,17 @@ public class MusicListMapRepository : IDatabaseRepository<MusicListModel>
         _db = new DatabaseService(path);
         Initialize();
     }
+    
+    private void Initialize()
+    {
+        _db.CreateTable(TABLE_NAME,
+            $"""
+             {nameof(MusicListModel.IdStr)} TEXT NOT NULL PRIMARY KEY,
+             {nameof(MusicListModel.Name)} TEXT,
+             {nameof(MusicListModel.Description)} TEXT,
+             {nameof(MusicListModel.IsCoverExist)} INTEGER 
+             """);
+    }
 
     public void Dispose()
     {
@@ -131,24 +142,6 @@ public class MusicListMapRepository : IDatabaseRepository<MusicListModel>
         return result.Count > 0;
     }
 
-    private void Initialize()
-    {
-        _db.CreateTable(TABLE_NAME,
-            $"""
-             {nameof(MusicListModel.IdStr)} TEXT NOT NULL PRIMARY KEY,
-             {nameof(MusicListModel.Name)} TEXT,
-             {nameof(MusicListModel.Description)} TEXT,
-             {nameof(MusicListModel.CoverId)} TEXT
-             """);
-    }
-
-    public IEnumerable<MusicListModel> GetEnumerableAll()
-    {
-        var rows = _db.Query($"SELECT * FROM {TABLE_NAME}");
-
-        return rows.Select(MapToModel);
-    }
-
     #region Helper Methods
 
     private static MusicListModel MapToModel(Dictionary<string, object?> dict)
@@ -164,8 +157,8 @@ public class MusicListMapRepository : IDatabaseRepository<MusicListModel>
         if (dict.TryGetValue(nameof(MusicListModel.Description), out object? description) && description?.ToString() is { } descriptionStr)
             model.Description = descriptionStr;
 
-        if (dict.TryGetValue(nameof(MusicListModel.CoverId), out object? coverFileName))
-            model.CoverId = coverFileName?.ToString();
+        if (dict.TryGetValue(nameof(MusicListModel.IsCoverExist), out object? isCoverExist))
+            model.IsCoverExist = Convert.ToInt32(isCoverExist) != 0;
 
         return model;
     }
@@ -177,7 +170,7 @@ public class MusicListMapRepository : IDatabaseRepository<MusicListModel>
             [nameof(MusicListModel.IdStr)] = model.IdStr,
             [nameof(MusicListModel.Name)] = model.Name,
             [nameof(MusicListModel.Description)] = model.Description,
-            [nameof(MusicListModel.CoverId)] = model.CoverId,
+            [nameof(MusicListModel.IsCoverExist)] = model.IsCoverExist ? 1 : 0,
         };
 
         return dict;

@@ -100,7 +100,7 @@ public partial class DataGridViewModelBase : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task DeleteMusicItemsAsync(IList items)
+    protected private async Task DeleteMusicItemsAsync(IList items)
     {
         if (items is not { Count: > 0 })
         {
@@ -115,7 +115,10 @@ public partial class DataGridViewModelBase : ViewModelBase
 
         if (successItems == null)
             return;
+        
+        MusicPlayerViewModel.Default.CheckForRemovedItems(successItems);
 
+        MusicPlayList.Remove(successItems);
         MusicItems.RemoveAll(successItems);
     }
 }

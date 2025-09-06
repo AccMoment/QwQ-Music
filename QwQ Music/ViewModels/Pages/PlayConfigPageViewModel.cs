@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using QwQ_Music.Common.Audio;
 using QwQ_Music.Common.Audio.SoundModifier;
 using QwQ_Music.Common.Manager;
 using QwQ_Music.Common.Services;
@@ -28,7 +27,7 @@ public partial class PlayConfigPageViewModel : ViewModelBase
 
     public static MusicItemManager MusicItemManager => MusicItemManager.Default;
 
-    public SoundModifierConfig SoundModifierConfig { get; } = ConfigManager.SoundModifierConfig;
+    public PlayComponent PlayComponent { get; } = ConfigManager.SoundModifierConfig.PlayComponent;
 
     public Dictionary<FadeModifier.FadeCurve, string> FadeCurves { get; } = new()
     {
@@ -141,6 +140,8 @@ public partial class PlayConfigPageViewModel : ViewModelBase
 
     private async Task ProcessItemsAsync(List<MusicItemModel> items, CancellationToken cancellationToken)
     {
+        using var audioGainCalculator = new AudioGainCalculator();
+
         await Parallel.ForEachAsync(items,
             new ParallelOptions
             {
@@ -151,7 +152,8 @@ public partial class PlayConfigPageViewModel : ViewModelBase
             {
                 try
                 {
-                    await ProcessSingleItemAsync(item, ct);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await ProcessSingleItemAsync(audioGainCalculator, item, ct);
                 }
                 catch (OperationCanceledException) when (ct.IsCancellationRequested) // 取消异常
                 {
@@ -165,23 +167,18 @@ public partial class PlayConfigPageViewModel : ViewModelBase
             });
     }
 
-    private async Task ProcessSingleItemAsync(MusicItemModel item, CancellationToken cancellationToken)
+    private async Task ProcessSingleItemAsync(AudioGainCalculator audioGainCalculator, MusicItemModel item, CancellationToken cancellationToken)
     {
-        await Task.Run(() =>
+        double gain = await audioGainCalculator.CalculateGainAsync(
+            item, SelectedMusicReplayGainStandard, PlayerConfig.CustomMusicReplayGainStandard);
+
+        MusicItemManager.Update(item.FilePath, new Dictionary<string, object?>
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            [nameof(MusicItemModel.Gain)] = gain,
+        });
 
-            double gain = AudioPreprocessor.CalcGainOfMusicItem(
-                item, SelectedMusicReplayGainStandard, PlayerConfig.CustomMusicReplayGainStandard);
-
-            MusicItemManager.Update(item.FilePath, new Dictionary<string, object?>
-            {
-                [nameof(MusicItemModel.Gain)] = gain,
-            });
-
-            item.Gain = gain;
-            NumberOfCompletedCalc++;
-        }, cancellationToken);
+        item.Gain = gain;
+        NumberOfCompletedCalc++;
     }
 
     [RelayCommand]

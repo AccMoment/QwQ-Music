@@ -1,96 +1,77 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using NcmdumpCSharp.Core;
 using QwQ_Music.Common.Manager;
 using QwQ_Music.Common.Services;
-using QwQ_Music.Common.Utilities;
+using QwQ_Music.Common.Services.MusicTagExtractors;
 using QwQ_Music.Models;
-using QwQ_Music.ViewModels;
 using SoundFlow.Enums;
-using SoundFlow.Providers;
 using SoundFlow.Structs;
-using Track = ATL.Track;
 
 namespace QwQ_Music.Common.Audio;
 
-public static class AudioPreprocessor
+public class AudioPreprocessor(AudioPlay audioPlay)
 {
-    public static AudioFormat UpdateAudioFormat(MusicItemModel model)
+    public TimeSpan InitialTime { get; set; } = TimeSpan.Zero;
+
+    public async Task InitializeAudioTrack(MusicItemModel musicItem)
     {
-        var ex = MusicExtractor.ExtractExtensionsInfo(model.FilePath);
-
-        return new AudioFormat
-        {
-            SampleRate = ConfigManager.PlayerConfig.IsAutoSetSampleRate ? ex.SamplingRate : ConfigManager.PlayerConfig.SampleRate,
-            Channels = ex.Channels,
-            Format = SampleFormat.F32,
-        };
-    }
-
-    public static async Task<AudioFormat> UpdateNcmAudioFormat(MusicItemModel model)
-    {
-        using var crypt = new NeteaseCrypt(model.FilePath);
-        var (audioStream, _) = await crypt.DumpToStreamAsync();
-
-        var track = new Track(audioStream);
-
-        return new AudioFormat
-        {
-            SampleRate = ConfigManager.PlayerConfig.IsAutoSetSampleRate ? (int)track.SampleRate : ConfigManager.PlayerConfig.SampleRate,
-            Channels = track.ChannelsArrangement.NbChannels,
-            Format = SampleFormat.F32,
-        };
-    }
-
-    public static double CalcGainOfMusicItem(
-        MusicItemModel musicItem,
-        MusicReplayGainStandard standard = MusicReplayGainStandard.Streaming,
-        double customTargetLufs = -16d
-        )
-    {
+        // 根据文件类型初始化音频
         string extension = Path.GetExtension(musicItem.FilePath).ToUpper();
+        await UpdateAudioFormat(musicItem);
 
         if (extension == AudioFileValidator.AudioFormatsExtendToNameMap[AudioFileValidator.ExtendAudioFormats.Ncm])
         {
-            NotificationService.Warning($"暂不支持对Ncm文件计算回放增益！《{musicItem.Title}》已使用默认值: 1 ");
-
-            return 1;
+            await InitializeNcmAudioTrackAsync(musicItem);
         }
-
-        var ex = MusicExtractor.ExtractExtensionsInfo(musicItem.FilePath);
-
-        return ReplayGainCalculator.CalculateGain(
-            ReadAudioBlocks(musicItem.FilePath, ex.SamplingRate, ex.Channels),
-            ex.SamplingRate,
-            ex.Channels,
-            standard,
-            customTargetLufs
-        );
+        else
+        {
+            await Task.Run(() => audioPlay.InitializeAudio(musicItem.FilePath, musicItem.Gain));
+        }
     }
 
-    public static IEnumerable<float[]> ReadAudioBlocks(string filePath, int sampleRate, int channels)
+    private async Task UpdateAudioFormat(MusicItemModel model)
     {
-        using var fileStream = File.OpenRead(filePath);
+        var track = await MusicTagExtractorFactory.GetTrackAsync(model.FilePath);
 
-        using var reader = new StreamDataProvider(MusicPlayerViewModel.Default.AudioEngine, new AudioFormat
+        audioPlay.AudioFormat = track == null
+            ? AudioFormat.DvdHq
+            : new AudioFormat
+            {
+                SampleRate = ConfigManager.PlayerConfig.IsAutoSetSampleRate ? (int)track.SampleRate : ConfigManager.PlayerConfig.SampleRate,
+                Channels = track.ChannelsArrangement.NbChannels,
+                Format = SampleFormat.F32,
+            };
+    }
+
+    private async Task InitializeNcmAudioTrackAsync(MusicItemModel musicItem)
+    {
+        using var crypt = new NeteaseCrypt(musicItem.FilePath);
+        var audioStream = await crypt.DumpToStreamAsync();
+
+        if (audioStream != null)
         {
-            Format = SampleFormat.F32,
-            SampleRate = sampleRate,
-            Channels = channels,
-        }, fileStream);
-
-        float[] buffer = new float[sampleRate * channels]; // 1秒缓冲
-
-        int samplesRead;
-
-        while ((samplesRead = reader.ReadBytes(buffer)) > 0)
-        {
-            float[] actualBuffer = new float[samplesRead];
-            Array.Copy(buffer, actualBuffer, samplesRead);
-
-            yield return actualBuffer;
+            // 对于NCM，我们暂时不处理ReplayGain
+            audioPlay.InitializeAudio(audioStream, 0);
         }
+    }
+
+    public void UpdateMusicPlayProgress(MusicItemModel musicItem, bool restart = false)
+    {
+        if (restart || IsNearEnd(musicItem))
+        {
+            musicItem.Current = TimeSpan.Zero;
+        }
+
+        if (musicItem.Current != InitialTime)
+        {
+            Task.Run(() => MusicItemManager.UpdatePlayProgress(musicItem.FilePath, musicItem.Current));
+        }
+    }
+
+    public static bool IsNearEnd(MusicItemModel musicItem)
+    {
+        return Math.Abs(musicItem.Duration.TotalSeconds - musicItem.Current.TotalSeconds) < 5;
     }
 }

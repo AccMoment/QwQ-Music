@@ -131,7 +131,7 @@
             <u:SelectionList SelectedIndex="{Binding NavigationIndex}">
 
                 <u:SelectionList.Indicator>
-                    <Border Effect="{DynamicResource LightColorDropShadowEffect}"
+                    <Border Effect="{DynamicResource LightColor0DropShadowEffect}"
                             Background="{DynamicResource SemiBlue5}"
                             Classes.Expanded="{Binding DrawerStatusViewModel.IsNavigationExpand}"
                             CornerRadius="8">
@@ -263,12 +263,5 @@
 
     </Carousel>
 
-    <Interaction.Behaviors>
-
-        <PointerWheelChangedTrigger>
-            <InvokeCommandAction Command="{Binding PointerWheelChangedCommand}" PassEventArgsToCommand="True" />
-        </PointerWheelChangedTrigger>
-
-    </Interaction.Behaviors>
 
 </Grid>

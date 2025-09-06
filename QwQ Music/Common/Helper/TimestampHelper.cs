@@ -85,4 +85,20 @@ public static class TimestampHelper
     {
         return _unixEpoch.AddMilliseconds(timestamp).ToLocalTime();
     }
+    
+    /// <summary>
+    ///     从 Unix 时间戳（秒）转换为 UTC DateTime
+    /// </summary>
+    public static DateTime FromUnixTimestampUtc(long timestamp)
+    {
+        return _unixEpoch.AddSeconds(timestamp);
+    }
+
+    /// <summary>
+    ///     从 Unix 时间戳（毫秒）转换为 UTC DateTime
+    /// </summary>
+    public static DateTime FromUnixTimestampMillisecondsUtc(long timestampMs)
+    {
+        return _unixEpoch.AddMilliseconds(timestampMs);
+    }
 }

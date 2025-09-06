@@ -12,6 +12,9 @@ using QwQ_Music.Common.Utilities;
 using QwQ_Music.Common.Utilities.StringUtilities;
 using QwQ_Music.Models;
 using QwQ_Music.ViewModels.Bases;
+using QwQ_Music.ViewModels.Dialogs;
+using QwQ_Music.Views.Dialogs;
+using Ursa.Controls;
 
 namespace QwQ_Music.ViewModels.Panels;
 
@@ -28,7 +31,19 @@ public partial class AlbumDetailsPanelViewModel : DataGridViewModelBase
     public partial AlbumItemModel AlbumItemModel { get; private set; } =
         new("Error", "#警告！你已进入未知空域，请立即离开此处（");
 
-    [ObservableProperty] public partial Bitmap CoverImage { get; set; } = CacheManager.Default;
+    public Bitmap? CoverImage
+    {
+        get => field ?? CacheManager.Default;
+        set
+        {
+            if (field == value) return;
+
+            field?.Dispose();
+
+            field = value;
+            OnPropertyChanged();
+        }
+    }
 
     private void ComeToOneselfEvent()
     {
@@ -47,18 +62,22 @@ public partial class AlbumDetailsPanelViewModel : DataGridViewModelBase
         _allMusicItems.AddRange(itemsToAdd);
 
         _allMusicItems.RemoveAll(itemsToRemove);
+
+        OnSearchTextChanged(SearchText);
+
+        if (_allMusicItems.Count == 0)
+        {
+            NotificationService.Warning("当前专辑内容为空，可能是专辑音乐被全部删除！");
+
+            return;
+        }
+
+        UpdateCoverImage(_allMusicItems.First());
     }
 
     public void UpdateAlbumItemModel(AlbumItemModel albumItemModel)
     {
         AlbumItemModel = albumItemModel;
-
-        OnSearchTextChanged(SearchText);
-
-        if (_allMusicItems.Count == 0)
-            NotificationService.Warning("当前专辑内容为空，可能是专辑音乐被全部删除！");
-
-        UpdateCoverImage(_allMusicItems.First());
 
         if (AlbumItemModel.Description != null)
             return;
@@ -165,8 +184,25 @@ public partial class AlbumDetailsPanelViewModel : DataGridViewModelBase
     }
 
     [RelayCommand]
+    private async Task ViewCompleteIntroduction()
+    {
+        if (AlbumItemModel.Description == null)
+            return;
+
+        var options = new OverlayDialogOptions
+        {
+            Title = "专辑简介",
+            Mode = DialogMode.Info,
+        };
+
+        await OverlayDialog.ShowCustomModal<ViewText, ViewTextViewModel, object>(
+            new ViewTextViewModel(AlbumItemModel.Description, options.Title), options: options);
+    }
+
+    [RelayCommand]
     private static void BackAllAlbum()
     {
         NavigateService.NavigateTo("全部专辑");
+        
     }
 }

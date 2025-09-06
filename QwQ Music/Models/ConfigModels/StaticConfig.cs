@@ -22,4 +22,15 @@ public static class StaticConfig
 
     public static string LyricsSavePath =>
         PathEnsurer.EnsureDirectoryExists(Path.Combine(Directory.GetCurrentDirectory(), "cache", "lyrics"));
+    
+    public static string GetMusicCoverFullPath(string filePath)
+    {
+        return Path.Combine(MusicCoverSavePath, $"{filePath}.png");
+    }
+
+    public static string GetMusicListCoverFullPath(string filePath)
+    {
+        return Path.Combine(MusicListCoverSavePath, $"{filePath}.png");
+    }
+
 }

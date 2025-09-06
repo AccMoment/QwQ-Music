@@ -19,14 +19,13 @@ namespace QwQ_Music.Common.Audio;
 /// </summary>
 public class AudioPlay : IAudioPlay
 {
-    private readonly SoundModifierConfig _soundModifier = ConfigManager.SoundModifierConfig;
+    private readonly PlayComponent _soundModifier = ConfigManager.SoundModifierConfig.PlayComponent;
     private DispatcherTimer? _fadeOutTimer; // 添加一个字段来跟踪当前的淡出定时器
     private AudioPlaybackDevice? _playerDevice;
     private DispatcherTimer? _progressTimer;
     private StreamDataProvider? _soundDataProvider;
+    private MiniAudioEngine? _audioEngine;
     private SoundPlayer? _soundPlayer;
-
-    public MiniAudioEngine AudioEngine { get; } = new();
 
     /// <summary>
     ///     音频格式
@@ -181,29 +180,28 @@ public class AudioPlay : IAudioPlay
         _soundPlayer.Seek((float)positionInSeconds);
     }
 
-    /// <inheritdoc />
-    public void InitializeAudio(string filePath, double replayGain)
-    {
-        try
-        {
-            DisposeCurrentTrack();
-            InitializeNewTrack(File.OpenRead(filePath), replayGain);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"初始化音轨失败: {ex.Message}");
-        }
-    }
-
     /// <summary>
     ///     释放所有资源
     /// </summary>
     public void Dispose()
     {
         DisposeCurrentTrack();
-        AudioEngine.Dispose();
-
         GC.SuppressFinalize(this);
+    }
+
+    /// <inheritdoc />
+    public void InitializeAudio(string filePath, double replayGain)
+    {
+        try
+        {
+            DisposeCurrentTrack();
+            
+            InitializeNewTrack(File.OpenRead(filePath), replayGain);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"初始化音轨失败: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -245,15 +243,17 @@ public class AudioPlay : IAudioPlay
     /// </summary>
     private void InitializeNewTrack(Stream audioStream, double replayGain)
     {
-        var defaultDevice = AudioEngine.PlaybackDevices.FirstOrDefault(x => x.IsDefault);
+        _audioEngine = new MiniAudioEngine();
+        
+        var defaultDevice = _audioEngine.PlaybackDevices.FirstOrDefault(x => x.IsDefault);
 
-        _playerDevice = AudioEngine.InitializePlaybackDevice(defaultDevice, AudioFormat);
+        _playerDevice = _audioEngine.InitializePlaybackDevice(defaultDevice, AudioFormat);
 
         _playerDevice.Start();
 
-        _soundDataProvider = new StreamDataProvider(AudioEngine, AudioFormat, audioStream);
+        _soundDataProvider = new StreamDataProvider(_audioEngine, AudioFormat, audioStream);
 
-        _soundPlayer = new SoundPlayer(AudioEngine, AudioFormat, _soundDataProvider)
+        _soundPlayer = new SoundPlayer(_audioEngine, AudioFormat, _soundDataProvider)
         {
             Volume = Volume,
             Mute = IsMute,
@@ -286,6 +286,14 @@ public class AudioPlay : IAudioPlay
         _soundModifier.FadeModifier.Reset();
         _soundModifier.FadeModifier.SampleRate = soundPlayer.Format.SampleRate;
         soundPlayer.AddModifier(_soundModifier.FadeModifier);
+
+        foreach (var soundModifier in SoundModifierManager.Default.SoundModifiers)
+        {
+            if (soundModifier.Modifier == null) 
+                continue;
+
+            soundPlayer.AddModifier(soundModifier.Modifier);
+        }
     }
 
     /// <summary>
@@ -343,6 +351,12 @@ public class AudioPlay : IAudioPlay
             _playerDevice.Stop();
             _playerDevice.Dispose();
             _playerDevice = null;
+        }
+
+        if (_audioEngine != null)
+        {
+            _audioEngine.Dispose();
+            _audioEngine = null;
         }
 
         // 停止并释放进度定时器

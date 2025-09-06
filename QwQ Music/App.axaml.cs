@@ -7,6 +7,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using QwQ_Music.Common;
+using QwQ_Music.Common.Services;
 using QwQ_Music.ViewModels;
 using QwQ_Music.Views;
 using Ursa.Controls;
@@ -15,7 +16,7 @@ namespace QwQ_Music;
 
 public class App : Application
 {
-    public static Window? TopLevel { get; private set; }
+    public static MainWindow? TopLevel { get; private set; }
 
     public static Assembly CurrentAssembly { get; } = Assembly.GetExecutingAssembly();
 
@@ -68,18 +69,22 @@ public class App : Application
             icon: MessageBoxIcon.Error,
             button: MessageBoxButton.OKCancel
         );
+
+        LoggerService.Fatal($"后台任务出现异常: {e.Exception.Message}\n{e.Exception.StackTrace}\n是否观察: {e.Observed}");
     }
 
     private static void UIThread_OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
-        e.Handled = true;
-
         MessageBox.ShowOverlayAsync(
             $"应用程序出现异常: {e.Exception.Message}",
             "异常",
             icon: MessageBoxIcon.Error,
             button: MessageBoxButton.OKCancel
         );
+
+        e.Handled = true;
+
+        LoggerService.Fatal($"应用程序出现异常: {e.Exception.Message}\n{e.Exception.StackTrace}\n是否处理: {e.Handled}");
     }
 
     private static void CurrentDomain_OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -90,6 +95,8 @@ public class App : Application
             icon: MessageBoxIcon.Error,
             button: MessageBoxButton.OKCancel
         );
+
+        LoggerService.Fatal($"异常对象: {e.ExceptionObject}\n是否终止运行时: {e.IsTerminating}");
     }
 
     /*

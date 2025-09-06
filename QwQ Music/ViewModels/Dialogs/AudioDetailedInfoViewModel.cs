@@ -1,4 +1,7 @@
+using System;
+using System.Linq;
 using System.Threading.Tasks;
+using ATL;
 using Avalonia.Collections;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Services;
@@ -7,115 +10,304 @@ using QwQ_Music.ViewModels.Bases;
 
 namespace QwQ_Music.ViewModels.Dialogs;
 
-public partial class AudioDetailedInfoViewModel(MusicItemModel musicItem, MusicTagExtensions musicTagExtensions)
-    : ViewModelBase
+public partial class AudioDetailedInfoViewModel : ViewModelBase
 {
-    public AvaloniaList<MusicInfoKeyValuePair> MusicInfoKeyValuePairs { get; } =
-    [
-        new("标题", musicItem.Title),
-        new("艺术家", musicItem.Artists),
-        new("专辑", musicItem.Album),
-        new("作曲", musicItem.Composer ?? "未知作曲"),
-        new("时长", musicItem.Duration.ToString(@"hh\:mm\:ss")),
-        new("添加时间", musicItem.InsertTime.ToString("yyyy-MM-dd HH:mm:ss")),
-        new("文件路径", musicItem.FilePath),
-        new("文件大小", musicItem.FileSize ?? "未知"),
-        new("编码格式", musicItem.EncodingFormat ?? "未知"),
-        new("采样率", $"{musicTagExtensions.SamplingRate} Hz"),
-        new("声道数", musicTagExtensions.Channels.ToString()),
-        new("比特率", $"{musicTagExtensions.Bitrate} kbps"),
-        new("位深度", $"{musicTagExtensions.BitsPerSample} bit"),
-        new("可变比特率", musicTagExtensions.IsVbr ? "是" : "否"),
-    ];
+    private readonly MusicItemModel _musicItem;
+    private readonly Track? _track;
+
+    public AudioDetailedInfoViewModel(MusicItemModel musicItem, Track? track)
+    {
+        _musicItem = musicItem;
+        _track = track;
+        MusicInfoGroups = [];
+
+        InitializeMusicInfo();
+    }
+
+    // 使用 MusicInfoGroup 集合替代原来的单个列表
+    public AvaloniaList<MusicInfoGroup> MusicInfoGroups { get; }
 
     public string? SelectedText { get; set; }
 
-    public AudioDetailedInfoViewModel MoreDetailedInfor()
+    private void InitializeMusicInfo()
     {
-        // 添加额外的信息项
-        if (!string.IsNullOrEmpty(musicItem.Comment))
+        AddFileInfoGroup();
+        AddBasicMetadataGroup();
+        AddPersonsAndRightsGroup();
+        AddClassificationAndSeriesGroup();
+        AddDatesGroup();
+        AddNumbersAndRatingsGroup();
+        AddIdentifiersGroup();
+        AddSortingGroup();
+        AddLyricsAndChaptersGroup();
+        AddAdditionalFieldsGroup();
+        AddAudioTechnicalInfoGroup();
+        AddMetadataFormatsGroup();
+    }
+
+    // --- 辅助方法 ---
+
+    private static void AddInfo(AvaloniaList<MusicInfoKeyValuePair> targetList, string key, string? value)
+    {
+        // 只添加非空且有意义的信息
+        if (!string.IsNullOrWhiteSpace(value) && value != "0" && value != "0001-01-01 00:00:00")
         {
-            MusicInfoKeyValuePairs.Add(new MusicInfoKeyValuePair("注释", musicItem.Comment));
+            targetList.Add(new MusicInfoKeyValuePair(key, value));
+        }
+    }
+
+    private static string FormatValue(object? value, string? unit = null)
+    {
+        if (value == null) return "未知";
+
+        string? valueStr = value.ToString();
+
+        if (string.IsNullOrEmpty(valueStr) || valueStr == "0") return "未知";
+
+        return string.IsNullOrEmpty(unit) ? valueStr : $"{valueStr} {unit}";
+    }
+
+    private static string GetCodecFamilyDescription(int codecFamily)
+    {
+        return codecFamily switch
+        {
+            0 => "流式传输，有损数据",
+            1 => "流式传输，无损数据",
+            2 => "带嵌入式音源库的序列化",
+            3 => "带编解码器或硬件相关音源库的序列化",
+            _ => "未知",
+        };
+    }
+
+    // --- 分组添加方法 ---
+
+    private void AddFileInfoGroup()
+    {
+        var items = new AvaloniaList<MusicInfoKeyValuePair>();
+        AddInfo(items, "标题", _musicItem.Title);
+        AddInfo(items, "文件路径", _musicItem.FilePath);
+        AddInfo(items, "文件大小", _musicItem.FileSize ?? "未知");
+        AddInfo(items, "添加时间", _musicItem.InsertTime.ToString("yyyy-MM-dd HH:mm:ss"));
+        AddInfo(items, "修改时间", _musicItem.ModificationTime.ToString("yyyy-MM-dd HH:mm:ss"));
+        AddInfo(items, "编码格式", _track?.AudioFormat.Name ?? "未知");
+
+        if (items.Count > 0)
+        {
+            MusicInfoGroups.Add(new MusicInfoGroup("文件信息", items));
+        }
+    }
+
+    private void AddBasicMetadataGroup()
+    {
+        var items = new AvaloniaList<MusicInfoKeyValuePair>();
+        AddInfo(items, "标题", _track?.Title);
+        AddInfo(items, "艺术家", _track?.Artist ?? _musicItem.Artists);
+        AddInfo(items, "专辑", _track?.Album ?? _musicItem.Album);
+        AddInfo(items, "专辑艺术家", _track?.AlbumArtist ?? _musicItem.AlbumArtist);
+        AddInfo(items, "作曲", _track?.Composer ?? _musicItem.Composer ?? "未知");
+        AddInfo(items, "指挥", _track?.Conductor);
+        AddInfo(items, "词作者", _track?.Lyricist);
+        AddInfo(items, "描述", _track?.Description);
+        AddInfo(items, "长描述", _track?.LongDescription);
+        AddInfo(items, "注释", _track?.Comment ?? _musicItem.Comment);
+        AddInfo(items, "语言", _track?.Language);
+
+        if (items.Count > 0)
+        {
+            MusicInfoGroups.Add(new MusicInfoGroup("基本元数据", items));
+        }
+    }
+
+    private void AddPersonsAndRightsGroup()
+    {
+        var items = new AvaloniaList<MusicInfoKeyValuePair>();
+        AddInfo(items, "相关人员", _track?.InvolvedPeople);
+        AddInfo(items, "版权", _track?.Copyright);
+        AddInfo(items, "发行商", _track?.Publisher);
+        AddInfo(items, "编码者", _track?.EncodedBy);
+        AddInfo(items, "编码器信息", _track?.Encoder);
+        AddInfo(items, "音频源 URL", _track?.AudioSourceUrl);
+
+        if (items.Count > 0)
+        {
+            MusicInfoGroups.Add(new MusicInfoGroup("相关人员与权利", items));
+        }
+    }
+
+    private void AddClassificationAndSeriesGroup()
+    {
+        var items = new AvaloniaList<MusicInfoKeyValuePair>();
+        AddInfo(items, "流派", _track?.Genre);
+        AddInfo(items, "内容组描述", _track?.Group);
+        AddInfo(items, "系列标题/乐章名称", _track?.SeriesTitle);
+        AddInfo(items, "系列部分/乐章索引", _track?.SeriesPart);
+
+        if (items.Count > 0)
+        {
+            MusicInfoGroups.Add(new MusicInfoGroup("分类与系列", items));
+        }
+    }
+
+    private void AddDatesGroup()
+    {
+        var items = new AvaloniaList<MusicInfoKeyValuePair>();
+
+        if (_track?.Date != null && _track.Date > DateTime.MinValue)
+            AddInfo(items, "录制日期", _track.Date.Value.ToString("yyyy-MM-dd HH:mm:ss"));
+
+        if (_track?.Year is > 0)
+            AddInfo(items, "录制年份", _track.Year.ToString());
+
+        if (_track?.OriginalReleaseDate != null && _track.OriginalReleaseDate > DateTime.MinValue)
+            AddInfo(items, "原始发行日期", _track.OriginalReleaseDate.Value.ToString("yyyy-MM-dd HH:mm:ss"));
+
+        if (_track?.OriginalReleaseYear is > 0)
+            AddInfo(items, "原始发行年份", _track.OriginalReleaseYear.ToString());
+
+        if (_track?.PublishingDate != null && _track.PublishingDate > DateTime.MinValue)
+            AddInfo(items, "发布日期", _track.PublishingDate.Value.ToString("yyyy-MM-dd HH:mm:ss"));
+
+        if (items.Count > 0)
+        {
+            MusicInfoGroups.Add(new MusicInfoGroup("日期信息", items));
+        }
+    }
+
+    private void AddNumbersAndRatingsGroup()
+    {
+        var items = new AvaloniaList<MusicInfoKeyValuePair>();
+
+        AddInfo(items, "音轨编号", _track?.TrackNumber?.ToString() ?? _track?.TrackNumberStr);
+        AddInfo(items, "音轨总数", _track?.TrackTotal?.ToString());
+        AddInfo(items, "光盘编号", _track?.DiscNumber?.ToString());
+        AddInfo(items, "光盘总数", _track?.DiscTotal?.ToString());
+
+        if (_track?.Popularity is > 0)
+            AddInfo(items, "流行度", $"{_track.Popularity:F1}%");
+
+        if (_track?.BPM is > 0)
+            AddInfo(items, "每分钟节拍数 (BPM)", _track.BPM.ToString());
+
+        AddInfo(items, "回放增益", _musicItem.Gain > 0 ? $"{_musicItem.Gain:F2} dB" : null);
+
+        if (items.Count > 0)
+        {
+            MusicInfoGroups.Add(new MusicInfoGroup("编号与评分", items));
+        }
+    }
+
+    private void AddIdentifiersGroup()
+    {
+        var items = new AvaloniaList<MusicInfoKeyValuePair>();
+        AddInfo(items, "产品 ID", _track?.ProductId);
+        AddInfo(items, "ISRC", _track?.ISRC);
+        AddInfo(items, "目录号", _track?.CatalogNumber);
+
+        if (items.Count > 0)
+        {
+            MusicInfoGroups.Add(new MusicInfoGroup("标识符", items));
+        }
+    }
+
+    private void AddSortingGroup()
+    {
+        var items = new AvaloniaList<MusicInfoKeyValuePair>();
+        AddInfo(items, "标题排序", _track?.SortTitle);
+        AddInfo(items, "艺术家排序", _track?.SortArtist);
+        AddInfo(items, "专辑排序", _track?.SortAlbum);
+        AddInfo(items, "专辑艺术家排序", _track?.SortAlbumArtist);
+
+        if (items.Count > 0)
+        {
+            MusicInfoGroups.Add(new MusicInfoGroup("排序信息", items));
+        }
+    }
+
+    private void AddLyricsAndChaptersGroup()
+    {
+        var items = new AvaloniaList<MusicInfoKeyValuePair>();
+
+        // 简化处理，只显示是否存在
+        if (_track?.Lyrics is { Count: > 0 })
+        {
+            AddInfo(items, "歌词", "存在");
         }
 
-        if (musicItem.Gain > 0)
+        if (_track?.Chapters is { Count: > 0 })
         {
-            MusicInfoKeyValuePairs.Add(new MusicInfoKeyValuePair("回放增益", $"{musicItem.Gain:F2} dB"));
+            AddInfo(items, "章节", "存在");
+            AddInfo(items, "章节表描述", _track.ChaptersTableDescription);
         }
 
-        // 从MusicTagExtensions加载扩展信息
-        if (!string.IsNullOrEmpty(musicTagExtensions.Genre))
+        if (items.Count > 0)
         {
-            MusicInfoKeyValuePairs.Add(new MusicInfoKeyValuePair("流派", musicTagExtensions.Genre));
+            MusicInfoGroups.Add(new MusicInfoGroup("歌词与章节", items));
+        }
+    }
+
+    private void AddAdditionalFieldsGroup()
+    {
+        if (_track?.AdditionalFields is { Count: > 0 })
+        {
+            var items = new AvaloniaList<MusicInfoKeyValuePair>();
+
+            foreach (var field in _track.AdditionalFields)
+            {
+                AddInfo(items, field.Key, field.Value);
+            }
+
+            if (items.Count > 0)
+            {
+                MusicInfoGroups.Add(new MusicInfoGroup("附加字段", items));
+            }
+        }
+    }
+
+    private void AddAudioTechnicalInfoGroup()
+    {
+        var items = new AvaloniaList<MusicInfoKeyValuePair>();
+
+        AddInfo(items, "音频格式", _track?.AudioFormat?.Name ?? "未知");
+        AddInfo(items, "时长", _musicItem.Duration.ToString(@"hh\:mm\:ss"));
+        AddInfo(items, "持续时间 (毫秒)", FormatValue(_track?.DurationMs, "ms"));
+        AddInfo(items, "比特率", FormatValue(_track?.Bitrate, "kbps"));
+        AddInfo(items, "可变比特率", _track?.IsVBR == true ? "是" : "否");
+        AddInfo(items, "采样率", FormatValue(_track?.SampleRate, "Hz"));
+        AddInfo(items, "位深度", FormatValue(_track?.BitDepth, "bit"));
+        AddInfo(items, "声道数", _track?.ChannelsArrangement?.NbChannels.ToString());
+        AddInfo(items, "编解码器族", GetCodecFamilyDescription(_track?.CodecFamily ?? -1));
+
+        if (items.Count > 0)
+        {
+            MusicInfoGroups.Add(new MusicInfoGroup("音频技术信息", items));
+        }
+    }
+
+    private void AddMetadataFormatsGroup()
+    {
+        var items = new AvaloniaList<MusicInfoKeyValuePair>();
+
+        if (_track?.MetadataFormats is { Count: > 0 })
+        {
+            string[] formatNames = _track.MetadataFormats.Select(f => f.Name).ToArray();
+            AddInfo(items, "存在的标签格式", string.Join(", ", formatNames));
         }
 
-        if (musicTagExtensions.Year.HasValue)
+        if (_track?.SupportedMetadataFormats is { Count: > 0 })
         {
-            MusicInfoKeyValuePairs.Add(new MusicInfoKeyValuePair("年份", musicTagExtensions.Year.Value.ToString()));
+            string[] supportedFormatNames = _track.SupportedMetadataFormats.Select(f => f.Name).ToArray();
+            AddInfo(items, "支持的标签格式", string.Join(", ", supportedFormatNames));
         }
 
-        if (!string.IsNullOrEmpty(musicTagExtensions.Copyright))
+        if (items.Count > 0)
         {
-            MusicInfoKeyValuePairs.Add(new MusicInfoKeyValuePair("版权", musicTagExtensions.Copyright));
+            MusicInfoGroups.Add(new MusicInfoGroup("元数据格式", items));
         }
-
-        if (musicTagExtensions.Disc > 0)
-        {
-            MusicInfoKeyValuePairs.Add(new MusicInfoKeyValuePair("光盘编号", musicTagExtensions.Disc.ToString()));
-        }
-
-        if (musicTagExtensions.Track > 0)
-        {
-            MusicInfoKeyValuePairs.Add(new MusicInfoKeyValuePair("音轨编号", musicTagExtensions.Track.ToString()));
-        }
-
-        if (!string.IsNullOrEmpty(musicTagExtensions.OriginalAlbum))
-        {
-            MusicInfoKeyValuePairs.Add(new MusicInfoKeyValuePair("原始专辑", musicTagExtensions.OriginalAlbum));
-        }
-
-        if (!string.IsNullOrEmpty(musicTagExtensions.OriginalArtist))
-        {
-            MusicInfoKeyValuePairs.Add(new MusicInfoKeyValuePair("原始艺术家", musicTagExtensions.OriginalArtist));
-        }
-
-        if (!string.IsNullOrEmpty(musicTagExtensions.AlbumArtist))
-        {
-            MusicInfoKeyValuePairs.Add(new MusicInfoKeyValuePair("专辑艺术家", musicTagExtensions.AlbumArtist));
-        }
-
-        if (!string.IsNullOrEmpty(musicTagExtensions.Publisher))
-        {
-            MusicInfoKeyValuePairs.Add(new MusicInfoKeyValuePair("发行商", musicTagExtensions.Publisher));
-        }
-
-        if (!string.IsNullOrEmpty(musicTagExtensions.Description))
-        {
-            MusicInfoKeyValuePairs.Add(new MusicInfoKeyValuePair("描述", musicTagExtensions.Description));
-        }
-
-        if (!string.IsNullOrEmpty(musicTagExtensions.Language))
-        {
-            MusicInfoKeyValuePairs.Add(new MusicInfoKeyValuePair("语言", musicTagExtensions.Language));
-        }
-
-        if (!string.IsNullOrEmpty(musicTagExtensions.AudioFormat))
-        {
-            MusicInfoKeyValuePairs.Add(new MusicInfoKeyValuePair("音频格式", musicTagExtensions.AudioFormat));
-        }
-
-        if (!string.IsNullOrEmpty(musicTagExtensions.EncoderInfo))
-        {
-            MusicInfoKeyValuePairs.Add(new MusicInfoKeyValuePair("编码器信息", musicTagExtensions.EncoderInfo));
-        }
-
-        return this;
     }
 
     [RelayCommand]
     private async Task CopyText(MusicInfoKeyValuePair keyValuePair)
     {
-        // 使用topLevel进行操作
         var clipboard = App.TopLevel?.Clipboard;
 
         if (clipboard == null)
@@ -125,8 +317,12 @@ public partial class AudioDetailedInfoViewModel(MusicItemModel musicItem, MusicT
             return;
         }
 
-        await clipboard.SetTextAsync(SelectedText ?? $"{keyValuePair.Key} : {keyValuePair.Value}");
+        string textToCopy = SelectedText ?? $"{keyValuePair.Key} : {keyValuePair.Value}";
+        await clipboard.SetTextAsync(textToCopy);
     }
 }
 
 public record struct MusicInfoKeyValuePair(string Key, string Value);
+
+// 添加新的记录类型用于分组
+public record MusicInfoGroup(string Header, AvaloniaList<MusicInfoKeyValuePair> Items);

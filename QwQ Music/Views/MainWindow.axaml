@@ -70,13 +70,27 @@
 
     </Window.Styles>
 
+    <Grid RowDefinitions="40,*">
 
-    <Grid DataContext="{Binding DrawerStatusViewModel}" RowDefinitions="40,*">
+        <ContentPresenter Grid.Row="0" Grid.RowSpan="2">
 
+            <ContentPresenter.Content>
+                <views:MainView />
+            </ContentPresenter.Content>
 
-        <views:MainView Grid.Row="0" Grid.RowSpan="2" />
+            <Interaction.Behaviors>
+
+                <PointerWheelChangedTrigger>
+                    <InvokeCommandAction Command="{Binding DrawerStatusViewModel.PointerWheelChangedCommand}"
+                                         PassEventArgsToCommand="True" />
+                </PointerWheelChangedTrigger>
+
+            </Interaction.Behaviors>
+
+        </ContentPresenter>
 
         <Panel Grid.Row="1"
+               DataContext="{Binding DrawerStatusViewModel}"
                Classes.Hide="{Binding !IsMusicPlayerTrayVisible}"
                Classes.Visible="{Binding IsMusicPlayerTrayVisible}"
                Height="130"
@@ -134,7 +148,7 @@
             </Panel.Transitions>
 
             <Border Margin="20"
-                    Effect="{DynamicResource LightColorDropShadowEffect}"
+                    Effect="{DynamicResource LightColor0DropShadowEffect}"
                     CornerRadius="25">
 
                 <Panel>
@@ -149,7 +163,9 @@
             </Border>
         </Panel>
 
-        <Panel Grid.Row="1" Classes.Hide="{Binding IsMusicPlayerTrayVisible}"
+        <Panel Grid.Row="1" 
+               DataContext="{Binding DrawerStatusViewModel}"
+               Classes.Hide="{Binding IsMusicPlayerTrayVisible}"
                Classes.Visible="{Binding !IsMusicPlayerTrayVisible}"
                IsPointerOver="{Binding IsMusicAlbumCoverPanelPointerOver, Mode=OneWayToSource}"
                VerticalAlignment="Bottom"
@@ -163,7 +179,7 @@
                     Margin="10"
                     CornerRadius="25"
                     RenderTransformOrigin="20%,50%"
-                    Effect="{DynamicResource LightColorDropShadowEffect}"
+                    Effect="{DynamicResource LightColor0DropShadowEffect}"
                     Background="{DynamicResource BorderCardBackground}">
 
                 <Border.Transitions>
@@ -278,7 +294,9 @@
 
         </Panel>
 
-        <Panel Grid.Row="0" Grid.RowSpan="2" Classes.Hide="{Binding !IsMusicPlayerPanelVisible}"
+        <Panel Grid.Row="0" Grid.RowSpan="2" 
+               DataContext="{Binding DrawerStatusViewModel}"
+               Classes.Hide="{Binding !IsMusicPlayerPanelVisible}"
                Classes.Visible="{Binding IsMusicPlayerPanelVisible}"
                Height="{Binding MusicPlayerPanelHeight}"
                Margin="{Binding $parent[Window].OffScreenMargin}"
@@ -326,7 +344,9 @@
 
         </Panel>
 
-        <Panel Grid.Row="1" Classes.Hide="{Binding !IsMusicPlayListVisible}"
+        <Panel Grid.Row="1" 
+               DataContext="{Binding DrawerStatusViewModel}"
+               Classes.Hide="{Binding !IsMusicPlayListVisible}"
                Classes.Normal="{Binding !IsMusicPlayerPanelVisible}"
                Classes.Retract="{Binding IsMusicPlayerPanelVisible}"
                Classes.Visible="{Binding IsMusicPlayListVisible}"
@@ -401,7 +421,7 @@
                 <Border.Styles>
 
                     <Style Selector="Border.NotTransparent">
-                        <Setter Property="Effect" Value="{DynamicResource LightColorDropShadowEffect}" />
+                        <Setter Property="Effect" Value="{DynamicResource LightColor0DropShadowEffect}" />
                         <Setter Property="Background" Value="{DynamicResource BorderCardBackground}" />
                     </Style>
 

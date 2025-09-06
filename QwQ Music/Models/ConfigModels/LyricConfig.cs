@@ -133,6 +133,7 @@ public class LyricConfig : ObservableObject
     public DesktopLyricConfig DesktopLyric { get; set; } = new();
 
     // ReSharper disable once CollectionNeverQueried.Global
+    [JsonIgnore]
     public static Dictionary<HorizontalAlignment, string> TextAlignments { get; } = new()
     {
         [HorizontalAlignment.Left] = "左对齐",

@@ -1,12 +1,11 @@
 using QwQ_Music.Common.Manager;
-using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels.Bases;
 
 namespace QwQ_Music.ViewModels.Pages;
 
 public class SoundEffectConfigViewModel() : NavigationViewModel("音效")
 {
-    public SoundModifierConfig SoundModifierConfig { get; } = ConfigManager.SoundModifierConfig;
+    public SoundModifierManager SoundModifierManager { get; } = SoundModifierManager.Default;
 
     public static MusicPlayerViewModel MusicPlayerViewModel => MusicPlayerViewModel.Default;
 

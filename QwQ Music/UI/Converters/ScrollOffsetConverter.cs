@@ -16,8 +16,7 @@ public class ScrollOffsetConverter : IValueConverter
         return param switch
         {
             "istop" => Math.Abs(offset.Y) < 0.001,
-            "nottop" => Math.Abs(offset.Y) >= 0.001 // 需要更多信息才能实现
-            ,
+            "nottop" => Math.Abs(offset.Y) >= 0.001,
             "isleft" => Math.Abs(offset.X) < 0.001,
             "notright" => Math.Abs(offset.X) >= 0.001,
             _ => Math.Abs(offset.Y) < 0.001,

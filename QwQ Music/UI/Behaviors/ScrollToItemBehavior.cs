@@ -80,10 +80,10 @@ public class ScrollToItemBehavior
 
                             Dispatcher.UIThread.Post(async void () =>
                             {
-                                /*// 确保项目可见 为保证滚动效果，先不使用
-                                listBox.ScrollIntoView(item);*/
                                 try
                                 {
+                                    /*// 确保项目可见 为保证滚动效果，先不使用
+                                    listBox.ScrollIntoView(item);*/
                                     await SmoothScrollToItemCenterAsync(listBox, item, duration, easing, token);
                                 }
                                 catch (Exception)

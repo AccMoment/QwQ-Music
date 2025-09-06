@@ -261,6 +261,7 @@
 
             <Button
                 Classes="Icon"
+                Classes.Full="{Binding MusicPlayerViewModel.Volume,Converter={StaticResource ValueComparisonConverter},ConverterParameter='@VALUE > 0'}"
                 ToolTip.Placement="Top"
                 ToolTip.VerticalOffset="-10">
 
@@ -276,6 +277,25 @@
                 </Button.Resources>
 
                 <Button.Styles>
+
+                    <Style Selector="Button">
+                        <Setter Property="ToolTip.Tip" Value="静音" />
+                        <Setter Property="Foreground" Value="{DynamicResource SemiRed4}" />
+                    </Style>
+
+                    <Style Selector="Button.Full">
+                        <Setter Property="Foreground" Value="{DynamicResource TextBlockDefaultForeground}" />
+                        <Setter Property="ToolTip.Tip">
+                            <Template>
+                                <TextBlock>
+                                    <Run Text="当前音量：" />
+                                    <Run Text="{Binding MusicPlayerViewModel.Volume}" />
+                                    <Run Text="%" />
+                                </TextBlock>
+                            </Template>
+                        </Setter>
+                    </Style>
+
                     <Style Selector="PathIcon.Half">
                         <Setter Property="Data" Value="{StaticResource SemiIconVolume1}" />
                     </Style>
@@ -285,7 +305,7 @@
                     </Style>
 
                     <Style Selector="PathIcon.Empty">
-                        <Setter Property="Data" Value="" />
+                        <Setter Property="Data" Value="{StaticResource SemiIconVolumnSilent}" />
                     </Style>
 
                 </Button.Styles>
@@ -296,7 +316,7 @@
                           Classes.Full="{Binding MusicPlayerViewModel.Volume,Converter={StaticResource ValueComparisonConverter},
                                                                                                   ConverterParameter='@VALUE > 50'}"
                           Classes.Empty="{Binding MusicPlayerViewModel.Volume,Converter={StaticResource ValueComparisonConverter},
-                                                                                                                                 ConverterParameter='@VALUE == 50'}" />
+                                                                                                                                 ConverterParameter='@VALUE == 0'}" />
 
                 <Button.Flyout>
                     <Flyout Placement="Top" ShowMode="TransientWithDismissOnPointerMoveAway">
@@ -355,24 +375,6 @@
                     </Flyout>
                 </Button.Flyout>
 
-                <ToolTip.Tip>
-
-                    <control:SwitchControl
-                        Condition="{Binding MusicPlayerViewModel.Volume,Mode=OneWay}">
-                        <control:SwitchControl.TrueContent>
-                            <TextBlock>
-                                <Run Text="当前音量：" />
-                                <Run Text="{Binding MusicPlayerViewModel.Volume}" />
-                                <Run Text="%" />
-                            </TextBlock>
-                        </control:SwitchControl.TrueContent>
-                        <control:SwitchControl.FalseContent>
-                            <TextBlock Text="静音" />
-                        </control:SwitchControl.FalseContent>
-                    </control:SwitchControl>
-
-                </ToolTip.Tip>
-
                 <Interaction.Behaviors>
 
                     <PointerWheelChangedTrigger>
@@ -405,90 +407,94 @@
 
                             <ScrollViewer Grid.Column="1">
                                 <Interaction.Behaviors>
-                                    <DataTrigger Binding="{Binding #Settings1.IsChecked}" Value="True">
-                                        <ChangeAvaloniaPropertyAction
-                                            TargetProperty="{x:Static ContentControl.ContentProperty}">
-                                            <ChangeAvaloniaPropertyAction.Value>
+                                    <IfElseTrigger Condition="{Binding #Settings1.IsChecked}">
 
-                                                <StackPanel Spacing="10" Margin="5">
+                                        <IfElseTrigger.IfActions>
+                                            <ChangeAvaloniaPropertyAction
+                                                TargetProperty="{x:Static ContentControl.ContentProperty}">
+                                                <ChangeAvaloniaPropertyAction.Value>
 
-                                                    <TextBlock Text="{Binding OffsetName}" />
-                                                    <u:NumericIntUpDown InnerRightContent="ms"
-                                                                        Value="{Binding MusicPlayerViewModel.LyricOffset}" />
+                                                    <StackPanel Spacing="10" Margin="5">
 
-
-                                                    <CheckBox Content="显示翻译"
-                                                              IsChecked="{Binding RolledLyric.ShowTranslation}" />
+                                                        <TextBlock Text="{Binding OffsetName}" />
+                                                        <u:NumericIntUpDown InnerRightContent="ms"
+                                                                            Value="{Binding MusicPlayerViewModel.LyricOffset}" />
 
 
-                                                    <TextBlock Text="对齐方式" VerticalAlignment="Center" />
-                                                    <ComboBox MinWidth="100"
-                                                              DisplayMemberBinding="{Binding Value}"
-                                                              SelectedValueBinding="{Binding Key}"
-                                                              ItemsSource="{x:Static configModels:LyricConfig.TextAlignments}"
-                                                              SelectedValue="{Binding RolledLyric.LyricTextAlignment}" />
+                                                        <CheckBox Content="显示翻译"
+                                                                  IsChecked="{Binding RolledLyric.ShowTranslation}" />
 
-                                                    <TextBlock Text="字体" VerticalAlignment="Center" />
-                                                    <Button Content="{Binding RolledLyric.RolledLyricsFont}"
-                                                            MinWidth="100"
-                                                            HorizontalAlignment="Left"
-                                                            Theme="{StaticResource ComboButton}">
 
-                                                        <Button.Styles>
+                                                        <TextBlock Text="对齐方式" VerticalAlignment="Center" />
+                                                        <ComboBox MinWidth="100"
+                                                                  DisplayMemberBinding="{Binding Value}"
+                                                                  SelectedValueBinding="{Binding Key}"
+                                                                  ItemsSource="{x:Static configModels:LyricConfig.TextAlignments}"
+                                                                  SelectedValue="{Binding RolledLyric.LyricTextAlignment}" />
 
-                                                            <Style Selector="Button:pressed">
-                                                                <Setter Property="RenderTransform"
-                                                                        Value="translateY(0px)" />
-                                                            </Style>
+                                                        <TextBlock Text="字体" VerticalAlignment="Center" />
+                                                        <Button Content="{Binding RolledLyric.RolledLyricsFont}"
+                                                                MinWidth="100"
+                                                                HorizontalAlignment="Left"
+                                                                Theme="{StaticResource ComboButton}">
 
-                                                        </Button.Styles>
+                                                            <Button.Styles>
 
-                                                        <Button.Flyout>
-                                                            <Flyout>
-                                                                <userControls:FontSelector
-                                                                    SelectedFont="{Binding RolledLyric.RolledLyricsFont}" />
-                                                            </Flyout>
-                                                        </Button.Flyout>
-                                                    </Button>
+                                                                <Style Selector="Button:pressed">
+                                                                    <Setter Property="RenderTransform"
+                                                                            Value="translateY(0px)" />
+                                                                </Style>
 
-                                                </StackPanel>
-                                            </ChangeAvaloniaPropertyAction.Value>
-                                        </ChangeAvaloniaPropertyAction>
-                                    </DataTrigger>
+                                                            </Button.Styles>
 
-                                    <DataTrigger Binding="{Binding #Settings2.IsChecked}" Value="True">
-                                        <ChangeAvaloniaPropertyAction
-                                            TargetProperty="{x:Static ContentControl.ContentProperty}">
-                                            <ChangeAvaloniaPropertyAction.Value>
+                                                            <Button.Flyout>
+                                                                <Flyout>
+                                                                    <userControls:FontSelector
+                                                                        SelectedFont="{Binding RolledLyric.RolledLyricsFont}" />
+                                                                </Flyout>
+                                                            </Button.Flyout>
+                                                        </Button>
 
-                                                <StackPanel Spacing="10" Margin="5">
+                                                    </StackPanel>
+                                                </ChangeAvaloniaPropertyAction.Value>
+                                            </ChangeAvaloniaPropertyAction>
+                                        </IfElseTrigger.IfActions>
 
-                                                    <TextBlock Text="主歌词大小" />
-                                                    <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
-                                                                        Value="{Binding RolledLyric.PrimaryFontSize}" />
+                                        <IfElseTrigger.ElseActions>
+                                            <ChangeAvaloniaPropertyAction
+                                                TargetProperty="{x:Static ContentControl.ContentProperty}">
+                                                <ChangeAvaloniaPropertyAction.Value>
 
-                                                    <TextBlock Text="翻译歌词大小" />
-                                                    <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
-                                                                        Value="{Binding RolledLyric.TranslationFontSize}" />
+                                                    <StackPanel Spacing="10" Margin="5">
 
-                                                    <TextBlock Text="歌词行间距" />
-                                                    <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
-                                                                        Value="{Binding RolledLyric.LyricsLineSpacing}" />
+                                                        <TextBlock Text="主歌词大小" />
+                                                        <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
+                                                                            Value="{Binding RolledLyric.PrimaryFontSize}" />
 
-                                                    <TextBlock Text="歌词翻译间距" />
-                                                    <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
-                                                                        Value="{Binding RolledLyric.TranslationSpacing}" />
+                                                        <TextBlock Text="翻译歌词大小" />
+                                                        <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
+                                                                            Value="{Binding RolledLyric.TranslationFontSize}" />
 
-                                                </StackPanel>
+                                                        <TextBlock Text="歌词行间距" />
+                                                        <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
+                                                                            Value="{Binding RolledLyric.LyricsLineSpacing}" />
 
-                                            </ChangeAvaloniaPropertyAction.Value>
-                                        </ChangeAvaloniaPropertyAction>
-                                    </DataTrigger>
+                                                        <TextBlock Text="歌词翻译间距" />
+                                                        <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
+                                                                            Value="{Binding RolledLyric.TranslationSpacing}" />
+
+                                                    </StackPanel>
+
+                                                </ChangeAvaloniaPropertyAction.Value>
+                                            </ChangeAvaloniaPropertyAction>
+                                        </IfElseTrigger.ElseActions>
+
+                                    </IfElseTrigger>
+
                                 </Interaction.Behaviors>
                             </ScrollViewer>
 
                         </Grid>
-
 
                     </Flyout>
                 </Button.Flyout>

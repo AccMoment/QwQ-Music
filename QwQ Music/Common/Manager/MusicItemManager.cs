@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Services.Databases;
+using QwQ_Music.Common.Services.MusicTagExtractors;
 using QwQ_Music.Models;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels.Dialogs;
@@ -64,19 +65,17 @@ public partial class MusicItemManager : ObservableObject
                 }
                 catch (Exception e)
                 {
-                    LoggerService.Error($"歌曲{musicItem.Title}保存到数据库失败！\n{e.Message}\n{e.StackTrace}");
-
-                    NotificationService.Error($"歌曲{musicItem.Title}保存到数据库失败！\n{e.Message}");
+                    LoggerService.Error($"歌曲《{musicItem.Title}》保存到数据库失败！\n{e.Message}\n{e.StackTrace}");
                 }
             }
         });
 
         // 批量添加到UI集合
-        MusicItems.InsertRange(0, successItems);
+        MusicItems.AddRange(successItems);
 
         var failedItems = musicItems.Except(successItems).ToList();
 
-        if (musicItems.Count > 0)
+        if (successItems.Count > 0)
         {
             string existingTitles = string.Join("、", musicItems.Select(items => $"《{items.Title}》")
             );
@@ -87,7 +86,7 @@ public partial class MusicItemManager : ObservableObject
         if (failedItems.Count > 0)
         {
             string failedTitles = string.Join("、", failedItems.Select(item => $"《{item.Title}》"));
-            NotificationService.Error($"删除 {failedTitles} 添加失败了！");
+            NotificationService.Error($"歌曲 {failedTitles} 添加失败了！");
         }
     }
 
@@ -107,6 +106,44 @@ public partial class MusicItemManager : ObservableObject
         }
     }
 
+    public static async Task Update(IList<MusicItemModel> musicItems)
+    {
+        var successItems = new List<MusicItemModel>();
+        
+        await Task.Run(() =>
+        {
+            using var repo = new MusicItemRepository(StaticConfig.DatabasePath);
+
+            foreach (var musicItem in musicItems)
+            {
+                try
+                {
+                    repo.Update(musicItem);
+                    successItems.Add(musicItem);
+                }
+                catch (Exception e)
+                {
+                    LoggerService.Error($"更新歌曲{musicItem.Title}到数据库失败！\n{e.Message}\n{e.StackTrace}");
+                }
+            }
+        });
+        
+        var failedItems = musicItems.Except(successItems).ToList();
+
+        // 显示删除结果通知
+        if (successItems.Count > 0)
+        {
+            string successTitles = string.Join("、", successItems.Select(item => $"《{item.Title}》"));
+            NotificationService.Success($"{successTitles}更新成功了！");
+        }
+
+        if (failedItems.Count > 0)
+        {
+            string failedTitles = string.Join("、", failedItems.Select(item => $"《{item.Title}》"));
+            NotificationService.Error($"更新{failedTitles}失败了！");
+        }
+    }
+    
     public static void Update(string filePath, Dictionary<string, object?> fields)
     {
         using var repo = new MusicItemRepository(StaticConfig.DatabasePath);
@@ -154,6 +191,8 @@ public partial class MusicItemManager : ObservableObject
                 {
                     repo.Delete(musicItem.FilePath);
                     successItems.Add(musicItem);
+
+                    musicItem.CoverImage = null;
                 }
                 catch (Exception e)
                 {
@@ -190,20 +229,12 @@ public partial class MusicItemManager : ObservableObject
         var options = new OverlayDialogOptions
         {
             Title = "详细信息",
-            Buttons = DialogButton.None,
             CanLightDismiss = true,
             Mode = DialogMode.Info,
-            CanDragMove = true,
-            CanResize = false,
         };
 
-        var tagExtensions = await Task.Run(() => MusicExtractor.ExtractExtensionsInfo(musicItem.FilePath));
-
-        await OverlayDialog.ShowModal<AudioDetailedInfo, AudioDetailedInfoViewModel>(
-            new AudioDetailedInfoViewModel(
-                musicItem,
-                tagExtensions
-            ).MoreDetailedInfor(),
+        await OverlayDialog.ShowCustomModal<AudioDetailedInfo, AudioDetailedInfoViewModel, object>(
+            new AudioDetailedInfoViewModel(musicItem, await MusicTagExtractorFactory.GetTrackAsync(musicItem.FilePath)),
             options: options
         );
     }

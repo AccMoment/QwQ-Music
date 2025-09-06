@@ -3,6 +3,7 @@ using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using QwQ_Music.Common.Manager;
 using QwQ_Music.Common.Services;
+using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.Models.Enums;
 
 namespace QwQ_Music.Models;
@@ -48,7 +49,7 @@ public partial class AlbumItemModel(string name, string artist, string? coverFil
             // 启动异步加载任务
             Task.Run(async () =>
             {
-                var bitmap = await MusicExtractor.LoadBitmapFromFileAsync(MusicExtractor.GetMusicCoverFullPath(coverFileName));
+                var bitmap = await MusicExtractor.LoadBitmapFromFileAsync(StaticConfig.GetMusicCoverFullPath(coverFileName));
 
                 if (bitmap != null)
                 {

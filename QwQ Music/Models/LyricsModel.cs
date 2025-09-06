@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using QwQ_Music.Common.Services;
 
 namespace QwQ_Music.Models;
 
@@ -33,18 +35,18 @@ public partial class LyricsModel : ObservableObject
     /// <summary>
     ///     更新歌词数据
     /// </summary>
-    /// <param name="lyricsData">新的歌词数据</param>
-    public void UpdateLyricsData(LyricsData lyricsData)
+    /// <param name="filePath">歌曲路径</param>
+    public async Task UpdateLyricsData(string filePath)
     {
-        LyricsData = lyricsData;
+        LyricsData = await MusicExtractor.ExtractMusicLyricsAsync(filePath);
         _timePoints.Clear();
 
-        if (lyricsData.Lyrics.Count > 0)
+        if (LyricsData.Lyrics.Count > 0)
         {
-            _timePoints.AddRange(lyricsData.Lyrics.Select(l => l.TimePoint).OrderBy(t => t));
-            CurrentLyric = lyricsData.Lyrics[0];
+            _timePoints.AddRange(LyricsData.Lyrics.Select(l => l.TimePoint).OrderBy(t => t));
+            CurrentLyric = LyricsData.Lyrics[0];
             LyricsIndex = 0;
-            NextLyricLine = lyricsData.Lyrics.Count > 1 ? lyricsData.Lyrics[1] : new LyricLine(0, "");
+            NextLyricLine = LyricsData.Lyrics.Count > 1 ? LyricsData.Lyrics[1] : new LyricLine(0, "");
         }
         else
         {

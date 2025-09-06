@@ -8,6 +8,7 @@
         SizeToContent="Height"
         Background="{Binding LyricConfig.LyricBackground,Converter={StaticResource ToBrushConverter}}"
         WindowStartupLocation="Manual"
+        Title="QwQ Music • 桌面歌词"
         x:Class="QwQ_Music.Views.DesktopLyricsWindow"
         x:DataType="viewModel:DesktopLyricsWindowViewModel"
         xmlns="https://github.com/avaloniaui"
@@ -68,14 +69,20 @@
                     Margin="{Binding LyricConfig.LyricMargin}">
 
             <Interaction.Behaviors>
-                <DataTriggerBehavior Binding="{Binding LyricConfig.LyricIsDoubleLine}" Value="True">
-                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static StackPanel.OrientationProperty}"
-                                                  Value="Vertical" />
-                </DataTriggerBehavior>
-                <DataTriggerBehavior Binding="{Binding LyricConfig.LyricIsDoubleLine}" Value="False">
-                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static StackPanel.OrientationProperty}"
-                                                  Value="Horizontal" />
-                </DataTriggerBehavior>
+                
+                <IfElseTrigger Condition="{Binding LyricConfig.LyricIsDoubleLine}">
+                    <IfElseTrigger.IfActions>
+                        <ChangeAvaloniaPropertyAction TargetProperty="{x:Static StackPanel.OrientationProperty}"
+                                                      Value="Vertical" />
+                    </IfElseTrigger.IfActions>
+
+                    <IfElseTrigger.ElseActions>
+                        <ChangeAvaloniaPropertyAction TargetProperty="{x:Static StackPanel.OrientationProperty}"
+                                                      Value="Horizontal" />
+                    </IfElseTrigger.ElseActions>
+
+                </IfElseTrigger>
+
             </Interaction.Behaviors>
 
             <StackPanel.Styles>

@@ -7,7 +7,6 @@
        xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-       xmlns:converters="clr-namespace:QwQ_Music.UI.Converters"
        d:DesignHeight="450"
        d:DesignWidth="800"
        mc:Ignorable="d"
@@ -15,10 +14,6 @@
        x:DataType="pages:AboutPageViewModel"
        x:Class="QwQ_Music.Views.Pages.AboutPage"
        Name="AboutPageContainer">
-
-    <Panel.Resources>
-        <converters:ScrollOffsetConverter x:Key="OffsetToIsAtTopConverter" />
-    </Panel.Resources>
 
     <Panel VerticalAlignment="Top" Margin="10,0" ZIndex="1"
            Classes.Transparent="{Binding #AboutScrollViewer.Offset,
@@ -255,14 +250,13 @@
 
                                 </Border>
 
-                                <Button
-                                    Height="50" Width="50"
-                                    Classes="None"
-                                    ToolTip.Tip="{Binding Speak}"
-                                    Command="{Binding #AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenContributorFromGayhubCommand}"
-                                    CommandParameter="{Binding Name}"
-                                    CornerRadius="30"
-                                    Background="{DynamicResource SemiColorBackground2}">
+                                <Button Height="50" Width="50"
+                                        Classes="None"
+                                        ToolTip.Tip="{Binding Speak}"
+                                        Command="{Binding #AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenContributorFromGayhubCommand}"
+                                        CommandParameter="{Binding Name}"
+                                        CornerRadius="30"
+                                        Background="{DynamicResource SemiColorBackground2}">
 
                                     <Border CornerRadius="30"
                                             ClipToBounds="True">
@@ -310,23 +304,23 @@
                     <DataTemplate DataType="pages:ThankItem">
 
                         <Button Classes="None"
-                                MinWidth="150"
+                                Width="150"
                                 Background="Transparent"
                                 Command="{Binding #AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenContributorFromGayhubCommand}"
                                 CommandParameter="{Binding RepoUrl}">
 
                             <DockPanel HorizontalSpacing="10" VerticalSpacing="5">
 
-                                <Rectangle
-                                    Fill="{x:Static utilities:ColorGenerator.RandomColor}"
-                                    Margin="0,5"
-                                    RadiusX="2" RadiusY="2"
-                                    Width="4" />
+                                <Rectangle Fill="{x:Static utilities:ColorGenerator.RandomColor}"
+                                           Margin="0,5"
+                                           RadiusX="2" RadiusY="2"
+                                           Width="4" />
 
                                 <TextBlock DockPanel.Dock="Top" Text="{Binding Name}" />
 
                                 <control:RunningText
                                     Speed="40"
+                                    Padding="0"
                                     Foreground="{DynamicResource TextBlockTertiaryForeground}"
                                     Text="{Binding Description}" FontWeight="Normal" />
 
@@ -362,22 +356,30 @@
 
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="pages:SpecialThank">
+                        
                         <Button Classes="None"
-                                MinWidth="150"
+                                Width="150"
                                 Background="Transparent"
                                 Command="{Binding #AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenUriCommand}"
                                 CommandParameter="{Binding Uri}">
+                            
                             <DockPanel HorizontalSpacing="10" VerticalSpacing="5">
-                                <Image
-                                    Source="{Binding Logo}"
-                                    Width="40" Height="40" />
+                                
+                                <Image Source="{Binding Logo}"
+                                       Width="40" Height="40" />
+                                
                                 <TextBlock DockPanel.Dock="Top" Text="{Binding Name}" />
+                                
                                 <control:RunningText
                                     Speed="40"
+                                    Padding="0"
                                     Foreground="{DynamicResource TextBlockTertiaryForeground}"
                                     Text="{Binding Description}" FontWeight="Normal" />
+                                
                             </DockPanel>
+                            
                         </Button>
+                        
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
 

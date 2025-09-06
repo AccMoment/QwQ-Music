@@ -13,7 +13,6 @@ using QwQ_Music.Common.Services.Databases;
 using QwQ_Music.Models;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels.Dialogs;
-using QwQ_Music.Views;
 using QwQ_Music.Views.Dialogs;
 using Ursa.Controls;
 
@@ -80,9 +79,6 @@ public partial class MusicListsManager : ObservableObject
         var options = new OverlayDialogOptions
         {
             Title = "新建歌单",
-            Mode = DialogMode.Info,
-            CanDragMove = true,
-            CanResize = false,
         };
 
         var model = await OverlayDialog.ShowCustomModal<CreateMusicList, CreateMusicListViewModel, MusicListModel>(
@@ -94,6 +90,16 @@ public partial class MusicListsManager : ObservableObject
         try
         {
             AddMusicList(model);
+
+            string coverFullPath = StaticConfig.GetMusicListCoverFullPath(model.IdStr);
+
+            if (model.CoverImage == null) 
+                return model;
+
+            if (!await FileOperationService.SaveImageAsync(model.CoverImage, coverFullPath, true))
+            {
+                NotificationService.Error($"保存歌词 {model.Name} 的图标失败啦~");
+            }
 
             return model;
         }
@@ -243,20 +249,20 @@ public partial class MusicListsManager : ObservableObject
                 repo.Delete(musicList.IdStr);
 
                 // 删除封面图片文件
-                if (!string.IsNullOrEmpty(musicList.CoverId))
-                {
-                    string coverFullPath = MusicExtractor.GetMusicListCoverFullPath(musicList.CoverId);
+                if (!musicList.IsCoverExist) 
+                    return;
 
-                    if (File.Exists(coverFullPath))
-                    {
-                        File.Delete(MusicExtractor.GetMusicListCoverFullPath(musicList.CoverId));
-                    }
+                string coverFullPath = StaticConfig.GetMusicListCoverFullPath(musicList.IdStr);
+
+                if (File.Exists(coverFullPath))
+                {
+                    File.Delete(coverFullPath);
                 }
 
                 // 从图片缓存中移除
-                if (!string.IsNullOrEmpty(musicList.CoverId))
+                if (!musicList.IsCoverExist)
                 {
-                    CacheManager.ImageCache.Remove(musicList.CoverId);
+                    CacheManager.ImageCache.Remove(musicList.IdStr);
                 }
             });
 
@@ -286,9 +292,6 @@ public partial class MusicListsManager : ObservableObject
         var options = new OverlayDialogOptions
         {
             Title = "修改名称",
-            Buttons = DialogButton.OKCancel,
-            Mode = DialogMode.Info,
-            CanDragMove = true,
         };
 
         string? result = await OverlayDialog.ShowCustomModal<EditText, EditTextViewModel, string>(new EditTextViewModel(musicList.Name, options.Title, 64), options: options);
@@ -305,13 +308,13 @@ public partial class MusicListsManager : ObservableObject
 
             musicList.Name = result;
 
-            NotificationService.Success($"修改{musicList.Name}的名称成功了");
+            NotificationService.Success($"修改歌单 {musicList.Name}的名称成功了");
         }
         catch (Exception e)
         {
-            await LoggerService.ErrorAsync($"修改 {musicList.Name} 的名称失败了:\n{e.Message}\n{e.StackTrace}");
+            await LoggerService.ErrorAsync($"修改歌单 {musicList.Name} 的名称失败了:\n{e.Message}\n{e.StackTrace}");
 
-            NotificationService.Error($"修改 {musicList.Name} 的名称失败了");
+            NotificationService.Error($"修改歌单 {musicList.Name} 的名称失败了");
         }
     }
 
@@ -321,9 +324,7 @@ public partial class MusicListsManager : ObservableObject
         var options = new OverlayDialogOptions
         {
             Title = "修改描述",
-            Buttons = DialogButton.OKCancel,
             Mode = DialogMode.Info,
-            CanDragMove = true,
         };
 
         string? result = await OverlayDialog.ShowCustomModal<EditText, EditTextViewModel, string>(new EditTextViewModel(musicList.Description, options.Title), options: options);
@@ -340,13 +341,13 @@ public partial class MusicListsManager : ObservableObject
 
             musicList.Name = result;
 
-            NotificationService.Success($"修改{musicList.Name}的名称成功了");
+            NotificationService.Success($"修改歌单 {musicList.Name}的描述成功了");
         }
         catch (Exception e)
         {
-            await LoggerService.ErrorAsync($"修改 {musicList.Name} 的名称失败了:\n{e.Message}\n{e.StackTrace}");
+            await LoggerService.ErrorAsync($"修改歌单 {musicList.Name} 的描述失败了:\n{e.Message}\n{e.StackTrace}");
 
-            NotificationService.Error($"修改 {musicList.Name} 的名称失败了");
+            NotificationService.Error($"修改歌单 {musicList.Name} 的描述失败了");
         }
     }
 
@@ -356,11 +357,9 @@ public partial class MusicListsManager : ObservableObject
         if (App.TopLevel == null)
             return;
 
-        var options = new ShowWindowOptions
+        var options = new OverlayDialogOptions
         {
-            Title = "裁剪图片",
-            IsRestoreButtonVisible = false,
-            IsFullScreenButtonVisible = false,
+            Title = "图片裁剪",
         };
 
         var bitmap = await FileOperationService.OpenImageFile(App.TopLevel);
@@ -368,23 +367,23 @@ public partial class MusicListsManager : ObservableObject
         if (bitmap == null)
             return;
 
-        var newCover = await WindowBox.ShowDialog<ImageCropping, Bitmap>(new ImageCroppingViewModel(bitmap), options, App.TopLevel);
+        var newCover = await OverlayDialog.ShowCustomModal<ImageCropping, ImageCroppingViewModel, Bitmap>(
+            new ImageCroppingViewModel(bitmap), options: options);
 
         if (newCover == null)
             return;
 
         musicList.CoverImage = newCover;
 
-        if (musicList.CoverId == null)
-            return;
+        string coverFullPath = StaticConfig.GetMusicListCoverFullPath(musicList.IdStr);
 
-        if (await FileOperationService.SaveImageAsync(newCover, MusicExtractor.GetMusicListCoverFullPath(musicList.CoverId)))
+        if (await FileOperationService.SaveImageAsync(newCover, coverFullPath,true))
         {
-            NotificationService.Success($"修改歌词 {musicList.Name} 的图标成功啦~");
+            NotificationService.Success($"修改歌单 {musicList.Name} 的图标成功啦~");
         }
         else
         {
-            NotificationService.Error($"修改歌词 {musicList.Name} 的图标失败啦~");
+            NotificationService.Error($"修改歌单 {musicList.Name} 的图标失败啦~");
         }
     }
 }
