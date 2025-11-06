@@ -289,10 +289,12 @@ public class AudioPlay : IAudioPlay
 
         foreach (var soundModifier in SoundModifierManager.Default.SoundModifiers)
         {
-            if (soundModifier.Modifier == null) 
-                continue;
+            soundModifier.Initialize(AudioFormat);
 
-            soundPlayer.AddModifier(soundModifier.Modifier);
+            if (soundModifier.Modifier != null)
+            {
+                soundPlayer.AddModifier(soundModifier.Modifier);
+            }
         }
     }
 

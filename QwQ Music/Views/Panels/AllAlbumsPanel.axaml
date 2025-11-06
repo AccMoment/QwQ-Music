@@ -22,7 +22,11 @@
                  HorizontalAlignment="Left"
                  Text="{Binding SearchText, Mode=TwoWay}"
                  Watermark="搜索专辑"
-                 Width="200" />
+                 Width="200">
+            <TextBox.InnerLeftContent>
+                <PathIcon Data="{StaticResource SemiIconSearchStroked}" Height="14" Width="14" />
+            </TextBox.InnerLeftContent>
+        </TextBox>
 
         <StackPanel Spacing="8" HorizontalAlignment="Right" Orientation="Horizontal">
 

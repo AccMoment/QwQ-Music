@@ -169,6 +169,10 @@ public partial class DesktopLyricConfig : ObservableObject
 
     [ObservableProperty] public partial bool LyricIsDualLang { get; set; }
 
+    public bool DesktopPlayControlIsEnabled { get; set; }
+
+    [ObservableProperty] public partial int DesktopPlayControlTriggerDistance { get; set; } = 10;
+    
     [ObservableProperty] public partial bool LyricIsVertical { get; set; }
 
     [ObservableProperty] public partial string DesktopLyricsFont { get; set; } = AppResources.DEFAULT_FONT_KEY;

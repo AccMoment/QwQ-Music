@@ -20,8 +20,11 @@
              HorizontalAlignment="Left"
              Text="{Binding SearchText, Mode=TwoWay}"
              Watermark="搜索歌单"
-             Width="200" />
-
+             Width="200">
+        <TextBox.InnerLeftContent>
+            <PathIcon Data="{StaticResource SemiIconSearchStroked}" Height="14" Width="14" />
+        </TextBox.InnerLeftContent>
+    </TextBox>
 
     <ScrollViewer Grid.Row="1">
 

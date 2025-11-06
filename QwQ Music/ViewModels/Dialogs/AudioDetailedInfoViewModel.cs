@@ -89,7 +89,7 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase
         AddInfo(items, "文件大小", _musicItem.FileSize ?? "未知");
         AddInfo(items, "添加时间", _musicItem.InsertTime.ToString("yyyy-MM-dd HH:mm:ss"));
         AddInfo(items, "修改时间", _musicItem.ModificationTime.ToString("yyyy-MM-dd HH:mm:ss"));
-        AddInfo(items, "编码格式", _track?.AudioFormat.Name ?? "未知");
+        AddInfo(items, "编码格式", _track?.AudioFormat.ShortName ?? "未知");
 
         if (items.Count > 0)
         {

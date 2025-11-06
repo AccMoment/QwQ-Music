@@ -21,7 +21,7 @@ public static class MusicExtractor
     /// <returns>包含音乐信息的模型。</returns>
     public static async Task<MusicItemModel?> ExtractMusicInfoAsync(string filePath)
     {
-        var track = await  MusicTagExtractorFactory.GetTrackAsync(filePath);
+        var track = await MusicTagExtractorFactory.GetTrackAsync(filePath);
 
         if (track == null)
         {
@@ -45,8 +45,9 @@ public static class MusicExtractor
     ///     如果文件的修改时间发生变动，则重新提取并更新除路径外的所有属性。
     /// </summary>
     /// <param name="musicItem">要更新的音乐项模型。</param>
+    /// <param name="forceRefresh">是否强制刷新，true: 刷新全部，false: 仅刷新修改时间变动的项目</param>
     /// <returns>如果成功更新则返回 true，否则返回 false。</returns>
-    public static async Task<bool> UpdateMusicInfoAsync(MusicItemModel musicItem)
+    public static async Task<bool> UpdateMusicInfoAsync(MusicItemModel musicItem, bool forceRefresh = false)
     {
         // 检查文件是否存在
         if (!File.Exists(musicItem.FilePath))
@@ -59,7 +60,7 @@ public static class MusicExtractor
         var fileInfo = new FileInfo(musicItem.FilePath);
 
         // 如果修改时间没有变动，不需要更新
-        if (fileInfo.LastWriteTimeUtc == musicItem.ModificationTime)
+        if (fileInfo.LastWriteTimeUtc == musicItem.ModificationTime && !forceRefresh)
         {
             return false;
         }
@@ -76,7 +77,7 @@ public static class MusicExtractor
 
         // 更新除 FilePath 外的所有属性
         SetMusicMetadata(musicItem, metadata, fileInfo);
-        
+
         return true;
     }
 
@@ -99,6 +100,7 @@ public static class MusicExtractor
         musicItem.Duration = TimeSpan.FromMilliseconds(track.DurationMs);
         musicItem.EncodingFormat = track.AudioFormat.ShortName;
         musicItem.Comment = track.Comment;
+        musicItem.AudioQualityLevel = AudioQualityDetector.DetermineQualityLevel(track);
 
         try
         {
@@ -268,7 +270,7 @@ public static class MusicExtractor
     }
 
     /// <summary>
-    /// 提取音频文件或同名.lrc文件中歌词
+    ///     提取音频文件或同名.lrc文件中歌词
     /// </summary>
     /// <param name="filePath">音频文件路径</param>
     /// <returns>歌词数据</returns>
@@ -298,7 +300,7 @@ public static class MusicExtractor
                     translation = null;
 
                 // 方案二：尝试分隔符
-                string[] split = phrases[0].Text.Split(["//", "|", "\n"," "], StringSplitOptions.RemoveEmptyEntries);
+                string[] split = phrases[0].Text.Split(["//", "|", "\n", " "], StringSplitOptions.RemoveEmptyEntries);
 
                 if (split.Length == 2)
                 {

@@ -20,42 +20,36 @@
     <Slider
         Maximum="1.0"
         Minimum="0.0"
-        Name="ReverbSetter1"
         Value="{Binding Wet}" />
 
     <TextBlock Text="{Binding Mix, StringFormat='干湿混合比例: {0:F3} '}" />
     <Slider
         Maximum="1"
         Minimum="0"
-        Name="ReverbSetter6"
         Value="{Binding Mix}" />
 
     <TextBlock Text="{Binding RoomSize, StringFormat='房间大小 : {0:F3}'}" />
     <Slider
         Maximum="1"
         Minimum="0"
-        Name="ReverbSetter2"
         Value="{Binding RoomSize}" />
 
     <TextBlock Text="{Binding Damp, StringFormat='阻尼 : {0:F3}'}" />
     <Slider
         Maximum="1"
         Minimum="0"
-        Name="ReverbSetter3"
         Value="{Binding Damp}" />
 
     <TextBlock Text="{Binding Width, StringFormat='立体声宽度 : {0:F3}'}" />
     <Slider
         Maximum="1"
         Minimum="0"
-        Name="ReverbSetter4"
         Value="{Binding Width}" />
 
     <TextBlock Text="{Binding PreDelay, StringFormat='预延迟: {0:F0} ms'}" />
     <Slider
         Maximum="100"
         Minimum="0"
-        Name="ReverbSetter5"
         Value="{Binding PreDelay}" />
 
 </StackPanel>

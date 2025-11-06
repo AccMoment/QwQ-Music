@@ -1,4 +1,5 @@
 using SoundFlow.Abstracts;
+using SoundFlow.Structs;
 
 namespace QwQ_Music.Common.Interfaces;
 
@@ -10,13 +11,13 @@ public interface ISoundModifierModel
 
     public bool Enabled { get; set; }
 
+    public void Initialize(AudioFormat modifier);
+    
     public void Revoke();
 }
 
-public interface ISoundModifierModel<TModifier> : ISoundModifierModel
+public interface ISoundModifierModel<out TModifier> : ISoundModifierModel
     where TModifier : SoundModifier
 {
     public new TModifier? Modifier { get; }
-
-    ISoundModifierModel<TModifier> Initialize(TModifier modifier);
 }

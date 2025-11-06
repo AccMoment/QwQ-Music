@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
-using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Helper;
@@ -14,6 +13,7 @@ namespace QwQ_Music.ViewModels.Pages;
 
 public partial class AboutPageViewModel : ViewModelBase
 {
+    /*
     private LoadingState? _coverStatus;
 
     public Bitmap BackgroundImage
@@ -21,35 +21,32 @@ public partial class AboutPageViewModel : ViewModelBase
         get
         {
             // 如果正在加载中，返回默认封面
-            if (_coverStatus is LoadingState.Loading or LoadingState.NotExist)
+            if (_coverStatus == LoadingState.Loading)
                 return CacheManager.Default;
 
             // 尝试从缓存获取图片
-            if (CacheManager.ImageCache.TryGetValue("关于:背景", out var image))
+            if (CacheManager.ImageCache.TryGetValue("关于:背景", out var image)
+             && image != null)
             {
-                _coverStatus = LoadingState.Loaded;
-
-                return image ?? CacheManager.Default;
+                return image;
             }
 
-            Task.Run(async () =>
-            {
-                var bitmap = await ImageHelper.LoadFromWeb(new Uri("https://www.loliapi.com/acg/"));
+            _coverStatus = LoadingState.Loading;
 
-                if (bitmap != null)
-                {
-                    CacheManager.ImageCache["关于:背景"] = bitmap;
-                    OnPropertyChanged();
-                }
-                else
-                {
-                    _coverStatus = LoadingState.NotExist;
-                }
+            Task.Run(() =>
+            {
+                var bitmap = CacheManager.GetBuiltInImage("蓝发猫猫.webp");
+
+                CacheManager.ImageCache["关于:背景"] = bitmap;
+                _coverStatus = LoadingState.Loaded;
+
+                OnPropertyChanged();
             });
 
             return CacheManager.Default;
         }
     }
+    */
 
     public ContributorItem[] Contributors { get; } = [new("Mioter", "我感谢我自己"), new("metaone01"), new("AccMoment")];
 
@@ -87,12 +84,6 @@ public partial class AboutPageViewModel : ViewModelBase
             "好用的Avalonia控件库"
         ),
         new(
-            "LoliAPI",
-            "https://cdn.iloli.love/img/liico.webp",
-            "https://www.loliapi.com/",
-            "这里是LoliAPI,提供免费api服务的站点之一"
-        ),
-        new(
             ".NET",
             "https://github.com/dotnet.png",
             "https://dotnet.microsoft.com/",
@@ -109,6 +100,18 @@ public partial class AboutPageViewModel : ViewModelBase
             "https://resources.jetbrains.com.cn/storage/products/company/brand/logos/Rider_icon.png",
             "https://www.jetbrains.com/zh-cn/rider/",
             "全球最受喜爱的 .NET 和游戏开发 IDE"
+        ),
+        new(
+            "沙丢sado",
+            "https://i0.hdslb.com/bfs/face/6990461e04e9c3acdd7798e575f2097bea747864.jpg@128w_128h_1c_1s.webp",
+            "https://space.bilibili.com/3546706807360209",
+            "提供了此页的背景图~"
+        ),
+        new(
+            "沙雕群友",
+            "http://p.qlogo.cn/gh/397510870/397510870/100/",
+            "https://qm.qq.com/q/kRktVpnTIA",
+            "397510870"
         ),
     ];
 
@@ -151,20 +154,6 @@ public partial class AboutPageViewModel : ViewModelBase
 
         NotificationService.Success($"版本号“{VersionText}”复制成功！");
     }
-
-    [RelayCommand]
-    private async Task SaveBackgroundImage()
-    {
-        if (App.TopLevel == null)
-        {
-            return;
-        }
-
-        string? path = await FileOperationService.GetSavePathAsync(App.TopLevel, "保存背景图片", [FilePickerFileTypes.ImagePng], $"{Guid.NewGuid()}.png");
-
-        if (path != null)
-            await FileOperationService.SaveImageAsync(BackgroundImage, path);
-    }
 }
 
 public class ContributorItem(string name, object? speak = null) : ObservableObject
@@ -181,12 +170,14 @@ public class ContributorItem(string name, object? speak = null) : ObservableObje
                 return CacheManager.Default;
 
             // 尝试从缓存获取图片
-            if (CacheManager.ImageCache.TryGetValue($"贡献者:{Name}", out var image))
+            if (CacheManager.ImageCache.TryGetValue($"贡献者:{Name}", out var image)
+             && image != null)
             {
                 _coverStatus = LoadingState.Loaded;
-
-                return image ?? CacheManager.Default;
+                return image;
             }
+
+            _coverStatus = LoadingState.Loading;
 
             Task.Run(async () =>
             {
@@ -197,6 +188,8 @@ public class ContributorItem(string name, object? speak = null) : ObservableObje
                 if (bitmap != null)
                 {
                     CacheManager.ImageCache[$"贡献者:{Name}"] = bitmap;
+                    _coverStatus = LoadingState.Loaded;
+
                     OnPropertyChanged();
                 }
                 else
@@ -212,7 +205,7 @@ public class ContributorItem(string name, object? speak = null) : ObservableObje
     public object Speak { get; set; } = speak ?? "TA没有什么想说的~";
 }
 
-public class SpecialThank(string name, string hpUri, string uri, string description) : ObservableObject
+public class SpecialThank(string name, string logoUri, string uri, string description) : ObservableObject
 {
     private LoadingState? _coverStatus;
 
@@ -228,21 +221,24 @@ public class SpecialThank(string name, string hpUri, string uri, string descript
                 return CacheManager.Default;
 
             // 尝试从缓存获取图片
-            if (CacheManager.ImageCache.TryGetValue($"鸣谢:{Name}", out var image))
+            if (CacheManager.ImageCache.TryGetValue($"鸣谢:{Name}", out var image)
+             && image != null)
             {
                 _coverStatus = LoadingState.Loaded;
-
-                return image ?? CacheManager.Default;
+                return image;
             }
+
+            _coverStatus = LoadingState.Loading;
 
             Task.Run(async () =>
             {
-                // 压缩图片到1MB以内
-                var bitmap = await ImageHelper.LoadFromWebAndDecodeToWidth(new Uri($"{hpUri}"));
+                var bitmap = await ImageHelper.LoadFromWebAndDecodeToWidth(new Uri($"{logoUri}"));
 
                 if (bitmap != null)
                 {
                     CacheManager.ImageCache[$"鸣谢:{Name}"] = bitmap;
+                    _coverStatus = LoadingState.Loaded;
+                    
                     OnPropertyChanged();
                 }
                 else

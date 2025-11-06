@@ -27,7 +27,7 @@ public interface IMusicPlayer
     public float Speed { get; set; }
 
     /// <summary>
-    ///     获取播放位置（秒）
+    ///     获取和设置播放位置（秒）
     /// </summary>
     public double Position { get; set; }
 
@@ -40,12 +40,6 @@ public interface IMusicPlayer
     ///     切换静音状态
     /// </summary>
     public void ToggleMute();
-
-    /// <summary>
-    ///     调整播放位置
-    /// </summary>
-    /// <param name="position">播放位置</param>
-    public void Seek(double position);
 
     /// <summary>
     ///     下一首

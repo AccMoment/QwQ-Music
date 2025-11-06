@@ -17,6 +17,7 @@ public partial class MainWindow : Window
     private bool _isClosing;
     private bool _isOpenClosingDialog;
     private bool _anExceptionMode;
+    private object? _lastContent;
 
     public MainWindow()
     {
@@ -46,10 +47,21 @@ public partial class MainWindow : Window
     {
         _anExceptionMode = true;
 
+        _lastContent = GetValue(ContentProperty);
+
         SetValue(ContentProperty, new FatalExceptionView
         {
             DataContext = fatalExceptionViewModel,
         });
+    }
+
+    public void BackMainContent()
+    {
+        if (_lastContent == null) 
+            return;
+
+        SetValue(ContentProperty, _lastContent);
+        _lastContent = null;
     }
 
     protected override async void OnClosing(WindowClosingEventArgs e)

@@ -62,6 +62,15 @@
             <u:IconButton.Icon>
                 <PathIcon Height="24" Width="24" Data="{StaticResource Refresh}" />
             </u:IconButton.Icon>
+            <u:IconButton.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="强制刷新" Command="{Binding ForceRefreshMusicInfoCommand}" >
+                        <MenuItem.Icon>
+                            <PathIcon Data="{StaticResource SemiIconRefresh}" Margin="2" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </ContextMenu>
+            </u:IconButton.ContextMenu>
         </u:IconButton>
 
         <u:IconButton Icon="{StaticResource SemiIconMore}" ToolTip.Tip="更多">
@@ -288,13 +297,17 @@
 
                             </userControls:MusicAlbumButton>
 
-                            <StackPanel Spacing="5" VerticalAlignment="Center">
-                                <TextBlock FontWeight="Bold" Text="{Binding Title}" />
-                                <TextBlock
-                                    Classes="Tertiary"
-                                    FontSize="12"
-                                    Text="{Binding Artists}" />
-                            </StackPanel>
+                            <DockPanel HorizontalSpacing="5" VerticalSpacing="5" VerticalAlignment="Center">
+                                <TextBlock FontWeight="Bold" Text="{Binding Title}" DockPanel.Dock="Top" />
+                                <Image DockPanel.Dock="Left" 
+                                       Height="12"
+                                       Source="{Binding AudioQualityLevel,
+                                       Converter={StaticResource AudioQualityLevelLogoConverter}}" />
+                                <TextBlock DockPanel.Dock="Right"
+                                           Classes="Tertiary"
+                                           FontSize="12"
+                                           Text="{Binding Artists}" />
+                            </DockPanel>
 
                         </StackPanel>
                     </DataTemplate>

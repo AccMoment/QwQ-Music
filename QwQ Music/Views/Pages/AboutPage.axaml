@@ -33,10 +33,11 @@
                     Orientation="Horizontal" Spacing="8">
 
             <u:IconButton Theme="{StaticResource BorderlessIconButton}"
-                          Command="{Binding SaveBackgroundImageCommand}"
+                          Command="{Binding OpenUriCommand}"
+                          CommandParameter="https://www.bilibili.com/video/BV1mnhyzvEmp/"
                           CornerRadius="8"
-                          ToolTip.Tip="保存此背景图"
-                          Icon="{StaticResource SemiIconAlignBottom}" />
+                          ToolTip.Tip="图片来源与授权信息"
+                          Icon="{StaticResource SemiIconPaperclip}" />
 
             <u:IconButton Theme="{StaticResource BorderlessIconButton}"
                           Command="{Binding OpenContributorFromGayhubCommand}"
@@ -79,7 +80,7 @@
             <Panel Background="Aquamarine">
 
                 <Image Width="{Binding #StackedLayer.Bounds.Width}" Height="{Binding #StackedLayer.Bounds.Height}"
-                       Stretch="UniformToFill" Source="{Binding BackgroundImage}" />
+                       Stretch="UniformToFill" Source="resm:QwQ_Music.Assets.EmbeddedRes.Images.Cat.webp" />
 
                 <Panel Name="StackedLayer" Background="{DynamicResource SemiColorBackground0}" Opacity="0.2" />
 
@@ -356,30 +357,30 @@
 
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="pages:SpecialThank">
-                        
+
                         <Button Classes="None"
                                 Width="150"
                                 Background="Transparent"
                                 Command="{Binding #AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenUriCommand}"
                                 CommandParameter="{Binding Uri}">
-                            
+
                             <DockPanel HorizontalSpacing="10" VerticalSpacing="5">
-                                
+
                                 <Image Source="{Binding Logo}"
                                        Width="40" Height="40" />
-                                
+
                                 <TextBlock DockPanel.Dock="Top" Text="{Binding Name}" />
-                                
+
                                 <control:RunningText
                                     Speed="40"
                                     Padding="0"
                                     Foreground="{DynamicResource TextBlockTertiaryForeground}"
                                     Text="{Binding Description}" FontWeight="Normal" />
-                                
+
                             </DockPanel>
-                            
+
                         </Button>
-                        
+
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
 

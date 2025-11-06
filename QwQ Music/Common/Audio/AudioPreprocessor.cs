@@ -35,7 +35,7 @@ public class AudioPreprocessor(AudioPlay audioPlay)
     {
         var track = await MusicTagExtractorFactory.GetTrackAsync(model.FilePath);
 
-        audioPlay.AudioFormat = track == null
+        var format = track == null
             ? AudioFormat.DvdHq
             : new AudioFormat
             {
@@ -43,6 +43,11 @@ public class AudioPreprocessor(AudioPlay audioPlay)
                 Channels = track.ChannelsArrangement.NbChannels,
                 Format = SampleFormat.F32,
             };
+
+        if (audioPlay.AudioFormat == format)
+            return;
+
+        audioPlay.AudioFormat = format;
     }
 
     private async Task InitializeNcmAudioTrackAsync(MusicItemModel musicItem)

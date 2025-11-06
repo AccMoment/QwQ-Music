@@ -1,38 +1,50 @@
-<UserControl
-    d:DesignHeight="450"
-    d:DesignWidth="800"
-    mc:Ignorable="d"
-    x:Class="QwQ_Music.Views.Pages.SoundEffectConfigPage"
-    x:DataType="pages:SoundEffectConfigViewModel"
-    xmlns="https://github.com/avaloniaui"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:pages="clr-namespace:QwQ_Music.ViewModels.Pages"
-    xmlns:u="https://irihi.tech/ursa">
+<Grid RowDefinitions="Auto,*"
+      ColumnDefinitions="Auto,*" 
+      ColumnSpacing="10"
+      Margin="0,10"
+      d:DesignHeight="450"
+      d:DesignWidth="800"
+      mc:Ignorable="d"
+      x:Class="QwQ_Music.Views.Pages.SoundEffectConfigPage"
+      x:DataType="pages:SoundEffectConfigViewModel"
+      xmlns="https://github.com/avaloniaui"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:pages="clr-namespace:QwQ_Music.ViewModels.Pages"
+      xmlns:u="https://irihi.tech/ursa"
+      xmlns:soundEffectModels="clr-namespace:QwQ_Music.Models.SoundEffectModels"
+      xmlns:soundEffects="clr-namespace:QwQ_Music.Views.SoundEffects">
 
-    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+    <u:IconButton Icon="{StaticResource SemiIconEditStroked}"
+                  Content="管理音效"
+                  FontWeight="Bold"
+                  Margin="0,5"
+                  Theme="{StaticResource OutlineIconButton}"
+                  CornerRadius="10"
+                  Command="{Binding OpenSoundEffectManagerPanelCommand}" />
 
-        <u:SelectionList Name="SoundEffSelectionList" Margin="0,5"
-                         ItemsSource="{Binding SoundModifierManager.SoundModifiers}">
+    <u:SelectionList Grid.Row="1" Grid.Column="0" Name="SoundEffSelectionList" Margin="0,5"
+                     ItemsSource="{Binding SoundModifierManager.SoundModifiers}">
 
-            <u:SelectionList.Styles>
+        <u:SelectionList.Styles>
 
-                <Style Selector="u|SelectionListItem">
-                    <Setter Property="Padding" Value="15" />
+            <Style Selector="u|SelectionListItem">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="Padding" Value="15" />
+            </Style>
+
+            <Style Selector="u|SelectionList CheckBox">
+                <Setter Property="CornerRadius" Value="10" />
+                <Style Selector="^:checked /template/ Border#NormalRectangle">
+                    <Setter Property="Background" Value="{DynamicResource SemiBlue4}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource SemiBlue4}" />
                 </Style>
+            </Style>
 
-                <Style Selector="u|SelectionList CheckBox">
-                    <Setter Property="CornerRadius" Value="10" />
-                    <Style Selector="^:checked /template/ Border#NormalRectangle">
-                        <Setter Property="Background" Value="{DynamicResource SemiBlue4}"/>
-                        <Setter Property="BorderBrush" Value="{DynamicResource SemiBlue4}"/>
-                    </Style>
-                </Style>
+        </u:SelectionList.Styles>
 
-            </u:SelectionList.Styles>
-
-            <!--<u:SelectionList.Indicator>
+        <!--<u:SelectionList.Indicator>
                 <PathIcon
                     Data="{StaticResource RoundedTriangle}"
                     Foreground="{DynamicResource SemiBlue4}"
@@ -45,556 +57,52 @@
                 </PathIcon>
             </u:SelectionList.Indicator>-->
 
-            <u:SelectionList.ItemTemplate>
-                <DataTemplate>
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                        <TextBlock Text="{Binding Name}" FontSize="15" />
-                        <CheckBox Grid.Column="1" 
-                                  IsChecked="{Binding Enabled,Mode=TwoWay}" />
-                    </Grid>
+        <u:SelectionList.ItemTemplate>
+            <DataTemplate>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <TextBlock Text="{Binding Name}" FontSize="15" />
+                    <CheckBox Grid.Column="1"
+                              IsChecked="{Binding Enabled,Mode=TwoWay}" />
+                </Grid>
+            </DataTemplate>
+
+        </u:SelectionList.ItemTemplate>
+
+    </u:SelectionList>
+
+    <ScrollViewer Grid.Row="0" Grid.RowSpan="2" Grid.Column="1">
+
+        <Carousel Margin="10,0" ItemsSource="{Binding SoundModifierManager.SoundModifiers}"
+                  SelectedIndex="{Binding #SoundEffSelectionList.SelectedIndex}">
+
+            <Carousel.DataTemplates>
+
+                <DataTemplate DataType="soundEffectModels:AlgorithmicReverbModel">
+                    <soundEffects:AlgorithmicReverb />
                 </DataTemplate>
 
-            </u:SelectionList.ItemTemplate>
-
-        </u:SelectionList>
-
-        <ScrollViewer Grid.Column="1" Margin="0,10">
-
-            <Carousel Margin="10,0" ItemsSource="{Binding SoundModifierManager.ConfigPanels}"
-                      SelectedIndex="{Binding #SoundEffSelectionList.SelectedIndex}" />
-
-        </ScrollViewer>
-
-        <!--
-        <ScrollViewer Grid.Column="1">
-
-            <control:IndexControl Index="{Binding NavigationIndex}" Margin="10">
-
-                <control:IndexControl.PageTransition>
-                    <CompositePageTransition>
-                        <CrossFade Duration="0:0:0.5" />
-                        <PageSlide
-                            Duration="0:0:0.3"
-                            Orientation="Vertical"
-                            SlideInEasing="QuadraticEaseIn"
-                            SlideOutEasing="QuadraticEaseOut" />
-                    </CompositePageTransition>
-                </control:IndexControl.PageTransition>
-
-                <control:IndexControl.Styles>
-                    <Style Selector="control|IndexControl> StackPanel">
-                        <Setter Property="Spacing" Value="10" />
-                    </Style>
-                </control:IndexControl.Styles>
-
-                <StackPanel DataContext="{Binding AudioModifierConfig.StereoEnhancementModifier}">
-
-                    <TextBlock FontWeight="Black" Text="效果增强" />
-
-                    <TextBlock FontSize="12" Text="{Binding #StereoEnhancementSetter1.Value, StringFormat='增强因子 : {0:F3}'}" />
-                    <Slider
-                        Maximum="3.0"
-                        Minimum="0.5"
-                        Name="StereoEnhancementSetter1"
-                        Value="{Binding EnhancementFactor}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #StereoEnhancementSetter2.Value, StringFormat='立体宽度 : {0:F3}'}" />
-                    <Slider
-                        Maximum="2.0"
-                        Minimum="0.0"
-                        Name="StereoEnhancementSetter2"
-                        Value="{Binding StereoWidth}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #StereoEnhancementSetter3.Value, StringFormat='高频增强 : {0:F3}'}" />
-                    <Slider
-                        Maximum="2.0"
-                        Minimum="0.5"
-                        Name="StereoEnhancementSetter3"
-                        Value="{Binding HighFrequencyBoost}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #StereoEnhancementSetter4.Value, StringFormat='动态压缩 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1.0"
-                        Minimum="0.0"
-                        Name="StereoEnhancementSetter4"
-                        Value="{Binding DynamicRangeCompression}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #StereoEnhancementSetter5.Value, StringFormat='交叉反馈量 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="StereoEnhancementSetter5"
-                        Value="{Binding CrossfeedAmount}" />
-
-                    <CheckBox
-                        Content="混合低频信号"
-                        FontSize="12"
-                        FontWeight="Black"
-                        IsChecked="{Binding BassMixing}" />
-
-                </StackPanel>
-
-                <StackPanel DataContext="{Binding AudioModifierConfig.SurroundSoundModifier}">
-
-                    <TextBlock FontSize="12" Text="{Binding #SurroundSoundSetter1.Value, StringFormat='全景声宽度 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="SurroundSoundSetter1"
-                        Value="{Binding SurroundWidth}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #SurroundSoundSetter2.Value, StringFormat='全景声深度 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="SurroundSoundSetter2"
-                        Value="{Binding SurroundDepth}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #SurroundSoundSetter3.Value, StringFormat='中央声道电平 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="SurroundSoundSetter3"
-                        Value="{Binding CenterLevel}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #SurroundSoundSetter5.Value, StringFormat='交叉反馈量 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="SurroundSoundSetter5"
-                        Value="{Binding CrossfeedAmount}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #SurroundSoundSetter4.Value, StringFormat='环绕声道电平 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="SurroundSoundSetter4"
-                        Value="{Binding SurroundLevel}" />
-
-                </StackPanel>
-
-                <Panel
-                    Height="500"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Width="500">
-
-                    <StackPanel
-                        Classes.Transparent="{Binding !#SpeakerBorder.IsPointerOver}"
-                        HorizontalAlignment="Center"
-                        Margin="30"
-                        Spacing="5"
-                        VerticalAlignment="Bottom">
-
-                        <StackPanel.Transitions>
-                            <Transitions>
-                                <DoubleTransition Duration="0:0:0.5" Property="Opacity" />
-                            </Transitions>
-                        </StackPanel.Transitions>
-
-                        <StackPanel.Styles>
-                            <Style Selector="StackPanel.Transparent">
-                                <Setter Property="Opacity" Value="0" />
-                            </Style>
-                        </StackPanel.Styles>
-
-                        <TextBlock
-                            Classes="Tertiary"
-                            FontSize="12"
-                            Text="{Binding SpatialAngle, StringFormat=' 当前角度 : {0:F3} '}" />
-                        <TextBlock
-                            Classes="Tertiary"
-                            FontSize="12"
-                            Text="{Binding SpatialDistance, StringFormat=' 当前距离 : {0:F3} '}" />
-                    </StackPanel>
-
-                    <controls:DraggableContainer
-                        BorderBrush="{DynamicResource BorderCardBorderBrush}"
-                        BorderThickness="1"
-                        CurrentAngle="{Binding SpatialAngle}"
-                        CurrentDistance="{Binding SpatialDistance}"
-                        CornerRadius="20">
-
-                        <Image
-                            Height="60"
-                            Source="{StaticResource CatsEars}"
-                            Width="60"
-                            controls:DraggableContainer.IsDraggable="False" />
-
-                        <Border
-                            Background="Black"
-                            BorderBrush="White"
-                            BorderThickness="2"
-                            BoxShadow="0 0 10 0 DarkGray"
-                            Name="SpeakerBorder"
-                            behaviors:DynamicCornerBehavior.IsEnabled="True">
-
-                            <Border
-                                ClipToBounds="True"
-                                IsHitTestVisible="False"
-                                Margin="3"
-                                behaviors:DynamicCornerBehavior.IsEnabled="True">
-
-                                <Image
-                                    Classes.AlbumCoverRotate="{Binding MusicPlayerViewModel.IsPlaying}"
-                                    Height="30"
-                                    RenderOptions.BitmapBlendingMode="Source"
-                                    Source="{Binding MusicPlayerViewModel.CurrentMusicItem.CoverImage}"
-                                    Width="30" />
-                            </Border>
-
-                        </Border>
-
-                    </controls:DraggableContainer>
-
-                </Panel>
-
-                <StackPanel DataContext="{Binding AudioModifierConfig.RotatingModifier}">
-
-                    <StackPanel Orientation="Horizontal" Spacing="5">
-
-                        <TextBlock
-                            FontSize="12"
-                            FontWeight="Black"
-                            Text="旋转方向" />
-
-                        <CheckBox
-                            FontSize="12"
-                            IsChecked="{Binding IsClockwise}"
-                            Name="RotationSetter1"
-                            VerticalAlignment="Center">
-                            <control:SwitchControl Condition="{Binding #RotationSetter1.IsChecked}">
-                                <control:SwitchControl.TrueContent>顺时针</control:SwitchControl.TrueContent>
-                                <control:SwitchControl.FalseContent>逆时针</control:SwitchControl.FalseContent>
-                            </control:SwitchControl>
-                        </CheckBox>
-
-                    </StackPanel>
-
-                    <u:Divider />
-
-                    <TextBlock FontSize="12" Text="{Binding #RotationSetter2.Value, StringFormat='速度 : {0:F3} 圈/秒'}" />
-                    <Slider
-                        Maximum="1.0"
-                        Minimum="0.0"
-                        Name="RotationSetter2"
-                        Value="{Binding RotationSpeed}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #RotationSetter3.Value, StringFormat='半径 : {0:F3}'}" />
-                    <Slider
-                        Maximum="100"
-                        Minimum="0.0"
-                        Name="RotationSetter3"
-                        Value="{Binding Radius}" />
-
-                </StackPanel>
-
-                <StackPanel DataContext="{Binding AudioModifierConfig.ReverbModifier}">
-
-                    <TextBlock FontSize="12" Text="{Binding #ReverbSetter1.Value, StringFormat='湿信号 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1.0"
-                        Minimum="0.0"
-                        Name="ReverbSetter1"
-                        Value="{Binding Wet}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #ReverbSetter6.Value, StringFormat='干湿混合比例: {0:F3} '}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="ReverbSetter6"
-                        Value="{Binding Mix}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #ReverbSetter2.Value, StringFormat='房间大小 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="ReverbSetter2"
-                        Value="{Binding RoomSize}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #ReverbSetter3.Value, StringFormat='阻尼 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="ReverbSetter3"
-                        Value="{Binding Damp}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #ReverbSetter4.Value, StringFormat='立体声宽度 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="ReverbSetter4"
-                        Value="{Binding Width}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #ReverbSetter5.Value, StringFormat='预延迟: {0:F0} ms'}" />
-                    <Slider
-                        Maximum="100"
-                        Minimum="0"
-                        Name="ReverbSetter5"
-                        Value="{Binding PreDelay}" />
-
-                </StackPanel>
-
-                <StackPanel DataContext="{Binding AudioModifierConfig.DelayModifier}">
-
-                    <u:Divider Content="{Binding #DelaySetter4.Value, StringFormat='延迟时间 : {0} 毫秒'}" FontSize="12" />
-                    <u:NumericIntUpDown
-                        InnerRightContent="ms"
-                        Maximum="60000"
-                        Minimum="0"
-                        Name="DelaySetter4"
-                        Step="200"
-                        Value="{Binding DelayTimeMs}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #DelaySetter1.Value, StringFormat='截至频率 : {0:F3} '}" />
-                    <Slider
-                        Maximum="5000"
-                        Minimum="0"
-                        Name="DelaySetter1"
-                        Value="{Binding Cutoff}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #DelaySetter2.Value, StringFormat='干湿比 : {0:F3} '}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="DelaySetter2"
-                        Value="{Binding WetMix}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #DelaySetter3.Value, StringFormat='反馈率 : {0:F3} '}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="DelaySetter3"
-                        Value="{Binding Feedback}" />
-
-                </StackPanel>
-
-                <StackPanel DataContext="{Binding AudioModifierConfig.DistortionModifier}">
-
-                    <TextBlock FontSize="12" Text="{Binding #DistortionSetter1.Value, StringFormat='失真量 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="DistortionSetter1"
-                        Value="{Binding Amount}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #DistortionSetter2.Value, StringFormat='音色 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="DistortionSetter2"
-                        Value="{Binding Tone}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #DistortionSetter3.Value, StringFormat='混音比例 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="DistortionSetter3"
-                        Value="{Binding Mix}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #DistortionSetter4.Value, StringFormat='输出增益 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="DistortionSetter4"
-                        Value="{Binding OutputGain}" />
-
-                </StackPanel>
-
-                <StackPanel>
-
-                    <u:Divider
-                        Content="波形"
-                        FontSize="12"
-                        FontWeight="Black" />
-                    <ComboBox
-                        ItemsSource="{Binding AudioModifierConfig.TremoloWaveforms}"
-                        MinWidth="150"
-                        SelectedItem="{Binding AudioModifierConfig.TremoloModifier.Waveform}" />
-                    <u:Divider
-                        Content="其他"
-                        FontSize="12"
-                        FontWeight="Black" />
-
-                    <TextBlock FontSize="12" Text="{Binding #TremoloSetter1.Value, StringFormat='速率 : {0:F3} Hz'}" />
-                    <Slider
-                        Maximum="20"
-                        Minimum="0.1"
-                        Name="TremoloSetter1"
-                        Value="{Binding AudioModifierConfig.TremoloModifier.Rate}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #TremoloSetter2.Value, StringFormat='深度 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0"
-                        Name="TremoloSetter2"
-                        Value="{Binding AudioModifierConfig.TremoloModifier.Depth}" />
-
-                </StackPanel>
-
-                <StackPanel DataContext="{Binding AudioModifierConfig.CompressorModifier}">
-
-                    <TextBlock FontWeight="Black" Text="基础属性" />
-
-                    <TextBlock FontSize="12" Text="{Binding #CompressorSetter1.Value, StringFormat='阈值 : {0:F3} Db'}" />
-                    <u:NumericFloatUpDown
-                        InnerRightContent="Db"
-                        Maximum="0"
-                        Minimum="-50"
-                        Name="CompressorSetter1"
-                        Step="5"
-                        Value="{Binding ThresholdDb}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #CompressorSetter2.Value, StringFormat='压缩比 : 1 / {0:F3}'}" />
-                    <u:NumericFloatUpDown
-                        Minimum="1"
-                        Name="CompressorSetter2"
-                        Step="1"
-                        Value="{Binding Ratio}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #CompressorSetter3.Value, StringFormat='攻击时间 : {0:F3} ms'}" />
-                    <u:NumericFloatUpDown
-                        InnerRightContent="ms"
-                        Minimum="0.1"
-                        Name="CompressorSetter3"
-                        Step="5"
-                        Value="{Binding AttackMs}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #CompressorSetter4.Value, StringFormat='释放时间 : {0:F3} ms'}" />
-                    <u:NumericFloatUpDown
-                        InnerRightContent="ms"
-                        Minimum="0.1"
-                        Name="CompressorSetter4"
-                        Step="5"
-                        Value="{Binding ReleaseMs}" />
-
-                    <TextBlock FontWeight="Black" Text="扩展属性" />
-
-                    <TextBlock FontSize="12" Text="{Binding #CompressorSetter5.Value, StringFormat='软拐点宽度 : {0:F3} Db'}" />
-                    <u:NumericFloatUpDown
-                        InnerRightContent="Db"
-                        Minimum="0"
-                        Name="CompressorSetter5"
-                        Step="5"
-                        Value="{Binding KneeDb}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #CompressorSetter6.Value, StringFormat='补偿增益 : {0:F3} Db'}" />
-                    <u:NumericFloatUpDown
-                        InnerRightContent="Db"
-                        Minimum="0"
-                        Name="CompressorSetter6"
-                        Step="1"
-                        Value="{Binding MakeupGainDb}" />
-                </StackPanel>
-
-                <Grid RowDefinitions="Auto,*">
-
-                    <StackPanel Orientation="Horizontal">
-                        <Button
-                            Command="{Binding RestoreDefaultEqualizerCommand}"
-                            Content="恢复默认"
-                            CornerRadius="8"
-                            FontSize="12" />
-                    </StackPanel>
-
-                    <Border
-                        BorderBrush="{DynamicResource BorderCardBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="10"
-                        Grid.Row="1"
-                        Height="400"
-                        HorizontalAlignment="Left"
-                        Margin="0,10,0,0"
-                        VerticalAlignment="Top">
-
-                        <ItemsControl
-                            HorizontalAlignment="Center"
-                            ItemsSource="{Binding ParametricEqualizerBands}"
-                            Margin="20,20,20,10">
-
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid RowDefinitions="*,Auto" Width="57">
-
-                                        <Slider
-                                            HorizontalAlignment="Center"
-                                            Maximum="12"
-                                            Minimum="-12"
-                                            Name="EqualizerSetter"
-                                            Orientation="Vertical"
-                                            TickFrequency="3"
-                                            TickPlacement="Outside"
-                                            Value="{Binding GainDb}" />
-
-                                        <TextBlock
-                                            FontWeight="Bold"
-                                            FontSize="10"
-                                            Grid.Row="1"
-                                            HorizontalAlignment="Center"
-                                            Margin="0,5"
-                                            Text="{Binding #EqualizerSetter.Value, StringFormat=' {0:F1} '}" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-
-                        </ItemsControl>
-
-                    </Border>
-                </Grid>
-
-                <StackPanel>
-
-                    <TextBlock FontSize="12" Text="{Binding NoiseReductionFftSize, StringFormat='FFT大小 : 2 ^ {0:F0}'}" />
-                    <u:NumericIntUpDown Minimum="10" Value="{Binding NoiseReductionFftSize}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #NoiseReductionSetter1.Value, StringFormat='过减因子 : {0:F3}'}" />
-                    <Slider
-                        Maximum="10"
-                        Minimum="0.5"
-                        Name="NoiseReductionSetter1"
-                        Value="{Binding AudioModifierConfig.NoiseReductionModifier.Alpha}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #NoiseReductionSetter2.Value, StringFormat='谱底参数 : {0:F3}'}" />
-                    <Slider
-                        Maximum="0.5"
-                        Minimum="0"
-                        Name="NoiseReductionSetter2"
-                        Value="{Binding AudioModifierConfig.NoiseReductionModifier.Beta}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #NoiseReductionSetter3.Value, StringFormat='残余噪声抑制的平滑因子 : {0:F3}'}" />
-                    <Slider
-                        Maximum="1"
-                        Minimum="0.1"
-                        Name="NoiseReductionSetter3"
-                        Value="{Binding AudioModifierConfig.NoiseReductionModifier.SmoothingFactor}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #NoiseReductionSetter4.Value, StringFormat='后处理增益乘数 : {0:F3}'}" />
-                    <Slider
-                        Maximum="5"
-                        Minimum="0.1"
-                        Name="NoiseReductionSetter4"
-                        Value="{Binding AudioModifierConfig.NoiseReductionModifier.Gain}" />
-
-                    <TextBlock FontSize="12" Text="{Binding #NoiseReductionSetter5.Value, StringFormat='用于预估噪声的初始帧数 : {0:F0}'}" />
-                    <Slider
-                        Maximum="100"
-                        Minimum="1"
-                        Name="NoiseReductionSetter5"
-                        Value="{Binding AudioModifierConfig.NoiseReductionModifier.NoiseFrames}" />
-
-                </StackPanel>
-
-            </control:IndexControl>
-
-        </ScrollViewer>
-        -->
-
-    </Grid>
-
-</UserControl>
+                <DataTemplate DataType="soundEffectModels:BassBoosterModel">
+                    <soundEffects:BassBooster />
+                </DataTemplate>
+
+                <DataTemplate DataType="soundEffectModels:ChorusModel">
+                    <soundEffects:Chorus />
+                </DataTemplate>
+
+            </Carousel.DataTemplates>
+
+            <Carousel.PageTransition>
+                <CompositePageTransition>
+                    <CrossFade Duration="0:0:0.5" />
+                    <PageSlide Duration="0:0:0.3"
+                               Orientation="Vertical"
+                               SlideInEasing="QuadraticEaseIn"
+                               SlideOutEasing="QuadraticEaseOut" />
+                </CompositePageTransition>
+            </Carousel.PageTransition>
+
+        </Carousel>
+
+    </ScrollViewer>
+
+</Grid>

@@ -48,7 +48,7 @@
                     IsChecked="{Binding UiConfig.CoverConfig.AllowNonSquareCover}">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <TextBlock Text="允许异形封面" />
-                        <TextBlock FontSize="13" VerticalAlignment="Center" Classes="Secondary" Text="在重新加载时生效" />
+                        <TextBlock Text="* 重新加载时生效" Foreground="{DynamicResource  TextBlockTertiaryForeground}"/>
                     </StackPanel>
                 </CheckBox>
 

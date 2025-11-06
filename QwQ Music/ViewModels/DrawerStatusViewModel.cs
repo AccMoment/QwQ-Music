@@ -91,10 +91,7 @@ public partial class DrawerStatusViewModel : ObservableObject
             if (!IsMusicPlayerPanelVisible)
                 return;
 
-            if (IsMusicPlayListVisible)
-            {
-                MusicPlayListThemeVariant = field;
-            }
+            MusicPlayListThemeVariant = field;
 
             Dispatcher.UIThread.Post(() =>
             {

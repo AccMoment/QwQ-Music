@@ -13,7 +13,6 @@ using QwQ_Music.Models;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.Models.Enums;
 using QwQ_Music.ViewModels.Bases;
-using SoundFlow.Structs;
 using Log = QwQ_Music.Common.Services.LoggerService;
 
 namespace QwQ_Music.ViewModels;
@@ -25,12 +24,6 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
     private readonly AudioPlay _audioPlay;
 
     private readonly AudioPreprocessor _audioPreprocessor;
-
-    public AudioFormat AudioFormat
-    {
-        get => _audioPlay.AudioFormat;
-        set => _audioPlay.AudioFormat = value;
-    }
 
     private readonly Timer _lyricsTimer;
 
@@ -66,8 +59,21 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
 
     public double Position
     {
-        get => CurrentMusicItem.Current.TotalSeconds;
-        set => Seek(value);
+        get;
+        set
+        {
+            field = value;
+            
+            _audioPlay.Seek(value);
+            LyricsModel.UpdateLyricsIndex(value);
+            OnPropertyChanged();
+
+            // 当播放位置改变时，重新设置歌词定时器
+            if (IsPlaying)
+            {
+                UpdateLyricsTimer();
+            }
+        }
     }
 
     public int Volume
@@ -211,7 +217,7 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
     private void OnPositionChanged(object? sender, double positionInSeconds)
     {
         CurrentMusicItem.Current = TimeSpan.FromSeconds(positionInSeconds);
-        OnPropertyChanged(nameof(Position));
+        Position = positionInSeconds;
     }
 
     private void UpdateLyricsTimer()
@@ -320,19 +326,6 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
         }
     }
 
-    public void Seek(double currentPosition)
-    {
-        _audioPlay.Seek(currentPosition);
-        LyricsModel.UpdateLyricsIndex(currentPosition);
-        OnPropertyChanged(nameof(Position));
-
-        // 当播放位置改变时，重新设置歌词定时器
-        if (IsPlaying)
-        {
-            UpdateLyricsTimer();
-        }
-    }
-
     public async Task ToggleMusicAsync(MusicItemModel musicItem)
     {
         if (VerifyMusicItem(musicItem))
@@ -366,7 +359,7 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
         if (!VerifyMusicItem(CurrentMusicItem))
             return;
 
-        Seek(0);
+        Position = 0;
         OnPlayingChanged(true);
     }
 
@@ -374,7 +367,7 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
     public void ClearPlayDuration(MusicItemModel musicItem)
     {
         if (musicItem.Equals(CurrentMusicItem))
-            Seek(0);
+            Position = 0;
         else
             musicItem.Current = TimeSpan.Zero;
     }
@@ -435,7 +428,7 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
 
         MusicPlayListManager.Add(musicItem);
 
-        NotificationService.Info($"当前音乐《{musicItem.Title}》不在播放列表中，以自动添加到播放列表末尾~");
+        NotificationService.Info($"当前音乐《{musicItem.Title}》不在播放列表中，已自动添加到播放列表末尾~");
 
         return true;
     }
@@ -515,19 +508,19 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
 
             // 使 View 中的 Slider 控件当前值归 0，
             // 避免因为当前值大于下一首音乐最大时长，导致下一首音乐当前播放时间被修改为 0
-            Seek(0);
+            Position = 0;
 
             CurrentMusicItem = musicItem;
 
             _audioPreprocessor.InitialTime = musicItem.Current;
             LyricOffset = musicItem.LyricOffset;
-            Seek(musicItem.Current.TotalSeconds);
+            Position = musicItem.Current.TotalSeconds;
 
             PlayerItemChanged?.Invoke(this, musicItem);
         }
         catch (Exception ex)
         {
-            IsPlaying = false;
+            OnPlayingChanged(false);
 
             await Log.ErrorAsync($"初始化新音轨失败:\n{ex.Message}\n{ex.StackTrace}");
 

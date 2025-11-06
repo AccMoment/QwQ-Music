@@ -158,6 +158,50 @@ public static class NavigateService
 
         _navigationHistory.Add(CurrentView);
         currentHistoryIndex = _navigationHistory.Count - 1; // 更新索引到最新的历史记录
+
+        NormalizeNavigationHistory(); // 整理历史记录，移除重复序列
+    }
+
+    /// <summary>
+    ///     整理历史记录：
+    ///     折叠尾部重复序列（如 歌单, 其他, 歌单, 其他 → 歌单, 其他）
+    /// </summary>
+    private static void NormalizeNavigationHistory()
+    {
+        if (_navigationHistory.Count == 0)
+            return;
+        
+
+        // 折叠尾部重复序列：若历史尾部存在 [S][S]，则移除最后一段 S
+        // 示例：ABAB -> AB，ABCABC -> ABC
+        bool changed;
+        do
+        {
+            changed = false;
+            int n = _navigationHistory.Count;
+            for (int block = 1; block <= n / 2; block++)
+            {
+                bool same = true;
+                for (int k = 0; k < block; k++)
+                {
+                    if (_navigationHistory[n - 1 - k] == _navigationHistory[n - 1 - block - k]) continue;
+
+                    same = false;
+                    break;
+                }
+
+                if (!same) continue;
+
+                _navigationHistory.RemoveRange(n - block, block);
+
+                // 尾部压缩后，确保当前索引有效；若在尾部，则指向新的末尾
+                if (currentHistoryIndex >= _navigationHistory.Count)
+                    currentHistoryIndex = _navigationHistory.Count - 1;
+
+                changed = true;
+                break; // 每次只折叠一段，随后重新检查
+            }
+        } while (changed);
     }
 
     /// <summary>

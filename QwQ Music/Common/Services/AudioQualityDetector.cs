@@ -1,9 +1,5 @@
-using System;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using ATL;
-using QwQ_Music.Common.Services.MusicTagExtractors;
 using QwQ_Music.Models.Enums;
 
 namespace QwQ_Music.Common.Services;
@@ -13,45 +9,17 @@ namespace QwQ_Music.Common.Services;
 /// </summary>
 public static class AudioQualityDetector
 {
-    public static string[] LosslessFormats =
+    public static readonly string[] LosslessFormats =
     [
         "FLAC", "APE", "WAV", "TTA", "WV", "TAK", "ALAC", "WMA LOSSLESS",
     ];
-    
-    /// <summary>
-    /// 异步检测音频文件的音质级别
-    /// </summary>
-    /// <param name="filePath">音频文件路径</param>
-    /// <returns>音质级别枚举值</returns>
-    public static async Task<AudioQualityLevel> DetectQualityLevelAsync(string filePath)
-    {
-        try
-        {
-            if (!File.Exists(filePath))
-            {
-                return AudioQualityLevel.Unknown;
-            }
-
-            // 获取音频文件的扩展信息
-            var extensionsInfo = await MusicTagExtractorFactory.GetTrackAsync(filePath);
-            
-            return extensionsInfo == null
-                ? AudioQualityLevel.Unknown
-                : DetermineQualityLevel(extensionsInfo);
-        }
-        catch (Exception ex)
-        {
-            await LoggerService.ErrorAsync($"检测音频质量时出错: {ex.Message}");
-            return AudioQualityLevel.Unknown;
-        }
-    }
 
     /// <summary>
     /// 根据音频扩展信息确定音质级别
     /// </summary>
     /// <param name="track">音频扩展信息</param>
     /// <returns>音质级别</returns>
-    private static AudioQualityLevel DetermineQualityLevel(Track track)
+    public static AudioQualityLevel DetermineQualityLevel(Track track)
     {
         int sampleRate = (int)track.SampleRate;
         int bitrate = track.Bitrate;
@@ -76,8 +44,6 @@ public static class AudioQualityDetector
     /// </summary>
     private static bool IsLosslessFormat(string audioFormat)
     {
-
-
         return LosslessFormats.Any(audioFormat.Contains);
     }
 

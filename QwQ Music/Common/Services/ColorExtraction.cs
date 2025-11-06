@@ -61,12 +61,12 @@ public static class ColorExtraction
         // 根据选择的算法生成调色板
         var paletteResult = algorithm switch
         {
-            ColorExtractionAlgorithm.KMeans => KMeansPaletteGenerator
+            ColorExtractionAlgorithm.KMeans => PaletteGenerators.KMeansPaletteGenerator
                 .CreatePalette(vectorColors, colorCount, ignoreWhite, toLab, useKMeansPp)
                 .GetAwaiter()
                 .GetResult(),
 
-            ColorExtractionAlgorithm.OctTree => OctTreePaletteGenerator
+            ColorExtractionAlgorithm.OctTree => PaletteGenerators.OctTreePaletteGenerator
                 .CreatePalette(vectorColors, colorCount, ignoreWhite)
                 .GetAwaiter()
                 .GetResult(),

@@ -1,63 +1,43 @@
+using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Manager;
 using QwQ_Music.ViewModels.Bases;
+using QwQ_Music.ViewModels.Dialogs;
+using QwQ_Music.Views.Dialogs;
+using Ursa.Controls;
 
 namespace QwQ_Music.ViewModels.Pages;
 
-public class SoundEffectConfigViewModel() : NavigationViewModel("音效")
+public partial class SoundEffectConfigViewModel() : NavigationViewModel("音效")
 {
-    public SoundModifierManager SoundModifierManager { get; } = SoundModifierManager.Default;
-
-    public static MusicPlayerViewModel MusicPlayerViewModel => MusicPlayerViewModel.Default;
-
-    /*
-    public float SpatialAngle
-    {
-        get => AudioModifierConfig.SpatialModifier.Angle;
-        set
-        {
-            AudioModifierConfig.SpatialModifier.Angle = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public float SpatialDistance
-    {
-        get => AudioModifierConfig.SpatialModifier.Distance;
-        set
-        {
-            AudioModifierConfig.SpatialModifier.Distance = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public List<EqualizerBand> ParametricEqualizerBands
-    {
-        get => AudioModifierConfig.ParametricEqualizer.Bands;
-        set
-        {
-            AudioModifierConfig.ParametricEqualizer.Bands = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public int NoiseReductionFftSize
-    {
-        get => (int)Math.Log(AudioModifierConfig.NoiseReductionModifier.FftSize, 2);
-        set
-        {
-            AudioModifierConfig.NoiseReductionModifier.FftSize = (int)Math.Pow(2, value);
-            OnPropertyChanged();
-        }
-    }
+    public SoundModifierManager SoundModifierManager => SoundModifierManager.Default;
 
     [RelayCommand]
-    private void RestoreDefaultEqualizer()
+    private async Task OpenSoundEffectManagerPanel()
     {
-        var temp = new List<EqualizerBand>(ParametricEqualizerBands);
-        foreach (var equalizerBand in temp)
+        var options = new OverlayDialogOptions
         {
-            equalizerBand.GainDb = 0f;
+            Title = "管理音效",
+        };
+
+        bool result = await OverlayDialog.ShowCustomModal<ManageSoundModifier, ManageSoundEffectViewModel,bool>(
+            new ManageSoundEffectViewModel(), options: options);
+
+        if (result)
+        {
+            SoundModifierManager.Clear();
+            
+            foreach (var builtInSoundEffect in SoundModifierManager.SoundEffectConfig.BuiltInSoundEffects)
+            {
+                if (builtInSoundEffect.Value)
+                {
+                    SoundModifierManager.LoadModifier(builtInSoundEffect.Key);
+                }
+                else
+                {
+                    SoundModifierManager.UnLoadModifier(builtInSoundEffect.Key);
+                }
+            }
         }
-        ParametricEqualizerBands = temp;
-    }*/
+    }
 }

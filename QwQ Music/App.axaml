@@ -198,6 +198,7 @@
         <converters:ValueComparisonConverter x:Key="ValueComparisonConverter" />
         <converters:StringToFontFamily x:Key="StringToFontFamily" />
         <converters:ScrollOffsetConverter x:Key="OffsetToIsAtTopConverter" />
+        <converters:AudioQualityLevelLogoConverter x:Key="AudioQualityLevelLogoConverter" />
 
         <!-- 基础 -->
 

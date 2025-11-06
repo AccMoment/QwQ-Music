@@ -1,27 +1,26 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Collections;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Manager;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models;
 using QwQ_Music.ViewModels.Bases;
-using System.Collections.Generic;
-using System.IO;
-using Avalonia.Controls;
-using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace QwQ_Music.ViewModels.Pages;
 
 public partial class AllMusicPageViewModel() : DataGridViewModelBase(MusicItemManager.Default.MusicItems)
 {
     private readonly AvaloniaList<MusicItemModel> _filterSource = [];
-    
-    [ObservableProperty]
-    public partial double DataGridHorizontalScrollValue { get; set; }
+
+    [ObservableProperty] public partial double DataGridHorizontalScrollValue { get; set; }
 
     protected override void OnSearchTextChanged(string? value)
     {
@@ -100,96 +99,108 @@ public partial class AllMusicPageViewModel() : DataGridViewModelBase(MusicItemMa
     [RelayCommand]
     private static async Task DropFilesAsync(DragEventArgs? e)
     {
-        if (e?.Data.Contains(DataFormats.Files) != true)
+        if (e?.DataTransfer.Contains(DataFormat.File) != true)
             return;
 
-        var items = e.Data.GetFiles()?.ToList();
+        var items = e.DataTransfer.TryGetFiles();
 
-        if (items == null || items.Count == 0)
+        if (items == null || items.Length == 0)
             return;
 
         await AudioFileService.ProcessStorageItemsAsync(items);
     }
 
     [RelayCommand]
+    private async Task ForceRefreshMusicInfo()
+    {
+        await RefreshMusicItemsAsync(true);
+    }
+
+    [RelayCommand]
     private async Task RefreshMusicInfo()
     {
-        // 显示加载提示
+        await RefreshMusicItemsAsync();
+    }
+
+    private async Task RefreshMusicItemsAsync(bool forceRefresh = false)
+    {
         NotificationService.Info("正在刷新音乐信息...");
 
-        var musicItemsToRemove = new List<MusicItemModel>();
-        var musicItemsToUpdate = new List<MusicItemModel>();
+        var itemsToRemove = new List<MusicItemModel>();
+        var itemsToUpdate = new List<MusicItemModel>();
 
-        // 遍历所有音乐项进行检查
-        foreach (var musicItem in MusicItemManager.Default.MusicItems.ToList())
-        {
-            // 检查文件是否存在
-            if (!File.Exists(musicItem.FilePath))
+        await Parallel.ForEachAsync(MusicItemManager.Default.MusicItems,
+            async (item, _) =>
             {
-                musicItemsToRemove.Add(musicItem);
-
-                continue;
-            }
-
-            // 重新提取音乐信息
-            try
-            {
-                bool result = await MusicExtractor.UpdateMusicInfoAsync(musicItem);
-
-                // 检查信息是否发生变化
-                if (result)
+                if (!File.Exists(item.FilePath))
                 {
-                    musicItemsToUpdate.Add(musicItem);
+                    itemsToRemove.Add(item);
+
+                    return;
                 }
-            }
-            catch (Exception ex)
-            {
-                await LoggerService.ErrorAsync($"刷新音乐信息失败: \n{musicItem.Title}\n{ex.Message}");
 
-                // 如果提取失败，标记为需要删除
-                musicItemsToRemove.Add(musicItem);
-            }
-        }
+                try
+                {
+                    bool updated = await MusicExtractor.UpdateMusicInfoAsync(item, forceRefresh);
 
+                    if (updated)
+                    {
+                        itemsToUpdate.Add(item);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await LoggerService.ErrorAsync($"刷新音乐信息失败: {ex.Message}\n{ex.StackTrace}");
+                    itemsToRemove.Add(item);
+                }
+            });
+
+        await HandleBatchOperationsAsync(itemsToRemove, itemsToUpdate);
+
+        ShowRefreshSummary(itemsToRemove.Count, itemsToUpdate.Count);
+    }
+
+    private async Task HandleBatchOperationsAsync(
+        List<MusicItemModel> itemsToRemove,
+        List<MusicItemModel> itemsToUpdate
+        )
+    {
         try
         {
-            // 批量删除不存在的音乐项
-            if (musicItemsToRemove.Count > 0)
+            if (itemsToRemove.Count > 0)
             {
-                await DeleteMusicItemsAsync(musicItemsToRemove);
+                await DeleteMusicItemsAsync(itemsToRemove);
             }
 
-            // 批量更新发生变化的音乐项
-            if (musicItemsToUpdate.Count > 0)
+            if (itemsToUpdate.Count > 0)
             {
-                await MusicItemManager.Update(musicItemsToUpdate);
+                await MusicItemManager.Update(itemsToUpdate);
             }
         }
         catch (Exception ex)
         {
-            await LoggerService.ErrorAsync($"刷新音乐信息时发生错误: {ex.Message}\n{ex.StackTrace}");
-            NotificationService.Error($"刷新音乐信息失败: {ex.Message}");
+            await LoggerService.ErrorAsync($"更新音乐信息到数据库时发生错误: {ex.Message}\n{ex.StackTrace}");
+            NotificationService.Error($"更新音乐信息到数据库失败: {ex.Message}");
         }
+    }
 
-        // 显示刷新结果
-        int removedCount = musicItemsToRemove.Count;
-        int updatedCount = musicItemsToUpdate.Count;
-
-        if (removedCount > 0 || updatedCount > 0)
-        {
-            string message = "";
-
-            if (removedCount > 0)
-                message += $"删除了 {removedCount} 个不存在的音乐文件\n";
-
-            if (updatedCount > 0)
-                message += $"更新了 {updatedCount} 个音乐文件的信息";
-
-            NotificationService.Success($"刷新完成！\n{message}");
-        }
-        else
+    private void ShowRefreshSummary(int removedCount, int updatedCount)
+    {
+        if (removedCount == 0 && updatedCount == 0)
         {
             NotificationService.Success("所有音乐文件信息都是最新的！");
+
+            return;
         }
+
+        var messageParts = new List<string>();
+
+        if (removedCount > 0)
+            messageParts.Add($"删除了 {removedCount} 个不存在的音乐文件");
+
+        if (updatedCount > 0)
+            messageParts.Add($"更新了 {updatedCount} 个音乐文件的信息");
+
+        NotificationService.Success($"刷新完成！\n{string.Join("\n", messageParts)}");
     }
 }

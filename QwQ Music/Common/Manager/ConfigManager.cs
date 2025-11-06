@@ -9,26 +9,26 @@ namespace QwQ_Music.Common.Manager;
 
 public static class ConfigManager
 {
-    // 使用Lazy<T>实现真正的懒加载
-    private static readonly Lazy<UserConfig> _config = new(() =>
-        JsonConfigService.Load<UserConfig>(nameof(UserConfig).ToLower(), UserConfigJsonSerializerContext.Default)
-     ?? new UserConfig()
+    private static readonly string _serviceConfigIniPath = Path.Combine(
+        StaticConfig.ConfigSavePath,
+        $"{nameof(ServiceConfig).ToLower()}.QwQ.ini"
     );
 
-    private static readonly Lazy<ServiceConfig> _serviceConfig = new(() =>
+    private static JsonConfigService JsonConfigService => new(UserConfigJsonSerializerContext.Default, StaticConfig.ConfigSavePath);
+
+    static ConfigManager()
+    {
+        ServiceConfig = GetServiceConfig();
+
+        UserConfig = JsonConfigService
+                .Load<UserConfig>(nameof(UserConfig).ToLower())
+         ?? new UserConfig();
+    }
+
+    private static ServiceConfig GetServiceConfig()
     {
         var config = new ServiceConfig();
         var ini = new IniConfigService(_serviceConfigIniPath);
-
-        // JsonServiceConfig
-        config.JsonServiceConfig.EnableBackup = ini.Get("EnableBackup", "JsonService")?.ToLower() == "true";
-
-        config.JsonServiceConfig.EnablePerformanceLogging =
-            ini.Get("EnablePerformanceLogging", "JsonService")?.ToLower() != "false";
-
-        config.JsonServiceConfig.MaxBackupCount = int.TryParse(ini.Get("MaxBackupCount", "JsonService"), out int jmax)
-            ? jmax
-            : 3;
 
         // LoggerServiceConfig
         config.LoggerServiceConfig.IsKeepOpen = ini.Get("IsKeepOpen", "LoggerService")?.ToLower() != "false";
@@ -43,14 +43,9 @@ public static class ConfigManager
             config.LoggerServiceConfig.Level = level;
 
         return config;
-    });
+    }
 
-    private static readonly string _serviceConfigIniPath = Path.Combine(
-        StaticConfig.ConfigSavePath,
-        $"{nameof(ServiceConfig).ToLower()}.QwQ.ini"
-    );
-
-    public static UserConfig UserConfig => _config.Value;
+    public static UserConfig UserConfig { get; }
 
     public static SystemConfig SystemConfig => UserConfig.SystemConfig;
 
@@ -64,7 +59,7 @@ public static class ConfigManager
 
     public static HotkeyConfig HotkeyConfig => UserConfig.HotkeyConfig;
 
-    public static ServiceConfig ServiceConfig => _serviceConfig.Value;
+    public static ServiceConfig ServiceConfig { get; }
 
     public static JsonServiceConfig JsonServiceConfig => ServiceConfig.JsonServiceConfig;
 
@@ -74,51 +69,33 @@ public static class ConfigManager
     {
         try
         {
-            if (_config.IsValueCreated)
-            {
-                JsonConfigService.Save(
-                    UserConfig,
-                    nameof(UserConfig).ToLower(),
-                    UserConfigJsonSerializerContext.Default
-                );
-            }
-
-            // 保存ServiceConfig到ini
-            if (!_serviceConfig.IsValueCreated)
-                return;
-
-            var ini = new IniConfigService();
-
-            // JsonServiceConfig
-            ini.Set(
-                "EnableBackup",
-                ServiceConfig.JsonServiceConfig.EnableBackup.ToString().ToLower(),
-                "JsonService"
+            JsonConfigService.Save(
+                UserConfig,
+                nameof(UserConfig).ToLower()
             );
 
-            ini.Set(
-                "EnablePerformanceLogging",
-                ServiceConfig.JsonServiceConfig.EnablePerformanceLogging.ToString().ToLower(),
-                "JsonService"
-            );
-
-            ini.Set("MaxBackupCount", ServiceConfig.JsonServiceConfig.MaxBackupCount.ToString(), "JsonService");
-
-            // LoggerServiceConfig
-            ini.Set(
-                "IsKeepOpen",
-                ServiceConfig.LoggerServiceConfig.IsKeepOpen.ToString().ToLower(),
-                "LoggerService"
-            );
-
-            ini.Set("RetryCount", ServiceConfig.LoggerServiceConfig.RetryCount.ToString(), "LoggerService");
-            ini.Set("Level", ServiceConfig.LoggerServiceConfig.Level.ToString(), "LoggerService");
-
-            ini.Save(_serviceConfigIniPath);
+            SaveServiceConfig();
         }
         catch (Exception e)
         {
             LoggerService.Error($"保存配置文件时发生错误 : {e.Message}");
         }
+    }
+
+    private static void SaveServiceConfig()
+    {
+        var ini = new IniConfigService();
+
+        // LoggerServiceConfig
+        ini.Set(
+            "IsKeepOpen",
+            ServiceConfig.LoggerServiceConfig.IsKeepOpen.ToString().ToLower(),
+            "LoggerService"
+        );
+
+        ini.Set("RetryCount", ServiceConfig.LoggerServiceConfig.RetryCount.ToString(), "LoggerService");
+        ini.Set("Level", ServiceConfig.LoggerServiceConfig.Level.ToString(), "LoggerService");
+
+        ini.Save(_serviceConfigIniPath);
     }
 }

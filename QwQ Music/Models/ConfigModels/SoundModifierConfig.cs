@@ -24,4 +24,8 @@ public class SoundEffectConfig
     public Dictionary<string, bool> BuiltInSoundEffects { get; set; } = [];
 
     public AlgorithmicReverbModel AlgorithmicReverb { get; set; } = new();
+
+    public BassBoosterModel BassBooster { get; set; } = new();
+
+    public ChorusModel Chorus { get; set; } = new();
 }

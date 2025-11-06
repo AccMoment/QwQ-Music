@@ -9,7 +9,7 @@ namespace QwQ_Music;
 
 public static class Program
 {
-    public static string VersionText => "0.9.1+build.2508016.1";
+    public static string VersionText => "0.9.1+build.251015.1+fix";
 
     [STAThread]
     public static void Main(string[] args)
@@ -19,11 +19,13 @@ public static class Program
             LoggerService.Info("Starting up\n" +
                 $"""
                  ===========================================
-
-                  ___ ___  ___   ___ ___ _  _ 
-                 | _ ) _ \/ _ \ / __| __| \| |
-                 | _ \   / (_) | (__| _|| .` |
-                 |___/_|_\\___/ \___|___|_|\_|
+                                                                                                             
+                   _|_|                          _|_|          _|      _|                      _|            
+                 _|    _|  _|      _|      _|  _|    _|        _|_|  _|_|  _|    _|    _|_|_|        _|_|_|  
+                 _|  _|_|  _|      _|      _|  _|  _|_|        _|  _|  _|  _|    _|  _|_|      _|  _|        
+                 _|    _|    _|  _|  _|  _|    _|    _|        _|      _|  _|    _|      _|_|  _|  _|        
+                   _|_|  _|    _|      _|        _|_|  _|      _|      _|    _|_|_|  _|_|_|    _|    _|_|_|  
+                                                           
                                               
                         ▶  QwQ Music v{VersionText}  🔊
                       "Where emotions meet melody"
@@ -79,6 +81,9 @@ public static class Program
 
     private static AppBuilder BuildAvaloniaApp()
     {
-        return AppBuilder.Configure<App>().UsePlatformDetect().WithInterFont().LogToTrace();
+        return AppBuilder.Configure<App>()
+            .UsePlatformDetect()
+            .WithInterFont()
+            .LogToTrace();
     }
 }

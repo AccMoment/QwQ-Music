@@ -4,18 +4,27 @@ using System.IO;
 using Avalonia;
 using Avalonia.Media.Imaging;
 using QwQ_Music.Common.Utilities;
+using QwQ_Music.Models.Enums;
 
 namespace QwQ_Music.Common.Manager;
 
 public static class CacheManager
 {
-    public static Bitmap NotExist { get; } = GetDefaultCover("没有图片哦");
+    public static Bitmap NotExist { get; } = GetBuiltInImage("没有图片哦.webp");
 
-    public static Bitmap Loading { get; } = GetDefaultCover("图片绘制中");
+    public static Bitmap Loading { get; } = GetBuiltInImage("图片绘制中.webp");
 
-    public static Bitmap Damaged { get; } = GetDefaultCover("图片压坏了");
+    public static Bitmap Damaged { get; } = GetBuiltInImage("图片压坏了.webp");
 
-    public static Bitmap Default { get; } = GetDefaultCover("看我");
+    public static Bitmap Default { get; } = GetBuiltInImage("看我.webp");
+
+    public static Dictionary<AudioQualityLevel, Bitmap> AudioQualityLevelLogo = new()
+    {
+        [AudioQualityLevel.PQ] = GetBuiltInImage("PQ.png"),
+        [AudioQualityLevel.HQ] = GetBuiltInImage("HQ.png"),
+        [AudioQualityLevel.SQ] = GetBuiltInImage("SQ.png"),
+        [AudioQualityLevel.HR] = GetBuiltInImage("HR.png"),
+    };
 
     public static WeakCache<string, Bitmap> ImageCache { get; } = new();
 
@@ -51,15 +60,15 @@ public static class CacheManager
     /// </summary>
     /// <returns></returns>
     /// <exception cref="FileNotFoundException">无法找到图片资源时抛出异常</exception>
-    private static Bitmap GetDefaultCover(string imageFileName)
+    public static Bitmap GetBuiltInImage(string imageFileName)
     {
         try
         {
             var assembly = App.CurrentAssembly;
 
             using var stream =
-                assembly.GetManifestResourceStream($"QwQ_Music.Assets.EmbeddedRes.Images.{imageFileName}.webp")
-             ?? throw new FileNotFoundException($"无法找到 {imageFileName}.webp 资源");
+                assembly.GetManifestResourceStream($"QwQ_Music.Assets.EmbeddedRes.Images.{imageFileName}")
+             ?? throw new FileNotFoundException($"无法找到 {imageFileName} 资源");
 
             return new Bitmap(stream);
         }
@@ -81,5 +90,10 @@ public static class CacheManager
         Loading.Dispose();
         NotExist.Dispose();
         Damaged.Dispose();
+
+        foreach (var bitmap in AudioQualityLevelLogo.Values)
+        {
+            bitmap.Dispose();
+        }
     }
 }

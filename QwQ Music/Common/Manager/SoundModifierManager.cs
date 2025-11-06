@@ -1,11 +1,8 @@
+using System.Collections.Generic;
+using System.Linq;
 using Avalonia.Collections;
-using Avalonia.Controls;
 using QwQ_Music.Common.Interfaces;
 using QwQ_Music.Models.ConfigModels;
-using QwQ_Music.ViewModels;
-using QwQ_Music.Views.SoundEffects;
-using SoundFlow.Modifiers;
-using SoundFlow.Structs;
 
 namespace QwQ_Music.Common.Manager;
 
@@ -13,7 +10,7 @@ public class SoundModifierManager
 {
     public readonly SoundEffectConfig SoundEffectConfig = ConfigManager.SoundModifierConfig.SoundEffectConfig;
 
-    public AudioFormat AudioFormat = MusicPlayerViewModel.Default.AudioFormat;
+    private readonly Dictionary<string, ISoundModifierModel> _modifierMap = new();
 
     private SoundModifierManager()
     {
@@ -22,50 +19,89 @@ public class SoundModifierManager
 
     public static SoundModifierManager Default { get; } = new();
 
-    public AvaloniaList<Control> ConfigPanels { get; } = [];
-
     public AvaloniaList<ISoundModifierModel> SoundModifiers { get; } = [];
 
     private void Initialize()
     {
+        // 确保内置效果已初始化
         if (SoundEffectConfig.BuiltInSoundEffects.Count == 0)
         {
-            SoundEffectConfig.BuiltInSoundEffects.Add("AlgorithmicReverb", true);
-            SoundEffectConfig.BuiltInSoundEffects.Add("BassBooster", false);
-            SoundEffectConfig.BuiltInSoundEffects.Add("Chorus", false);
-            SoundEffectConfig.BuiltInSoundEffects.Add("Compressor", false);
-            SoundEffectConfig.BuiltInSoundEffects.Add("Delay ", false);
-            SoundEffectConfig.BuiltInSoundEffects.Add("FrequencyBand", false);
-            SoundEffectConfig.BuiltInSoundEffects.Add("MultiChannelChorusM", false);
-            SoundEffectConfig.BuiltInSoundEffects.Add("ParametricEqualizer", false);
-            SoundEffectConfig.BuiltInSoundEffects.Add("TrebleBooster", false);
-        }
-
-        InitializeModifier();
-    }
-
-    public void InitializeModifier()
-    {
-        if (SoundEffectConfig.BuiltInSoundEffects.TryGetValue("AlgorithmicReverb", out bool value) && value)
-        {            
-            var algorithmicReverbModel = SoundEffectConfig.AlgorithmicReverb.Initialize(new AlgorithmicReverbModifier(AudioFormat));
-            SoundModifiers.Add(algorithmicReverbModel);
-            
-            ConfigPanels.Add(new AlgorithmicReverb
+            var defaults = new (string name, bool enabled)[]
             {
-                DataContext = algorithmicReverbModel,
-            });
+                ("AlgorithmicReverb", true),
+                ("BassBooster", true),
+                ("Chorus", true),
+                ("Compressor", false),
+                ("Delay", false),
+                ("FrequencyBand", false),
+                ("MultiChannelChorus", false),
+                ("ParametricEqualizer", false),
+                ("TrebleBooster", false),
+            };
+
+            foreach ((string name, bool enabled) in defaults)
+            {
+                SoundEffectConfig.BuiltInSoundEffects[name] = enabled;
+            }
+        }
+
+        // 加载所有启用的效果
+        foreach (var kvp in SoundEffectConfig.BuiltInSoundEffects.Where(kvp => kvp.Value))
+        {
+            LoadModifierInternal(kvp.Key);
         }
     }
 
-
-    public void LoadModifier()
+    public void Clear()
     {
-        
+        SoundModifiers.Clear();
+        _modifierMap.Clear();
     }
 
-    public void UnLoadModifier()
+    private void LoadModifierInternal(string modifierName)
     {
-        
+        if (_modifierMap.ContainsKey(modifierName))
+            return; // 已加载
+
+        ISoundModifierModel? model = modifierName switch
+        {
+            "AlgorithmicReverb" => SoundEffectConfig.AlgorithmicReverb,
+            "BassBooster" => SoundEffectConfig.BassBooster,
+            "Chorus" => SoundEffectConfig.Chorus,
+            // TODO: 补充其他效果的映射，暂时这样吧，现在懒得写了
+            _ => null,
+        };
+
+        if (model != null)
+        {
+            _modifierMap[modifierName] = model;
+            SoundModifiers.Add(model);
+        }
+    }
+
+    private void UnloadModifierInternal(string modifierName)
+    {
+        if (_modifierMap.Remove(modifierName, out var model))
+        {
+            SoundModifiers.Remove(model);
+        }
+    }
+
+    public void LoadModifier(string modifierName)
+    {
+        if (!SoundEffectConfig.BuiltInSoundEffects.ContainsKey(modifierName))
+            return;
+
+        SoundEffectConfig.BuiltInSoundEffects[modifierName] = true;
+        LoadModifierInternal(modifierName);
+    }
+
+    public void UnLoadModifier(string modifierName)
+    {
+        if (!SoundEffectConfig.BuiltInSoundEffects.ContainsKey(modifierName))
+            return;
+
+        SoundEffectConfig.BuiltInSoundEffects[modifierName] = false;
+        UnloadModifierInternal(modifierName);
     }
 }

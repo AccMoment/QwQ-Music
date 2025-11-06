@@ -1,9 +1,9 @@
-using System;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using QwQ_Music.Common.Interfaces;
 using SoundFlow.Abstracts;
 using SoundFlow.Modifiers;
+using SoundFlow.Structs;
 
 namespace QwQ_Music.Models.SoundEffectModels;
 
@@ -15,20 +15,21 @@ public class AlgorithmicReverbModel : ObservableObject, ISoundModifierModel<Algo
 
     [JsonIgnore] public string Name { get; } = "混响";
 
-    public ISoundModifierModel<AlgorithmicReverbModifier> Initialize(AlgorithmicReverbModifier modifier)
+    public void Initialize(AudioFormat audioFormat)
     {
-        // 初始化时同步所有属性值到 Modifier
-        modifier.Enabled = Enabled;
-        modifier.Wet = Wet;
-        modifier.RoomSize = RoomSize;
-        modifier.Damp = Damp;
-        modifier.Width = Width;
-        modifier.PreDelay = PreDelay;
-        modifier.Mix = Mix;
+        var modifier = new AlgorithmicReverbModifier(audioFormat)
+        {
+            // 初始化时同步所有属性值到 Modifier
+            Enabled = Enabled,
+            Wet = Wet,
+            RoomSize = RoomSize,
+            Damp = Damp,
+            Width = Width,
+            PreDelay = PreDelay,
+            Mix = Mix,
+        };
 
         Modifier = modifier;
-
-        return this;
     }
 
     public void Revoke()
@@ -56,8 +57,6 @@ public class AlgorithmicReverbModel : ObservableObject, ISoundModifierModel<Algo
         get;
         set
         {
-            value = Math.Clamp(value, 0f, 1f);
-
             if (SetProperty(ref field, value))
             {
                 Modifier?.Wet = value;
@@ -73,8 +72,6 @@ public class AlgorithmicReverbModel : ObservableObject, ISoundModifierModel<Algo
         get;
         set
         {
-            value = Math.Clamp(value, 0f, 1f);
-
             if (SetProperty(ref field, value))
             {
                 Modifier?.RoomSize = value;
@@ -90,8 +87,6 @@ public class AlgorithmicReverbModel : ObservableObject, ISoundModifierModel<Algo
         get;
         set
         {
-            value = Math.Clamp(value, 0f, 1f);
-
             if (SetProperty(ref field, value))
             {
                 Modifier?.Damp = value;
@@ -107,8 +102,6 @@ public class AlgorithmicReverbModel : ObservableObject, ISoundModifierModel<Algo
         get;
         set
         {
-            value = Math.Clamp(value, 0f, 1f);
-
             if (SetProperty(ref field, value))
             {
                 Modifier?.Width = value;
@@ -124,8 +117,6 @@ public class AlgorithmicReverbModel : ObservableObject, ISoundModifierModel<Algo
         get;
         set
         {
-            value = Math.Clamp(value, 0f, 100f);
-
             if (SetProperty(ref field, value))
             {
                 Modifier?.PreDelay = value;
@@ -141,8 +132,6 @@ public class AlgorithmicReverbModel : ObservableObject, ISoundModifierModel<Algo
         get;
         set
         {
-            value = Math.Clamp(value, 0f, 1f);
-
             if (SetProperty(ref field, value))
             {
                 Modifier?.Mix = value;

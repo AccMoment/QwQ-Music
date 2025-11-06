@@ -136,8 +136,17 @@
                     IsChecked="{Binding LyricIsDoubleLine}" />
 
                 <CheckBox
-                    Content="{Binding IsDualLangName}"
-                    IsChecked="{Binding LyricConfig.DesktopLyric.LyricIsDualLang}" />
+                    IsChecked="{Binding DesktopPlayControlIsEnabled}">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="桌面播放控制" />
+                        <TextBlock Text="- 在鼠标进入屏幕顶部中心 1/3 区域时，显示播放控制窗口"
+                                   Foreground="{DynamicResource  TextBlockTertiaryForeground}" />
+                    </StackPanel>
+                </CheckBox>
+
+                <TextBlock Text="触发距离" />
+                <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
+                                    Value="{Binding LyricConfig.DesktopLyric.DesktopPlayControlTriggerDistance}" />
 
                 <Panel>
                     <TextBlock Text="字体" VerticalAlignment="Center" />
@@ -490,6 +499,5 @@
         </anchorControl:AnchorItem>
 
     </anchorControl:Anchor>
-
-
+    
 </Grid>

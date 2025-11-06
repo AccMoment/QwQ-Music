@@ -23,7 +23,7 @@ public partial class ExitConfirmViewModel : ObservableObject, IDialogContext
     private void Hide()
     {
         ClosingBehavior = ClosingBehavior.HideToTray;
-        Close();
+        Close(true);
     }
 
     [RelayCommand]

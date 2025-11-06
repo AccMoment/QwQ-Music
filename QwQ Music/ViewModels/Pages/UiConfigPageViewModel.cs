@@ -12,7 +12,7 @@ namespace QwQ_Music.ViewModels.Pages;
 
 public partial class UiConfigPageViewModel() : NavigationViewModel("界面")
 {
-    public UiConfig UiConfig { get; set; } = ConfigManager.UiConfig;
+    public UiConfig UiConfig { get; } = ConfigManager.UiConfig;
 
     public static AppResources AppResources => AppResources.Default;
 
@@ -72,8 +72,8 @@ public partial class UiConfigPageViewModel() : NavigationViewModel("界面")
                 item.CoverColors = null;
             }
         });
+        
+        NotificationService.Info("封面颜色缓存已经清空，切换音乐时将会重新提取并缓存~");
     }
 
-    /*
-    public static string[] ThemeModes => ["Light", "Dark", "Default"];*/
 }

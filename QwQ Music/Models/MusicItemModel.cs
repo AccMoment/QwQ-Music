@@ -33,13 +33,15 @@ public partial class MusicItemModel : ObservableObject
 
     public string? FileSize { get; set; }
 
-    [ObservableProperty] public partial double Gain { get; set; }
+    public double Gain { get; set; }
 
     public string? EncodingFormat { get; set; }
 
     public string? CoverId { get; set; }
 
     public string[]? CoverColors { get; set; }
+    
+    public AudioQualityLevel AudioQualityLevel { get; set; }
 
     public string? Comment { get; set; }
 

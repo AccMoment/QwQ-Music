@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QwQ_Music.Common.Interfaces;
 using QwQ_Music.Models;
+using QwQ_Music.Models.Enums;
 
 namespace QwQ_Music.Common.Services.Databases;
 
@@ -35,6 +36,7 @@ public class MusicItemRepository : IDatabaseRepository<MusicItemModel>
              {nameof(MusicItemModel.Gain)} INTEGER,
              {nameof(MusicItemModel.EncodingFormat)} TEXT NOT NULL,
              {nameof(MusicItemModel.Comment)} TEXT,
+             {nameof(MusicItemModel.AudioQualityLevel)} TEXT,
              {nameof(MusicItemModel.Remarks)} TEXT,
              {nameof(MusicItemModel.LyricOffset)} INTEGER,
              {nameof(MusicItemModel.InsertTime)} INTEGER,
@@ -198,6 +200,9 @@ public class MusicItemRepository : IDatabaseRepository<MusicItemModel>
         if (dict.TryGetValue(nameof(MusicItemModel.Comment), out object? comment))
             model.Comment = comment?.ToString();
 
+        if (dict.TryGetValue(nameof(MusicItemModel.AudioQualityLevel), out object? audioQualityLevel))
+            model.AudioQualityLevel = (AudioQualityLevel)Convert.ToInt32(audioQualityLevel);
+
         if (dict.TryGetValue(nameof(MusicItemModel.Remarks), out object? remarks))
             model.Remarks = remarks?.ToString();
 
@@ -231,6 +236,7 @@ public class MusicItemRepository : IDatabaseRepository<MusicItemModel>
             [nameof(MusicItemModel.Gain)] = model.Gain,
             [nameof(MusicItemModel.EncodingFormat)] = model.EncodingFormat,
             [nameof(MusicItemModel.Comment)] = model.Comment,
+            [nameof(MusicItemModel.AudioQualityLevel)] = (int)model.AudioQualityLevel,
             [nameof(MusicItemModel.Remarks)] = model.Remarks,
             [nameof(MusicItemModel.LyricOffset)] = model.LyricOffset,
             [nameof(MusicItemModel.InsertTime)] = model.InsertTime.Ticks,

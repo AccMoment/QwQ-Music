@@ -23,6 +23,11 @@ public class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        
+#if DEBUG
+        this.AttachDeveloperTools();
+#endif
+        
         AppResources.Default.Initialize();
         DataContext = new ApplicationViewModel();
     }
@@ -70,7 +75,7 @@ public class App : Application
             button: MessageBoxButton.OKCancel
         );
 
-        LoggerService.Fatal($"后台任务出现异常: {e.Exception.Message}\n{e.Exception.StackTrace}\n是否观察: {e.Observed}");
+        LoggerService.Fatal($"后台任务出现异常: {e.Exception.Message}\n异常堆栈: {e.Exception.StackTrace}\n是否观察: {e.Observed}");
     }
 
     private static void UIThread_OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
@@ -84,7 +89,7 @@ public class App : Application
 
         e.Handled = true;
 
-        LoggerService.Fatal($"应用程序出现异常: {e.Exception.Message}\n{e.Exception.StackTrace}\n是否处理: {e.Handled}");
+        LoggerService.Fatal($"应用程序出现异常: {e.Exception.Message}\n异常堆栈: {e.Exception.StackTrace}\n是否处理: {e.Handled}");
     }
 
     private static void CurrentDomain_OnUnhandledException(object sender, UnhandledExceptionEventArgs e)

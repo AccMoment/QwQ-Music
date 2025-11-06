@@ -72,12 +72,7 @@
 
     <Grid RowDefinitions="40,*">
 
-        <ContentPresenter Grid.Row="0" Grid.RowSpan="2">
-
-            <ContentPresenter.Content>
-                <views:MainView />
-            </ContentPresenter.Content>
-
+        <views:MainView Grid.Row="0" Grid.RowSpan="2">
             <Interaction.Behaviors>
 
                 <PointerWheelChangedTrigger>
@@ -86,8 +81,7 @@
                 </PointerWheelChangedTrigger>
 
             </Interaction.Behaviors>
-
-        </ContentPresenter>
+        </views:MainView>
 
         <Panel Grid.Row="1"
                DataContext="{Binding DrawerStatusViewModel}"

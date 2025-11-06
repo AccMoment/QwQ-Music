@@ -35,7 +35,11 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
     public MusicCoverPageViewModel()
         : base("播放")
     {
-        MusicPlayerViewModelOnPlayerItemChanged(null, MusicPlayerViewModel.CurrentMusicItem);
+        if (MusicPlayerViewModel.CurrentMusicItem != MusicPlayListManager.DefaultMusicItem)
+        {
+            MusicPlayerViewModelOnPlayerItemChanged(null, MusicPlayerViewModel.CurrentMusicItem);
+        }
+
         MusicPlayerViewModel.PlayerItemChanged += MusicPlayerViewModelOnPlayerItemChanged;
         AppDomain.CurrentDomain.ProcessExit += CurrentDomain_OnProcessExit;
     }
@@ -71,7 +75,7 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
         {
             if (SetProperty(ref field, value))
             {
-                MusicPlayerViewModel.Seek(field);
+                MusicPlayerViewModel.Position = field;
             }
         }
     }

@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using Avalonia;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
-using QwQ_Music.Common;
 using QwQ_Music.Common.Manager;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels.Bases;
-using QwQ_Music.Views;
+using QwQ_Music.Views.Windows;
 using static QwQ_Music.Models.LanguageModel;
 
 namespace QwQ_Music.ViewModels.Pages;
@@ -19,11 +19,24 @@ public partial class LyricConfigPageViewModel : ViewModelBase
     public LyricConfigPageViewModel()
     {
         ToggleWindowDisplayStatus(LyricIsEnabled);
+        ToggleDesktopPlayControlService(DesktopPlayControlIsEnabled);
         OnPropertyChanged(nameof(LyricWidth));
         SetLyricsWindowWidth(LyricConfig.DesktopLyric.LyricIsDoubleLine);
+        
+        AppDomain.CurrentDomain.ProcessExit += CurrentDomainOnProcessExit;
     }
 
-    public static AppResources AppResources => AppResources.Default;
+    private void CurrentDomainOnProcessExit(object? sender, EventArgs e)
+    {
+        AppDomain.CurrentDomain.ProcessExit -= CurrentDomainOnProcessExit;
+        Dispatcher.UIThread.Post(() =>
+        {
+            CloseLyricWindow();
+            DesktopPlayControlService.Stop();
+        }); 
+    }
+
+    #region 多语言
 
     public static string IsEnabledName => Lang[nameof(IsEnabledName)];
 
@@ -50,7 +63,9 @@ public partial class LyricConfigPageViewModel : ViewModelBase
     public static string LyricAltBottomColorName => Lang[nameof(LyricAltBottomColorName)];
 
     public static string LyricAltBorderColorName => Lang[nameof(LyricAltBorderColorName)];
-
+    
+    #endregion
+    
     public bool LyricIsEnabled
     {
         get => LyricConfig.DesktopLyric.LyricIsEnabled;
@@ -63,6 +78,33 @@ public partial class LyricConfigPageViewModel : ViewModelBase
             OnPropertyChanged();
 
             ToggleWindowDisplayStatus(value);
+        }
+    }
+
+    public bool DesktopPlayControlIsEnabled
+    {
+        get => LyricConfig.DesktopLyric.DesktopPlayControlIsEnabled;
+        set
+        {
+            if (DesktopPlayControlIsEnabled == value) return;
+
+            LyricConfig.DesktopLyric.DesktopPlayControlIsEnabled = value;
+            OnPropertyChanged();
+
+            ToggleDesktopPlayControlService(value);
+        }
+    }
+
+    private static void ToggleDesktopPlayControlService(bool value)
+    {
+        if (value)
+        {
+            // 启动桌面播放控制服务
+            DesktopPlayControlService.Start();
+        }
+        else
+        {
+            DesktopPlayControlService.Stop();
         }
     }
 
@@ -117,7 +159,7 @@ public partial class LyricConfigPageViewModel : ViewModelBase
         }
         else
         {
-            HideLyricWindow();
+            CloseLyricWindow();
         }
     }
 
@@ -159,7 +201,7 @@ public partial class LyricConfigPageViewModel : ViewModelBase
         _desktopLyricsWindow.Show();
     }
 
-    private void HideLyricWindow()
+    private void CloseLyricWindow()
     {
         _desktopLyricsWindow?.Close();
         _desktopLyricsWindow = null;

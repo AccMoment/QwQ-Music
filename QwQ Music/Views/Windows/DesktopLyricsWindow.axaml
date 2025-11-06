@@ -9,7 +9,8 @@
         Background="{Binding LyricConfig.LyricBackground,Converter={StaticResource ToBrushConverter}}"
         WindowStartupLocation="Manual"
         Title="QwQ Music • 桌面歌词"
-        x:Class="QwQ_Music.Views.DesktopLyricsWindow"
+        Icon="resm:QwQ_Music.Assets.EmbeddedRes.app-icon.ico"
+        x:Class="QwQ_Music.Views.Windows.DesktopLyricsWindow"
         x:DataType="viewModel:DesktopLyricsWindowViewModel"
         xmlns="https://github.com/avaloniaui"
         xmlns:viewModel="using:QwQ_Music.ViewModels"
@@ -23,6 +24,7 @@
     </Window.Resources>
 
     <Panel>
+        
         <Border Classes.RunLyricBorder="{Binding $parent[Window].IsPointerOver}"
                 CornerRadius="{Binding LyricConfig.WindowCornerRadius}"
                 BorderThickness="2">
