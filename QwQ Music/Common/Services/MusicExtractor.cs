@@ -21,23 +21,26 @@ public static class MusicExtractor
     /// <returns>包含音乐信息的模型。</returns>
     public static async Task<MusicItemModel?> ExtractMusicInfoAsync(string filePath)
     {
-        var track = await MusicTagExtractorFactory.GetTrackAsync(filePath);
+        var track = await MusicTagExtractorFactory.GetTrackAsync(filePath).ConfigureAwait(false);
 
-        if (track == null)
+        if (track != null)
         {
-            await LoggerService.ErrorAsync($"未能从音频文件中提取元数据 {filePath}!");
+            return await Task.Run(() =>
+            {
+                var itemModel = new MusicItemModel
+                {
+                    FilePath = filePath,
+                };
 
-            return null;
+                SetMusicMetadata(itemModel, track);
+
+                return itemModel;
+            }).ConfigureAwait(false); // 在线程池中完成较重的元数据与封面解码，避免切回 UI 线程造成卡顿
         }
 
-        var itemModel = new MusicItemModel
-        {
-            FilePath = filePath,
-        };
+        await LoggerService.ErrorAsync($"未能从音频文件中提取元数据 {filePath}!").ConfigureAwait(false);
 
-        SetMusicMetadata(itemModel, track);
-
-        return itemModel;
+        return null;
     }
 
     /// <summary>
@@ -104,9 +107,11 @@ public static class MusicExtractor
 
         try
         {
-            musicItem.CoverImage = track.EmbeddedPictures.Count > 0
-                ? Bitmap.DecodeToWidth(new MemoryStream(track.EmbeddedPictures[0].PictureData), 128)
-                : null;
+            if (track.EmbeddedPictures.Count > 0)
+            {
+                using var coverStream = new MemoryStream(track.EmbeddedPictures[0].PictureData);
+                musicItem.CoverImage = Bitmap.DecodeToWidth(coverStream, 128);
+            }
         }
         catch (Exception ex)
         {

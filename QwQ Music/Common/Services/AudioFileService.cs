@@ -27,16 +27,22 @@ public static class AudioFileService
 
         NotificationService.Info("提示", "开始导入中，请稍等....！");
 
-        var allFilePaths = await Task.Run(() => FileOperationService.GetAllFilePaths(paths));
-        await ImportMusicFilesAsync(allFilePaths);
+        var allFilePaths = FileOperationService.GetAllFilePaths(paths);
+        var musicItems = await ImportMusicFilesAsync(allFilePaths);
+
+        if (musicItems == null || musicItems.Count == 0)
+            return;
+
+        // 批量添加到UI集合
+        await MusicItemManager.Default.AddAsync(musicItems);
     }
 
     /// <summary>
-    ///     导入音乐文件到播放列表
+    ///     导入音乐文件
     /// </summary>
     /// <param name="filePaths">要导入的文件路径列表</param>
-    /// <returns>导入任务</returns>
-    private static async Task ImportMusicFilesAsync(IReadOnlyList<string> filePaths)
+    /// <returns>导入的音乐文件信息</returns>
+    private static async Task<List<MusicItemModel>?> ImportMusicFilesAsync(IReadOnlyList<string> filePaths)
     {
         // 过滤出音频文件
         var audioFilePaths = await Task.Run(() => AudioFileValidator.FilterAudioFiles(filePaths));
@@ -45,7 +51,7 @@ public static class AudioFileService
         {
             NotificationService.Info("提示", "没有找到可导入的音频文件！");
 
-            return;
+            return null;
         }
 
         // 预加载现有路径集合
@@ -69,18 +75,12 @@ public static class AudioFileService
         }
 
         if (newFilePaths.Count == 0)
-            return;
+            return null;
 
         // 并行提取音乐信息，并过滤掉 null 结果
-        var musicItems = (await Task.WhenAll(newFilePaths.Select(MusicExtractor.ExtractMusicInfoAsync)))
+        return (await Task.WhenAll(newFilePaths.Select(MusicExtractor.ExtractMusicInfoAsync)))
             .Where(m => m != null)
             .Cast<MusicItemModel>()
             .ToList();
-
-        if (musicItems.Count == 0)
-            return;
-
-        // 批量添加到UI集合
-        await MusicItemManager.Default.AddAsync(musicItems);
     }
 }

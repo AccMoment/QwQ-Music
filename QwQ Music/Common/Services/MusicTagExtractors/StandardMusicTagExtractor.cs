@@ -13,6 +13,6 @@ public class StandardMusicTagExtractor(string filePath) : IMusicTagExtractor
 
     public Task<Track?> GetTrackAsync()
     {
-        return Task.FromResult(GetTrack());
+        return Task.Run(GetTrack);
     }
 }

@@ -22,7 +22,6 @@ public partial class DesktopLyricsWindow : Window
 
         PositionChanged += Window_OnPositionChanged;
         Closed += OnClosed;
-        base.Show();
 
         SetPenetrate(LyricConfig.LockLyricWindow);
     }

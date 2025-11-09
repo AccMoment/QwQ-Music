@@ -80,7 +80,6 @@ public partial class PlayConfigPageViewModel : ViewModelBase
         foreach (var musicItem in musicItems)
         {
             musicItem.Gain = 0;
-            NumberOfCompletedCalc--;
         }
 
         await Task.Run(() =>
@@ -93,6 +92,8 @@ public partial class PlayConfigPageViewModel : ViewModelBase
                 });
             }
         });
+
+        NumberOfCompletedCalc = 0;
 
         NotificationService.Info("回放增益值已清空！");
     }
@@ -140,12 +141,10 @@ public partial class PlayConfigPageViewModel : ViewModelBase
 
     private async Task ProcessItemsAsync(List<MusicItemModel> items, CancellationToken cancellationToken)
     {
-        using var audioGainCalculator = new AudioGainCalculator();
-
         await Parallel.ForEachAsync(items,
             new ParallelOptions
             {
-                MaxDegreeOfParallelism = Environment.ProcessorCount,
+                MaxDegreeOfParallelism = Math.Max(1, Math.Min(Environment.ProcessorCount / 2, 4)),
                 CancellationToken = cancellationToken,
             },
             async (item, ct) =>
@@ -153,11 +152,12 @@ public partial class PlayConfigPageViewModel : ViewModelBase
                 try
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    await ProcessSingleItemAsync(audioGainCalculator, item, ct);
+                    using var audioGainCalculator = new AudioGainCalculator();
+                    await ProcessSingleItemAsync(audioGainCalculator, item);
                 }
                 catch (OperationCanceledException) when (ct.IsCancellationRequested) // 取消异常
                 {
-                    NotificationService.Info("回放增益计算已取消！");
+                    // 单项取消时不弹通知，避免 UI 频繁刷新；整体取消会有统一提示
                 }
                 catch (Exception ex)
                 {
@@ -167,7 +167,7 @@ public partial class PlayConfigPageViewModel : ViewModelBase
             });
     }
 
-    private async Task ProcessSingleItemAsync(AudioGainCalculator audioGainCalculator, MusicItemModel item, CancellationToken cancellationToken)
+    private async Task ProcessSingleItemAsync(AudioGainCalculator audioGainCalculator, MusicItemModel item)
     {
         double gain = await audioGainCalculator.CalculateGainAsync(
             item, SelectedMusicReplayGainStandard, PlayerConfig.CustomMusicReplayGainStandard);

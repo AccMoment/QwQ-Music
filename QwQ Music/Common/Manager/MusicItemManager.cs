@@ -77,8 +77,7 @@ public partial class MusicItemManager : ObservableObject
 
         if (successItems.Count > 0)
         {
-            string existingTitles = string.Join("、", musicItems.Select(items => $"《{items.Title}》")
-            );
+            string existingTitles = string.Join("、", musicItems.Select(items => $"《{items.Title}》"));
 
             NotificationService.Success($"歌曲 {existingTitles} 添加成功啦~");
         }
@@ -109,7 +108,7 @@ public partial class MusicItemManager : ObservableObject
     public static async Task Update(IList<MusicItemModel> musicItems)
     {
         var successItems = new List<MusicItemModel>();
-        
+
         await Task.Run(() =>
         {
             using var repo = new MusicItemRepository(StaticConfig.DatabasePath);
@@ -127,7 +126,7 @@ public partial class MusicItemManager : ObservableObject
                 }
             }
         });
-        
+
         var failedItems = musicItems.Except(successItems).ToList();
 
         // 显示删除结果通知
@@ -143,7 +142,7 @@ public partial class MusicItemManager : ObservableObject
             NotificationService.Error($"更新{failedTitles}失败了！");
         }
     }
-    
+
     public static void Update(string filePath, Dictionary<string, object?> fields)
     {
         using var repo = new MusicItemRepository(StaticConfig.DatabasePath);

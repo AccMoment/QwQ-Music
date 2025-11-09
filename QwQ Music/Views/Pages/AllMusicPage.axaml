@@ -64,7 +64,7 @@
             </u:IconButton.Icon>
             <u:IconButton.ContextMenu>
                 <ContextMenu>
-                    <MenuItem Header="强制刷新" Command="{Binding ForceRefreshMusicInfoCommand}" >
+                    <MenuItem Header="强制刷新" Command="{Binding ForceRefreshMusicInfoCommand}">
                         <MenuItem.Icon>
                             <PathIcon Data="{StaticResource SemiIconRefresh}" Margin="2" />
                         </MenuItem.Icon>
@@ -89,7 +89,7 @@
 
     </StackPanel>
 
-    <DataGrid Background="Transparent"    
+    <DataGrid Background="Transparent"
               x:Name="AllMusicDataGrid"
               CanUserReorderColumns="True"
               CanUserResizeColumns="True"
@@ -299,10 +299,11 @@
 
                             <DockPanel HorizontalSpacing="5" VerticalSpacing="5" VerticalAlignment="Center">
                                 <TextBlock FontWeight="Bold" Text="{Binding Title}" DockPanel.Dock="Top" />
-                                <Image DockPanel.Dock="Left" 
+                                <Image DockPanel.Dock="Left"
                                        Height="12"
+                                       IsVisible="{Binding $self.Source,Converter={x:Static ObjectConverters.IsNotNull}}"
                                        Source="{Binding AudioQualityLevel,
-                                       Converter={StaticResource AudioQualityLevelLogoConverter}}" />
+                                            Converter={StaticResource AudioQualityLevelLogoConverter}}" />
                                 <TextBlock DockPanel.Dock="Right"
                                            Classes="Tertiary"
                                            FontSize="12"
