@@ -2,9 +2,11 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using QwQ_Music.Common.Manager;
 using QwQ_Music.Common.Services;
+using QwQ_Music.Common.Utilities;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.Models.Enums;
 
@@ -71,20 +73,28 @@ public partial class MusicItemModel : ObservableObject
             // 启动异步加载任务
             Task.Run(async () =>
             {
-                var dbBitmap = await MusicExtractor.LoadBitmapFromFileAsync(
-                    StaticConfig.GetMusicCoverFullPath(CoverId));
-
-                if (dbBitmap == null)
+                try
                 {
-                    _loadingState = LoadingState.NotExist;
-                    OnPropertyChanged();
+                    var dbBitmap = await MusicExtractor.LoadBitmapFromFileAsync(
+                        StaticConfig.GetMusicCoverFullPath(CoverId));
 
-                    return;
+                    if (dbBitmap == null)
+                    {
+                        _loadingState = LoadingState.NotExist;
+                        OnPropertyChanged();
+
+                        return;
+                    }
+
+                    dbBitmap = await Dispatcher.UIThread.InvokeAsync(() => BitmapCropper.Crop(dbBitmap, 1.0));
+                    CacheManager.ImageCache.Add(CoverId, dbBitmap);
+                    _loadingState = LoadingState.Loaded;
+                    OnPropertyChanged(); // 通知 UI 更新
                 }
-
-                CacheManager.ImageCache.Add(CoverId, dbBitmap);
-                _loadingState = LoadingState.Loaded;
-                OnPropertyChanged(); // 通知 UI 更新
+                catch (Exception e)
+                {
+                    await LoggerService.ErrorAsync($"音乐《{Title}》在异步加载其封面时发生错误 : {e}\n音乐路径 : {FilePath}");
+                }
             });
 
             // 首次或加载中时返回加载中封面
@@ -96,13 +106,20 @@ public partial class MusicItemModel : ObservableObject
             {
                 Task.Run(async () =>
                 {
-                    CoverId ??= Guid.NewGuid().ToString();
-                    CacheManager.SetImage(CoverId, value);
+                    try
+                    {
+                        CoverId ??= Guid.NewGuid().ToString();
+                        CacheManager.SetImage(CoverId, value);
 
-                    await FileOperationService.SaveImageAsync(value, StaticConfig.GetMusicCoverFullPath(CoverId), true);
+                        await FileOperationService.SaveImageAsync(value, StaticConfig.GetMusicCoverFullPath(CoverId), true);
 
-                    _loadingState = LoadingState.Loaded;
-                    OnPropertyChanged();
+                        _loadingState = LoadingState.Loaded;
+                        OnPropertyChanged();
+                    }
+                    catch (Exception e)
+                    {
+                        await LoggerService.ErrorAsync($"音乐《{Title}》在异步保存其封面时发生错误 : {e}\n音乐路径 : {FilePath}");
+                    }
                 });
             }
             else
@@ -112,18 +129,25 @@ public partial class MusicItemModel : ObservableObject
 
                 Task.Run(() =>
                 {
-                    CacheManager.DeleteImage(CoverId);
-
-                    string coverFullPath = StaticConfig.GetMusicCoverFullPath(CoverId);
-
-                    if (File.Exists(coverFullPath))
+                    try
                     {
-                        File.Delete(coverFullPath);
-                    }
+                        CacheManager.DeleteImage(CoverId);
 
-                    CoverId = null;
-                    _loadingState = LoadingState.NotExist;
-                    OnPropertyChanged();
+                        string coverFullPath = StaticConfig.GetMusicCoverFullPath(CoverId);
+
+                        if (File.Exists(coverFullPath))
+                        {
+                            File.Delete(coverFullPath);
+                        }
+
+                        CoverId = null;
+                        _loadingState = LoadingState.NotExist;
+                        OnPropertyChanged();
+                    }
+                    catch (Exception e)
+                    {
+                        LoggerService.Error($"在删除为音乐《{Title}》缓存的封面时发生错误 : {e}");
+                    }
                 });
             }
         }

@@ -28,4 +28,8 @@ public class SoundEffectConfig
     public BassBoosterModel BassBooster { get; set; } = new();
 
     public ChorusModel Chorus { get; set; } = new();
+
+    public CompressorModel Compressor { get; set; } = new();
+    
+    public DelayModel Delay { get; set; } = new();
 }

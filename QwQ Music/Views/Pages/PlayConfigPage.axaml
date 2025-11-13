@@ -10,7 +10,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:pages="clr-namespace:QwQ_Music.ViewModels.Pages"
              xmlns:utilities="clr-namespace:QwQ_Music.Common.Utilities"
-             xmlns:u="https://irihi.tech/ursa">
+             xmlns:u="https://irihi.tech/ursa"
+             xmlns:converters="clr-namespace:QwQ_Music.UI.Converters">
 
     <ScrollViewer>
 
@@ -44,8 +45,7 @@
                     </Style>
                 </Style>
 
-
-                <Style Selector="WrapPanel > Border > StackPanel > StackPanel > TextBlock">
+                <Style Selector="TextBlock.CardTitle">
                     <Setter Property="VerticalAlignment" Value="Center" />
                     <Setter Property="FontWeight" Value="Bold" />
                 </Style>
@@ -82,11 +82,11 @@
                         <StackPanel>
                             <PathIcon Data="{StaticResource SemiIconMusicNoteStroked}" Height="14"
                                       Foreground="{x:Static utilities:ColorGenerator.RandomColor}" />
-                            <TextBlock Text="播放完成后 : " />
+                            <TextBlock Text="播放完成后 : " Classes="CardTitle"/>
                         </StackPanel>
 
                         <RadioButton Content="自动切换" IsChecked="{Binding PlayerConfig.AutoSwitchNext}" />
-                        <RadioButton Content="回到开头" IsChecked="{Binding !PlayerConfig.AutoSwitchNext}" />
+                        <RadioButton Content="回到开头" IsChecked="{Binding !PlayerConfig.AutoSwitchNext,Mode=OneWay}" />
                     </StackPanel>
                 </Border>
 
@@ -95,11 +95,11 @@
                         <StackPanel>
                             <PathIcon Data="{StaticResource SemiIconChevronUpDown}" Height="14"
                                       Foreground="{x:Static utilities:ColorGenerator.RandomColor}" />
-                            <TextBlock Text="切换音乐时 : " />
+                            <TextBlock Text="切换音乐时 : "  Classes="CardTitle"/>
                         </StackPanel>
 
                         <RadioButton Content="从头开始播放" IsChecked="{Binding PlayerConfig.IsRestartPlay}" />
-                        <RadioButton Content="继续上次播放" IsChecked="{Binding !PlayerConfig.IsRestartPlay}" />
+                        <RadioButton Content="继续上次播放" IsChecked="{Binding !PlayerConfig.IsRestartPlay,Mode=OneWay}" />
                     </StackPanel>
                 </Border>
 
@@ -108,11 +108,11 @@
                         <StackPanel>
                             <PathIcon Data="{StaticResource Random}" Height="14"
                                       Foreground="{x:Static utilities:ColorGenerator.RandomColor}" />
-                            <TextBlock Text="随机模式 : " />
+                            <TextBlock Text="随机模式 : "  Classes="CardTitle"/>
                         </StackPanel>
 
                         <RadioButton Content="随机切换一首" IsChecked="{Binding PlayerConfig.IsRealRandom}" />
-                        <RadioButton Content="打乱播放列表" IsChecked="{Binding !PlayerConfig.IsRealRandom}" />
+                        <RadioButton Content="打乱播放列表" IsChecked="{Binding !PlayerConfig.IsRealRandom,Mode=OneWay}" />
                     </StackPanel>
                 </Border>
 
@@ -121,7 +121,7 @@
                         <StackPanel>
                             <PathIcon Data="{StaticResource SemiIconSonicStroked}" Height="12.5"
                                       Foreground="{x:Static utilities:ColorGenerator.RandomColor}" />
-                            <TextBlock Text="输出采样率 : " />
+                            <TextBlock Text="输出采样率 : "  Classes="CardTitle"/>
                         </StackPanel>
 
                         <ComboBox
@@ -138,7 +138,30 @@
 
                     </StackPanel>
                 </Border>
+                
+              <Border>
+                  
+                  <Border.Resources>
+                      <converters:ShareModeToBoolConverter x:Key="ShareModeToBoolConverter"/>
+                      <converters:BoolToShareModeConverter x:Key="BoolToShareModeConverter"/>
+                  </Border.Resources>
+                  
+                  <StackPanel>
+                      
+                      <StackPanel>
+                            <PathIcon Data="{StaticResource SemiIconPlayCircle}" Height="12.5"
+                                      Foreground="{x:Static utilities:ColorGenerator.RandomColor}" />
+                            <TextBlock Text="播放模式 : "  Classes="CardTitle"/>
+                        </StackPanel>
+                      
+                      <RadioButton Content="共享播放"
+                                   IsChecked="{Binding PlayerConfig.DeviceConfig.Playback.ShareMode,Converter={StaticResource BoolToShareModeConverter}}" />
 
+                      <RadioButton Content="独占播放" 
+                                   IsChecked="{Binding PlayerConfig.DeviceConfig.Playback.ShareMode,Mode=OneWay,Converter={StaticResource ShareModeToBoolConverter}}" />
+
+                  </StackPanel>
+              </Border>
 
             </WrapPanel>
 
@@ -150,13 +173,20 @@
                         <Setter Property="Spacing" Value="10" />
                     </Style>
 
-                    <Style Selector="WrapPanel > Border > StackPanel > StackPanel">
-                        <Setter Property="Height" Value="25" />
+                    <Style Selector="WrapPanel > Border">
+                        <Setter Property="Padding" Value="15" />
+                    </Style>
+
+                    <Style Selector="WrapPanel > Border > StackPanel > StackPanel > Rectangle">
+                        <Setter Property="Margin" Value="0,2" />
+                        <Setter Property="Width" Value="4" />
+                        <Setter Property="RadiusX" Value="2" />
+                        <Setter Property="RadiusY" Value="2" />
                     </Style>
 
                 </WrapPanel.Styles>
 
-                <Border MinWidth="280" Padding="15">
+                <Border MinWidth="280">
 
                     <StackPanel Spacing="0">
 
@@ -182,13 +212,15 @@
                             Orientation="Horizontal"
                             VerticalAlignment="Center">
 
+                            <ToolTip.Tip>
+                                <TextBlock FontWeight="Normal"
+                                           Text="回放增益是一种用于标准化音频播放音量的技术，旨在解决不同音频文件之间音量差异的问题。通过分析音频文件的内容，计算出一个标准化的响度值，并将该值存储在数据库中，而不会对音频本身进行更改。"/>
+                            </ToolTip.Tip>
+                            
                             <Rectangle
-                                Fill="{x:Static utilities:ColorGenerator.RandomColor}"
-                                Margin="0,5"
-                                RadiusX="2" RadiusY="2"
-                                Width="4" />
+                                Fill="{x:Static utilities:ColorGenerator.RandomColor}"/>
 
-                            <TextBlock FontWeight="Bold" Text="启用回放增益" />
+                            <TextBlock FontWeight="Bold" Text="启用回放增益"  Classes="CardTitle"/>
                             <CheckBox IsChecked="{Binding PlayComponent.ReplayGainModifier.Enabled}" />
                         </StackPanel>
 
@@ -309,13 +341,9 @@
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
 
-                            <Rectangle
-                                Fill="{x:Static utilities:ColorGenerator.RandomColor}"
-                                Margin="0,5"
-                                RadiusX="2" RadiusY="2"
-                                Width="4" />
+                            <Rectangle Fill="{x:Static utilities:ColorGenerator.RandomColor}"/>
 
-                            <TextBlock Text="启用淡入淡出" />
+                            <TextBlock Text="启用淡入淡出"  Classes="CardTitle"/>
                             <CheckBox IsChecked="{Binding PlayComponent.FadeModifier.Enabled}" />
                         </StackPanel>
 
@@ -354,6 +382,67 @@
 
                     </StackPanel>
                 </Border>
+                
+                <Border>
+                    
+                    <StackPanel>
+                        
+                        <StackPanel.Styles>
+                            
+                            <Style Selector="TextBlock.Tertiary">
+                                <Setter Property="FontSize" Value="12.1"/>
+                            </Style>
+
+                        </StackPanel.Styles>
+
+                        <StackPanel Orientation="Horizontal">
+
+                            <PathIcon Data="{StaticResource SemiIconHourglass}" Height="12.5"
+                                      Foreground="{x:Static utilities:ColorGenerator.RandomColor}" />
+                            <TextBlock Text="缓冲区大小" Classes="CardTitle" />
+
+                        </StackPanel>
+
+                        <TextBlock Text="设备缓冲区使用的周期数"
+                                   Classes="Tertiary"
+                                   ToolTip.Tip="设置设备缓冲区使用的周期数，0 表示设备默认值" />
+
+                        <u:NumericIntUpDown Step="100"
+                                            InnerRightContent="period"
+                                            Minimum="0"
+                                            Value="{Binding PlayerConfig.DeviceConfig.Periods}" />
+                        
+                        <Panel>
+                            <TextBlock Text="以每个声道的帧数为单位"
+                                       Classes="Tertiary"
+                                       ToolTip.Tip="如：10ms * 48kHz = 480 帧（单声道），立体声则为 960 帧，0 表示使用设备默认值" />
+
+                            <PathIcon Height="12" Width="12"
+                                      ToolTip.Tip="此选项（声道的帧数为单位）优先级大于声道的毫秒时间为单位"
+                                      Foreground="{DynamicResource SemiBlue4}"
+                                      HorizontalAlignment="Right"
+                                      Data="{StaticResource SemiIconHelpCircleStroked}" />
+                        </Panel>
+
+                        <u:NumericIntUpDown Step="100"
+                                            InnerRightContent="frame"
+                                            Minimum="0"
+                                            Value="{Binding PlayerConfig.DeviceConfig.PeriodSizeInFrames}" />
+
+                        <TextBlock Text="以每个通道的毫秒时间为单位"
+                                   Classes="Tertiary"
+                                   ToolTip.Tip="如：设置为 10ms 单身道，则双声道会自动变为20ms，0 表示使用设备默认值" />
+
+                        <u:NumericIntUpDown Step="100"
+                                            Minimum="0"
+                                            InnerRightContent="ms"
+                                            Value="{Binding PlayerConfig.DeviceConfig.PeriodSizeInMilliseconds}" />
+
+                    </StackPanel>
+
+                </Border>
+
+
             </WrapPanel>
 
         </StackPanel>

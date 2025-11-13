@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Audio;
 using QwQ_Music.Common.Interfaces;
@@ -21,7 +22,7 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
 {
     #region 属性和字段
 
-    private readonly AudioPlay _audioPlay;
+    public AudioPlay AudioPlay { get; }
 
     private readonly AudioPreprocessor _audioPreprocessor;
 
@@ -37,6 +38,20 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
         set
         {
             MusicPlayListManager.CurrentMusicItem = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public Bitmap? CoverImage
+    {
+        get => field ?? CacheManager.Default;
+        set
+        {
+            if (field == value) return;
+
+            field?.Dispose();
+
+            field = value;
             OnPropertyChanged();
         }
     }
@@ -63,8 +78,8 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
         set
         {
             field = value;
-            
-            _audioPlay.Seek(value);
+
+            AudioPlay.Seek(value);
             LyricsModel.UpdateLyricsIndex(value);
             OnPropertyChanged();
 
@@ -87,11 +102,16 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
                 return;
 
             PlayerConfig.Volume = result;
-            _audioPlay.Volume = result / 100f;
+            AudioPlay.Volume = NormalVolume(result);
 
             IsMuted = result == 0f;
             OnPropertyChanged();
         }
+    }
+
+    public static float NormalVolume(int volume)
+    {
+        return volume / 100f;
     }
 
     public bool IsMuted
@@ -103,7 +123,7 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
                 return;
 
             PlayerConfig.IsMuted = value;
-            _audioPlay.IsMute = value;
+            AudioPlay.IsMute = value;
 
             OnPropertyChanged();
         }
@@ -121,7 +141,7 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
 
             PlayerConfig.PlaybackSpeed = result;
             OnPropertyChanged();
-            _audioPlay.Speed = result;
+            AudioPlay.Speed = result;
         }
     }
 
@@ -148,16 +168,20 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
     #endregion
 
     #region 初始化方法
-    
+
     private MusicPlayerViewModel()
     {
         InitializeAsync();
 
-        _audioPlay = new AudioPlay();
-        _audioPreprocessor = new AudioPreprocessor(_audioPlay);
-        
-        _audioPlay.PositionChanged += OnPositionChanged;
-        _audioPlay.PlaybackCompleted += AudioPlayOnPlaybackCompleted;
+        AudioPlay = new AudioPlay();
+        _audioPreprocessor = new AudioPreprocessor(AudioPlay);
+
+        AudioPlay.Volume = NormalVolume(Volume);
+        AudioPlay.IsMute = IsMuted;
+        AudioPlay.Speed = Speed;
+
+        AudioPlay.PositionChanged += OnPositionChanged;
+        AudioPlay.PlaybackCompleted += AudioPlayOnPlaybackCompleted;
 
         // 初始化歌词滚动定时器
         _lyricsTimer = new Timer();
@@ -193,12 +217,12 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
 
     public void Shutdown()
     {
-        _audioPlay.PositionChanged -= OnPositionChanged;
-        _audioPlay.PlaybackCompleted -= AudioPlayOnPlaybackCompleted;
+        AudioPlay.PositionChanged -= OnPositionChanged;
+        AudioPlay.PlaybackCompleted -= AudioPlayOnPlaybackCompleted;
         _lyricsTimer.Elapsed -= OnLyricsTimerElapsed;
         _lyricsTimer.Dispose();
 
-        _audioPlay.Dispose();
+        AudioPlay.Dispose();
 
         SaveFinalState();
     }
@@ -229,7 +253,7 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
         _lyricsTimer.Stop();
 
         // 计算到下一句歌词的时间间隔
-        double nextInterval = LyricsModel.GetNextLyricsInterval(_audioPlay.Position);
+        double nextInterval = LyricsModel.GetNextLyricsInterval(AudioPlay.Position);
 
         if (!(nextInterval > 0))
             return;
@@ -242,10 +266,10 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
     private void OnLyricsTimerElapsed(object? sender, ElapsedEventArgs e)
     {
         // 更新当前歌词
-        LyricsModel.UpdateLyricsIndex(_audioPlay.Position);
+        LyricsModel.UpdateLyricsIndex(AudioPlay.Position);
 
         // 计算到下一句歌词的时间间隔
-        double nextInterval = LyricsModel.GetNextLyricsInterval(_audioPlay.Position);
+        double nextInterval = LyricsModel.GetNextLyricsInterval(AudioPlay.Position);
 
         if (!(nextInterval > 0))
             return;
@@ -380,7 +404,7 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
         if (IsPlaying)
         {
             IsPlaying = false;
-            _audioPlay.Stop();
+            AudioPlay.Stop();
         }
 
         CurrentMusicItem = MusicPlayListManager.DefaultMusicItem;
@@ -398,12 +422,12 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
 
         if (value)
         {
-            _audioPlay.Play();
+            AudioPlay.Play();
             UpdateLyricsTimer();
         }
         else
         {
-            _audioPlay.Pause();
+            AudioPlay.Pause();
             _lyricsTimer.Stop();
         }
     }
@@ -499,11 +523,10 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
     {
         try
         {
-            _audioPreprocessor.UpdateMusicPlayProgress(musicItem, restart);
-
             await Task.WhenAll(
-                _audioPreprocessor.InitializeAudioTrack(musicItem),
-                LyricsModel.UpdateLyricsData(musicItem.FilePath)
+                _audioPreprocessor.UpdateMusicPlayProgressAsync(musicItem, restart),
+                _audioPreprocessor.InitializeAudioTrackAsync(musicItem),
+                LyricsModel.UpdateLyricsDataAsync(musicItem.FilePath)
             );
 
             // 使 View 中的 Slider 控件当前值归 0，
@@ -532,7 +555,6 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
 
     #region 其他
 
-    
     /// <summary>
     ///     注册热键功能
     /// </summary>

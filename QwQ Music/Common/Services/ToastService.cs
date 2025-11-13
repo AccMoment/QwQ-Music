@@ -1,21 +1,16 @@
 using System;
-using Avalonia;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
-using Notification = Ursa.Controls.Notification;
-using WindowNotificationManager = Ursa.Controls.WindowNotificationManager;
+using Ursa.Controls;
 
 namespace QwQ_Music.Common.Services;
 
-public static class NotificationService
+public class ToastService
 {
-    public static WindowNotificationManager? NotificationManager { get; } =
-        WindowNotificationManager.TryGetNotificationManager(App.TopLevel, out var manager)
+    public static WindowToastManager? ToastManager { get; } =
+        WindowToastManager.TryGetToastManager(App.TopLevel, out var manager)
             ? manager
-            : new WindowNotificationManager(App.TopLevel)
-            {
-                Margin = new Thickness(0, 40, 0, 0),
-            };
+            : new WindowToastManager(App.TopLevel);
 
     public static double CharactersPerMinute { get; set; } = 200.0;
 
@@ -45,7 +40,6 @@ public static class NotificationService
     }
 
     public static void Show(
-        string title,
         string message,
         NotificationType type,
         TimeSpan? expiration = null,
@@ -71,8 +65,8 @@ public static class NotificationService
         {
             var calculatedExpiration = CalculateExpiration(message, expiration);
 
-            NotificationManager?.Show(
-                new Notification(title, message),
+            ToastManager?.Show(
+                new Toast(message),
                 type,
                 calculatedExpiration,
                 showIcon,
@@ -85,7 +79,6 @@ public static class NotificationService
     }
 
     public static void ShowLight(
-        string title,
         string message,
         NotificationType type,
         TimeSpan? expiration = null,
@@ -95,9 +88,7 @@ public static class NotificationService
         Action? onClose = null
         )
     {
-        Show(
-            title,
-            message,
+        Show(message,
             type,
             expiration,
             showIcon,
@@ -110,41 +101,21 @@ public static class NotificationService
 
     public static void Success(string message, string[]? classes = null)
     {
-        Show("好欸！", message, NotificationType.Success, classes: classes);
+        Show(message, NotificationType.Success, classes: classes);
     }
 
     public static void Error(string message, string[]? classes = null)
     {
-        Show("坏欸！", message, NotificationType.Error, classes: classes);
+        Show(message, NotificationType.Error, classes: classes);
     }
 
     public static void Info(string message, string[]? classes = null)
     {
-        Show("提示！", message, NotificationType.Information, classes: classes);
+        Show(message, NotificationType.Information, classes: classes);
     }
 
     public static void Warning(string message, string[]? classes = null)
     {
-        Show("注意！", message, NotificationType.Warning, classes: classes);
-    }
-
-    public static void Success(string title, string message, string[]? classes = null)
-    {
-        Show(title, message, NotificationType.Success, classes: classes);
-    }
-
-    public static void Error(string title, string message, string[]? classes = null)
-    {
-        Show(title, message, NotificationType.Error, classes: classes);
-    }
-
-    public static void Info(string title, string message, string[]? classes = null)
-    {
-        Show(title, message, NotificationType.Information, classes: classes);
-    }
-
-    public static void Warning(string title, string message, string[]? classes = null)
-    {
-        Show(title, message, NotificationType.Warning, classes: classes);
+        Show(message, NotificationType.Warning, classes: classes);
     }
 }

@@ -36,7 +36,7 @@ public partial class LyricsModel : ObservableObject
     ///     更新歌词数据
     /// </summary>
     /// <param name="filePath">歌曲路径</param>
-    public async Task UpdateLyricsData(string filePath)
+    public async Task UpdateLyricsDataAsync(string filePath)
     {
         LyricsData = await MusicExtractor.ExtractMusicLyricsAsync(filePath);
         _timePoints.Clear();

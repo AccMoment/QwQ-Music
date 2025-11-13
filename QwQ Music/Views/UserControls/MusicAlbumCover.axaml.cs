@@ -11,6 +11,9 @@ public partial class MusicAlbumCover : UserControl
         Bitmap
     >(nameof(CoverImage));
 
+    public static readonly StyledProperty<bool> IsAutoRoundedCornersProperty = AvaloniaProperty.Register<MusicAlbumCover, bool>(
+        nameof(IsAutoRoundedCorners), true);
+
     public MusicAlbumCover()
     {
         InitializeComponent();
@@ -21,4 +24,11 @@ public partial class MusicAlbumCover : UserControl
         get => GetValue(CoverImageProperty);
         set => SetValue(CoverImageProperty, value);
     }
+    
+    public bool IsAutoRoundedCorners
+    {
+        get => GetValue(IsAutoRoundedCornersProperty);
+        set => SetValue(IsAutoRoundedCornersProperty, value);
+    }
+
 }

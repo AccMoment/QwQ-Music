@@ -88,6 +88,14 @@
                 <DataTemplate DataType="soundEffectModels:ChorusModel">
                     <soundEffects:Chorus />
                 </DataTemplate>
+                
+                <DataTemplate DataType="soundEffectModels:CompressorModel">
+                    <soundEffects:Compressor/>
+                </DataTemplate>
+                
+                <DataTemplate DataType="soundEffectModels:DelayModel">
+                    <soundEffects:Delay/>
+                </DataTemplate>
 
             </Carousel.DataTemplates>
 

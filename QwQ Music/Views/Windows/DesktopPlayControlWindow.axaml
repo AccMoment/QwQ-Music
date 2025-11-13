@@ -3,7 +3,6 @@
         ShowActivated="False"
         ShowInTaskbar="False"
         SystemDecorations="None"
-        Topmost="True"
         RemoveAnimationDuration="0:0:0.25"
         SizeToContent="WidthAndHeight"
         Background="Transparent"
@@ -11,13 +10,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:viewModels="clr-namespace:QwQ_Music.ViewModels"
         xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
         xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
         xmlns:windows="clr-namespace:QwQ_Music.Views.Windows"
+        xmlns:windows1="clr-namespace:QwQ_Music.ViewModels.Windows"
         mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="200"
         x:Class="QwQ_Music.Views.Windows.DesktopPlayControlWindow"
-        x:DataType="viewModels:MusicPlayerViewModel"
+        x:DataType="windows1:DesktopPlayControlWindowViewModel"
         Icon="resm:QwQ_Music.Assets.EmbeddedRes.app-icon.ico"
         Title="QwQ Music • 播放控制">
 
@@ -73,9 +72,10 @@
 
     </Window.Styles>
 
-    <Border CornerRadius="25"
+    <Border CornerRadius="15"
             Padding="10"
             Margin="10"
+            Width="180"
             Classes.MiniStatus="{Binding $parent[windows:DesktopPlayControlWindow].StartMovingOut}"
             Classes.AnimationDuringDisplay="{Binding $parent[Window].IsVisible}"
             Effect="{DynamicResource LightColor0DropShadowEffect}"
@@ -84,7 +84,7 @@
             HorizontalAlignment="Center"
             VerticalAlignment="Center">
 
-        <StackPanel Orientation="Horizontal" Spacing="20" HorizontalAlignment="Center"
+        <StackPanel Spacing="10" HorizontalAlignment="Center"
                     VerticalAlignment="Center">
 
             <StackPanel.Styles>
@@ -93,29 +93,77 @@
                 </Style>
             </StackPanel.Styles>
 
-            <!--  上一首  -->
-            <Button Theme="{DynamicResource BorderlessButton}"
-                    ToolTip.Tip="上一首"
-                    Command="{Binding PreviousSongCommand}"
-                    Foreground="{DynamicResource TextBlockDefaultForeground}"
-                    behaviors:DynamicCornerBehavior.IsEnabled="True">
-                <PathIcon
-                    Data="{StaticResource PlayIconData}"
-                    Height="30"
-                    RenderTransform="rotate(180deg)" />
-            </Button>
+            <Border HorizontalAlignment="Center" CornerRadius="25"
+                    BorderBrush="{DynamicResource BorderCardBorderBrush}"
+                    BorderThickness="1" Padding="10">
 
-            <!--  播放/暂停 按钮  -->
-            <userControls:MusicPlayButton />
+                <StackPanel Orientation="Horizontal" Spacing="20" HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
 
-            <!--  下一首  -->
-            <Button
-                Classes="Icon"
-                ToolTip.Tip="下一首"
-                Command="{Binding NextSongCommand}"
-                Foreground="{DynamicResource TextBlockDefaultForeground}"
-                behaviors:DynamicCornerBehavior.IsEnabled="True">
-                <PathIcon Data="{StaticResource PlayIconData}" Height="30" />
+                    <!--  上一首  -->
+                    <Button Theme="{DynamicResource BorderlessButton}"
+                            ToolTip.Tip="上一首"
+                            Command="{Binding MusicPlayerViewModel.PreviousSongCommand}"
+                            Foreground="{DynamicResource TextBlockDefaultForeground}"
+                            behaviors:DynamicCornerBehavior.IsEnabled="True">
+                        <PathIcon
+                            Data="{StaticResource PlayIconData}"
+                            Height="30"
+                            RenderTransform="rotate(180deg)" />
+                    </Button>
+
+                    <!--  播放/暂停 按钮  -->
+                    <userControls:MusicPlayButton />
+
+                    <!--  下一首  -->
+                    <Button
+                        Classes="Icon"
+                        ToolTip.Tip="下一首"
+                        Command="{Binding MusicPlayerViewModel.NextSongCommand}"
+                        Foreground="{DynamicResource TextBlockDefaultForeground}"
+                        behaviors:DynamicCornerBehavior.IsEnabled="True">
+                        <PathIcon Data="{StaticResource PlayIconData}" Height="30" />
+                    </Button>
+
+                </StackPanel>
+
+            </Border>
+
+            <!--  音乐信息  -->
+            <StackPanel>
+                
+                <StackPanel.Styles>
+                    <Style Selector="TextBlock">
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                    </Style>
+                </StackPanel.Styles>
+
+                <TextBlock Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Title}"
+                           FontWeight="Bold" 
+                           Padding="0" />
+
+                <TextBlock Classes="Tertiary"
+                           FontSize="12"
+                           MaxLines="2"
+                           TextTrimming="CharacterEllipsis"
+                           TextWrapping="Wrap"
+                           ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}">
+                    <Run Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Artists}" />
+                    -
+                    <Run Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Album}" />
+                </TextBlock>
+
+            </StackPanel>
+
+            <!--  专辑按钮  -->
+            <Button Classes="None"
+                    Command="{Binding ShowMusicPlayerPageCommand}">
+
+                <userControls:MusicAlbumCover
+                    IsAutoRoundedCorners="False"
+                    CornerRadius="10"
+                    CoverImage="{Binding MusicPlayerViewModel.CoverImage}" />
             </Button>
 
         </StackPanel>

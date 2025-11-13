@@ -9,8 +9,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:models="clr-namespace:QwQ_Music.Models"
     xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls" ClipToBounds="True"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:control="clr-namespace:QwQ.Avalonia.Control;assembly=QwQ.Avalonia.Control">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Border ClipToBounds="True" CornerRadius="{Binding $parent[userControls:MusicAlbumButton].CornerRadius}">
 
@@ -31,111 +30,212 @@
                 </Border.IsVisible>
             </Panel>
 
-            <control:SwitchControl
-                IsVisible="{Binding #CoverLayer.IsVisible}"
-                Foreground="White"
-                Margin="6"
-                x:Name="QuickPlaySwitchControl">
+            <ContentPresenter Margin="6"
+                              Foreground="White"
+                              IsVisible="{Binding #CoverLayer.IsVisible}">
 
-                <control:SwitchControl.Condition>
-                    <MultiBinding Converter="{StaticResource ObjectCompareMultiConverter}">
-                        <Binding Path="$parent[userControls:MusicAlbumButton].CurrentMusicItem" />
-                        <Binding />
-                    </MultiBinding>
-                </control:SwitchControl.Condition>
+                <Interaction.Behaviors>
 
-                <control:SwitchControl.TrueContent>
+                    <IfElseTrigger>
 
-                    <control:SwitchControl Condition="{Binding $parent[userControls:MusicAlbumButton].IsPlaying}">
+                        <IfElseTrigger.Condition>
+                            <MultiBinding Converter="{StaticResource ObjectCompareMultiConverter}">
+                                <Binding Path="$parent[userControls:MusicAlbumButton].CurrentMusicItem" />
+                                <Binding />
+                            </MultiBinding>
+                        </IfElseTrigger.Condition>
 
-                        <control:SwitchControl.TrueContent>
+                        <IfElseTrigger.IfActions>
 
-                            <control:SwitchControl
-                                Condition="{Binding $parent[userControls:MusicAlbumButton].IsPointerOver}">
+                            <ChangeAvaloniaPropertyAction
+                                TargetProperty="{x:Static ContentPresenter.ContentProperty}">
+                                <ChangeAvaloniaPropertyAction.Value>
+                                    
+                                    <ContentPresenter>
 
-                                <control:SwitchControl.TrueContent>
-                                    <PathIcon Data="{StaticResource PauseIconData}" />
-                                </control:SwitchControl.TrueContent>
+                                        <Interaction.Behaviors>
 
-                                <control:SwitchControl.FalseContent>
-                                    <StackPanel
-                                        HorizontalAlignment="Center"
-                                        Orientation="Horizontal"
-                                        Spacing="4"
-                                        VerticalAlignment="Center">
+                                            <IfElseTrigger
+                                                Condition="{Binding $parent[userControls:MusicAlbumButton].IsPlaying}">
 
-                                        <Border Classes="Short" />
-                                        <Border Classes="Long" />
-                                        <Border Classes="Short" />
+                                                <IfElseTrigger.IfActions>
 
-                                        <StackPanel.Styles>
-                                            <Style Selector="Border">
-                                                <Setter Property="CornerRadius" Value="3" />
-                                                <Setter Property="Width" Value="4" />
-                                                <Setter Property="Background" Value="White" />
-                                            </Style>
+                                                    <ChangeAvaloniaPropertyAction
+                                                        TargetProperty="{x:Static ContentPresenter.ContentProperty}">
+                                                        <ChangeAvaloniaPropertyAction.Value>
 
-                                            <Style Selector="Border.Long">
-                                                <Setter Property="Height" Value="20" />
-                                                <Style.Animations>
-                                                    <Animation
-                                                        Duration="0:0:1"
-                                                        FillMode="Forward"
-                                                        IterationCount="Infinite">
-                                                        <KeyFrame Cue="0%">
-                                                            <Setter Property="ScaleTransform.ScaleY" Value="1" />
-                                                        </KeyFrame>
-                                                        <KeyFrame Cue="50%">
-                                                            <Setter Property="ScaleTransform.ScaleY" Value="0.5" />
-                                                        </KeyFrame>
-                                                        <KeyFrame Cue="100%">
-                                                            <Setter Property="ScaleTransform.ScaleY" Value="1" />
-                                                        </KeyFrame>
-                                                    </Animation>
-                                                </Style.Animations>
-                                            </Style>
+                                                            <ContentPresenter>
 
-                                            <Style Selector="Border.Short">
-                                                <Setter Property="Height" Value="10" />
-                                                <Style.Animations>
-                                                    <Animation
-                                                        Duration="0:0:1"
-                                                        FillMode="Forward"
-                                                        IterationCount="Infinite">
-                                                        <KeyFrame Cue="0%">
-                                                            <Setter Property="ScaleTransform.ScaleY" Value="1" />
-                                                        </KeyFrame>
-                                                        <KeyFrame Cue="50%">
-                                                            <Setter Property="ScaleTransform.ScaleY" Value="1.5" />
-                                                        </KeyFrame>
-                                                        <KeyFrame Cue="100%">
-                                                            <Setter Property="ScaleTransform.ScaleY" Value="1" />
-                                                        </KeyFrame>
-                                                    </Animation>
-                                                </Style.Animations>
-                                            </Style>
+                                                                <Interaction.Behaviors>
 
-                                        </StackPanel.Styles>
-                                    </StackPanel>
-                                </control:SwitchControl.FalseContent>
-                            </control:SwitchControl>
+                                                                    <IfElseTrigger
+                                                                        Condition="{Binding $parent[userControls:MusicAlbumButton].IsPointerOver}">
 
-                        </control:SwitchControl.TrueContent>
+                                                                        <IfElseTrigger.IfActions>
 
-                        <control:SwitchControl.FalseContent>
-                            <PathIcon Data="{StaticResource PlayIconData}" />
-                        </control:SwitchControl.FalseContent>
+                                                                            <ChangeAvaloniaPropertyAction
+                                                                                TargetProperty="{x:Static ContentPresenter.ContentProperty}">
+                                                                                <ChangeAvaloniaPropertyAction.Value>
 
-                    </control:SwitchControl>
+                                                                                    <PathIcon
+                                                                                        Data="{StaticResource PauseIconData}" />
 
-                </control:SwitchControl.TrueContent>
+                                                                                </ChangeAvaloniaPropertyAction.Value>
+                                                                            </ChangeAvaloniaPropertyAction>
 
-                <control:SwitchControl.FalseContent>
-                    <PathIcon Data="{StaticResource PlayIconData}" />
-                </control:SwitchControl.FalseContent>
+                                                                        </IfElseTrigger.IfActions>
 
-            </control:SwitchControl>
+                                                                        <IfElseTrigger.ElseActions>
 
+                                                                            <ChangeAvaloniaPropertyAction
+                                                                                TargetProperty="{x:Static ContentPresenter.ContentProperty}">
+                                                                                <ChangeAvaloniaPropertyAction.Value>
+
+                                                                                    <StackPanel
+                                                                                        HorizontalAlignment="Center"
+                                                                                        Orientation="Horizontal"
+                                                                                        Spacing="4"
+                                                                                        VerticalAlignment="Center">
+
+                                                                                        <Border Classes="Short" />
+                                                                                        <Border Classes="Long" />
+                                                                                        <Border Classes="Short" />
+
+                                                                                        <StackPanel.Styles>
+                                                                                            <Style Selector="Border">
+                                                                                                <Setter
+                                                                                                    Property="CornerRadius"
+                                                                                                    Value="3" />
+                                                                                                <Setter
+                                                                                                    Property="Width"
+                                                                                                    Value="4" />
+                                                                                                <Setter
+                                                                                                    Property="Background"
+                                                                                                    Value="White" />
+                                                                                            </Style>
+
+                                                                                            <Style
+                                                                                                Selector="Border.Long">
+                                                                                                <Setter
+                                                                                                    Property="Height"
+                                                                                                    Value="20" />
+                                                                                                <Style.Animations>
+                                                                                                    <Animation
+                                                                                                        Duration="0:0:1"
+                                                                                                        FillMode="Forward"
+                                                                                                        IterationCount="Infinite">
+                                                                                                        <KeyFrame
+                                                                                                            Cue="0%">
+                                                                                                            <Setter
+                                                                                                                Property="ScaleTransform.ScaleY"
+                                                                                                                Value="1" />
+                                                                                                        </KeyFrame>
+                                                                                                        <KeyFrame
+                                                                                                            Cue="50%">
+                                                                                                            <Setter
+                                                                                                                Property="ScaleTransform.ScaleY"
+                                                                                                                Value="0.5" />
+                                                                                                        </KeyFrame>
+                                                                                                        <KeyFrame
+                                                                                                            Cue="100%">
+                                                                                                            <Setter
+                                                                                                                Property="ScaleTransform.ScaleY"
+                                                                                                                Value="1" />
+                                                                                                        </KeyFrame>
+                                                                                                    </Animation>
+                                                                                                </Style.Animations>
+                                                                                            </Style>
+
+                                                                                            <Style
+                                                                                                Selector="Border.Short">
+                                                                                                <Setter
+                                                                                                    Property="Height"
+                                                                                                    Value="10" />
+                                                                                                <Style.Animations>
+                                                                                                    <Animation
+                                                                                                        Duration="0:0:1"
+                                                                                                        FillMode="Forward"
+                                                                                                        IterationCount="Infinite">
+                                                                                                        <KeyFrame
+                                                                                                            Cue="0%">
+                                                                                                            <Setter
+                                                                                                                Property="ScaleTransform.ScaleY"
+                                                                                                                Value="1" />
+                                                                                                        </KeyFrame>
+                                                                                                        <KeyFrame
+                                                                                                            Cue="50%">
+                                                                                                            <Setter
+                                                                                                                Property="ScaleTransform.ScaleY"
+                                                                                                                Value="1.5" />
+                                                                                                        </KeyFrame>
+                                                                                                        <KeyFrame
+                                                                                                            Cue="100%">
+                                                                                                            <Setter
+                                                                                                                Property="ScaleTransform.ScaleY"
+                                                                                                                Value="1" />
+                                                                                                        </KeyFrame>
+                                                                                                    </Animation>
+                                                                                                </Style.Animations>
+                                                                                            </Style>
+
+                                                                                        </StackPanel.Styles>
+                                                                                    </StackPanel>
+
+                                                                                </ChangeAvaloniaPropertyAction.Value>
+                                                                            </ChangeAvaloniaPropertyAction>
+
+                                                                        </IfElseTrigger.ElseActions>
+
+                                                                    </IfElseTrigger>
+
+                                                                </Interaction.Behaviors>
+
+                                                            </ContentPresenter>
+                                                        </ChangeAvaloniaPropertyAction.Value>
+                                                    </ChangeAvaloniaPropertyAction>
+                                                </IfElseTrigger.IfActions>
+
+                                                <IfElseTrigger.ElseActions>
+
+                                                    <ChangeAvaloniaPropertyAction
+                                                        TargetProperty="{x:Static ContentPresenter.ContentProperty}">
+                                                        <ChangeAvaloniaPropertyAction.Value>
+
+                                                            <PathIcon Data="{StaticResource PlayIconData}" />
+
+                                                        </ChangeAvaloniaPropertyAction.Value>
+                                                    </ChangeAvaloniaPropertyAction>
+
+                                                </IfElseTrigger.ElseActions>
+
+                                            </IfElseTrigger>
+
+                                        </Interaction.Behaviors>
+                                    </ContentPresenter>
+
+                                </ChangeAvaloniaPropertyAction.Value>
+
+                            </ChangeAvaloniaPropertyAction>
+
+                        </IfElseTrigger.IfActions>
+
+                        <IfElseTrigger.ElseActions>
+                            <ChangeAvaloniaPropertyAction
+                                TargetProperty="{x:Static ContentPresenter.ContentProperty}">
+                                <ChangeAvaloniaPropertyAction.Value>
+
+                                    <PathIcon Data="{StaticResource PlayIconData}" />
+
+                                </ChangeAvaloniaPropertyAction.Value>
+                            </ChangeAvaloniaPropertyAction>
+
+                        </IfElseTrigger.ElseActions>
+
+                    </IfElseTrigger>
+
+                </Interaction.Behaviors>
+                
+            </ContentPresenter>
 
         </Panel>
 

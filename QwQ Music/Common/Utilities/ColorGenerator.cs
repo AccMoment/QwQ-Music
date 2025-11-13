@@ -27,6 +27,12 @@ public static class ColorGenerator
 
     private static Color HsvToRgb(double hue, double saturation, double value)
     {
+        // 标准化输入值
+        hue %= 360;
+        if (hue < 0) hue += 360;
+        saturation = Math.Max(0, Math.Min(1, saturation));
+        value = Math.Max(0, Math.Min(1, value));
+
         int hi = (int)(hue / 60) % 6;
         double f = hue / 60 - Math.Floor(hue / 60);
 

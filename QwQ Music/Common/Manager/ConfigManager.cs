@@ -61,8 +61,6 @@ public static class ConfigManager
 
     public static ServiceConfig ServiceConfig { get; }
 
-    public static JsonServiceConfig JsonServiceConfig => ServiceConfig.JsonServiceConfig;
-
     public static LoggerServiceConfig LoggerServiceConfig => ServiceConfig.LoggerServiceConfig;
 
     public static void SaveConfig()

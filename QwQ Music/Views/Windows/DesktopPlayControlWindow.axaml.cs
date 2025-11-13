@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using QwQ_Music.ViewModels;
+using QwQ_Music.ViewModels.Windows;
 
 namespace QwQ_Music.Views.Windows;
 
@@ -12,7 +12,7 @@ public partial class DesktopPlayControlWindow : Window
     public DesktopPlayControlWindow()
     {
         InitializeComponent();
-        DataContext = MusicPlayerViewModel.Default;
+        DataContext = new DesktopPlayControlWindowViewModel();
     }
 
     public static readonly StyledProperty<bool> StartMovingOutProperty = AvaloniaProperty.Register<DesktopPlayControlWindow, bool>(

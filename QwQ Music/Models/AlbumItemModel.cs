@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -49,19 +50,26 @@ public partial class AlbumItemModel(string name, string artist, string? coverFil
             // 启动异步加载任务
             Task.Run(async () =>
             {
-                var bitmap = await MusicExtractor.LoadBitmapFromFileAsync(StaticConfig.GetMusicCoverFullPath(coverFileName));
-
-                if (bitmap != null)
+                try
                 {
-                    CacheManager.ImageCache[coverFileName] = bitmap;
-                    _coverStatus = LoadingState.Loaded;
-                }
-                else
-                {
-                    _coverStatus = LoadingState.NotExist;
-                }
+                    var bitmap = await MusicExtractor.LoadBitmapFromFileAsync(StaticConfig.GetMusicCoverFullPath(coverFileName));
 
-                OnPropertyChanged(); // 通知 UI 更新
+                    if (bitmap != null)
+                    {
+                        CacheManager.ImageCache[coverFileName] = bitmap;
+                        _coverStatus = LoadingState.Loaded;
+                    }
+                    else
+                    {
+                        _coverStatus = LoadingState.NotExist;
+                    }
+
+                    OnPropertyChanged(); // 通知 UI 更新
+                }
+                catch (Exception e)
+                {
+                    await LoggerService.ErrorAsync($"专辑封面'{coverFileName}'在异步加载时发生错误 : {e}\n");
+                }
             });
 
             // 首次或加载中时返回默认封面

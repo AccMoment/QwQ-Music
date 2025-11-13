@@ -381,7 +381,7 @@
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
                 Spacing="10"
-                Margin="20">
+                Margin="15,20">
 
         <Button Classes="FloatButton"
                 Command="{Binding JumpToTopCommand}"

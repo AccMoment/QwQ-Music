@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Xaml.Interactivity;
-using QwQ.Avalonia.Helper;
+using Irihi.Avalonia.Shared.Helpers;
 
 namespace QwQ_Music.UI.Behaviors;
 

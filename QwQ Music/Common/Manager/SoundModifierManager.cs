@@ -34,7 +34,6 @@ public class SoundModifierManager
                 ("Compressor", false),
                 ("Delay", false),
                 ("FrequencyBand", false),
-                ("MultiChannelChorus", false),
                 ("ParametricEqualizer", false),
                 ("TrebleBooster", false),
             };
@@ -68,6 +67,8 @@ public class SoundModifierManager
             "AlgorithmicReverb" => SoundEffectConfig.AlgorithmicReverb,
             "BassBooster" => SoundEffectConfig.BassBooster,
             "Chorus" => SoundEffectConfig.Chorus,
+            "Compressor" => SoundEffectConfig.Compressor,
+            "Delay" => SoundEffectConfig.Delay,
             // TODO: 补充其他效果的映射，暂时这样吧，现在懒得写了
             _ => null,
         };

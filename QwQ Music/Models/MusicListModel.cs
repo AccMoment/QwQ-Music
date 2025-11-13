@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -47,20 +48,27 @@ public partial class MusicListModel : ObservableObject
             // 启动异步加载任务
             Task.Run(async () =>
             {
-                var dbBitmap = await MusicExtractor.LoadCompressedBitmapFromFileAsync(
-                    StaticConfig.GetMusicListCoverFullPath(IdStr));
-
-                if (dbBitmap == null)
+                try
                 {
-                    _loadingState = LoadingState.NotExist;
-                    OnPropertyChanged();
+                    var dbBitmap = await MusicExtractor.LoadCompressedBitmapFromFileAsync(
+                        StaticConfig.GetMusicListCoverFullPath(IdStr));
 
-                    return;
+                    if (dbBitmap == null)
+                    {
+                        _loadingState = LoadingState.NotExist;
+                        OnPropertyChanged();
+
+                        return;
+                    }
+
+                    CacheManager.ImageCache.Add(IdStr, dbBitmap);
+                    _loadingState = LoadingState.Loaded;
+                    OnPropertyChanged(); // 通知 UI 更新
                 }
-
-                CacheManager.ImageCache.Add(IdStr, dbBitmap);
-                _loadingState = LoadingState.Loaded;
-                OnPropertyChanged(); // 通知 UI 更新
+                catch (Exception e)
+                {
+                    await LoggerService.ErrorAsync($"音乐列表'{Name}'在异步加载其封面时发生错误 : {e}");
+                }
             });
 
             // 首次或加载中时返回加载中封面

@@ -206,14 +206,12 @@ public static class DesktopPlayControlService
         if (window != null)
             return;
 
-        window = new DesktopPlayControlWindow
-        {
-            Topmost = true,
-        };
+        window = new DesktopPlayControlWindow();
 
         window.PointerEntered += OnWindowPointerEntered;
         window.PointerExited += OnWindowPointerExited;
         window.Closed += OnWindowClosed;
+        window.Topmost = true;
     }
 
     private static bool TryGetCursorPixelPoint(out PixelPoint cursor)

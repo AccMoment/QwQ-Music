@@ -181,20 +181,27 @@ public class ContributorItem(string name, object? speak = null) : ObservableObje
 
             Task.Run(async () =>
             {
-                var bitmap = await ImageHelper.LoadFromWebAndDecodeToWidth(
-                    new Uri($"https://github.com/{Name}.png")
-                );
-
-                if (bitmap != null)
+                try
                 {
-                    CacheManager.ImageCache[$"贡献者:{Name}"] = bitmap;
-                    _coverStatus = LoadingState.Loaded;
+                    var bitmap = await ImageHelper.LoadFromWebAndDecodeToWidth(
+                        new Uri($"https://github.com/{Name}.png")
+                    );
 
-                    OnPropertyChanged();
+                    if (bitmap != null)
+                    {
+                        CacheManager.ImageCache[$"贡献者:{Name}"] = bitmap;
+                        _coverStatus = LoadingState.Loaded;
+
+                        OnPropertyChanged();
+                    }
+                    else
+                    {
+                        _coverStatus = LoadingState.NotExist;
+                    }
                 }
-                else
+                catch (Exception e)
                 {
-                    _coverStatus = LoadingState.NotExist;
+                    await LoggerService.ErrorAsync($"贡献者'{Name}'在异步加载其头像时发生错误 : {e}");
                 }
             });
 
@@ -232,18 +239,25 @@ public class SpecialThank(string name, string logoUri, string uri, string descri
 
             Task.Run(async () =>
             {
-                var bitmap = await ImageHelper.LoadFromWebAndDecodeToWidth(new Uri($"{logoUri}"));
+                try
+                {
+                    var bitmap = await ImageHelper.LoadFromWebAndDecodeToWidth(new Uri($"{logoUri}"));
 
-                if (bitmap != null)
-                {
-                    CacheManager.ImageCache[$"鸣谢:{Name}"] = bitmap;
-                    _coverStatus = LoadingState.Loaded;
+                    if (bitmap != null)
+                    {
+                        CacheManager.ImageCache[$"鸣谢:{Name}"] = bitmap;
+                        _coverStatus = LoadingState.Loaded;
                     
-                    OnPropertyChanged();
+                        OnPropertyChanged();
+                    }
+                    else
+                    {
+                        _coverStatus = LoadingState.NotExist;
+                    }
                 }
-                else
+                catch (Exception e)
                 {
-                    _coverStatus = LoadingState.NotExist;
+                    await LoggerService.ErrorAsync($"Logo'{Logo}'在异步加载时发生错误 : {e}");
                 }
             });
 

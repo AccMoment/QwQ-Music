@@ -11,25 +11,36 @@ namespace QwQ_Music.ViewModels;
 public partial class ApplicationViewModel : ObservableObject
 {
     public ThemeConfig ThemeConfig { get; } = ConfigManager.UiConfig.ThemeConfig;
-
-    [RelayCommand]
-    private static void ShowMainWindow()
+    
+    public static void ShowMainWindow(bool onlyActivate)
     {
         if (App.TopLevel is not { } mainWindow)
             return;
 
         if (mainWindow.IsVisible)
         {
-            mainWindow.Activate();
-            mainWindow.Topmost = true;
-            mainWindow.Topmost = false;
+            if (onlyActivate)
+            {
+                mainWindow.Activate();
+            }
+            else
+            {
+                mainWindow.Topmost = true;
+                mainWindow.Topmost = false;
 
-            NotificationService.Info("看我", "窗口已经在显示了~");
+                NotificationService.Info("看我", "窗口已经在显示了~");
+            }
         }
         else
         {
             mainWindow.ShowMainWindow();
         }
+    }
+
+    [RelayCommand]
+    private static void ShowMainWindow()
+    {
+        ShowMainWindow(false);
     }
 
     [RelayCommand]

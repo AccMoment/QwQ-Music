@@ -66,44 +66,45 @@ public class App : Application
         TaskScheduler.UnobservedTaskException -= TaskScheduler_OnUnobservedTaskException;
     }
 
+    private static void ShowExceptionOverlay(string message, string title = "异常", MessageBoxIcon icon = MessageBoxIcon.Error, MessageBoxButton button = MessageBoxButton.OK)
+    {
+        MessageBox.ShowOverlayAsync(message, title, icon: icon, button: button);
+    }
+
     private static void TaskScheduler_OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
-        MessageBox.ShowOverlayAsync(
-            $"后台任务出现异常: {e.Exception.Message}",
-            "异常",
-            icon: MessageBoxIcon.Error,
-            button: MessageBoxButton.OKCancel
-        );
-
-        LoggerService.Fatal($"后台任务出现异常: {e.Exception.Message}\n异常堆栈: {e.Exception.StackTrace}\n是否观察: {e.Observed}");
+        HandleException($"后台任务出现异常: {e.Exception.Message}", e.Exception);
     }
 
     private static void UIThread_OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
-        MessageBox.ShowOverlayAsync(
-            $"应用程序出现异常: {e.Exception.Message}",
-            "异常",
-            icon: MessageBoxIcon.Error,
-            button: MessageBoxButton.OKCancel
-        );
-
+        HandleException($"应用程序出现异常: {e.Exception.Message}", e.Exception);
         e.Handled = true;
-
-        LoggerService.Fatal($"应用程序出现异常: {e.Exception.Message}\n异常堆栈: {e.Exception.StackTrace}\n是否处理: {e.Handled}");
     }
 
     private static void CurrentDomain_OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
-        MessageBox.ShowOverlayAsync(
-            $"应用域出现异常: {e.ExceptionObject}",
-            "异常",
-            icon: MessageBoxIcon.Error,
-            button: MessageBoxButton.OKCancel
-        );
-
-        LoggerService.Fatal($"异常对象: {e.ExceptionObject}\n是否终止运行时: {e.IsTerminating}");
+        HandleException($"应用域出现异常: {e.ExceptionObject}", (Exception)e.ExceptionObject);
     }
 
+    private static void HandleException(string message, Exception? exception = null)
+    {
+        string fullMessage = exception != null
+            ? $"{message}\n\n详细信息:\n{exception}"
+            : message;
+
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            ShowExceptionOverlay(fullMessage);
+        }
+        else
+        {
+            Dispatcher.UIThread.Post(() => ShowExceptionOverlay(fullMessage));
+        }
+
+        LoggerService.Fatal(fullMessage);
+    }
+    
     /*
     private static void DisableAvaloniaDataAnnotationValidation()
     {

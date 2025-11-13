@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Collections;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Manager;
@@ -21,11 +22,6 @@ namespace QwQ_Music.ViewModels.Panels;
 public partial class AlbumDetailsPanelViewModel : DataGridViewModelBase
 {
     private readonly AvaloniaList<MusicItemModel> _allMusicItems = [];
-
-    public AlbumDetailsPanelViewModel()
-    {
-        NavigateService.ComeToOneselfEvents["专辑详情"] = ComeToOneselfEvent;
-    }
 
     [ObservableProperty]
     public partial AlbumItemModel AlbumItemModel { get; private set; } =
@@ -45,36 +41,6 @@ public partial class AlbumDetailsPanelViewModel : DataGridViewModelBase
         }
     }
 
-    private void ComeToOneselfEvent()
-    {
-        var newMusicItems = SearchMusicItems(AlbumItemModel).ToList();
-
-        // 创建FilePath的HashSet以提高查找效率
-        var newFilePaths = new HashSet<string>(newMusicItems.Select(item => item.FilePath));
-        var existingFilePaths = new HashSet<string>(_allMusicItems.Select(item => item.FilePath));
-
-        // 添加newMusicItems中多出的项
-        var itemsToAdd = newMusicItems.Where(item => !existingFilePaths.Contains(item.FilePath));
-
-        // 移除_allMusicItems中缺少的项
-        var itemsToRemove = _allMusicItems.Where(item => !newFilePaths.Contains(item.FilePath));
-
-        _allMusicItems.AddRange(itemsToAdd);
-
-        _allMusicItems.RemoveAll(itemsToRemove);
-
-        OnSearchTextChanged(SearchText);
-
-        if (_allMusicItems.Count == 0)
-        {
-            NotificationService.Warning("当前专辑内容为空，可能是专辑音乐被全部删除！");
-
-            return;
-        }
-
-        UpdateCoverImage(_allMusicItems.First());
-    }
-
     public void UpdateAlbumItemModel(AlbumItemModel albumItemModel)
     {
         AlbumItemModel = albumItemModel;
@@ -92,6 +58,25 @@ public partial class AlbumDetailsPanelViewModel : DataGridViewModelBase
         AlbumItemModel.Description = "专辑信息等待获取中...";
 
         GetAlbumDetailByNameAsync(albumItemModel);
+        
+        UpdateAlbumDetails();
+    }
+
+    private void UpdateAlbumDetails()
+    {
+        _allMusicItems.Clear();
+        _allMusicItems.AddRange(SearchMusicItems(AlbumItemModel));
+        
+        OnSearchTextChanged(SearchText);
+
+        if (_allMusicItems.Count == 0)
+        {
+            NotificationService.Warning("当前专辑内容为空，可能是专辑音乐被全部删除！");
+
+            return;
+        }
+
+        UpdateCoverImage(_allMusicItems.First());
     }
 
     private async void UpdateCoverImage(MusicItemModel musicItem)
@@ -105,7 +90,7 @@ public partial class AlbumDetailsPanelViewModel : DataGridViewModelBase
 
             CoverImage = ConfigManager.UiConfig.CoverConfig.AllowNonSquareCover
                 ? bitmap
-                : BitmapCropper.Crop(bitmap, 1.0);
+                : await Dispatcher.UIThread.InvokeAsync(() => BitmapCropper.Crop(bitmap, 1.0));
         }
         catch (Exception e)
         {

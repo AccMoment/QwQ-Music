@@ -72,8 +72,6 @@
                     <PathIcon Data="{StaticResource PlayIconData}" Margin="0" />
                 </Button>
 
-                <u:IconButton Command="{Binding}" Icon="{StaticResource SemiIconPlus}" />
-
                 <u:IconButton Icon="{StaticResource SemiIconMore}" ToolTip.Tip="更多">
 
                     <Button.Flyout>

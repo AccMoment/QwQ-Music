@@ -2,7 +2,7 @@
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels.Bases;
 
-namespace QwQ_Music.ViewModels;
+namespace QwQ_Music.ViewModels.Windows;
 
 public class DesktopLyricsWindowViewModel : ViewModelBase
 {

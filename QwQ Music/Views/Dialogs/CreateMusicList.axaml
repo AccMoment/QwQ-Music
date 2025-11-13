@@ -1,6 +1,5 @@
 <Grid xmlns="https://github.com/avaloniaui"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:control="clr-namespace:QwQ.Avalonia.Control;assembly=QwQ.Avalonia.Control"
       xmlns:dialogs="clr-namespace:QwQ_Music.ViewModels.Dialogs"
       RowDefinitions="Auto,*,Auto"
       Margin="20" RowSpacing="20"
@@ -33,21 +32,31 @@
                 Command="{Binding SetCoverCommand}"
                 Background="#F5F5F6"
                 CornerRadius="8">
-            <control:SwitchControl
-                Condition="{Binding Cover,Converter={x:Static ObjectConverters.IsNull}}">
 
-                <control:SwitchControl.TrueContent>
-                    <PathIcon Foreground="#CACACA" Margin="50"
-                              Data="{StaticResource AddCover}" />
-                </control:SwitchControl.TrueContent>
+            <Interaction.Behaviors>
+                <IfElseTrigger Condition="{Binding Cover,Converter={x:Static ObjectConverters.IsNull}}">
 
-                <control:SwitchControl.FalseContent>
-                    <Border CornerRadius="{Binding $parent[Button].CornerRadius}" ClipToBounds="True">
-                        <Image Source="{Binding Cover}" />
-                    </Border>
-                </control:SwitchControl.FalseContent>
+                    <IfElseTrigger.IfActions>
+                        <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentPresenter.ContentProperty}">
+                            <ChangeAvaloniaPropertyAction.Value>
+                                <PathIcon Foreground="#CACACA" Margin="50"
+                                          Data="{StaticResource AddCover}" />
+                            </ChangeAvaloniaPropertyAction.Value>
+                        </ChangeAvaloniaPropertyAction>
+                    </IfElseTrigger.IfActions>
 
-            </control:SwitchControl>
+                    <IfElseTrigger.ElseActions>
+                        <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentPresenter.ContentProperty}">
+                            <ChangeAvaloniaPropertyAction.Value>
+                                <Border CornerRadius="{Binding $parent[Button].CornerRadius}" ClipToBounds="True">
+                                    <Image Source="{Binding Cover}" />
+                                </Border>
+                            </ChangeAvaloniaPropertyAction.Value>
+                        </ChangeAvaloniaPropertyAction>
+                    </IfElseTrigger.ElseActions>
+                </IfElseTrigger>
+
+            </Interaction.Behaviors>
         </Button>
 
         <StackPanel DockPanel.Dock="Top">

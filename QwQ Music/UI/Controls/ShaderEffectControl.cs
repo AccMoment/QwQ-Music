@@ -9,8 +9,8 @@ using Avalonia.Platform;
 using Avalonia.Rendering.SceneGraph;
 using Avalonia.Skia;
 using Avalonia.Threading;
+using Irihi.Avalonia.Shared.Helpers;
 using QwQ_Music.Common.Services.Shader;
-using QwQ.Avalonia.Helper;
 using SkiaSharp;
 
 namespace QwQ_Music.UI.Controls;

@@ -3,7 +3,6 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:pages="clr-namespace:QwQ_Music.ViewModels.Pages"
       xmlns:pages1="clr-namespace:QwQ_Music.Views.Pages"
-      xmlns:control="clr-namespace:QwQ.Avalonia.Control;assembly=QwQ.Avalonia.Control"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:models="clr-namespace:QwQ_Music.Models"
@@ -50,16 +49,16 @@
             </Border>
 
             <Border BorderBrush="{DynamicResource BorderCardBorderBrush}" BorderThickness="1" CornerRadius="8">
-                <StackPanel Orientation="Horizontal" Margin="2">
+                <StackPanel Orientation="Horizontal" Margin="2" Spacing="8">
 
                     <Ellipse Width="10" Height="10" Fill="{DynamicResource SemiBlue4Color}" Margin="6,0,0,0" />
 
-                    <control:RunningText
+                    <TextBlock
                         Width="180"
-                        Speed="50"
                         FontWeight="Bold"
                         VerticalAlignment="Center"
-                        Text="{Binding SelectedAlbumItem.Name,FallbackValue='请选择专辑'}" />
+                        Text="{Binding SelectedAlbumItem.Name,FallbackValue='请选择专辑'}" /> 
+                    <!-- RunningText.Text在使用高强度更改选中专辑会导致UI堵塞-->
 
                     <Button
                         Classes="Icon"

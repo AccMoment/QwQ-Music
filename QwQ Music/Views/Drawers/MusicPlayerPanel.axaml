@@ -2,7 +2,6 @@
       x:Class="QwQ_Music.Views.Drawers.MusicPlayerPanel"
       x:DataType="drawers:MusicCoverPageViewModel"
       xmlns="https://github.com/avaloniaui"
-      xmlns:control="clr-namespace:QwQ.Avalonia.Control;assembly=QwQ.Avalonia.Control"
       xmlns:u="https://irihi.tech/ursa"
       xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -15,8 +14,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       d:DesignHeight="450" d:DesignWidth="600"
       mc:Ignorable="d"
-      Background="Transparent"
-      Name="MusicPlayerContainer">
+      Background="Transparent">
 
     <!--  内容层  -->
 
@@ -68,17 +66,19 @@
 
     </Panel>
 
-    <Grid Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center"
+    <Grid Grid.Row="1" Grid.Column="0"
+          HorizontalAlignment="Center"
           Margin="50,20,10,20"
           RowDefinitions="*,Auto"
           RowSpacing="10"
           VerticalAlignment="Center">
+        
         <Border BoxShadow="0 0 5 0 DarkGray"
                 CornerRadius="20"
                 HorizontalAlignment="Center">
             <Border ClipToBounds="True" CornerRadius="20">
                 <!--  专辑封面 Image 控件  -->
-                <Image Source="{Binding CoverImage}" />
+                <Image Source="{Binding MusicPlayerViewModel.CoverImage}" />
             </Border>
         </Border>
 
@@ -132,9 +132,39 @@
 
     </controls:LyricsControl>
 
-    <Grid ColumnDefinitions="1*,3*,1*"
+    <controls:SpectrumVisualizerControl x:Name="SpectrumVisualizer"
+                                        Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                        LineBrush="{Binding SpectrumVisualizerBrush}"
+                                        Margin="20"
+                                        Classes="Hide"
+                                        LineThickness="3"
+                                        AmplitudeScale="1"
+                                        SmoothingFactor="0.15">
+        
+        <controls:SpectrumVisualizerControl.Transitions>
+            <Transitions>
+                <DoubleTransition Duration="0:0:0.5"
+                                  Easing="CircularEaseOut"
+                                  Property="Opacity" />
+            </Transitions>
+        </controls:SpectrumVisualizerControl.Transitions>
+        
+        <controls:SpectrumVisualizerControl.Styles>
+
+            <Style Selector="controls|SpectrumVisualizerControl.Hide">
+                <Setter Property="Opacity" Value="0" />
+                <Setter Property="IsHitTestVisible" Value="False" />
+            </Style>
+
+        </controls:SpectrumVisualizerControl.Styles>
+        
+    </controls:SpectrumVisualizerControl>
+
+    <Grid Name="ControlPanelGrid"
+          Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+          ColumnDefinitions="1*,3*,1*"
           RowDefinitions="Auto,Auto"
-          RowSpacing="20" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+          RowSpacing="20"
           Margin="20">
 
         <Grid.Transitions>
@@ -152,18 +182,7 @@
                 <Setter Property="IsHitTestVisible" Value="False" />
             </Style>
 
-            <Style Selector="Slider:pressed">
-                <Setter Property="IsTabStop" Value="False" />
-            </Style>
-
         </Grid.Styles>
-
-        <Classes.Hide>
-            <MultiBinding Converter="{x:Static BoolConverters.And}">
-                <Binding Path="!#MusicPlayerContainer.IsPointerOver" />
-                <Binding Path="#PlayProgressSlider.IsTabStop" />
-            </MultiBinding>
-        </Classes.Hide>
 
         <!--  播放控制  -->
         <StackPanel Grid.Column="1"
@@ -220,22 +239,44 @@
                     ToolTip.Tip="{Binding MusicPlayerViewModel.PlayModeName}"
                     ToolTip.VerticalOffset="-10"
                     behaviors:DynamicCornerBehavior.IsEnabled="True">
+                
+                <PathIcon >
+                    
+                    <Interaction.Behaviors>
+                        
+                        <DataTrigger Binding="{Binding MusicPlayerViewModel.PlayerConfig.PlayMode}"
+                                     Value="{x:Static enums:PlayMode.Sequential}">
+                            
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
+                                                          Value="3.6" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
+                                                          Value="{StaticResource Sequential}" />
+                        </DataTrigger>
 
-                <control:ChoiceControl Selected="{Binding MusicPlayerViewModel.PlayerConfig.PlayMode}"
-                                       TargetType="{x:Type enums:PlayMode}">
-                    <PathIcon Data="{StaticResource Sequential}"
-                              Margin="3.6"
-                              control:ChoiceControl.SelectName="Sequential" />
+                        <DataTrigger Binding="{Binding MusicPlayerViewModel.PlayerConfig.PlayMode}"
+                                     Value="{x:Static enums:PlayMode.Random}">
 
-                    <PathIcon Data="{StaticResource Random}"
-                              Margin="4.8"
-                              control:ChoiceControl.SelectName="Random" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
+                                                          Value="4.8" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
+                                                          Value="{StaticResource Random}" />
 
-                    <PathIcon Data="{StaticResource SingleLoop}"
-                              Margin="4"
-                              control:ChoiceControl.SelectName="SingleLoop" />
-                </control:ChoiceControl>
+                        </DataTrigger>
 
+                        <DataTrigger Binding="{Binding MusicPlayerViewModel.PlayerConfig.PlayMode}"
+                                     Value="{x:Static enums:PlayMode.SingleLoop}">
+                            
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
+                                                          Value="4" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
+                                                          Value="{StaticResource SingleLoop}" />
+                            
+                        </DataTrigger>
+                        
+                    </Interaction.Behaviors>
+
+                </PathIcon>
+                
             </Button>
 
         </StackPanel>
@@ -512,8 +553,7 @@
         <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3">
 
             <!--  进度条  -->
-            <Slider Name="PlayProgressSlider"
-                    Maximum="{Binding MusicPlayerViewModel.CurrentMusicItem.Duration.TotalSeconds}"
+            <Slider Maximum="{Binding MusicPlayerViewModel.CurrentMusicItem.Duration.TotalSeconds}"
                     Value="{Binding MusicPlayerViewModel.Position}">
                 <Slider.Transitions>
                     <Transitions>

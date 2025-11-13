@@ -35,16 +35,16 @@
         <PackageReference Include="Irihi.Ursa" Version="1.13.0" />
         <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.13.0" />
         <PackageReference Include="managed-midi" Version="1.10.1"/>
-        <PackageReference Include="QwQ.Avalonia" Version="0.1.7.3"/>
+        <PackageReference Include="QwQ.Avalonia.Control" Version="0.1.7.3" />
         <PackageReference Include="Semi.Avalonia" Version="11.3.7" />
         <PackageReference Include="Semi.Avalonia.ColorPicker" Version="11.3.7" />
         <PackageReference Include="Semi.Avalonia.DataGrid" Version="11.3.7" />
         <PackageReference Include="SkiaSharp" Version="3.119.2-preview.1" />
-        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0-rc.2.25502.107" />
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
         <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.2-preview.1" />
         <PackageReference Include="SoundFlow" Version="1.2.1"/>
         <PackageReference Include="Xaml.Behaviors.Avalonia" Version="11.3.6.6" />
-        <PackageReference Include="z440.atl.core" Version="7.6.0" />
+        <PackageReference Include="z440.atl.core" Version="7.7.0" />
     </ItemGroup>
 
     <ItemGroup>

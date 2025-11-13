@@ -17,7 +17,6 @@ public class SoundEffectsNameConverter : IValueConverter
             "Compressor" => "压缩器",
             "Delay" => "延迟",
             "FrequencyBand" => "限频器",
-            "MultiChannelChorus" => "多声合唱",
             "ParametricEqualizer" => "均衡器",
             "TrebleBooster" => "高音增强",
             _ => value,

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Input;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -32,6 +31,9 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
         Color.Parse("#E4F2FF"),
     ];
 
+    private readonly IBrush _lightThemeBrush = Brush.Parse("#88FFFFFF");
+    private readonly IBrush _darkThemeBrush = Brush.Parse("#22FFFFFF");
+
     public MusicCoverPageViewModel()
         : base("播放")
     {
@@ -54,20 +56,6 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
 
     public static string ShaderCode => ShaderConstants.WaveWarpShader;
 
-    public Bitmap? CoverImage
-    {
-        get => field ?? CacheManager.Default;
-        set
-        {
-            if (field == value) return;
-
-            field?.Dispose();
-
-            field = value;
-            OnPropertyChanged();
-        }
-    }
-
     public double SelectLyricsTimePoint
     {
         get;
@@ -81,6 +69,8 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
     }
 
     [ObservableProperty] public partial List<Color> ColorsList { get; set; } = _defaultColors;
+    
+    [ObservableProperty] public partial IBrush SpectrumVisualizerBrush { get; set; } = Brushes.White;
 
     private void CurrentDomain_OnProcessExit(object? sender, EventArgs e)
     {
@@ -108,29 +98,19 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
 
     private async Task UpdateCoverImage(MusicItemModel musicItem)
     {
-        string? coverId = musicItem.CoverId;
+        var bitmap = await MusicExtractor.GetCoverFromAudioAsync(musicItem.FilePath);
 
-        if (coverId != null)
+        if (bitmap != null)
         {
-            var bitmap = await MusicExtractor.GetCoverFromAudioAsync(musicItem.FilePath);
-
-            if (bitmap != null)
+            if (!ConfigManager.UiConfig.CoverConfig.AllowNonSquareCover)
             {
-                if (!ConfigManager.UiConfig.CoverConfig.AllowNonSquareCover)
-                {
-                    CoverImage = Dispatcher.UIThread.Invoke(() => BitmapCropper.Crop(bitmap, 1.0));
-
-                    return;
-                }
-
-                CoverImage = bitmap;
+                MusicPlayerViewModel.CoverImage = await Dispatcher.UIThread.InvokeAsync(() => BitmapCropper.Crop(bitmap, 1.0));
 
                 return;
             }
         }
 
-        // 尝试从音频文件中提取封面
-        CoverImage = await MusicExtractor.GetCoverFromAudioAsync(musicItem.FilePath);
+        MusicPlayerViewModel.CoverImage = bitmap;
     }
 
     private async Task UpdateColorsList(MusicItemModel musicItem)
@@ -154,12 +134,15 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
         // 提取新的颜色
         var colorsList = await GetColorPalette(musicItem.CoverId, COLOR_COUNT);
 
+        // 使用提取的颜色，为null则使用默认颜色
+        ColorsList = colorsList ?? _defaultColors;
+
         // 缓存提取的颜色
         if (colorsList != null)
         {
             musicItem.CoverColors = colorsList.Select(x => x.ToString()).ToArray();
 
-            _ = Task.Run(() =>
+            await Task.Run(() =>
             {
                 MusicItemManager.Update(musicItem.FilePath, new Dictionary<string, object?>
                 {
@@ -167,9 +150,6 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
                 });
             });
         }
-
-        // 使用提取的颜色，为null则使用默认颜色
-        ColorsList = colorsList ?? _defaultColors;
     }
 
     private void UpdateThemeVariantFromColors()
@@ -186,7 +166,10 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
         double avgLuminance = totalLuminance / ColorsList.Count;
 
         // 根据平均亮度设置主题（反色）
-        DrawerStatusViewModel.Default.MusicPlayerPanelThemeVariant = avgLuminance > 0.5 ? "Light" : "Dark";
+        bool isHighLuminance = avgLuminance > 0.5;
+
+        SpectrumVisualizerBrush = isHighLuminance ? _lightThemeBrush : _darkThemeBrush;
+        DrawerStatusViewModel.Default.MusicPlayerPanelThemeVariant = isHighLuminance ? "Light" : "Dark";
     }
 
     private static async Task<List<Color>?> GetColorPalette(string imagePath, int colorCount = 5)

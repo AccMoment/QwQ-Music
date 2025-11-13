@@ -11,13 +11,13 @@
         Title="QwQ Music • 桌面歌词"
         Icon="resm:QwQ_Music.Assets.EmbeddedRes.app-icon.ico"
         x:Class="QwQ_Music.Views.Windows.DesktopLyricsWindow"
-        x:DataType="viewModel:DesktopLyricsWindowViewModel"
+        x:DataType="windows:DesktopLyricsWindowViewModel"
         xmlns="https://github.com/avaloniaui"
-        xmlns:viewModel="using:QwQ_Music.ViewModels"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:converters="clr-namespace:Avalonia.Controls.Converters;assembly=Avalonia.Controls.ColorPicker"
         xmlns:control="clr-namespace:QwQ.Avalonia.Control;assembly=QwQ.Avalonia.Control"
-        xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors">
+        xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
+        xmlns:windows="clr-namespace:QwQ_Music.ViewModels.Windows">
 
     <Window.Resources>
         <converters:ToBrushConverter x:Key="ToBrushConverter" />

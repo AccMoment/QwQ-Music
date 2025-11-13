@@ -14,7 +14,6 @@
 
         <TextBlock Text="程序" />
         <TextBlock Text="日志" IsEnabled="{Binding Config.IsDebugMode}" />
-        <TextBlock Text="配置" IsEnabled="{Binding Config.IsDebugMode}" />
 
     </u:SelectionList>
 
@@ -85,24 +84,6 @@
 
         </anchorControl:AnchorItem>
 
-        <anchorControl:AnchorItem Header="配置" IsEnabled="{Binding Config.IsDebugMode}">
-
-            <StackPanel>
-
-                <CheckBox
-                    Content="启用备份"
-                    IsChecked="{Binding JsonServiceConfig.EnableBackup}" />
-
-                <CheckBox
-                    Content="性能监控"
-                    IsChecked="{Binding JsonServiceConfig.EnablePerformanceLogging}" />
-
-                <TextBlock Text="最大备份数量" />
-                <u:NumericIntUpDown Minimum="0" Maximum="10" InnerRightContent="个"
-                                    Value="{Binding JsonServiceConfig.MaxBackupCount}" />
-
-            </StackPanel>
-        </anchorControl:AnchorItem>
 
     </anchorControl:Anchor>
 

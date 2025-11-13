@@ -11,6 +11,7 @@ using SoundFlow.Components;
 using SoundFlow.Enums;
 using SoundFlow.Providers;
 using SoundFlow.Structs;
+using SoundFlow.Visualization;
 
 namespace QwQ_Music.Common.Audio;
 
@@ -26,6 +27,8 @@ public class AudioPlay : IAudioPlay
     private StreamDataProvider? _soundDataProvider;
     private MiniAudioEngine? _audioEngine;
     private SoundPlayer? _soundPlayer;
+    private SpectrumAnalyzer? _spectrumAnalyzer;
+    private DispatcherTimer? _visualizerRefreshTimer;
 
     /// <summary>
     ///     音频格式
@@ -37,6 +40,11 @@ public class AudioPlay : IAudioPlay
 
     /// <inheritdoc />
     public event EventHandler? PlaybackCompleted;
+
+    /// <summary>
+    ///     频谱数据更新事件
+    /// </summary>
+    public event EventHandler<float[]>? SpectrumDataUpdated;
 
     /// <inheritdoc />
     public double Position
@@ -113,7 +121,9 @@ public class AudioPlay : IAudioPlay
             _soundModifier.FadeModifier.BeginFadeIn();
         }
 
+        _playerDevice?.Start();
         _soundPlayer.Play();
+        _visualizerRefreshTimer?.Start();
 
         // 启动进度定时器
         StartProgressTimer();
@@ -155,6 +165,7 @@ public class AudioPlay : IAudioPlay
             // 直接暂停
             _soundPlayer.Pause();
             _progressTimer?.Stop();
+            _visualizerRefreshTimer?.Stop();
         }
     }
 
@@ -164,6 +175,7 @@ public class AudioPlay : IAudioPlay
     public void Stop()
     {
         _soundPlayer?.Stop();
+        _playerDevice?.Stop();
     }
 
     /// <summary>
@@ -200,7 +212,7 @@ public class AudioPlay : IAudioPlay
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"初始化音轨失败: {ex.Message}");
+            Console.WriteLine($"初始化音轨失败: {ex}");
         }
     }
 
@@ -217,6 +229,7 @@ public class AudioPlay : IAudioPlay
         {
             _soundPlayer.Pause();
             _progressTimer?.Stop();
+            _visualizerRefreshTimer?.Stop();
         }
 
         // 停止并清理定时器
@@ -230,11 +243,12 @@ public class AudioPlay : IAudioPlay
         try
         {
             DisposeCurrentTrack();
+            
             InitializeNewTrack(audioStream, replayGain);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"初始化音轨失败: {ex.Message}");
+            Console.WriteLine($"初始化音轨失败: {ex}");
         }
     }
 
@@ -244,12 +258,10 @@ public class AudioPlay : IAudioPlay
     private void InitializeNewTrack(Stream audioStream, double replayGain)
     {
         _audioEngine = new MiniAudioEngine();
-        
+
         var defaultDevice = _audioEngine.PlaybackDevices.FirstOrDefault(x => x.IsDefault);
 
-        _playerDevice = _audioEngine.InitializePlaybackDevice(defaultDevice, AudioFormat);
-
-        _playerDevice.Start();
+        _playerDevice = _audioEngine.InitializePlaybackDevice(defaultDevice, AudioFormat, ConfigManager.PlayerConfig.DeviceConfig);
 
         _soundDataProvider = new StreamDataProvider(_audioEngine, AudioFormat, audioStream);
 
@@ -261,7 +273,18 @@ public class AudioPlay : IAudioPlay
         };
 
         InitializeModifier(_soundPlayer, replayGain);
+        
+        _spectrumAnalyzer = new SpectrumAnalyzer(AudioFormat, fftSize: 2048);
+        
+        _soundPlayer.AddAnalyzer(_spectrumAnalyzer);
+        
         _playerDevice.MasterMixer.AddComponent(_soundPlayer);
+        
+        _visualizerRefreshTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(200), // 每100毫秒更新一次
+        };
+        _visualizerRefreshTimer.Tick += OnSpectrumVisualizer;
 
         // 设置播放完成事件
         _soundPlayer.PlaybackEnded += OnPlaybackCompleted;
@@ -275,6 +298,60 @@ public class AudioPlay : IAudioPlay
         _progressTimer.Tick += OnProgressTimerTick;
     }
 
+    private void OnSpectrumVisualizer(object? sender, EventArgs eventArgs)
+    {
+        if (_spectrumAnalyzer == null)
+            return;
+
+        var spectrumData = _spectrumAnalyzer.SpectrumData;
+
+        if (spectrumData.Length <= 0)
+            return;
+
+        // 复制数据以避免在lambda中使用ref局部变量
+        float[] spectrumDataCopy =spectrumData[..128].ToArray();
+
+        // 触发频谱数据更新事件
+        SpectrumDataUpdated?.Invoke(this, spectrumDataCopy);
+
+/*
+#if DEBUG
+        // 调试输出（可选）
+        Console.Write("Spectrum: ");
+
+        for (int i = 0; i < Math.Min(10, spectrumData.Length); i++)
+        {
+            Console.Write($"{spectrumData[i]:F2} ");
+        }
+
+        Console.WriteLine();
+#endif
+*/
+        
+    }
+    
+    public static T[] GetFrontAndBack<T>(ReadOnlySpan<T> span, int frontCount, int backCount)
+    {
+        if (frontCount + backCount > span.Length)
+        {
+            throw new ArgumentException("前N个和后M个元素的总数不能超过原Span的长度");
+        }
+    
+        var result = new T[frontCount + backCount];
+    
+        // 复制前N个元素
+        span[..frontCount].CopyTo(result.AsSpan(0, frontCount));
+    
+        // 复制后M个元素
+        if (backCount > 0)
+        {
+            span.Slice(span.Length - backCount, backCount)
+                .CopyTo(result.AsSpan(frontCount, backCount));
+        }
+    
+        return result;
+    }
+    
     /// <summary>
     ///     初始化效果链
     /// </summary>
@@ -332,6 +409,8 @@ public class AudioPlay : IAudioPlay
     /// </summary>
     private void DisposeCurrentTrack()
     {
+        _visualizerRefreshTimer?.Stop();
+        
         // 清理淡出定时器
         if (_fadeOutTimer != null)
         {
@@ -370,5 +449,6 @@ public class AudioPlay : IAudioPlay
         }
 
         _soundDataProvider?.Dispose();
+        _soundDataProvider = null;
     }
 }

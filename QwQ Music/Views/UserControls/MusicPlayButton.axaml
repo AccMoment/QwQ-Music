@@ -1,7 +1,6 @@
 <Button x:Class="QwQ_Music.Views.UserControls.MusicPlayButton"
         x:DataType="userControls:MusicPlayButtonViewModel"
         xmlns="https://github.com/avaloniaui"
-        xmlns:control="clr-namespace:QwQ.Avalonia.Control;assembly=QwQ.Avalonia.Control"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:userControls="clr-namespace:QwQ_Music.ViewModels.UserControls"
         xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
@@ -70,29 +69,68 @@
             </Ellipse>
 
         </Border>
-
-        <control:SwitchControl
-            Condition="{Binding MusicPlayerViewModel.IsPlaying}"
+        
+        <PathIcon
+            Foreground="White"
             Height="30"
             Width="30">
 
-            <control:SwitchControl.TrueContent>
-                <PathIcon Data="{StaticResource PauseIconData}" Foreground="White" />
-            </control:SwitchControl.TrueContent>
+            <Interaction.Behaviors>
 
-            <control:SwitchControl.FalseContent>
-                <PathIcon Data="{StaticResource PlayIconData}" Foreground="White" />
-            </control:SwitchControl.FalseContent>
+                <IfElseTrigger Condition="{Binding MusicPlayerViewModel.IsPlaying}">
 
-        </control:SwitchControl>
+                    <IfElseTrigger.IfActions>
+
+                        <ChangeAvaloniaPropertyAction
+                            TargetProperty="{x:Static PathIcon.DataProperty}"
+                            Value="{StaticResource PauseIconData}" />
+
+                    </IfElseTrigger.IfActions>
+
+                    <IfElseTrigger.ElseActions>
+
+                        <ChangeAvaloniaPropertyAction
+                            TargetProperty="{x:Static PathIcon.DataProperty}"
+                            Value="{StaticResource PlayIconData}" />
+
+                    </IfElseTrigger.ElseActions>
+
+                </IfElseTrigger>
+
+            </Interaction.Behaviors>
+            
+        </PathIcon>
 
     </Panel>
 
     <ToolTip.Tip>
+        
+        <TextBlock>
+            <Interaction.Behaviors>
 
-        <control:SwitchControl Condition="{Binding MusicPlayerViewModel.IsPlaying}"
-                               TrueContent="暂停⏸️"
-                               FalseContent="播放▶️" />
+                <IfElseTrigger Condition="{Binding MusicPlayerViewModel.IsPlaying}">
+
+                    <IfElseTrigger.IfActions>
+
+                        <ChangeAvaloniaPropertyAction
+                            TargetProperty="{x:Static TextBlock.TextProperty}"
+                            Value="暂停⏸️" />
+
+                    </IfElseTrigger.IfActions>
+
+                    <IfElseTrigger.ElseActions>
+
+                        <ChangeAvaloniaPropertyAction
+                            TargetProperty="{x:Static TextBlock.TextProperty}"
+                            Value="播放▶️" />
+
+                    </IfElseTrigger.ElseActions>
+
+                </IfElseTrigger>
+
+            </Interaction.Behaviors>
+
+        </TextBlock>
 
     </ToolTip.Tip>
 

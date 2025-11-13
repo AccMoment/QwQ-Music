@@ -7,16 +7,17 @@
     <userControls:MusicAlbumCover.Template>
         <ControlTemplate>
             <Border
-                Background="Black"
-                BorderBrush="{DynamicResource SemiColorBackground4}"
-                BorderThickness="3"
-                BoxShadow="0 0 10 0 DarkGray"
-                Margin="10"
-                behaviors:DynamicCornerBehavior.IsEnabled="True">
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                Margin="{TemplateBinding Margin}"
+                CornerRadius="{TemplateBinding CornerRadius}"
+                behaviors:DynamicCornerBehavior.IsEnabled="{TemplateBinding IsAutoRoundedCorners}">
                 <Border
                     ClipToBounds="True"
-                    Margin="5"
-                    behaviors:DynamicCornerBehavior.IsEnabled="True">
+                    Margin="{TemplateBinding Padding}"
+                    CornerRadius="{TemplateBinding CornerRadius}"
+                    behaviors:DynamicCornerBehavior.IsEnabled="{TemplateBinding IsAutoRoundedCorners}">
 
                     <!--  专辑封面 Image 控件  -->
                     <Image Source="{TemplateBinding CoverImage}" />

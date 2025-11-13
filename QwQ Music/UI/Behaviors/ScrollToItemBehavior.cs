@@ -11,7 +11,6 @@ using Avalonia.Layout;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
-using QwQ.Avalonia.Helper;
 
 namespace QwQ_Music.UI.Behaviors;
 
@@ -49,65 +48,73 @@ public class ScrollToItemBehavior
 
     static ScrollToItemBehavior()
     {
-        ScrollToItemProperty.Changed.Subscribe(args =>
+        ScrollToItemProperty.Changed.AddClassHandler<Control>(OnScrollToItemChanged);
+    }
+
+    private static void OnScrollToItemChanged(Control control, AvaloniaPropertyChangedEventArgs args)
+    {
+        object? newValue = args.NewValue;
+
+        if (newValue == null) return;
+
+        switch (control)
         {
-            switch (args.Sender)
-            {
-                case DataGrid dataGrid:
+            case DataGrid dataGrid:
+                {
+                    // DataGrid 没有 ContainerFromItem 方法，暂不实现平滑滚动。
+                    object item = newValue;
+                    Dispatcher.UIThread.Post(() => dataGrid.ScrollIntoView(item, null));
+
+                    break;
+                }
+            case ListBox listBox:
+                {
+                    object item = newValue;
+                    bool smoothScrollingEnabled = GetSmoothScrollingEnabled(listBox);
+
+                    // 取消当前正在进行的滚动动画
+                    CancelCurrentScrollAnimation();
+
+                    if (smoothScrollingEnabled)
                     {
-                        // DataGrid 没有 ContainerFromItem 方法，暂不实现平滑滚动。
-                        object item = args.NewValue.Value;
-                        Dispatcher.UIThread.Post(() => dataGrid.ScrollIntoView(item, null));
+                        var duration = GetScrollDuration(listBox);
+                        var easing = GetScrollEasing(listBox);
 
-                        break;
-                    }
-                case ListBox listBox:
-                    {
-                        object item = args.NewValue.Value;
-                        bool smoothScrollingEnabled = GetSmoothScrollingEnabled(listBox);
+                        // 创建新的取消令牌
+                        currentScrollCts = new CancellationTokenSource();
+                        var token = currentScrollCts.Token;
 
-                        // 取消当前正在进行的滚动动画
-                        CancelCurrentScrollAnimation();
-
-                        if (smoothScrollingEnabled)
+                        Dispatcher.UIThread.Post(async void () =>
                         {
-                            var duration = GetScrollDuration(listBox);
-                            var easing = GetScrollEasing(listBox);
-
-                            // 创建新的取消令牌
-                            currentScrollCts = new CancellationTokenSource();
-                            var token = currentScrollCts.Token;
-
-                            Dispatcher.UIThread.Post(async void () =>
+                            try
                             {
-                                try
+                                await SmoothScrollToItemCenterAsync(listBox, item, duration, easing, token);
+                            }
+                            catch (OperationCanceledException)
+                            {
+                                // 动画被取消，忽略异常
+                            }
+                            catch (Exception)
+                            {
+                                // 其他异常，忽略
+                            }
+                            finally
+                            {
+                                if (!token.IsCancellationRequested)
                                 {
-                                    /*// 确保项目可见 为保证滚动效果，先不使用
-                                    listBox.ScrollIntoView(item);*/
-                                    await SmoothScrollToItemCenterAsync(listBox, item, duration, easing, token);
+                                    CancelCurrentScrollAnimation();
                                 }
-                                catch (Exception)
-                                {
-                                    // ignored
-                                }
-                                finally
-                                {
-                                    if (!token.IsCancellationRequested)
-                                    {
-                                        CancelCurrentScrollAnimation();
-                                    }
-                                }
-                            });
-                        }
-                        else
-                        {
-                            Dispatcher.UIThread.Post(() => listBox.ScrollIntoView(item));
-                        }
-
-                        break;
+                            }
+                        });
                     }
-            }
-        });
+                    else
+                    {
+                        Dispatcher.UIThread.Post(() => listBox.ScrollIntoView(item));
+                    }
+
+                    break;
+                }
+        }
     }
 
     // 取消当前正在进行的滚动动画
@@ -237,8 +244,6 @@ public class ScrollToItemBehavior
                 },
             }
         );
-
-        // 创建一个TaskCompletionSource来跟踪动画完成
 
         // 运行动画
         await animation.RunAsync(scrollViewer, cancellationToken);

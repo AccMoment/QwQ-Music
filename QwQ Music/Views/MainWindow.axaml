@@ -206,6 +206,7 @@
                 </Button.Transitions>
 
                 <userControls:MusicAlbumCover Classes.AlbumCoverRotate="{Binding MusicPlayerViewModel.IsPlaying}"
+                                              Classes="RoundAlbum"
                                               CoverImage="{Binding MusicPlayerViewModel.CurrentMusicItem.CoverImage}"
                                               DataContext="{Binding #MusicPlayerTray.((viewModels11:MusicPlayerTrayViewModel)DataContext)}">
 

@@ -7,6 +7,7 @@ using QwQ_Music.Common.Manager;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels.Bases;
+using QwQ_Music.ViewModels.Windows;
 using QwQ_Music.Views.Windows;
 using static QwQ_Music.Models.LanguageModel;
 
@@ -199,6 +200,7 @@ public partial class LyricConfigPageViewModel : ViewModelBase
         };
 
         _desktopLyricsWindow.Show();
+        _desktopLyricsWindow.SetPenetrate(LyricConfig.DesktopLyric.LockLyricWindow);
     }
 
     private void CloseLyricWindow()

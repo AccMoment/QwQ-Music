@@ -1,10 +1,16 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using QwQ_Music.Models.Enums;
+using SoundFlow.Backends.MiniAudio.Devices;
 
 namespace QwQ_Music.Models.ConfigModels;
 
 public partial class PlayerConfig : ObservableObject
 {
+    /// <summary>
+    /// 音频设备配置
+    /// </summary>
+    public MiniAudioDeviceConfig DeviceConfig { get; set; } = new();
+    
     public int Volume { get; set; } = 100;
 
     public bool IsMuted { get; set; }

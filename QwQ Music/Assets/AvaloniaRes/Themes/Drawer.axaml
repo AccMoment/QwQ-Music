@@ -178,7 +178,7 @@
                                 Margin="20"
                                 HorizontalAlignment="Right"
                                 Spacing="20"
-                                IsVisible="{TemplateBinding Buttons,Converter={StaticResource StringCompareConverter},ConverterParameter={x:Static u:DialogButton.None}}"
+                                IsVisible="{TemplateBinding Buttons,Converter={x:Static ObjectConverters.Equal},ConverterParameter={x:Static u:DialogButton.None}}"
                                 Orientation="Horizontal">
                                 <Button Name="{x:Static u:DefaultDialogControl.PART_CancelButton}" />
                                 <Button Name="{x:Static u:DefaultDialogControl.PART_NoButton}" />

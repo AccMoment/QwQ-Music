@@ -111,4 +111,36 @@
 
     </Carousel>
 
+    <Button Grid.Row="1" Classes="FloatButton"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Margin="15,25"
+            Command="{Binding SaveConfigImmediatelyCommand}">
+        <ToolTip.Tip>
+            <StackPanel>
+                <TextBlock Text="立即保存配置" />
+                <TextBlock FontSize="12"
+                           Classes.Default="{Binding LastSavedTime,Converter={x:Static ObjectConverters.IsNotNull}}"
+                           Classes.TextIsNull="{Binding LastSavedTime,Converter={x:Static ObjectConverters.IsNull}}">
+
+                    <TextBlock.Styles>
+                        <Style Selector="TextBlock.Default">
+                            <Setter Property="Text"
+                                    Value="{Binding LastSavedTime,StringFormat='上次保存时间 : {0:HH:mm:ss}'}" />
+                            <Setter Property="Foreground" Value="{DynamicResource SemiBlue4}"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                        </Style>
+                    </TextBlock.Styles>
+
+                    <TextBlock.Styles>
+                        <Style Selector="TextBlock.TextIsNull">
+                            <Setter Property="Text" Value="此处记录上次保存时间" />
+                        </Style>
+                    </TextBlock.Styles>
+                </TextBlock>
+            </StackPanel>
+        </ToolTip.Tip>
+        <PathIcon Data="{StaticResource SemiIconSave}" />
+    </Button>
+
 </Grid>

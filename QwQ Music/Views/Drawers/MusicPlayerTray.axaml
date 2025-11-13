@@ -2,7 +2,6 @@
       x:Class="QwQ_Music.Views.Drawers.MusicPlayerTray"
       x:DataType="drawers:MusicPlayerTrayViewModel"
       xmlns="https://github.com/avaloniaui"
-      xmlns:control="clr-namespace:QwQ.Avalonia.Control;assembly=QwQ.Avalonia.Control"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
@@ -38,6 +37,7 @@
             Command="{Binding DrawerStatusViewModel.ShowMusicPlayerPageCommand}">
 
         <userControls:MusicAlbumCover
+            Classes="RoundAlbum"
             Classes.AlbumCoverRotate="{Binding MusicPlayerViewModel.IsPlaying}"
             CoverImage="{Binding MusicPlayerViewModel.CurrentMusicItem.CoverImage}">
 
@@ -57,62 +57,114 @@
 
         <TextBlock Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Title}"
                    FontWeight="Bold"
+                   ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}"
                    Padding="0" />
 
-        <control:SwitchControl Condition="{Binding MusicPlayerViewModel.IsPlaying}">
+        <ContentPresenter>
+            <Interaction.Behaviors>
+                
+                <IfElseTrigger Condition="{Binding MusicPlayerViewModel.IsPlaying}">
 
-            <control:SwitchControl.TrueContent>
+                    <IfElseTrigger.IfActions>
+                        
+                        <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentPresenter.ContentProperty}">
+                            
+                            <ChangeAvaloniaPropertyAction.Value>
 
-                <control:SwitchControl>
+                                <ContentPresenter >
 
-                    <control:SwitchControl.Condition>
-                        <MultiBinding Converter="{x:Static BoolConverters.And}">
-                            <Binding Path="RolledLyric.ShowTranslation" />
-                            <Binding Path="MusicPlayerViewModel.LyricsModel.CurrentLyric.Translation"
-                                     Converter="{x:Static StringConverters.IsNotNullOrEmpty}" />
-                        </MultiBinding>
-                    </control:SwitchControl.Condition>
+                                    <Interaction.Behaviors>
 
-                    <control:SwitchControl.TrueContent>
+                                        <IfElseTrigger>
 
-                        <TextBlock FontSize="12"
-                                   MaxLines="2"
-                                   Text="{Binding MusicPlayerViewModel.LyricsModel.CurrentLyric.Translation}"
-                                   TextTrimming="CharacterEllipsis"
-                                   TextWrapping="Wrap"
-                                   ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
+                                            <IfElseTrigger.Condition>
 
-                    </control:SwitchControl.TrueContent>
+                                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                    <Binding Path="RolledLyric.ShowTranslation" />
+                                                    <Binding
+                                                        Path="MusicPlayerViewModel.LyricsModel.CurrentLyric.Translation"
+                                                        Converter="{x:Static StringConverters.IsNotNullOrEmpty}" />
+                                                </MultiBinding>
 
-                    <control:SwitchControl.FalseContent>
+                                            </IfElseTrigger.Condition>
 
-                        <TextBlock FontSize="12"
-                                   MaxLines="2"
-                                   Text="{Binding MusicPlayerViewModel.LyricsModel.CurrentLyric.Primary}"
-                                   TextTrimming="CharacterEllipsis"
-                                   TextWrapping="Wrap"
-                                   ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
+                                            <IfElseTrigger.IfActions>
 
-                    </control:SwitchControl.FalseContent>
-                </control:SwitchControl>
+                                                <ChangeAvaloniaPropertyAction
+                                                    TargetProperty="{x:Static ContentPresenter.ContentProperty}">
 
+                                                    <ChangeAvaloniaPropertyAction.Value>
 
-            </control:SwitchControl.TrueContent>
+                                                        <TextBlock FontSize="12"
+                                                                   MaxLines="2"
+                                                                   Text="{Binding MusicPlayerViewModel.LyricsModel.CurrentLyric.Translation}"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   TextWrapping="Wrap"
+                                                                   ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
 
-            <control:SwitchControl.FalseContent>
+                                                    </ChangeAvaloniaPropertyAction.Value>
 
-                <TextBlock Classes="Tertiary"
-                           FontSize="12"
-                           MaxLines="2"
-                           Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Artists}"
-                           TextTrimming="CharacterEllipsis"
-                           TextWrapping="Wrap"
-                           ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
+                                                </ChangeAvaloniaPropertyAction>
 
-            </control:SwitchControl.FalseContent>
+                                            </IfElseTrigger.IfActions>
 
-        </control:SwitchControl>
+                                            <IfElseTrigger.ElseActions>
 
+                                                <ChangeAvaloniaPropertyAction
+                                                    TargetProperty="{x:Static ContentPresenter.ContentProperty}">
+
+                                                    <ChangeAvaloniaPropertyAction.Value>
+
+                                                        <TextBlock FontSize="12"
+                                                                   MaxLines="2"
+                                                                   Text="{Binding MusicPlayerViewModel.LyricsModel.CurrentLyric.Primary}"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   TextWrapping="Wrap"
+                                                                   ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
+
+                                                    </ChangeAvaloniaPropertyAction.Value>
+
+                                                </ChangeAvaloniaPropertyAction>
+
+                                            </IfElseTrigger.ElseActions>
+
+                                        </IfElseTrigger>
+
+                                    </Interaction.Behaviors>
+                                </ContentPresenter>
+                                                            
+                            </ChangeAvaloniaPropertyAction.Value>
+
+                        </ChangeAvaloniaPropertyAction>
+
+                    </IfElseTrigger.IfActions>
+
+                    <IfElseTrigger.ElseActions>
+
+                        <ChangeAvaloniaPropertyAction
+                            TargetProperty="{x:Static ContentPresenter.ContentProperty}">
+                            
+                            <ChangeAvaloniaPropertyAction.Value>
+                                
+                                <TextBlock FontSize="12"
+                                           MaxLines="2"
+                                           Classes="Tertiary"
+                                           Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Artists}"
+                                           TextTrimming="CharacterEllipsis"
+                                           TextWrapping="Wrap"
+                                           ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
+
+                            </ChangeAvaloniaPropertyAction.Value>
+                            
+                        </ChangeAvaloniaPropertyAction>
+
+                    </IfElseTrigger.ElseActions>
+                    
+                </IfElseTrigger>
+
+            </Interaction.Behaviors>
+            
+        </ContentPresenter>
     </StackPanel>
 
     <!--  播放控制  -->
@@ -182,23 +234,44 @@
                 ToolTip.Tip="{Binding MusicPlayerViewModel.PlayModeName}"
                 ToolTip.VerticalOffset="-10"
                 behaviors:DynamicCornerBehavior.IsEnabled="True">
-                <control:ChoiceControl Selected="{Binding MusicPlayerViewModel.PlayerConfig.PlayMode}"
-                                       TargetType="{x:Type enums:PlayMode}">
-                    <PathIcon
-                        Data="{StaticResource Sequential}"
-                        Margin="3.6"
-                        control:ChoiceControl.SelectName="Sequential" />
 
-                    <PathIcon
-                        Data="{StaticResource Random}"
-                        Margin="4.8"
-                        control:ChoiceControl.SelectName="Random" />
+                <PathIcon Foreground="White">
 
-                    <PathIcon
-                        Data="{StaticResource SingleLoop}"
-                        Margin="4"
-                        control:ChoiceControl.SelectName="SingleLoop" />
-                </control:ChoiceControl>
+                    <Interaction.Behaviors>
+
+                        <DataTrigger Binding="{Binding MusicPlayerViewModel.PlayerConfig.PlayMode}"
+                                     Value="{x:Static enums:PlayMode.Sequential}">
+
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
+                                                          Value="3.6" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
+                                                          Value="{StaticResource Sequential}" />
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding MusicPlayerViewModel.PlayerConfig.PlayMode}"
+                                     Value="{x:Static enums:PlayMode.Random}">
+
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
+                                                          Value="4.8" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
+                                                          Value="{StaticResource Random}" />
+
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding MusicPlayerViewModel.PlayerConfig.PlayMode}"
+                                     Value="{x:Static enums:PlayMode.SingleLoop}">
+
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
+                                                          Value="4" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
+                                                          Value="{StaticResource SingleLoop}" />
+
+                        </DataTrigger>
+
+                    </Interaction.Behaviors>
+
+                </PathIcon>
+
             </Button>
 
         </StackPanel>
@@ -475,20 +548,42 @@
                 </Button.Flyout>
 
                 <ToolTip.Tip>
+                    <ContentPresenter>
+                        
+                        <Interaction.Behaviors>
+                            
+                            <IfElseTrigger Condition="{Binding MusicPlayerViewModel.Volume,Mode=OneWay}">
 
-                    <control:SwitchControl Condition="{Binding MusicPlayerViewModel.Volume,Mode=OneWay}">
-                        <control:SwitchControl.TrueContent>
-                            <TextBlock>
-                                <Run Text="当前音量：" />
-                                <Run Text="{Binding MusicPlayerViewModel.Volume}" />
-                                <Run Text="%" />
-                            </TextBlock>
-                        </control:SwitchControl.TrueContent>
-                        <control:SwitchControl.FalseContent>
-                            <TextBlock Text="静音" />
-                        </control:SwitchControl.FalseContent>
-                    </control:SwitchControl>
+                                <IfElseTrigger.IfActions>
+                                    <ChangeAvaloniaPropertyAction
+                                        TargetProperty="{x:Static ContentPresenter.ContentProperty}">
+                                        <ChangeAvaloniaPropertyAction.Value>
+                                            <TextBlock>
+                                                <Run Text="当前音量：" />
+                                                <Run Text="{Binding MusicPlayerViewModel.Volume}" />
+                                                <Run Text="%" />
+                                            </TextBlock>
+                                        </ChangeAvaloniaPropertyAction.Value>
+                                    </ChangeAvaloniaPropertyAction>
+                                </IfElseTrigger.IfActions>
 
+                                <IfElseTrigger.ElseActions>
+
+                                    <ChangeAvaloniaPropertyAction
+                                        TargetProperty="{x:Static ContentPresenter.ContentProperty}">
+                                        <ChangeAvaloniaPropertyAction.Value>
+                                            <TextBlock Text="静音" />
+
+                                        </ChangeAvaloniaPropertyAction.Value>
+                                    </ChangeAvaloniaPropertyAction>
+                                </IfElseTrigger.ElseActions>
+
+                            </IfElseTrigger>
+
+                        </Interaction.Behaviors>
+                        
+                    </ContentPresenter>
+                    
                 </ToolTip.Tip>
 
                 <Interaction.Behaviors>

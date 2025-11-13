@@ -35,8 +35,8 @@ public partial class AlbumClassPageViewModel : NavigationViewModel
     [RelayCommand]
     private void ToggleItem(AlbumItemModel model)
     {
-        _allAlbumsPanelViewModel.SelectedAlbumItem = model;
-        _albumDetailsPanelViewModel.UpdateAlbumItemModel(model);
+        _albumDetailsPanelViewModel.UpdateAlbumItemModel(model);  
+        _allAlbumsPanelViewModel.SelectedAlbumItem = model; 
         NavigationIndex = 1;
     }
 }

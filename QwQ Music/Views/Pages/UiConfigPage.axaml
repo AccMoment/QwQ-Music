@@ -10,7 +10,8 @@
       xmlns:pages="clr-namespace:QwQ_Music.ViewModels.Pages"
       xmlns:u="https://irihi.tech/ursa"
       xmlns:anchorControl="clr-namespace:QwQ_Music.UI.Controls.AnchorControl"
-      xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls">
+      xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
+      xmlns:services="clr-namespace:QwQ_Music.Common.Services">
 
     <u:SelectionList Grid.Column="0" Name="NavigationList">
 
@@ -82,12 +83,12 @@
 
                 <CheckBox
                     Content="转化为Lab矢量"
-                    IsVisible="{Binding UiConfig.CoverConfig.SelectedColorExtractionAlgorithm,Converter={StaticResource StringCompareConverter},ConverterParameter='KMeans'}"
+                    IsVisible="{Binding UiConfig.CoverConfig.SelectedColorExtractionAlgorithm,Converter={x:Static ObjectConverters.Equal},ConverterParameter='{x:Static services:ColorExtractionAlgorithm.KMeans}'}"
                     IsChecked="{Binding UiConfig.CoverConfig.ToLab}" />
 
                 <CheckBox
                     Content="使用UseKMeansPp"
-                    IsVisible="{Binding UiConfig.CoverConfig.SelectedColorExtractionAlgorithm,Converter={StaticResource StringCompareConverter},ConverterParameter='KMeans'}"
+                    IsVisible="{Binding UiConfig.CoverConfig.SelectedColorExtractionAlgorithm,Converter={x:Static ObjectConverters.Equal},ConverterParameter='{x:Static services:ColorExtractionAlgorithm.KMeans}'}"
                     IsChecked="{Binding UiConfig.CoverConfig.UseKMeansPp}" />
 
             </StackPanel>
