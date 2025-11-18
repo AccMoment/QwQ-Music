@@ -1,0 +1,55 @@
+<StackPanel xmlns="https://github.com/avaloniaui"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+            xmlns:soundEffectModels="clr-namespace:QwQ_Music.Models.SoundEffectModels"
+            mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+            x:DataType="soundEffectModels:AlgorithmicReverbModel"
+            Spacing="10"
+            x:Class="QwQ_Music.Views.SoundEffects.AlgorithmicReverb">
+    
+    <DockPanel HorizontalSpacing="10" Height="40">
+        <Separator VerticalAlignment="Bottom" Margin="0" DockPanel.Dock="Bottom" />
+        <TextBlock FontSize="16" Text="{Binding Name}" FontWeight="Bold" VerticalAlignment="Center" />
+        <TextBlock Text="Free-verb 算法混响效果器"
+                   VerticalAlignment="Center"
+                   Foreground="{DynamicResource SemiColorTertiary}" />
+    </DockPanel>
+    
+    <TextBlock Text="{Binding Wet, StringFormat='湿信号 : {0:F3}'}" />
+    <Slider
+        Maximum="1.0"
+        Minimum="0.0"
+        Value="{Binding Wet}" />
+
+    <TextBlock Text="{Binding Mix, StringFormat='干湿混合比例: {0:F3} '}" />
+    <Slider
+        Maximum="1"
+        Minimum="0"
+        Value="{Binding Mix}" />
+
+    <TextBlock Text="{Binding RoomSize, StringFormat='房间大小 : {0:F3}'}" />
+    <Slider
+        Maximum="1"
+        Minimum="0"
+        Value="{Binding RoomSize}" />
+
+    <TextBlock Text="{Binding Damp, StringFormat='阻尼 : {0:F3}'}" />
+    <Slider
+        Maximum="1"
+        Minimum="0"
+        Value="{Binding Damp}" />
+
+    <TextBlock Text="{Binding Width, StringFormat='立体声宽度 : {0:F3}'}" />
+    <Slider
+        Maximum="1"
+        Minimum="0"
+        Value="{Binding Width}" />
+
+    <TextBlock Text="{Binding PreDelay, StringFormat='预延迟: {0:F0} ms'}" />
+    <Slider
+        Maximum="100"
+        Minimum="0"
+        Value="{Binding PreDelay}" />
+
+</StackPanel>

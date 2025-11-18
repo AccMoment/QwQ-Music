@@ -1,12 +1,13 @@
 using System;
-using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using QwQ_Music.Common;
+using QwQ_Music.Common.Services;
 using QwQ_Music.ViewModels;
 using QwQ_Music.Views;
 using Ursa.Controls;
@@ -15,11 +16,19 @@ namespace QwQ_Music;
 
 public class App : Application
 {
-    public static TopLevel? TopLevel { get; private set; }
+    public static MainWindow? TopLevel { get; private set; }
+
+    public static Assembly CurrentAssembly { get; } = Assembly.GetExecutingAssembly();
 
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        
+#if DEBUG
+        this.AttachDeveloperTools();
+#endif
+        
+        AppResources.Default.Initialize();
         DataContext = new ApplicationViewModel();
     }
 
@@ -35,10 +44,16 @@ public class App : Application
         {
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit.
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
-            DisableAvaloniaDataAnnotationValidation();
-            TopLevel = desktop.MainWindow = new MainWindow();
+            /*DisableAvaloniaDataAnnotationValidation();*/
+
+            desktop.MainWindow = TopLevel = new MainWindow
+            {
+                DataContext = new MainWindowViewModel(),
+            };
+
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
         }
+
         base.OnFrameworkInitializationCompleted();
     }
 
@@ -51,37 +66,46 @@ public class App : Application
         TaskScheduler.UnobservedTaskException -= TaskScheduler_OnUnobservedTaskException;
     }
 
+    private static void ShowExceptionOverlay(string message, string title = "异常", MessageBoxIcon icon = MessageBoxIcon.Error, MessageBoxButton button = MessageBoxButton.OK)
+    {
+        MessageBox.ShowOverlayAsync(message, title, icon: icon, button: button);
+    }
+
     private static void TaskScheduler_OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
-        MessageBox.ShowOverlayAsync(
-            $"后台任务出现异常: {e.Exception.Message}",
-            "异常",
-            icon: MessageBoxIcon.Error,
-            button: MessageBoxButton.OKCancel
-        );
+        HandleException($"后台任务出现异常: {e.Exception.Message}", e.Exception);
     }
 
     private static void UIThread_OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
+        HandleException($"应用程序出现异常: {e.Exception.Message}", e.Exception);
         e.Handled = true;
-        MessageBox.ShowOverlayAsync(
-            $"应用程序出现异常: {e.Exception.Message}",
-            "异常",
-            icon: MessageBoxIcon.Error,
-            button: MessageBoxButton.OKCancel
-        );
     }
 
     private static void CurrentDomain_OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
-        MessageBox.ShowOverlayAsync(
-            $"应用域出现异常: {e.ExceptionObject}",
-            "异常",
-            icon: MessageBoxIcon.Error,
-            button: MessageBoxButton.OKCancel
-        );
+        HandleException($"应用域出现异常: {e.ExceptionObject}", (Exception)e.ExceptionObject);
     }
 
+    private static void HandleException(string message, Exception? exception = null)
+    {
+        string fullMessage = exception != null
+            ? $"{message}\n\n详细信息:\n{exception}"
+            : message;
+
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            ShowExceptionOverlay(fullMessage);
+        }
+        else
+        {
+            Dispatcher.UIThread.Post(() => ShowExceptionOverlay(fullMessage));
+        }
+
+        LoggerService.Fatal(fullMessage);
+    }
+    
+    /*
     private static void DisableAvaloniaDataAnnotationValidation()
     {
         // Get an array of plugins to remove
@@ -95,4 +119,5 @@ public class App : Application
             BindingPlugins.DataValidators.Remove(plugin);
         }
     }
+    */
 }

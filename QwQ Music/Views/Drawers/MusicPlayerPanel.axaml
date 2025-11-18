@@ -1,0 +1,655 @@
+<Grid RowDefinitions="40,*,Auto" ColumnDefinitions="*,*"
+      x:Class="QwQ_Music.Views.Drawers.MusicPlayerPanel"
+      x:DataType="drawers:MusicCoverPageViewModel"
+      xmlns="https://github.com/avaloniaui"
+      xmlns:u="https://irihi.tech/ursa"
+      xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:configModels="clr-namespace:QwQ_Music.Models.ConfigModels"
+      xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
+      xmlns:controls="clr-namespace:QwQ_Music.UI.Controls"
+      xmlns:drawers="clr-namespace:QwQ_Music.ViewModels.Drawers"
+      xmlns:enums="clr-namespace:QwQ_Music.Models.Enums"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      d:DesignHeight="450" d:DesignWidth="600"
+      mc:Ignorable="d"
+      Background="Transparent">
+
+    <!--  内容层  -->
+
+    <Grid.Styles>
+        <Style Selector="u|IconButton">
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+        <Style Selector="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource AppFont}" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Duration="0:0:0.3" Easing="QuadraticEaseIn" Property="Foreground" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="PathIcon">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Duration="0:0:0.15" Easing="QuadraticEaseIn" Property="Foreground" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector=":is(Button)">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Duration="0:0:0.15" Easing="QuadraticEaseIn" Property="Foreground" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+    </Grid.Styles>
+
+    <controls:ShaderEffectControl Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" Grid.ColumnSpan="2"
+                                  Colors="{Binding ColorsList}"
+                                  IsEnableAnimation="{Binding DrawerStatusViewModel.IsMusicPlayerPanelVisible}"
+                                  PerformanceMode="HighQuality"
+                                  ShaderCode="{Binding ShaderCode}" />
+
+    <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Name="TopPanel" Background="Transparent">
+        <u:IconButton
+            Command="{Binding DrawerStatusViewModel.ShowMusicPlayerPageCommand}"
+            HorizontalAlignment="Left"
+            Icon="{StaticResource SemiIconChevronDown}"
+            Margin="5" />
+
+    </Panel>
+
+    <Grid Grid.Row="1" Grid.Column="0"
+          HorizontalAlignment="Center"
+          Margin="50,20,10,20"
+          RowDefinitions="*,Auto"
+          RowSpacing="10"
+          VerticalAlignment="Center">
+
+        <Border BoxShadow="0 0 5 0 DarkGray"
+                CornerRadius="20"
+                HorizontalAlignment="Center">
+            <Border ClipToBounds="True" CornerRadius="20">
+                <!--  专辑封面 Image 控件  -->
+                <Image Source="{Binding MusicPlayerViewModel.CoverImage}" />
+            </Border>
+        </Border>
+
+        <!--  音乐信息  -->
+        <StackPanel Grid.Row="1"
+                    HorizontalAlignment="Left"
+                    Margin="10,0"
+                    Spacing="5">
+
+            <TextBlock FontSize="18"
+                       FontWeight="Bold"
+                       Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Title}"
+                       TextTrimming="CharacterEllipsis"
+                       ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
+            <TextBlock Classes="Tertiary"
+                       FontSize="15"
+                       Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Artists}"
+                       TextTrimming="CharacterEllipsis"
+                       ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
+
+        </StackPanel>
+
+    </Grid>
+
+    <controls:LyricsControl ClickedLyricTime="{Binding SelectLyricsTimePoint}"
+                            CurrentLyricIndex="{Binding MusicPlayerViewModel.LyricsModel.LyricsIndex}"
+                            Grid.Row="1" Grid.Column="1"
+                            Margin="10,20"
+                            LyricTextAlignment="{Binding RolledLyric.LyricTextAlignment}"
+                            LyricsData="{Binding MusicPlayerViewModel.LyricsModel.LyricsData}"
+                            ShowTranslation="{Binding RolledLyric.ShowTranslation}"
+                            TextMargin="30,10"
+                            LineSpacing="{Binding RolledLyric.LyricsLineSpacing}"
+                            TranslationSpacing="{Binding RolledLyric.TranslationSpacing}">
+
+        <controls:LyricsControl.Styles>
+
+            <Style Selector="TextBlock">
+                <Setter Property="FontSize" Value="{Binding RolledLyric.PrimaryFontSize}" />
+                <Setter Property="FontFamily"
+                        Value="{Binding RolledLyric.RolledLyricsFont,Converter={StaticResource StringToFontFamily}}" />
+            </Style>
+
+            <!-- 普通歌词样式 -->
+            <Style Selector="controls|LyricLineControl">
+                <Setter Property="PrimaryFontSize" Value="{Binding RolledLyric.PrimaryFontSize}" />
+                <Setter Property="TranslationFontSize" Value="{Binding RolledLyric.TranslationFontSize}" />
+            </Style>
+
+        </controls:LyricsControl.Styles>
+
+    </controls:LyricsControl>
+
+    <controls:SpectrumVisualizerControl x:Name="SpectrumVisualizer"
+                                        Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                        LineBrush="{Binding SpectrumVisualizerBrush}"
+                                        Margin="20"
+                                        Classes="Hide"
+                                        LineThickness="{Binding SpectrumConfig.LineThickness}"
+                                        AmplitudeScale="{Binding SpectrumConfig.AmplitudeScale}"
+                                        SmoothingFactor="{Binding SpectrumConfig.SmoothingFactor}">
+
+        <controls:SpectrumVisualizerControl.Transitions>
+            <Transitions>
+                <DoubleTransition Duration="0:0:0.5"
+                                  Easing="CircularEaseOut"
+                                  Property="Opacity" />
+            </Transitions>
+        </controls:SpectrumVisualizerControl.Transitions>
+
+        <controls:SpectrumVisualizerControl.Styles>
+
+            <Style Selector="controls|SpectrumVisualizerControl.Hide">
+                <Setter Property="Opacity" Value="0" />
+                <Setter Property="IsHitTestVisible" Value="False" />
+            </Style>
+
+        </controls:SpectrumVisualizerControl.Styles>
+
+    </controls:SpectrumVisualizerControl>
+
+    <Grid Name="ControlPanelGrid"
+          Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+          ColumnDefinitions="1*,3*,1*"
+          RowDefinitions="Auto,Auto"
+          RowSpacing="20"
+          Margin="20">
+
+        <Grid.Transitions>
+            <Transitions>
+                <DoubleTransition Duration="0:0:0.5"
+                                  Easing="CircularEaseOut"
+                                  Property="Opacity" />
+            </Transitions>
+        </Grid.Transitions>
+
+        <Grid.Styles>
+
+            <Style Selector="Grid.Hide">
+                <Setter Property="Opacity" Value="0" />
+                <Setter Property="IsHitTestVisible" Value="False" />
+            </Style>
+
+        </Grid.Styles>
+
+        <!--  播放控制  -->
+        <StackPanel Grid.Column="1"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="30"
+                    VerticalAlignment="Bottom">
+
+            <StackPanel.Styles>
+                <Style Selector="StackPanel > Button">
+                    <Setter Property="Padding" Value="0" />
+                </Style>
+            </StackPanel.Styles>
+
+            <!--  刷新播放  -->
+            <Button Classes="Icon"
+                    Command="{Binding MusicPlayerViewModel.RefreshPlaybackCommand}"
+                    Foreground="{DynamicResource TextBlockDefaultForeground}"
+                    Height="25"
+                    IsEnabled="{Binding MusicPlayerViewModel.CurrentMusicItem.FilePath, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=''}"
+                    behaviors:DynamicCornerBehavior.IsEnabled="True">
+                <PathIcon Data="{StaticResource SemiIconRefresh2}" Margin="5" />
+            </Button>
+
+            <!--  上一首  -->
+            <Button Classes="Icon"
+                    Command="{Binding MusicPlayerViewModel.PreviousSongCommand}"
+                    Foreground="{DynamicResource TextBlockDefaultForeground}"
+                    behaviors:DynamicCornerBehavior.IsEnabled="True">
+                <PathIcon
+                    Data="{StaticResource PlayIconData}"
+                    Height="30"
+                    RenderTransform="rotate(180deg)" />
+            </Button>
+
+            <!--  播放/暂停 按钮  -->
+            <userControls:MusicPlayButton />
+
+            <!--  下一首  -->
+            <Button Classes="Icon"
+                    Command="{Binding MusicPlayerViewModel.NextSongCommand}"
+                    Foreground="{DynamicResource TextBlockDefaultForeground}"
+                    behaviors:DynamicCornerBehavior.IsEnabled="True">
+                <PathIcon Data="{StaticResource PlayIconData}"
+                          Height="30" />
+            </Button>
+
+            <!--  播放模式  -->
+            <Button Classes="Icon"
+                    Command="{Binding MusicPlayerViewModel.TogglePlayModeCommand}"
+                    Foreground="{DynamicResource TextBlockDefaultForeground}"
+                    Height="25"
+                    ToolTip.Placement="Top"
+                    ToolTip.Tip="{Binding MusicPlayerViewModel.PlayModeName}"
+                    ToolTip.VerticalOffset="-10"
+                    behaviors:DynamicCornerBehavior.IsEnabled="True">
+
+                <PathIcon>
+
+                    <Interaction.Behaviors>
+
+                        <DataTrigger Binding="{Binding MusicPlayerViewModel.PlayerConfig.PlayMode}"
+                                     Value="{x:Static enums:PlayMode.Sequential}">
+
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
+                                                          Value="3.6" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
+                                                          Value="{StaticResource Sequential}" />
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding MusicPlayerViewModel.PlayerConfig.PlayMode}"
+                                     Value="{x:Static enums:PlayMode.Random}">
+
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
+                                                          Value="4.8" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
+                                                          Value="{StaticResource Random}" />
+
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding MusicPlayerViewModel.PlayerConfig.PlayMode}"
+                                     Value="{x:Static enums:PlayMode.SingleLoop}">
+
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
+                                                          Value="4" />
+                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
+                                                          Value="{StaticResource SingleLoop}" />
+
+                        </DataTrigger>
+
+                    </Interaction.Behaviors>
+
+                </PathIcon>
+
+            </Button>
+
+        </StackPanel>
+
+        <StackPanel Grid.Row="0" Grid.Column="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="10"
+                    Name="FunctionButtonContainer"
+                    VerticalAlignment="Center">
+
+            <StackPanel.Styles>
+
+                <Style Selector="StackPanel#FunctionButtonContainer > Button">
+                    <Setter Property="Height" Value="30" />
+                    <Setter Property="Width" Value="30" />
+                    <Setter Property="Padding" Value="8" />
+                    <Setter Property="Foreground" Value="{DynamicResource TextBlockDefaultForeground}" />
+                    <Setter Property="behaviors:DynamicCornerBehavior.IsEnabled" Value="True" />
+                </Style>
+
+            </StackPanel.Styles>
+
+            <Button
+                Classes="Icon"
+                Classes.Full="{Binding MusicPlayerViewModel.Volume,Converter={StaticResource ValueComparisonConverter},ConverterParameter='@VALUE > 0'}"
+                ToolTip.Placement="Top"
+                ToolTip.VerticalOffset="-10">
+
+                <Button.Resources>
+
+                    <!-- ReSharper disable once Xaml.RedundantResource -->
+                    <x:Double x:Key="FlyoutMinWidth">30</x:Double>
+                    <!-- ReSharper disable once Xaml.RedundantResource -->
+                    <Thickness x:Key="FlyoutPadding">0</Thickness>
+                    <!-- ReSharper disable once Xaml.RedundantResource -->
+                    <x:Double x:Key="FlyoutMinHeight">30</x:Double>
+
+                </Button.Resources>
+
+                <Button.Styles>
+
+                    <Style Selector="Button">
+                        <Setter Property="ToolTip.Tip" Value="静音" />
+                        <Setter Property="Foreground" Value="{DynamicResource SemiRed4}" />
+                    </Style>
+
+                    <Style Selector="Button.Full">
+                        <Setter Property="Foreground" Value="{DynamicResource TextBlockDefaultForeground}" />
+                        <Setter Property="ToolTip.Tip">
+                            <Template>
+                                <TextBlock>
+                                    <Run Text="当前音量：" />
+                                    <Run Text="{Binding MusicPlayerViewModel.Volume}" />
+                                    <Run Text="%" />
+                                </TextBlock>
+                            </Template>
+                        </Setter>
+                    </Style>
+
+                    <Style Selector="PathIcon.Half">
+                        <Setter Property="Data" Value="{StaticResource SemiIconVolume1}" />
+                    </Style>
+
+                    <Style Selector="PathIcon.Full">
+                        <Setter Property="Data" Value="{StaticResource SemiIconVolume2}" />
+                    </Style>
+
+                    <Style Selector="PathIcon.Empty">
+                        <Setter Property="Data" Value="{StaticResource SemiIconVolumnSilent}" />
+                    </Style>
+
+                </Button.Styles>
+
+                <PathIcon Height="15"
+                          Classes.Half="{Binding MusicPlayerViewModel.Volume,Converter={StaticResource ValueComparisonConverter},
+                                ConverterParameter='@VALUE > 0'}"
+                          Classes.Full="{Binding MusicPlayerViewModel.Volume,Converter={StaticResource ValueComparisonConverter},
+                                                                                                  ConverterParameter='@VALUE > 50'}"
+                          Classes.Empty="{Binding MusicPlayerViewModel.Volume,Converter={StaticResource ValueComparisonConverter},
+                                                                                                                                 ConverterParameter='@VALUE == 0'}" />
+
+                <Button.Flyout>
+                    <Flyout Placement="Top" ShowMode="TransientWithDismissOnPointerMoveAway">
+
+                        <Grid Height="180"
+                              Margin="0,5,0,0"
+                              RowDefinitions="Auto,*,Auto">
+
+                            <TextBlock FontSize="12"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,0,0,3"
+                                       Text="{Binding MusicPlayerViewModel.Volume}" />
+
+                            <Slider Grid.Row="1"
+                                    HorizontalAlignment="Center"
+                                    Maximum="100"
+                                    Orientation="Vertical"
+                                    Value="{Binding MusicPlayerViewModel.Volume}" />
+
+                            <Button Classes="Icon"
+                                    Classes.Silent="{Binding MusicPlayerViewModel.IsMuted}"
+                                    Command="{Binding MusicPlayerViewModel.ToggleMuteCommand}"
+                                    CornerRadius="8"
+                                    Grid.Row="2"
+                                    Margin="8"
+                                    Padding="0">
+
+                                <PathIcon Data="{StaticResource Prohibit}" Width="25" />
+
+                                <Button.Styles>
+                                    <Style Selector="Button.Silent">
+                                        <Setter Property="Background"
+                                                Value="{DynamicResource SemiRed5}" />
+                                        <Setter Property="Foreground" Value="White" />
+                                        <Style Selector="^:pointerover /template/ ContentPresenter">
+                                            <Setter Property="Background"
+                                                    Value="{DynamicResource SemiRed4}" />
+                                        </Style>
+                                    </Style>
+                                </Button.Styles>
+
+                                <Interaction.Behaviors>
+
+                                    <PointerWheelChangedTrigger>
+                                        <InvokeCommandAction
+                                            Command="{Binding VolumeBarPointerWheelChangedCommand}"
+                                            PassEventArgsToCommand="True" />
+                                    </PointerWheelChangedTrigger>
+
+                                </Interaction.Behaviors>
+
+                            </Button>
+
+                        </Grid>
+                    </Flyout>
+                </Button.Flyout>
+
+                <Interaction.Behaviors>
+
+                    <PointerWheelChangedTrigger>
+                        <InvokeCommandAction Command="{Binding VolumeBarPointerWheelChangedCommand}"
+                                             PassEventArgsToCommand="True" />
+                    </PointerWheelChangedTrigger>
+
+                </Interaction.Behaviors>
+
+            </Button>
+
+            <Button Classes="Icon">
+                <PathIcon Data="{StaticResource SemiIconTextRectangle}" />
+
+                <Button.Flyout>
+                    <Flyout Placement="Top">
+
+                        <Grid ColumnDefinitions="Auto,*" Height="300" Width="200" ColumnSpacing="10" Margin="5">
+
+                            <Border Theme="{StaticResource RadioButtonGroupBorder}"
+                                    CornerRadius="8">
+
+                                <StackPanel Orientation="Vertical" Spacing="0">
+                                    <RadioButton Name="Settings1" Content="显示" IsChecked="True"
+                                                 Theme="{DynamicResource ButtonRadioButton}" />
+                                    <RadioButton Name="Settings2" Content="样式"
+                                                 Theme="{DynamicResource ButtonRadioButton}" />
+                                    <RadioButton Name="Settings3" Content="频谱"
+                                                 Theme="{DynamicResource ButtonRadioButton}" />
+                                </StackPanel>
+                            </Border>
+
+                            <ScrollViewer Grid.Column="1">
+                                <Interaction.Behaviors>
+                                    <IfElseTrigger Condition="{Binding #Settings1.IsChecked}">
+
+                                        <IfElseTrigger.IfActions>
+                                            <ChangeAvaloniaPropertyAction
+                                                TargetProperty="{x:Static ContentControl.ContentProperty}">
+                                                <ChangeAvaloniaPropertyAction.Value>
+
+                                                    <StackPanel Spacing="10" Margin="5">
+
+                                                        <TextBlock Text="{Binding OffsetName}" />
+                                                        <u:NumericIntUpDown InnerRightContent="ms"
+                                                                            Value="{Binding MusicPlayerViewModel.LyricOffset}" />
+
+
+                                                        <CheckBox Content="显示翻译"
+                                                                  IsChecked="{Binding RolledLyric.ShowTranslation}" />
+
+
+                                                        <TextBlock Text="对齐方式" VerticalAlignment="Center" />
+                                                        <ComboBox MinWidth="100"
+                                                                  DisplayMemberBinding="{Binding Value}"
+                                                                  SelectedValueBinding="{Binding Key}"
+                                                                  ItemsSource="{x:Static configModels:LyricConfig.TextAlignments}"
+                                                                  SelectedValue="{Binding RolledLyric.LyricTextAlignment}" />
+
+                                                        <TextBlock Text="字体" VerticalAlignment="Center" />
+                                                        <Button Content="{Binding RolledLyric.RolledLyricsFont}"
+                                                                MinWidth="100"
+                                                                HorizontalAlignment="Left"
+                                                                Theme="{StaticResource ComboButton}">
+
+                                                            <Button.Styles>
+
+                                                                <Style Selector="Button:pressed">
+                                                                    <Setter Property="RenderTransform"
+                                                                            Value="translateY(0px)" />
+                                                                </Style>
+
+                                                            </Button.Styles>
+
+                                                            <Button.Flyout>
+                                                                <Flyout>
+                                                                    <userControls:FontSelector
+                                                                        SelectedFont="{Binding RolledLyric.RolledLyricsFont}" />
+                                                                </Flyout>
+                                                            </Button.Flyout>
+                                                        </Button>
+
+                                                    </StackPanel>
+                                                </ChangeAvaloniaPropertyAction.Value>
+                                            </ChangeAvaloniaPropertyAction>
+                                        </IfElseTrigger.IfActions>
+
+                                    </IfElseTrigger>
+
+                                    <IfElseTrigger Condition="{Binding #Settings2.IsChecked}">
+
+                                        <IfElseTrigger.IfActions>
+                                            <ChangeAvaloniaPropertyAction
+                                                TargetProperty="{x:Static ContentControl.ContentProperty}">
+                                                <ChangeAvaloniaPropertyAction.Value>
+
+                                                    <StackPanel Spacing="10" Margin="5">
+
+                                                        <TextBlock Text="主歌词大小" />
+                                                        <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
+                                                                            Value="{Binding RolledLyric.PrimaryFontSize}" />
+
+                                                        <TextBlock Text="翻译歌词大小" />
+                                                        <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
+                                                                            Value="{Binding RolledLyric.TranslationFontSize}" />
+
+                                                        <TextBlock Text="歌词行间距" />
+                                                        <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
+                                                                            Value="{Binding RolledLyric.LyricsLineSpacing}" />
+
+                                                        <TextBlock Text="歌词翻译间距" />
+                                                        <u:NumericIntUpDown Minimum="0" InnerRightContent="px"
+                                                                            Value="{Binding RolledLyric.TranslationSpacing}" />
+
+                                                    </StackPanel>
+
+                                                </ChangeAvaloniaPropertyAction.Value>
+                                            </ChangeAvaloniaPropertyAction>
+                                        </IfElseTrigger.IfActions>
+
+                                    </IfElseTrigger>
+
+                                    <IfElseTrigger Condition="{Binding #Settings3.IsChecked}">
+
+                                        <IfElseTrigger.IfActions>
+                                            <ChangeAvaloniaPropertyAction
+                                                TargetProperty="{x:Static ContentControl.ContentProperty}">
+                                                <ChangeAvaloniaPropertyAction.Value>
+
+                                                    <StackPanel Spacing="10" Margin="5">
+
+                                                        <CheckBox Content="启用可视化"
+                                                                  IsChecked="{Binding SpectrumConfig.IsEnabled}" />
+
+                                                        <TextBlock Text="频谱线条粗细" />
+                                                        <u:NumericDoubleUpDown Minimum="0"
+                                                                               Maximum="5"
+                                                                               Value="{Binding SpectrumConfig.LineThickness}" />
+
+
+                                                        <TextBlock Text="振幅缩放因子" ToolTip.Tip="控制波形高度" />
+                                                        <u:NumericDoubleUpDown Minimum="0"
+                                                                               Step="0.2"
+                                                                               Maximum="10"
+                                                                               Value="{Binding SpectrumConfig.AmplitudeScale}" />
+
+                                                        <TextBlock Text="平滑因子" ToolTip.Tip="0-1，值越大变化越快" />
+                                                        <u:NumericDoubleUpDown Minimum="0"
+                                                                               Step="0.05"
+                                                                               Maximum="5"
+                                                                               Value="{Binding SpectrumConfig.SmoothingFactor}" />
+
+                                                        <u:Divider Content="高级设置" />
+
+                                                        <TextBlock Text="刷新间隔" />
+                                                        <u:NumericIntUpDown Minimum="1"
+                                                                            Step="50"
+                                                                            Value="{Binding SpectrumConfig.UpdateIntervalMs}" />
+
+                                                        <TextBlock Text="FFT数组大小指数"
+                                                                   ToolTip.Tip="即'2^N'，FFT数组大小必需为2的冥次方" />
+                                                        <u:NumericIntUpDown Minimum="0"
+                                                                            Maximum="30"
+                                                                            Value="{Binding SpectrumConfig.FFTSizeIndex}" />
+                                                        <TextBlock FontSize="12" Classes="Tertiary"
+                                                                   Text="{Binding SpectrumConfig.FFTSize,StringFormat='FFT数组大小为 {0}'}" />
+
+                                                    </StackPanel>
+
+                                                </ChangeAvaloniaPropertyAction.Value>
+                                            </ChangeAvaloniaPropertyAction>
+                                        </IfElseTrigger.IfActions>
+
+                                    </IfElseTrigger>
+
+                                </Interaction.Behaviors>
+                            </ScrollViewer>
+
+                        </Grid>
+
+                    </Flyout>
+                </Button.Flyout>
+
+            </Button>
+
+            <Button Classes="Icon"
+                    Command="{Binding DrawerStatusViewModel.ShowMusicPlaylistCommand}">
+                <PathIcon
+                    Data="{StaticResource SemiIconDescend2}" />
+            </Button>
+
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3">
+
+            <!--  进度条  -->
+            <Slider Maximum="{Binding MusicPlayerViewModel.CurrentMusicItem.Duration.TotalSeconds}"
+                    Value="{Binding MusicPlayerViewModel.Position}">
+                <Slider.Transitions>
+                    <Transitions>
+                        <BrushTransition Duration="0:0:0.2" Property="Foreground" />
+                        <BrushTransition Duration="0:0:0.2" Property="Background" />
+                    </Transitions>
+                </Slider.Transitions>
+            </Slider>
+
+            <!--  播放时长 / 总时长  -->
+            <Panel>
+
+                <TextBlock FontSize="13"
+                           Text="{Binding MusicPlayerViewModel.Position, Mode=OneWay, Converter={StaticResource SecondsToStringConverter}}" />
+
+                <TextBlock FontSize="13"
+                           HorizontalAlignment="Right"
+                           Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Duration, Mode=OneWay, Converter={StaticResource TruncateDecimalConverter}}" />
+
+            </Panel>
+        </StackPanel>
+
+    </Grid>
+
+    <!--
+    <Rectangle Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" Opacity="1">
+        <Rectangle.Fill>
+            <RadialGradientBrush Center="25%,70%" GradientOrigin="20%,70%" RadiusX="50%" RadiusY="70%">
+                <GradientStop Color="{Binding ColorsList[0]}" Offset="0" />
+                <GradientStop Color="{Binding ColorsList[1]}" Offset="0.9" />
+                <GradientStop Color="{Binding ColorsList[2]}" Offset="1" />
+            </RadialGradientBrush>
+        </Rectangle.Fill>
+        <Rectangle.Effect>
+            <BlurEffect Radius="20" />
+        </Rectangle.Effect>
+    </Rectangle>
+    -->
+
+</Grid>

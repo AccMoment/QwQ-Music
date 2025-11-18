@@ -1,10 +1,16 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using QwQ_Music.Definitions.Enums;
+using QwQ_Music.Models.Enums;
+using SoundFlow.Backends.MiniAudio.Devices;
 
 namespace QwQ_Music.Models.ConfigModels;
 
 public partial class PlayerConfig : ObservableObject
 {
+    /// <summary>
+    /// 音频设备配置
+    /// </summary>
+    public MiniAudioDeviceConfig DeviceConfig { get; set; } = new();
+    
     public int Volume { get; set; } = 100;
 
     public bool IsMuted { get; set; }
@@ -17,10 +23,11 @@ public partial class PlayerConfig : ObservableObject
 
     public bool IsRealRandom { get; set; }
 
-    [ObservableProperty]
-    public partial bool IsAutoSetSampleRate { get; set; } = true;
+    [ObservableProperty] public partial bool IsAutoSetSampleRate { get; set; } = true;
 
-    public string LatestPlayListName { get; set; } = string.Empty;
+    public string? LastPlayedFilePath { get; set; }
+    
+    [ObservableProperty] public partial double CustomMusicReplayGainStandard { get; set; } = -16;
 
     public static int[] AudioOutputSampleRateArray { get; } =
         [44100, 48000, 88200, 96000, 176400, 192000, 352800, 384000];
@@ -28,7 +35,7 @@ public partial class PlayerConfig : ObservableObject
     public int SampleRate { get; set; } = AudioOutputSampleRateArray[1];
 
     /// <summary>
-    /// 播放模式
+    ///     播放模式
     /// </summary>
     [ObservableProperty]
     public partial PlayMode PlayMode { get; set; } = PlayMode.Sequential;

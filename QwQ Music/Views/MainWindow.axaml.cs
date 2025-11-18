@@ -1,13 +1,13 @@
 using System;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Controls.Notifications;
 using Avalonia.Input;
-using QwQ_Music.Models;
-using QwQ_Music.Services;
+using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Services;
+using QwQ_Music.Models.Enums;
 using QwQ_Music.ViewModels;
-using QwQ_Music.ViewModels.UserControls;
-using QwQ_Music.Views.UserControls;
+using QwQ_Music.ViewModels.Dialogs;
+using QwQ_Music.Views.Dialogs;
 using Ursa.Controls;
 
 namespace QwQ_Music.Views;
@@ -16,6 +16,8 @@ public partial class MainWindow : Window
 {
     private bool _isClosing;
     private bool _isOpenClosingDialog;
+    private bool _anExceptionMode;
+    private object? _lastContent;
 
     public MainWindow()
     {
@@ -24,9 +26,14 @@ public partial class MainWindow : Window
         Width = 1200;
         Height = 800;
 
-        DataContext = MainWindowViewModel.Instance;
+        AppDomain.CurrentDomain.ProcessExit += CurrentDomain_OnProcessExit;
+        MusicPlayerPanel.TopPanel.PointerPressed += MusicCoverPageOnPointerPressed;
+    }
 
-        MusicCoverPage.TopPanel.PointerPressed += MusicCoverPageOnPointerPressed;
+    private void CurrentDomain_OnProcessExit(object? sender, EventArgs e)
+    {
+        MusicPlayerPanel.TopPanel.PointerPressed -= MusicCoverPageOnPointerPressed;
+        AppDomain.CurrentDomain.ProcessExit -= CurrentDomain_OnProcessExit;
     }
 
     public void ShowMainWindow()
@@ -36,52 +43,39 @@ public partial class MainWindow : Window
         WindowState = WindowState.Normal;
     }
 
-    public void CloseMainWindow()
+    public void ShowFatalException(FatalExceptionViewModel fatalExceptionViewModel)
     {
-        _isClosing = true;
-        
-        MusicCoverPage.TopPanel.PointerPressed -= MusicCoverPageOnPointerPressed;
-        Close();
+        _anExceptionMode = true;
+
+        _lastContent = GetValue(ContentProperty);
+
+        SetValue(ContentProperty, new FatalExceptionView
+        {
+            DataContext = fatalExceptionViewModel,
+        });
+    }
+
+    public void BackMainContent()
+    {
+        if (_lastContent == null) 
+            return;
+
+        SetValue(ContentProperty, _lastContent);
+        _lastContent = null;
     }
 
     protected override async void OnClosing(WindowClosingEventArgs e)
     {
         try
         {
+            base.OnClosing(e);
+
             if (_isClosing)
                 return;
 
             e.Cancel = true;
 
-            switch (ConfigManager.SystemConfig.ClosingBehavior)
-            {
-                case Definitions.Enums.ClosingBehavior.AskAbout:
-                    if (_isOpenClosingDialog)
-                    {
-                        NotificationService.ShowLight(
-                            "注意",
-                            "请不要再点啦，先选择关闭行为吧！",
-                            NotificationType.Information,
-                            showClose: true
-                        );
-                        break;
-                    }
-                    await ShowClosingDialog();
-                    break;
-
-                case Definitions.Enums.ClosingBehavior.Exit:
-                    await ApplicationViewModel.ExitApplication();
-                    break;
-
-                case Definitions.Enums.ClosingBehavior.HideToTray:
-                    Hide();
-                    break;
-                default:
-                    await ApplicationViewModel.ExitApplication();
-                    break;
-            }
-            
-            base.OnClosing(e);
+            await HandleWindowClosingAsync();
         }
         catch (Exception ex)
         {
@@ -89,49 +83,66 @@ public partial class MainWindow : Window
         }
     }
 
-    private async Task ShowClosingDialog()
+    private async Task HandleWindowClosingAsync()
     {
-        var options = new OverlayDialogOptions
+        var behavior = ConfigManager.SystemConfig.ClosingBehavior;
+
+        if (_isOpenClosingDialog)
         {
-            Title = "退出提示",
-            Mode = DialogMode.Question,
-            CanDragMove = true,
-            CanResize = false,
-        };
+            NotificationService.Info("注意", "请不要再点啦，先选择关闭行为吧！");
 
-        var model = new ProgramExitConfirmViewModel(options);
-
-        _isOpenClosingDialog = true;
-        await OverlayDialog.ShowCustomModal<ProgramExitConfirm, ProgramExitConfirmViewModel, object>(
-            model,
-            options: options
-        );
-
-        if (model.IsCancel)
-        {
-            _isOpenClosingDialog = false;
             return;
         }
 
-        if (model.IsEnablePrompt)
+        _isOpenClosingDialog = true;
+
+        if (_anExceptionMode)
         {
-            ConfigManager.SystemConfig.ClosingBehavior = model.ClosingBehavior;
+            behavior = Models.Enums.ClosingBehavior.Exit;
+        }
+        else if (behavior == Models.Enums.ClosingBehavior.AskAbout)
+        {
+            behavior = await GetUserClosingBehaviorAsync();
         }
 
-        switch (model.ClosingBehavior)
+        switch (behavior)
         {
-            case Definitions.Enums.ClosingBehavior.Exit:
-                await ApplicationViewModel.ExitApplication();
+            case Models.Enums.ClosingBehavior.Exit:
+                _isClosing = true;
+                ApplicationViewModel.ExitApplication();
+
                 break;
-            case Definitions.Enums.ClosingBehavior.HideToTray:
+            case Models.Enums.ClosingBehavior.HideToTray:
                 Hide();
-                _isOpenClosingDialog = false;
+
                 break;
-            case Definitions.Enums.ClosingBehavior.AskAbout:
+            case Models.Enums.ClosingBehavior.AskAbout:
             default:
-                _isOpenClosingDialog = false;
-                return;
+                // 其它情况无需处理
+                break;
         }
+
+        _isOpenClosingDialog = false;
+    }
+
+    private static async Task<ClosingBehavior> GetUserClosingBehaviorAsync()
+    {
+        var options = new OverlayDialogOptions
+        {
+            Title = "确认关闭?",
+            Mode = DialogMode.Question,
+        };
+
+        var model = new ExitConfirmViewModel();
+        bool result = await OverlayDialog.ShowCustomModal<ExitConfirm, ExitConfirmViewModel, bool>(model, options: options);
+
+        if (!result)
+            return Models.Enums.ClosingBehavior.AskAbout;
+
+        if (model.IsEnablePrompt)
+            ConfigManager.SystemConfig.ClosingBehavior = model.ClosingBehavior;
+
+        return model.ClosingBehavior;
     }
 
     private void MusicCoverPageOnPointerPressed(object? sender, PointerPressedEventArgs e)

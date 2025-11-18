@@ -1,0 +1,142 @@
+<Grid ColumnDefinitions="Auto,*" ColumnSpacing="20" Margin="0,10"
+      d:DesignHeight="450" d:DesignWidth="800"
+      mc:Ignorable="d"
+      x:Class="QwQ_Music.Views.Pages.UiConfigPage"
+      x:DataType="pages:UiConfigPageViewModel"
+      xmlns="https://github.com/avaloniaui"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:pages="clr-namespace:QwQ_Music.ViewModels.Pages"
+      xmlns:u="https://irihi.tech/ursa"
+      xmlns:anchorControl="clr-namespace:QwQ_Music.UI.Controls.AnchorControl"
+      xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
+      xmlns:services="clr-namespace:QwQ_Music.Common.Services">
+
+    <u:SelectionList Grid.Column="0" Name="NavigationList">
+
+        <TextBlock Text="封面" />
+        <TextBlock Text="主题" />
+
+    </u:SelectionList>
+
+    <anchorControl:Anchor Grid.Column="1" IndexSource="{Binding ElementName=NavigationList}">
+
+        <anchorControl:Anchor.Styles>
+
+            <Style Selector="StackPanel">
+                <Setter Property="Spacing" Value="10" />
+            </Style>
+
+        </anchorControl:Anchor.Styles>
+
+        <anchorControl:Anchor.HeaderTemplate>
+
+            <DataTemplate DataType="x:String">
+                <Panel>
+                    <TextBlock FontSize="16" Text="{Binding}" FontWeight="Bold" VerticalAlignment="Center" />
+                    <Separator VerticalAlignment="Bottom" Margin="0" />
+                </Panel>
+            </DataTemplate>
+
+        </anchorControl:Anchor.HeaderTemplate>
+
+        <anchorControl:AnchorItem Header="封面">
+
+            <StackPanel Spacing="10">
+
+                <CheckBox
+                    IsChecked="{Binding UiConfig.CoverConfig.AllowNonSquareCover}">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="允许异形封面" />
+                        <TextBlock Text="* 重新加载时生效" Foreground="{DynamicResource  TextBlockTertiaryForeground}"/>
+                    </StackPanel>
+                </CheckBox>
+
+                <Panel>
+                    <TextBlock Text="颜色缓存 : " VerticalAlignment="Center" />
+                    <Button
+                        Command="{Binding ClearCoverColorCommand}"
+                        Content="清空"
+                        HorizontalAlignment="Right" />
+                </Panel>
+
+                <Panel>
+                    <TextBlock Text="取色算法 : " VerticalAlignment="Center" />
+
+                    <ComboBox HorizontalAlignment="Right"
+                              ItemsSource="{Binding ColorExtractionAlgorithms}"
+                              SelectedValueBinding="{Binding Key}"
+                              SelectedValue="{Binding UiConfig.CoverConfig.SelectedColorExtractionAlgorithm}">
+
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Key}" ToolTip.Tip="{Binding Value}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Panel>
+
+                <CheckBox
+                    Content="忽略白色"
+                    IsChecked="{Binding UiConfig.CoverConfig.IgnoreWhite}" />
+
+                <CheckBox
+                    Content="转化为Lab矢量"
+                    IsVisible="{Binding UiConfig.CoverConfig.SelectedColorExtractionAlgorithm,Converter={x:Static ObjectConverters.Equal},ConverterParameter='{x:Static services:ColorExtractionAlgorithm.KMeans}'}"
+                    IsChecked="{Binding UiConfig.CoverConfig.ToLab}" />
+
+                <CheckBox
+                    Content="使用UseKMeansPp"
+                    IsVisible="{Binding UiConfig.CoverConfig.SelectedColorExtractionAlgorithm,Converter={x:Static ObjectConverters.Equal},ConverterParameter='{x:Static services:ColorExtractionAlgorithm.KMeans}'}"
+                    IsChecked="{Binding UiConfig.CoverConfig.UseKMeansPp}" />
+
+            </StackPanel>
+
+        </anchorControl:AnchorItem>
+
+        <anchorControl:AnchorItem Header="主题">
+
+            <StackPanel Spacing="10">
+
+                <Panel>
+                    <TextBlock Text="字体" VerticalAlignment="Center" />
+                    <Button HorizontalAlignment="Right"
+                            Theme="{StaticResource ComboButton}"
+                            Content="{Binding AppResources.CurrentFont}">
+
+                        <Button.Styles>
+
+                            <Style Selector="Button:pressed">
+                                <Setter Property="RenderTransform" Value="translateY(0px)" />
+                            </Style>
+
+                        </Button.Styles>
+
+                        <Button.Flyout>
+                            <Flyout>
+
+                                <userControls:FontSelector
+                                    SelectedFont="{Binding AppResources.CurrentFont}" />
+
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                </Panel>
+
+                <Panel>
+                    <TextBlock Text="主题模式 " VerticalAlignment="Center" />
+                    <ComboBox HorizontalAlignment="Right"
+                              ItemsSource="{Binding ThemeModes}"
+                              DisplayMemberBinding="{Binding Value}"
+                              SelectedValueBinding="{Binding Key}"
+                              SelectedValue="{Binding ThemeMode}" />
+                </Panel>
+
+            </StackPanel>
+
+        </anchorControl:AnchorItem>
+
+    </anchorControl:Anchor>
+
+</Grid>
