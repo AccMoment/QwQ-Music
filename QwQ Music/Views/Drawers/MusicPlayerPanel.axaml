@@ -72,7 +72,7 @@
           RowDefinitions="*,Auto"
           RowSpacing="10"
           VerticalAlignment="Center">
-        
+
         <Border BoxShadow="0 0 5 0 DarkGray"
                 CornerRadius="20"
                 HorizontalAlignment="Center">
@@ -137,10 +137,10 @@
                                         LineBrush="{Binding SpectrumVisualizerBrush}"
                                         Margin="20"
                                         Classes="Hide"
-                                        LineThickness="3"
-                                        AmplitudeScale="1"
-                                        SmoothingFactor="0.15">
-        
+                                        LineThickness="{Binding SpectrumConfig.LineThickness}"
+                                        AmplitudeScale="{Binding SpectrumConfig.AmplitudeScale}"
+                                        SmoothingFactor="{Binding SpectrumConfig.SmoothingFactor}">
+
         <controls:SpectrumVisualizerControl.Transitions>
             <Transitions>
                 <DoubleTransition Duration="0:0:0.5"
@@ -148,7 +148,7 @@
                                   Property="Opacity" />
             </Transitions>
         </controls:SpectrumVisualizerControl.Transitions>
-        
+
         <controls:SpectrumVisualizerControl.Styles>
 
             <Style Selector="controls|SpectrumVisualizerControl.Hide">
@@ -157,7 +157,7 @@
             </Style>
 
         </controls:SpectrumVisualizerControl.Styles>
-        
+
     </controls:SpectrumVisualizerControl>
 
     <Grid Name="ControlPanelGrid"
@@ -239,14 +239,14 @@
                     ToolTip.Tip="{Binding MusicPlayerViewModel.PlayModeName}"
                     ToolTip.VerticalOffset="-10"
                     behaviors:DynamicCornerBehavior.IsEnabled="True">
-                
-                <PathIcon >
-                    
+
+                <PathIcon>
+
                     <Interaction.Behaviors>
-                        
+
                         <DataTrigger Binding="{Binding MusicPlayerViewModel.PlayerConfig.PlayMode}"
                                      Value="{x:Static enums:PlayMode.Sequential}">
-                            
+
                             <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
                                                           Value="3.6" />
                             <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
@@ -265,18 +265,18 @@
 
                         <DataTrigger Binding="{Binding MusicPlayerViewModel.PlayerConfig.PlayMode}"
                                      Value="{x:Static enums:PlayMode.SingleLoop}">
-                            
+
                             <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
                                                           Value="4" />
                             <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
                                                           Value="{StaticResource SingleLoop}" />
-                            
+
                         </DataTrigger>
-                        
+
                     </Interaction.Behaviors>
 
                 </PathIcon>
-                
+
             </Button>
 
         </StackPanel>
@@ -443,6 +443,8 @@
                                                  Theme="{DynamicResource ButtonRadioButton}" />
                                     <RadioButton Name="Settings2" Content="样式"
                                                  Theme="{DynamicResource ButtonRadioButton}" />
+                                    <RadioButton Name="Settings3" Content="频谱"
+                                                 Theme="{DynamicResource ButtonRadioButton}" />
                                 </StackPanel>
                             </Border>
 
@@ -501,7 +503,11 @@
                                             </ChangeAvaloniaPropertyAction>
                                         </IfElseTrigger.IfActions>
 
-                                        <IfElseTrigger.ElseActions>
+                                    </IfElseTrigger>
+
+                                    <IfElseTrigger Condition="{Binding #Settings2.IsChecked}">
+
+                                        <IfElseTrigger.IfActions>
                                             <ChangeAvaloniaPropertyAction
                                                 TargetProperty="{x:Static ContentControl.ContentProperty}">
                                                 <ChangeAvaloniaPropertyAction.Value>
@@ -528,7 +534,60 @@
 
                                                 </ChangeAvaloniaPropertyAction.Value>
                                             </ChangeAvaloniaPropertyAction>
-                                        </IfElseTrigger.ElseActions>
+                                        </IfElseTrigger.IfActions>
+
+                                    </IfElseTrigger>
+
+                                    <IfElseTrigger Condition="{Binding #Settings3.IsChecked}">
+
+                                        <IfElseTrigger.IfActions>
+                                            <ChangeAvaloniaPropertyAction
+                                                TargetProperty="{x:Static ContentControl.ContentProperty}">
+                                                <ChangeAvaloniaPropertyAction.Value>
+
+                                                    <StackPanel Spacing="10" Margin="5">
+
+                                                        <CheckBox Content="启用可视化"
+                                                                  IsChecked="{Binding SpectrumConfig.IsEnabled}" />
+
+                                                        <TextBlock Text="频谱线条粗细" />
+                                                        <u:NumericDoubleUpDown Minimum="0"
+                                                                               Maximum="5"
+                                                                               Value="{Binding SpectrumConfig.LineThickness}" />
+
+
+                                                        <TextBlock Text="振幅缩放因子" ToolTip.Tip="控制波形高度" />
+                                                        <u:NumericDoubleUpDown Minimum="0"
+                                                                               Step="0.2"
+                                                                               Maximum="10"
+                                                                               Value="{Binding SpectrumConfig.AmplitudeScale}" />
+
+                                                        <TextBlock Text="平滑因子" ToolTip.Tip="0-1，值越大变化越快" />
+                                                        <u:NumericDoubleUpDown Minimum="0"
+                                                                               Step="0.05"
+                                                                               Maximum="5"
+                                                                               Value="{Binding SpectrumConfig.SmoothingFactor}" />
+
+                                                        <u:Divider Content="高级设置" />
+
+                                                        <TextBlock Text="刷新间隔" />
+                                                        <u:NumericIntUpDown Minimum="1"
+                                                                            Step="50"
+                                                                            Value="{Binding SpectrumConfig.UpdateIntervalMs}" />
+
+                                                        <TextBlock Text="FFT数组大小指数"
+                                                                   ToolTip.Tip="即'2^N'，FFT数组大小必需为2的冥次方" />
+                                                        <u:NumericIntUpDown Minimum="0"
+                                                                            Maximum="30"
+                                                                            Value="{Binding SpectrumConfig.FFTSizeIndex}" />
+                                                        <TextBlock FontSize="12" Classes="Tertiary"
+                                                                   Text="{Binding SpectrumConfig.FFTSize,StringFormat='FFT数组大小为 {0}'}" />
+
+                                                    </StackPanel>
+
+                                                </ChangeAvaloniaPropertyAction.Value>
+                                            </ChangeAvaloniaPropertyAction>
+                                        </IfElseTrigger.IfActions>
 
                                     </IfElseTrigger>
 

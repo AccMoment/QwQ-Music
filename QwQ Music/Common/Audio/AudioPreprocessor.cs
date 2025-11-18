@@ -71,23 +71,10 @@ public class AudioPreprocessor(AudioPlay audioPlay)
 
         if (musicItem.Current != InitialTime)
         {
-            MusicItemManager.UpdatePlayProgress(musicItem.FilePath, musicItem.Current);
+            MusicItemManager.UpdatePlayProgress(musicItem, musicItem.Current);
         }
     }
 
-    public async Task UpdateMusicPlayProgressAsync(MusicItemModel musicItem, bool restart = false)
-    {
-        if (restart || IsNearEnd(musicItem))
-        {
-            musicItem.Current = TimeSpan.Zero;
-        }
-
-        if (musicItem.Current != InitialTime)
-        {
-            await Task.Run(() =>  MusicItemManager.UpdatePlayProgress(musicItem.FilePath, musicItem.Current));
-        }
-    }
-    
     public static bool IsNearEnd(MusicItemModel musicItem)
     {
         return Math.Abs(musicItem.Duration.TotalSeconds - musicItem.Current.TotalSeconds) < 5;

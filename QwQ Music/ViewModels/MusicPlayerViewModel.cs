@@ -20,6 +20,103 @@ namespace QwQ_Music.ViewModels;
 
 public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
 {
+    #region 音频处理
+
+    private async Task SetCurrentMusicItem(MusicItemModel musicItem, bool restart = false)
+    {
+        try
+        {
+            _ = Task.Run(() => _audioPreprocessor.UpdateMusicPlayProgress(musicItem, restart));
+
+            await Task.WhenAll(
+                _audioPreprocessor.InitializeAudioTrackAsync(musicItem),
+                LyricsModel.UpdateLyricsDataAsync(musicItem.FilePath)
+            );
+
+            // 使 View 中的 Slider 控件当前值归 0，
+            // 避免因为当前值大于下一首音乐最大时长，导致下一首音乐当前播放时间被修改为 0
+            Position = 0;
+
+            CurrentMusicItem = musicItem;
+
+            _audioPreprocessor.InitialTime = musicItem.Current;
+            LyricOffset = musicItem.LyricOffset;
+            Position = musicItem.Current.TotalSeconds;
+
+            PlayerItemChanged?.Invoke(this, musicItem);
+        }
+        catch (Exception ex)
+        {
+            OnPlayingChanged(false);
+
+            await Log.ErrorAsync($"初始化新音轨失败:\n{ex.Message}\n{ex.StackTrace}");
+
+            NotificationService.Error("播放失败", $"初始化新音轨失败: {ex.Message}\n可能的原因: 当前{musicItem.EncodingFormat}格式不支持解码");
+        }
+    }
+
+    #endregion
+
+    #region 其他
+
+    /// <summary>
+    ///     注册热键功能
+    /// </summary>
+    private void RegisterHotkeyFunctions()
+    {
+        HotkeyService.RegisterFunctionAction(HotkeyFunction.PreviousSong, () => PreviousSongCommand.Execute(null));
+
+        HotkeyService.RegisterFunctionAction(HotkeyFunction.NextSong, () => NextSongCommand.Execute(null));
+
+        HotkeyService.RegisterFunctionAction(HotkeyFunction.PlayPause, () => TogglePlayStaceCommand.Execute(null));
+
+        HotkeyService.RegisterFunctionAction(HotkeyFunction.ToggleMute, () => ToggleMuteCommand.Execute(null));
+
+        HotkeyService.RegisterFunctionAction(HotkeyFunction.TogglePlayMode, () => TogglePlayModeCommand.Execute(null));
+
+        HotkeyService.RegisterFunctionAction(
+            HotkeyFunction.VolumeUp, () =>
+            {
+                if (Volume < 100)
+                    Volume += 5;
+            }
+        );
+
+        HotkeyService.RegisterFunctionAction(
+            HotkeyFunction.VolumeDown, () =>
+            {
+                if (Volume > 0)
+                    Volume -= 5;
+            }
+        );
+
+        HotkeyService.RegisterFunctionAction(
+            HotkeyFunction.RefreshCurrentMusic,
+            () => RefreshPlaybackCommand.Execute(null)
+        );
+
+        HotkeyService.RegisterFunctionAction(
+            HotkeyFunction.ShowPlaylistInfo, () =>
+            {
+                NotificationService.Info("你知道吗？",
+                    $"当前播放列表有: {MusicPlayListManager.Count} 首音乐！\n" +
+                    $"现在正在播放第 {MusicPlayListManager.CurrentIndex} 首");
+            }
+        );
+
+        HotkeyService.RegisterFunctionAction(
+            HotkeyFunction.ShowCurrentInfo, () =>
+            {
+                NotificationService.Info("你知道吗？",
+                    $"{(IsPlaying ? "正在播放" : "已暂停")}的音乐叫做: {CurrentMusicItem.Title} 哦！\n" +
+                    $"你的音量是: {Volume}% "
+                );
+            }
+        );
+    }
+
+    #endregion
+
     #region 属性和字段
 
     public AudioPlay AudioPlay { get; }
@@ -514,102 +611,6 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
             PlayMode.SingleLoop => "单曲循环",
             _ => "未知模式",
         };
-
-    #endregion
-
-    #region 音频处理
-
-    private async Task SetCurrentMusicItem(MusicItemModel musicItem, bool restart = false)
-    {
-        try
-        {
-            await Task.WhenAll(
-                _audioPreprocessor.UpdateMusicPlayProgressAsync(musicItem, restart),
-                _audioPreprocessor.InitializeAudioTrackAsync(musicItem),
-                LyricsModel.UpdateLyricsDataAsync(musicItem.FilePath)
-            );
-
-            // 使 View 中的 Slider 控件当前值归 0，
-            // 避免因为当前值大于下一首音乐最大时长，导致下一首音乐当前播放时间被修改为 0
-            Position = 0;
-
-            CurrentMusicItem = musicItem;
-
-            _audioPreprocessor.InitialTime = musicItem.Current;
-            LyricOffset = musicItem.LyricOffset;
-            Position = musicItem.Current.TotalSeconds;
-
-            PlayerItemChanged?.Invoke(this, musicItem);
-        }
-        catch (Exception ex)
-        {
-            OnPlayingChanged(false);
-
-            await Log.ErrorAsync($"初始化新音轨失败:\n{ex.Message}\n{ex.StackTrace}");
-
-            NotificationService.Error("播放失败", $"初始化新音轨失败: {ex.Message}\n可能的原因: 当前{musicItem.EncodingFormat}格式不支持解码");
-        }
-    }
-
-    #endregion
-
-    #region 其他
-
-    /// <summary>
-    ///     注册热键功能
-    /// </summary>
-    private void RegisterHotkeyFunctions()
-    {
-        HotkeyService.RegisterFunctionAction(HotkeyFunction.PreviousSong, () => PreviousSongCommand.Execute(null));
-
-        HotkeyService.RegisterFunctionAction(HotkeyFunction.NextSong, () => NextSongCommand.Execute(null));
-
-        HotkeyService.RegisterFunctionAction(HotkeyFunction.PlayPause, () => TogglePlayStaceCommand.Execute(null));
-
-        HotkeyService.RegisterFunctionAction(HotkeyFunction.ToggleMute, () => ToggleMuteCommand.Execute(null));
-
-        HotkeyService.RegisterFunctionAction(HotkeyFunction.TogglePlayMode, () => TogglePlayModeCommand.Execute(null));
-
-        HotkeyService.RegisterFunctionAction(
-            HotkeyFunction.VolumeUp, () =>
-            {
-                if (Volume < 100)
-                    Volume += 5;
-            }
-        );
-
-        HotkeyService.RegisterFunctionAction(
-            HotkeyFunction.VolumeDown, () =>
-            {
-                if (Volume > 0)
-                    Volume -= 5;
-            }
-        );
-
-        HotkeyService.RegisterFunctionAction(
-            HotkeyFunction.RefreshCurrentMusic,
-            () => RefreshPlaybackCommand.Execute(null)
-        );
-
-        HotkeyService.RegisterFunctionAction(
-            HotkeyFunction.ShowPlaylistInfo, () =>
-            {
-                NotificationService.Info("你知道吗？",
-                    $"当前播放列表有: {MusicPlayListManager.Count} 首音乐！\n" +
-                    $"现在正在播放第 {MusicPlayListManager.CurrentIndex} 首");
-            }
-        );
-
-        HotkeyService.RegisterFunctionAction(
-            HotkeyFunction.ShowCurrentInfo, () =>
-            {
-                NotificationService.Info("你知道吗？",
-                    $"{(IsPlaying ? "正在播放" : "已暂停")}的音乐叫做: {CurrentMusicItem.Title} 哦！\n" +
-                    $"你的音量是: {Volume}% "
-                );
-            }
-        );
-    }
 
     #endregion
 }

@@ -143,21 +143,37 @@ public partial class MusicItemManager : ObservableObject
         }
     }
 
-    public static void Update(string filePath, Dictionary<string, object?> fields)
+    public static void Update(MusicItemModel musicItem, Dictionary<string, object?> fields)
     {
-        using var repo = new MusicItemRepository(StaticConfig.DatabasePath);
+        try
+        {
+            using var repo = new MusicItemRepository(StaticConfig.DatabasePath);
 
-        repo.Update(filePath, fields);
+            repo.Update(musicItem.FilePath, fields);
+        }
+        catch (Exception e)
+        {
+            LoggerService.ErrorAsync($"更新歌曲《{musicItem.Title}》信息到数据库时发生错误 : \n{e}");
+            NotificationService.Error($"更新歌曲《{musicItem.Title}》信息到数据库时发生错误 : \n{e.Message}");
+        }
     }
 
-    public static void UpdatePlayProgress(string filePath, TimeSpan current)
+    public static void UpdatePlayProgress(MusicItemModel musicItem, TimeSpan current)
     {
-        using var repo = new MusicItemRepository(StaticConfig.DatabasePath);
-
-        repo.Update(filePath, new Dictionary<string, object?>
+        try
         {
-            [nameof(MusicItemModel.Current)] = current.ToString(),
-        });
+            using var repo = new MusicItemRepository(StaticConfig.DatabasePath);
+
+            repo.Update(musicItem.FilePath, new Dictionary<string, object?>
+            {
+                [nameof(MusicItemModel.Current)] = current.ToString(),
+            });
+        }
+        catch (Exception e)
+        {
+            LoggerService.ErrorAsync($"保存歌曲《{musicItem.Title}》的播放进度到数据库时发生错误 : \n{e}");
+            NotificationService.Error($"保存歌曲《{musicItem.Title}》的播放进度到数据库时发生错误 : \n{e.Message}");
+        }
     }
 
     public async Task<List<MusicItemModel>?> Delete(IList<MusicItemModel> musicItems)

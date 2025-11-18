@@ -1,3 +1,5 @@
+using System;
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using QwQ_Music.Common;
 using QwQ_Music.Common.Services;
@@ -11,6 +13,8 @@ public class UiConfig
     public ThemeConfig ThemeConfig { get; set; } = new();
 
     public StyleConfig StyleConfig { get; set; } = new();
+
+    public SpectrumConfig SpectrumConfig { get; set; } = new();
 }
 
 public partial class CoverConfig : ObservableObject
@@ -26,6 +30,33 @@ public partial class CoverConfig : ObservableObject
     [ObservableProperty]
     public partial ColorExtractionAlgorithm SelectedColorExtractionAlgorithm { get; set; } =
         ColorExtractionAlgorithm.KMeans;
+}
+
+public partial class SpectrumConfig : ObservableObject
+{
+    public bool IsEnabled { get; set; } = true;
+
+    [ObservableProperty] public partial double LineThickness { get; set; } = 2d;
+
+    [ObservableProperty] public partial double AmplitudeScale { get; set; } = 1d;
+
+    [ObservableProperty] public partial double SmoothingFactor { get; set; } = 0.15d;
+
+    public int FFTSizeIndex
+    {
+        get;
+        set
+        {
+            if (value == field) return;
+
+            field = value;
+            OnPropertyChanged(nameof(FFTSize));
+        }
+    } = 11;
+
+    [JsonIgnore] public int FFTSize => (int)Math.Pow(2, FFTSizeIndex);
+
+    public int UpdateIntervalMs { get; set; } = 100;
 }
 
 public partial class ThemeConfig : ObservableObject

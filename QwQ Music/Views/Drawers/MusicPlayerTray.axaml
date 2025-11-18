@@ -62,16 +62,16 @@
 
         <ContentPresenter>
             <Interaction.Behaviors>
-                
+
                 <IfElseTrigger Condition="{Binding MusicPlayerViewModel.IsPlaying}">
 
                     <IfElseTrigger.IfActions>
-                        
+
                         <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentPresenter.ContentProperty}">
-                            
+
                             <ChangeAvaloniaPropertyAction.Value>
 
-                                <ContentPresenter >
+                                <ContentPresenter>
 
                                     <Interaction.Behaviors>
 
@@ -132,7 +132,7 @@
 
                                     </Interaction.Behaviors>
                                 </ContentPresenter>
-                                                            
+
                             </ChangeAvaloniaPropertyAction.Value>
 
                         </ChangeAvaloniaPropertyAction>
@@ -143,9 +143,9 @@
 
                         <ChangeAvaloniaPropertyAction
                             TargetProperty="{x:Static ContentPresenter.ContentProperty}">
-                            
+
                             <ChangeAvaloniaPropertyAction.Value>
-                                
+
                                 <TextBlock FontSize="12"
                                            MaxLines="2"
                                            Classes="Tertiary"
@@ -155,15 +155,15 @@
                                            ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
 
                             </ChangeAvaloniaPropertyAction.Value>
-                            
+
                         </ChangeAvaloniaPropertyAction>
 
                     </IfElseTrigger.ElseActions>
-                    
+
                 </IfElseTrigger>
 
             </Interaction.Behaviors>
-            
+
         </ContentPresenter>
     </StackPanel>
 
@@ -235,7 +235,7 @@
                 ToolTip.VerticalOffset="-10"
                 behaviors:DynamicCornerBehavior.IsEnabled="True">
 
-                <PathIcon Foreground="White">
+                <PathIcon>
 
                     <Interaction.Behaviors>
 
@@ -549,9 +549,9 @@
 
                 <ToolTip.Tip>
                     <ContentPresenter>
-                        
+
                         <Interaction.Behaviors>
-                            
+
                             <IfElseTrigger Condition="{Binding MusicPlayerViewModel.Volume,Mode=OneWay}">
 
                                 <IfElseTrigger.IfActions>
@@ -581,9 +581,9 @@
                             </IfElseTrigger>
 
                         </Interaction.Behaviors>
-                        
+
                     </ContentPresenter>
-                    
+
                 </ToolTip.Tip>
 
                 <Interaction.Behaviors>

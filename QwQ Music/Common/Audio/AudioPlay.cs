@@ -21,11 +21,11 @@ namespace QwQ_Music.Common.Audio;
 public class AudioPlay : IAudioPlay
 {
     private readonly PlayComponent _soundModifier = ConfigManager.SoundModifierConfig.PlayComponent;
+    private MiniAudioEngine? _audioEngine;
     private DispatcherTimer? _fadeOutTimer; // 添加一个字段来跟踪当前的淡出定时器
     private AudioPlaybackDevice? _playerDevice;
     private DispatcherTimer? _progressTimer;
     private StreamDataProvider? _soundDataProvider;
-    private MiniAudioEngine? _audioEngine;
     private SoundPlayer? _soundPlayer;
     private SpectrumAnalyzer? _spectrumAnalyzer;
     private DispatcherTimer? _visualizerRefreshTimer;
@@ -40,11 +40,6 @@ public class AudioPlay : IAudioPlay
 
     /// <inheritdoc />
     public event EventHandler? PlaybackCompleted;
-
-    /// <summary>
-    ///     频谱数据更新事件
-    /// </summary>
-    public event EventHandler<float[]>? SpectrumDataUpdated;
 
     /// <inheritdoc />
     public double Position
@@ -207,7 +202,7 @@ public class AudioPlay : IAudioPlay
         try
         {
             DisposeCurrentTrack();
-            
+
             InitializeNewTrack(File.OpenRead(filePath), replayGain);
         }
         catch (Exception ex)
@@ -215,6 +210,11 @@ public class AudioPlay : IAudioPlay
             Console.WriteLine($"初始化音轨失败: {ex}");
         }
     }
+
+    /// <summary>
+    ///     频谱数据更新事件
+    /// </summary>
+    public event EventHandler<float[]>? SpectrumDataUpdated;
 
     /// <summary>
     ///     淡出定时器事件处理
@@ -243,7 +243,7 @@ public class AudioPlay : IAudioPlay
         try
         {
             DisposeCurrentTrack();
-            
+
             InitializeNewTrack(audioStream, replayGain);
         }
         catch (Exception ex)
@@ -273,18 +273,22 @@ public class AudioPlay : IAudioPlay
         };
 
         InitializeModifier(_soundPlayer, replayGain);
-        
-        _spectrumAnalyzer = new SpectrumAnalyzer(AudioFormat, fftSize: 2048);
-        
-        _soundPlayer.AddAnalyzer(_spectrumAnalyzer);
-        
+
         _playerDevice.MasterMixer.AddComponent(_soundPlayer);
-        
-        _visualizerRefreshTimer = new DispatcherTimer
+
+        if (ConfigManager.UiConfig.SpectrumConfig.IsEnabled)
         {
-            Interval = TimeSpan.FromMilliseconds(200), // 每100毫秒更新一次
-        };
-        _visualizerRefreshTimer.Tick += OnSpectrumVisualizer;
+            _spectrumAnalyzer = new SpectrumAnalyzer(AudioFormat, ConfigManager.UiConfig.SpectrumConfig.FFTSize);
+
+            _soundPlayer.AddAnalyzer(_spectrumAnalyzer);
+
+            _visualizerRefreshTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(ConfigManager.UiConfig.SpectrumConfig.UpdateIntervalMs),
+            };
+
+            _visualizerRefreshTimer.Tick += OnSpectrumVisualizer;
+        }
 
         // 设置播放完成事件
         _soundPlayer.PlaybackEnded += OnPlaybackCompleted;
@@ -300,7 +304,7 @@ public class AudioPlay : IAudioPlay
 
     private void OnSpectrumVisualizer(object? sender, EventArgs eventArgs)
     {
-        if (_spectrumAnalyzer == null)
+        if (_spectrumAnalyzer == null || !ConfigManager.UiConfig.SpectrumConfig.IsEnabled)
             return;
 
         var spectrumData = _spectrumAnalyzer.SpectrumData;
@@ -309,7 +313,7 @@ public class AudioPlay : IAudioPlay
             return;
 
         // 复制数据以避免在lambda中使用ref局部变量
-        float[] spectrumDataCopy =spectrumData[..128].ToArray();
+        float[] spectrumDataCopy = spectrumData[..128].ToArray();
 
         // 触发频谱数据更新事件
         SpectrumDataUpdated?.Invoke(this, spectrumDataCopy);
@@ -327,31 +331,8 @@ public class AudioPlay : IAudioPlay
         Console.WriteLine();
 #endif
 */
-        
     }
-    
-    public static T[] GetFrontAndBack<T>(ReadOnlySpan<T> span, int frontCount, int backCount)
-    {
-        if (frontCount + backCount > span.Length)
-        {
-            throw new ArgumentException("前N个和后M个元素的总数不能超过原Span的长度");
-        }
-    
-        var result = new T[frontCount + backCount];
-    
-        // 复制前N个元素
-        span[..frontCount].CopyTo(result.AsSpan(0, frontCount));
-    
-        // 复制后M个元素
-        if (backCount > 0)
-        {
-            span.Slice(span.Length - backCount, backCount)
-                .CopyTo(result.AsSpan(frontCount, backCount));
-        }
-    
-        return result;
-    }
-    
+
     /// <summary>
     ///     初始化效果链
     /// </summary>
@@ -409,8 +390,13 @@ public class AudioPlay : IAudioPlay
     /// </summary>
     private void DisposeCurrentTrack()
     {
-        _visualizerRefreshTimer?.Stop();
-        
+        if (_visualizerRefreshTimer != null)
+        {
+            _visualizerRefreshTimer.Stop();
+            _visualizerRefreshTimer.Tick -= OnSpectrumVisualizer;
+            _visualizerRefreshTimer = null;
+        }
+
         // 清理淡出定时器
         if (_fadeOutTimer != null)
         {

@@ -7,8 +7,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:drawers="clr-namespace:QwQ_Music.ViewModels.Drawers"
-      xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors">
+      xmlns:drawers="clr-namespace:QwQ_Music.ViewModels.Drawers">
 
     <Grid.Styles>
 
@@ -77,7 +76,7 @@
              Name="PlayListBox"
              SelectionMode="Multiple"
              SelectedItem="{Binding SelectedItem}"
-             behaviors:ScrollToItemBehavior.ScrollToItem="{Binding SelectedItem}">
+             AutoScrollToSelectedItem="True">
 
         <ListBox.ItemTemplate>
             <DataTemplate>
@@ -215,12 +214,12 @@
                 <Setter Property="CornerRadius" Value="15" />
                 <Setter Property="FontWeight" Value="Normal" />
                 <Setter Property="Foreground" Value="{DynamicResource TextBlockDefaultForeground}" />
-                
+
                 <Style Selector="^:pointerover /template/ ContentPresenter">
                     <Setter Property="Foreground" Value="{DynamicResource ButtonDefaultPrimaryForeground}" />
                     <Setter Property="Background" Value="{DynamicResource ButtonDefaultPointeroverBackground}" />
                 </Style>
-                
+
                 <Style Selector="^:pressed /template/ ContentPresenter">
                     <Setter Property="Background" Value="{DynamicResource ButtonDefaultPressedBackground}" />
                 </Style>

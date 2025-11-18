@@ -253,7 +253,12 @@ public static class MusicExtractor
     {
         try
         {
-            byte[]? pictureData = (await MusicTagExtractorFactory.GetTrackAsync(filePath))?.EmbeddedPictures[0].PictureData;
+            var track = await MusicTagExtractorFactory.GetTrackAsync(filePath);
+
+            if (track?.EmbeddedPictures.Count <= 0)
+                return null;
+
+            byte[]? pictureData = track?.EmbeddedPictures[0].PictureData;
 
             if (pictureData == null || pictureData.Length == 0)
                 return null;

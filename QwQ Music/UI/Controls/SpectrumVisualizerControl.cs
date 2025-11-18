@@ -67,18 +67,18 @@ public class SpectrumVisualizerControl : Control
             // 如果差值很小，直接设置为目标值
             if (Math.Abs(diff) < 0.01)
             {
-                if (!(Math.Abs(_currentValues[i] - target) > 0.001)) 
+                if (!(Math.Abs(_currentValues[i] - target) > 0.001))
                     continue;
 
                 _currentValues[i] = target;
-                needsUpdate = true;
             }
             else
             {
                 // 使用平滑因子进行插值
                 _currentValues[i] += diff * SmoothingFactor;
-                needsUpdate = true;
             }
+
+            needsUpdate = true;
         }
 
         if (needsUpdate)
@@ -100,6 +100,7 @@ public class SpectrumVisualizerControl : Control
         {
             // 绘制水平基线
             DrawBaseline(context, bounds);
+
             return;
         }
 
@@ -115,10 +116,10 @@ public class SpectrumVisualizerControl : Control
         // 考虑线条粗细，确保基线完全在可视区域内
         double halfThickness = LineThickness / 2;
         double baselineY = bounds.Height - halfThickness;
-        
+
         // 确保基线不会超出边界
         baselineY = Math.Clamp(baselineY, halfThickness, bounds.Height - halfThickness);
-        
+
         var pen = new Pen(LineBrush, LineThickness)
         {
             LineCap = PenLineCap.Round,
@@ -146,12 +147,13 @@ public class SpectrumVisualizerControl : Control
 
         // 生成数据点
         var points = new Point[dataCount];
+
         for (int i = 0; i < dataCount; i++)
         {
             double x = i * stepX;
             double amplitude = _currentValues[i] * AmplitudeScale;
             double y = bottomY - amplitude * height;
-            
+
             // 限制Y坐标在边界内，考虑线条粗细
             y = Math.Clamp(y, halfThickness, bounds.Height - halfThickness);
             points[i] = new Point(x, y);
@@ -159,6 +161,7 @@ public class SpectrumVisualizerControl : Control
 
         // 创建路径几何
         var geometry = new PathGeometry();
+
         var figure = new PathFigure
         {
             StartPoint = points[0],
@@ -184,14 +187,17 @@ public class SpectrumVisualizerControl : Control
             {
                 double t = j / (double)segmentsPerPoint;
                 var interpolatedPoint = CatmullRomInterpolate(p0, p1, p2, p3, t);
-                
+
                 // 确保插值点不会超出边界
                 interpolatedPoint = new Point(
                     interpolatedPoint.X,
                     Math.Clamp(interpolatedPoint.Y, halfThickness, bounds.Height - halfThickness)
                 );
 
-                figure.Segments.Add(new LineSegment { Point = interpolatedPoint });
+                figure.Segments.Add(new LineSegment
+                {
+                    Point = interpolatedPoint,
+                });
             }
         }
 
@@ -217,18 +223,18 @@ public class SpectrumVisualizerControl : Control
 
         // Catmull-Rom样条公式
         double x = 0.5 * (2 * p1.X +
-                         (-p0.X + p2.X) * t +
-                         (2 * p0.X - 5 * p1.X + 4 * p2.X - p3.X) * t2 +
-                         (-p0.X + 3 * p1.X - 3 * p2.X + p3.X) * t3);
+            (-p0.X + p2.X) * t +
+            (2 * p0.X - 5 * p1.X + 4 * p2.X - p3.X) * t2 +
+            (-p0.X + 3 * p1.X - 3 * p2.X + p3.X) * t3);
 
         double y = 0.5 * (2 * p1.Y +
-                         (-p0.Y + p2.Y) * t +
-                         (2 * p0.Y - 5 * p1.Y + 4 * p2.Y - p3.Y) * t2 +
-                         (-p0.Y + 3 * p1.Y - 3 * p2.Y + p3.Y) * t3);
+            (-p0.Y + p2.Y) * t +
+            (2 * p0.Y - 5 * p1.Y + 4 * p2.Y - p3.Y) * t2 +
+            (-p0.Y + 3 * p1.Y - 3 * p2.Y + p3.Y) * t3);
 
         return new Point(x, y);
     }
-    
+
     /*
     /// <summary>
     ///     备选方案：使用三次贝塞尔曲线的平滑波形绘制
@@ -275,12 +281,12 @@ public class SpectrumVisualizerControl : Control
         {
             Point previousPoint = points[i - 1];
             Point currentPoint = points[i];
-            
+
             if (i == 1 || i == dataCount - 1)
             {
                 double controlX1 = previousPoint.X + (currentPoint.X - previousPoint.X) * 0.5;
                 double controlX2 = previousPoint.X + (currentPoint.X - previousPoint.X) * 0.5;
-                
+
                 figure.Segments.Add(new BezierSegment
                 {
                     Point1 = new Point(controlX1, previousPoint.Y),
@@ -292,10 +298,10 @@ public class SpectrumVisualizerControl : Control
             {
                 Point nextPoint = points[i + 1];
                 Point prevPrevPoint = points[i - 2];
-                
+
                 double tangent1X = (currentPoint.X - prevPrevPoint.X) * 0.2;
                 double tangent2X = (nextPoint.X - previousPoint.X) * 0.2;
-                
+
                 figure.Segments.Add(new BezierSegment
                 {
                     Point1 = new Point(previousPoint.X + tangent1X, previousPoint.Y),
@@ -316,7 +322,7 @@ public class SpectrumVisualizerControl : Control
         context.DrawGeometry(null, pen, geometry);
     }
     */
-    
+
     /// <summary>
     ///     更新频谱数据
     /// </summary>
@@ -327,6 +333,7 @@ public class SpectrumVisualizerControl : Control
             _targetValues = null;
             _currentValues = null;
             InvalidateVisual();
+
             return;
         }
 

@@ -9,7 +9,7 @@ namespace QwQ_Music;
 
 public static class Program
 {
-    public static string VersionText => "0.9.1+build.251114.1";
+    public static string VersionText => "0.9.1+build.251114.2";
 
     [STAThread]
     public static void Main(string[] args)

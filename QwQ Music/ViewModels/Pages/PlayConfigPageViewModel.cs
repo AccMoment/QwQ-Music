@@ -86,7 +86,7 @@ public partial class PlayConfigPageViewModel : ViewModelBase
         {
             foreach (var musicItem in musicItems)
             {
-                MusicItemManager.Update(musicItem.FilePath, new Dictionary<string, object?>
+                MusicItemManager.Update(musicItem, new Dictionary<string, object?>
                 {
                     [nameof(MusicItemModel.Gain)] = musicItem.Gain,
                 });
@@ -172,7 +172,7 @@ public partial class PlayConfigPageViewModel : ViewModelBase
         double gain = await audioGainCalculator.CalculateGainAsync(
             item, SelectedMusicReplayGainStandard, PlayerConfig.CustomMusicReplayGainStandard);
 
-        MusicItemManager.Update(item.FilePath, new Dictionary<string, object?>
+        MusicItemManager.Update(item, new Dictionary<string, object?>
         {
             [nameof(MusicItemModel.Gain)] = gain,
         });

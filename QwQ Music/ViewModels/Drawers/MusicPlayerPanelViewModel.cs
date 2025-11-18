@@ -30,9 +30,9 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
         Color.Parse("#DFE7FF"),
         Color.Parse("#E4F2FF"),
     ];
+    private readonly IBrush _darkThemeBrush = Brush.Parse("#22FFFFFF");
 
     private readonly IBrush _lightThemeBrush = Brush.Parse("#88FFFFFF");
-    private readonly IBrush _darkThemeBrush = Brush.Parse("#22FFFFFF");
 
     public MusicCoverPageViewModel()
         : base("播放")
@@ -54,6 +54,8 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
 
     public static RolledLyricConfig RolledLyric { get; } = ConfigManager.LyricConfig.RolledLyric;
 
+    public static SpectrumConfig SpectrumConfig { get; } = ConfigManager.UiConfig.SpectrumConfig;
+
     public static string ShaderCode => ShaderConstants.WaveWarpShader;
 
     public double SelectLyricsTimePoint
@@ -69,7 +71,7 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
     }
 
     [ObservableProperty] public partial List<Color> ColorsList { get; set; } = _defaultColors;
-    
+
     [ObservableProperty] public partial IBrush SpectrumVisualizerBrush { get; set; } = Brushes.White;
 
     private void CurrentDomain_OnProcessExit(object? sender, EventArgs e)
@@ -142,9 +144,9 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
         {
             musicItem.CoverColors = colorsList.Select(x => x.ToString()).ToArray();
 
-            await Task.Run(() =>
+            _ = Task.Run(() =>
             {
-                MusicItemManager.Update(musicItem.FilePath, new Dictionary<string, object?>
+                MusicItemManager.Update(musicItem, new Dictionary<string, object?>
                 {
                     [nameof(MusicItemModel.CoverColors)] = string.Join("、", musicItem.CoverColors),
                 });
