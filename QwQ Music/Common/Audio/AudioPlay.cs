@@ -6,6 +6,7 @@ using Avalonia.Threading;
 using QwQ_Music.Common.Interfaces;
 using QwQ_Music.Common.Manager;
 using QwQ_Music.Models.ConfigModels;
+using QwQ_Music.ViewModels;
 using SoundFlow.Abstracts.Devices;
 using SoundFlow.Backends.MiniAudio;
 using SoundFlow.Components;
@@ -263,7 +264,7 @@ public class AudioPlay : IAudioPlay {
     }
 
     private void OnSpectrumVisualizer(object? sender, EventArgs eventArgs) {
-        if (_spectrumAnalyzer == null || !ConfigManager.UiConfig.SpectrumConfig.IsEnabled)
+        if (_spectrumAnalyzer == null || !ConfigManager.UiConfig.SpectrumConfig.IsEnabled || !DrawerStatusViewModel.Default.IsMusicPlayerPanelVisible)
             return;
 
         var spectrumData = _spectrumAnalyzer.SpectrumData;
