@@ -171,9 +171,6 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
 
     private double _position;
 
-            AudioPlay.Seek(value);
-            LyricsModel.UpdateLyricsIndex(value);
-            OnPropertyChanged();
 
     public void UpdateCurrentLyric() {
         LyricsModel.UpdateLyricsIndex(_position);
@@ -344,6 +341,7 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
     {
         CurrentMusicItem.Current = TimeSpan.FromSeconds(positionInSeconds);
         _position = positionInSeconds;
+        OnPropertyChanged(nameof(Position));
         UpdateCurrentLyric();
     }
 
