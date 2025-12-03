@@ -59,7 +59,7 @@
 
     <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Name="TopPanel" Background="Transparent">
         <u:IconButton
-            Command="{Binding DrawerStatusViewModel.ShowMusicPlayerPageCommand}"
+            Command="{Binding DrawerStatusViewModel.ToggleMusicPlayerPageCommand}"
             HorizontalAlignment="Left"
             Icon="{StaticResource SemiIconChevronDown}"
             Margin="5" />
