@@ -50,7 +50,7 @@ public partial class DrawerStatusViewModel : ObservableObject
 
             OnPropertyChanged(nameof(MusicPlayerPanelHeight));
 
-            object brush;
+            IBrush brush;
 
             if (field)
             {
@@ -126,7 +126,7 @@ public partial class DrawerStatusViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void ShowMusicPlayerPage()
+    private void ToggleMusicPlayerPage()
     {
         IsMusicPlayerPanelVisible = !IsMusicPlayerPanelVisible;
     }
