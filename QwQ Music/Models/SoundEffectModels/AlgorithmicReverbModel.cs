@@ -17,7 +17,7 @@ public class AlgorithmicReverbModel : ObservableObject, ISoundModifierModel<Algo
 
     public void Initialize(AudioFormat audioFormat)
     {
-        var modifier = new AlgorithmicReverbModifier(audioFormat)
+        Modifier = new AlgorithmicReverbModifier(audioFormat)
         {
             // 初始化时同步所有属性值到 Modifier
             Enabled = Enabled,
@@ -28,8 +28,6 @@ public class AlgorithmicReverbModel : ObservableObject, ISoundModifierModel<Algo
             PreDelay = PreDelay,
             Mix = Mix,
         };
-
-        Modifier = modifier;
     }
 
     public void Revoke()

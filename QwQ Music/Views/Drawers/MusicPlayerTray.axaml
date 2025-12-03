@@ -34,7 +34,7 @@
 
     <!--  专辑按钮  -->
     <Button Classes="None"
-            Command="{Binding DrawerStatusViewModel.ShowMusicPlayerPageCommand}">
+            Command="{Binding DrawerStatusViewModel.ToggleMusicPlayerPageCommand}">
 
         <userControls:MusicAlbumCover
             Classes="RoundAlbum"

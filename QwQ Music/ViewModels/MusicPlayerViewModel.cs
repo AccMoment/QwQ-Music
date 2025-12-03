@@ -169,22 +169,24 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
 
     public LyricsModel LyricsModel { get; } = new();
 
-    public double Position
-    {
-        get;
-        set
-        {
-            field = value;
+    private double _position;
 
+
+    public void UpdateCurrentLyric() {
+        LyricsModel.UpdateLyricsIndex(_position);
+        // 当播放位置改变时，重新设置歌词定时器
+        if (IsPlaying) {
+            UpdateLyricsTimer();
+        }
+    }
+
+    public double Position {
+        get => _position;
+        set {
+            _position = value;
             AudioPlay.Seek(value);
-            LyricsModel.UpdateLyricsIndex(value);
             OnPropertyChanged();
-
-            // 当播放位置改变时，重新设置歌词定时器
-            if (IsPlaying)
-            {
-                UpdateLyricsTimer();
-            }
+            UpdateCurrentLyric();
         }
     }
 
@@ -338,7 +340,9 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
     private void OnPositionChanged(object? sender, double positionInSeconds)
     {
         CurrentMusicItem.Current = TimeSpan.FromSeconds(positionInSeconds);
-        Position = positionInSeconds;
+        _position = positionInSeconds;
+        OnPropertyChanged(nameof(Position));
+        UpdateCurrentLyric();
     }
 
     private void UpdateLyricsTimer()
