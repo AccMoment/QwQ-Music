@@ -12,12 +12,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
         xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
-        xmlns:windows="clr-namespace:QwQ_Music.Views.Windows"
-        xmlns:windows1="clr-namespace:QwQ_Music.ViewModels.Windows"
+        xmlns:vWindows="clr-namespace:QwQ_Music.Views.Windows"
+        xmlns:vmWindows="clr-namespace:QwQ_Music.ViewModels.Windows"
         mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="200"
         x:Class="QwQ_Music.Views.Windows.DesktopPlayControlWindow"
-        x:DataType="windows1:DesktopPlayControlWindowViewModel"
-        Icon="resm:QwQ_Music.Assets.EmbeddedRes.app-icon.ico"
+        x:DataType="vmWindows:DesktopPlayControlWindowViewModel"
+        Icon="res:QwQ_Music.Assets.EmbeddedRes.app-icon.ico"
         Title="QwQ Music • 播放控制">
 
     <Window.Styles>
@@ -76,7 +76,7 @@
             Padding="10"
             Margin="10"
             Width="180"
-            Classes.MiniStatus="{Binding $parent[windows:DesktopPlayControlWindow].StartMovingOut}"
+            Classes.MiniStatus="{Binding $parent[vWindows:DesktopPlayControlWindow].StartMovingOut}"
             Classes.AnimationDuringDisplay="{Binding $parent[Window].IsVisible}"
             Effect="{DynamicResource LightColor0DropShadowEffect}"
             RenderTransformOrigin="50%,0%"
@@ -139,7 +139,7 @@
                     </Style>
                 </StackPanel.Styles>
 
-                <TextBlock Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Title}"
+                <TextBlock Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.Title}"
                            FontWeight="Bold" 
                            Padding="0" />
 
@@ -149,9 +149,9 @@
                            TextTrimming="CharacterEllipsis"
                            TextWrapping="Wrap"
                            ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}">
-                    <Run Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Artists}" />
+                    <Run Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.Artists}" />
                     -
-                    <Run Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Album}" />
+                    <Run Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.Album}" />
                 </TextBlock>
 
             </StackPanel>

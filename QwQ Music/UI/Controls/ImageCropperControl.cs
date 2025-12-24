@@ -70,7 +70,7 @@ public class ImageCropperControl : Control
         TopLeft,
         TopRight,
         BottomLeft,
-        BottomRight,
+        BottomRight
     }
 
     #endregion
@@ -244,7 +244,7 @@ public class ImageCropperControl : Control
                     handleSize,
                     handleSize
                 )
-            ),
+            )
         };
 
         return handles.FirstOrDefault(h => h.Item2.Contains(point)).Item1;
@@ -578,7 +578,7 @@ public class ImageCropperControl : Control
                     _cropRect.Bottom - handleSize / 2,
                     handleSize,
                     handleSize
-                ),
+                )
             };
 
             foreach (var handle in handles)

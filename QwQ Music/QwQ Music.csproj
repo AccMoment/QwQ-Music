@@ -2,10 +2,11 @@
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFrameworks>net10.0-windows10.0.19041.0;net10.0</TargetFrameworks>
         <LangVersion>preview</LangVersion>
         <ImplicitUsings>disable</ImplicitUsings>
         <ApplicationIcon>Assets\EmbeddedRes\app-icon.ico</ApplicationIcon>
@@ -15,7 +16,9 @@
         <EnableSourceLink>false</EnableSourceLink>
         -->
     </PropertyGroup>
-
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">
+        <DefineConstants>_WIN_NT</DefineConstants>
+    </PropertyGroup>
     <ItemGroup>
         <AvaloniaResource Include="Assets\AvaloniaRes\**"/>
         <EmbeddedResource Include="Assets\EmbeddedRes\**"/>

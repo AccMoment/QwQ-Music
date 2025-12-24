@@ -94,7 +94,7 @@ public enum Scale
     C1 = 24,
     B0 = 23,
     A0S = 22,
-    A0 = 21,
+    A0 = 21
 }
 
 public enum Voice
@@ -130,7 +130,7 @@ public enum Voice
     LowSpeed = 500,
     MiddleSpeed = 400,
     HighSpeed = 300,
-    _ = 0xFF,
+    _ = 0xFF
 }
 
 public static class MidiSpring
@@ -448,7 +448,7 @@ public static class MidiSpring
             (int)Voice.M1,
             300,
             (int)Voice._,
-            (int)Voice._,
+            (int)Voice._
         ];
 
         foreach (int i in spring)

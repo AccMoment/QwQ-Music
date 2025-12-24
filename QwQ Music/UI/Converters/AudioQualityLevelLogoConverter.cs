@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Avalonia;
 using Avalonia.Data.Converters;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Models.Enums;
 
 namespace QwQ_Music.UI.Converters;

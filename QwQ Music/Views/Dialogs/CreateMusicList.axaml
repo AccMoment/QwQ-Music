@@ -11,7 +11,7 @@
         <PathIcon Height="20" Width="20" Data="{StaticResource SemiIconPlusCircle}"
                   Foreground="#46C01B" />
 
-        <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" />
+        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" />
 
     </StackPanel>
 

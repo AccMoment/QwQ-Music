@@ -21,7 +21,7 @@ public class ParametricEqualizerModel : ObservableObject, ISoundModifierModel<Pa
     {
         var modifier = new ParametricEqualizer(audioFormat)
         {
-            Enabled = Enabled,
+            Enabled = Enabled
         };
 
         // 添加所有已配置的频段

@@ -19,7 +19,7 @@ public class SoundEffectsNameConverter : IValueConverter
             "FrequencyBand" => "限频器",
             "ParametricEqualizer" => "均衡器",
             "TrebleBooster" => "高音增强",
-            _ => value,
+            _ => value
         };
     }
 

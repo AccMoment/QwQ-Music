@@ -64,13 +64,13 @@ public class LoveWindow : Window
             {
                 BlurRadius = 10,
                 Color = Colors.DarkGray,
-                Opacity = 10,
-            },
+                Opacity = 10
+            }
         };
 
         var panel = new Panel
         {
-            Background = Brushes.Transparent,
+            Background = Brushes.Transparent
         };
 
         panel.Children.Add(textBlock);

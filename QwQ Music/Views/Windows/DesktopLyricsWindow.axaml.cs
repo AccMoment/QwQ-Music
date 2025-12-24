@@ -1,7 +1,7 @@
 ﻿using System;
 using Avalonia.Controls;
 using Avalonia.Input;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Utilities;
 using DesktopLyricConfig = QwQ_Music.Models.ConfigModels.DesktopLyricConfig;
 

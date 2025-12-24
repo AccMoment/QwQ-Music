@@ -16,7 +16,7 @@ public sealed class FadeModifier : SoundFlow.Abstracts.SoundModifier
     {
         Linear,
         Exponential,
-        Cosine,
+        Cosine
     }
 
     // 曲线函数：输入 [0,1]，输出归一化增益变化
@@ -71,7 +71,7 @@ public sealed class FadeModifier : SoundFlow.Abstracts.SoundModifier
                 FadeCurve.Linear => static p => p,
                 FadeCurve.Exponential => static p => p * p,
                 FadeCurve.Cosine => static p => (1f - MathF.Cos(MathF.PI * p)) * 0.5f,
-                _ => throw new ArgumentOutOfRangeException(nameof(value)),
+                _ => throw new ArgumentOutOfRangeException(nameof(value))
             };
         }
     } = FadeCurve.Linear;
@@ -168,7 +168,7 @@ public sealed class FadeModifier : SoundFlow.Abstracts.SoundModifier
         {
             FadePhase.Active => _startGain + (_targetGain - _startGain) * (_samplesProcessed / (float)_totalSamples),
             FadePhase.Completing or FadePhase.Idle => _targetGain,
-            _ => 1.0f,
+            _ => 1.0f
         };
 
         if (MathF.Abs(currentGain - targetGain) <= _smoothnessThreshold) return;
@@ -202,6 +202,6 @@ public sealed class FadeModifier : SoundFlow.Abstracts.SoundModifier
     {
         Idle,
         Active,
-        Completing,
+        Completing
     }
 }

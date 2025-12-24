@@ -1,13 +1,15 @@
 <Grid RowDefinitions="Auto,*" Margin="10"
       mc:Ignorable="d" d:DesignHeight="800" d:DesignWidth="300"
       x:Class="QwQ_Music.Views.Drawers.MusicPlayList"
-      x:DataType="drawers:MusicPlayListViewModel"
+      x:DataType="drawers:MusicPlaylistViewModel"
       xmlns="https://github.com/avaloniaui"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:drawers="clr-namespace:QwQ_Music.ViewModels.Drawers">
+      xmlns:drawers="clr-namespace:QwQ_Music.ViewModels.Drawers"
+      xmlns:vm="clr-namespace:QwQ_Music.ViewModels"
+      xmlns:managers="clr-namespace:QwQ_Music.Common.Managers">
 
     <Grid.Styles>
 
@@ -71,11 +73,11 @@
     </Panel>
 
     <ListBox Grid.Row="1"
-             ItemsSource="{Binding MusicItems}"
+             ItemsSource="{Binding PlaylistManager.ActualPlaylist}"
              Margin="0,5"
              Name="PlayListBox"
              SelectionMode="Multiple"
-             SelectedItem="{Binding SelectedItem}"
+             SelectedItems="{Binding SelectedItems}"
              AutoScrollToSelectedItem="True">
 
         <ListBox.ItemTemplate>
@@ -83,14 +85,13 @@
                 <Panel>
                     <StackPanel Orientation="Horizontal">
 
-                        <!-- ReSharper disable once Xaml.PossibleNullReferenceException -->
                         <userControls:MusicAlbumButton
-                            Command="{Binding $parent[ListBox].((drawers:MusicPlayListViewModel)DataContext).MusicPlayerViewModel.PlayThisMusicCommand}"
-                            CommandParameter="{Binding}"
+                            Command="{Binding (vm:MusicPlayerViewModel).Current.PlayThisMusicCommand}"
+                            CommandParameter="{Binding }"
                             CornerRadius="8"
-                            CurrentMusicItem="{Binding $parent[ListBox].((drawers:MusicPlayListViewModel)DataContext).MusicPlayerViewModel.CurrentMusicItem}"
+                            CurrentMusicItem="{Binding (vm:MusicPlayerViewModel).CurrentMusicItem.Model}"
                             ExternalMouseTouch="{Binding $parent[ListBoxItem].IsPointerOver}"
-                            IsPlaying="{Binding $parent[ListBox].((drawers:MusicPlayListViewModel)DataContext).MusicPlayerViewModel.IsPlaying}">
+                            IsPlaying="{Binding Model.IsCurrent}">
 
                             <!--<Button.Effect>
                                 <DropShadowEffect
@@ -104,11 +105,11 @@
                         </userControls:MusicAlbumButton>
 
                         <StackPanel Spacing="5" VerticalAlignment="Center">
-                            <TextBlock FontWeight="Bold" Text="{Binding Title}" />
+                            <TextBlock FontWeight="Bold" Text="{Binding Model.Title}" />
                             <TextBlock
                                 Classes="Tertiary"
                                 FontSize="12"
-                                Text="{Binding Artists}" />
+                                Text="{Binding Model.Artists}" />
                         </StackPanel>
 
                     </StackPanel>
@@ -128,7 +129,8 @@
                         <ContextMenu>
 
                             <MenuItem
-                                Command="{Binding $parent[ListBox].((drawers:MusicPlayListViewModel)DataContext).MusicPlayerViewModel.PlayThisMusicCommand}"
+                                x:DataType="managers:PlaylistItemModel"
+                                Command="{Binding (vm:MusicPlayerViewModel).Current.PlayThisMusicCommand}"
                                 CommandParameter="{Binding}"
                                 Header="立即播放">
                                 <MenuItem.Icon>
@@ -137,7 +139,7 @@
                             </MenuItem>
 
                             <MenuItem
-                                Command="{Binding $parent[ListBox].((drawers:MusicPlayListViewModel)DataContext).AddToPlaylistNextCommand}"
+                                Command="{Binding $parent[ListBox].((drawers:MusicPlaylistViewModel)DataContext).AddToPlaylistNextCommand}"
                                 CommandParameter="{Binding $parent[ListBox].SelectedItems}"
                                 Header="添加到下一首">
                                 <MenuItem.Icon>
@@ -149,7 +151,7 @@
                             </MenuItem>
 
                             <MenuItem
-                                Command="{Binding $parent[ListBox].((drawers:MusicPlayListViewModel)DataContext).RemoveInPlaylistCommand}"
+                                Command="{Binding $parent[ListBox].((drawers:MusicPlaylistViewModel)DataContext).RemoveInPlaylistCommand}"
                                 CommandParameter="{Binding $parent[ListBox].SelectedItems}"
                                 Header="移出播放列表">
                                 <MenuItem.Icon>
@@ -163,7 +165,7 @@
 
                             <!--  在文件中打开  -->
                             <MenuItem
-                                Command="{Binding $parent[ListBox].((drawers:MusicPlayListViewModel)DataContext).MusicItemManager.OpenInExplorerCommand}"
+                                Command="{Binding $parent[ListBox].((drawers:MusicPlaylistViewModel)DataContext).MusicItemsManager.OpenInExplorerCommand}"
                                 CommandParameter="{Binding}"
                                 Header="在文件中打开">
                                 <MenuItem.Icon>
@@ -172,7 +174,7 @@
                             </MenuItem>
 
                             <MenuItem
-                                Command="{Binding $parent[ListBox].((drawers:MusicPlayListViewModel)DataContext).MusicItemManager.ShowDetailedInfoCommand}"
+                                Command="{Binding $parent[ListBox].((drawers:MusicPlaylistViewModel)DataContext).MusicItemsManager.ShowDetailedInfoCommand}"
                                 CommandParameter="{Binding}"
                                 Header="详细信息">
                                 <MenuItem.Icon>
@@ -191,7 +193,7 @@
         <Interaction.Behaviors>
 
             <DoubleTappedTrigger>
-                <InvokeCommandAction Command="{Binding ToggleMusicCommand}" />
+                <InvokeCommandAction Command="{Binding SetMusicCommand}" />
             </DoubleTappedTrigger>
 
         </Interaction.Behaviors>
@@ -230,7 +232,7 @@
                 Classes.FloatButton="{Binding !DrawerStatusViewModel.IsMusicPlayerPanelVisible}"
                 Command="{Binding JumpToTopCommand}"
                 CommandParameter="{Binding #PlayListBox}"
-                IsVisible="{Binding #PlayListBox.Scroll.Offset,Converter={StaticResource OffsetToIsAtTopConverter},ConverterParameter='nottop'}"
+                IsVisible="{Binding !#PlayListBox.Scroll.Offset,Converter={StaticResource OffsetToIsAtTopConverter},ConverterParameter='nottop'}"
                 ToolTip.Tip="跳转到顶部">
             <PathIcon Data="{StaticResource SemiIconAlignTop}" />
         </Button>
@@ -238,7 +240,7 @@
         <Button Classes.Transparent="{Binding DrawerStatusViewModel.IsMusicPlayerPanelVisible}"
                 Classes.FloatButton="{Binding !DrawerStatusViewModel.IsMusicPlayerPanelVisible}"
                 IsVisible="{Binding MusicItems.Count}"
-                Command="{Binding SelectedCurrentMusicItemCommand}"
+                Command="{Binding SelectCurrentMusicItemCommand}"
                 ToolTip.Tip="跳转当前音乐">
             <PathIcon Data="{StaticResource SemiIconAlignCenterVertical}" />
         </Button>

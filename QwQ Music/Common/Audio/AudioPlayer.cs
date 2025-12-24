@@ -1,16 +1,18 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using QwQ_Music.Common.Interfaces;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
+using QwQ_Music.Common.Services;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels;
+using SoundFlow.Abstracts;
 using SoundFlow.Abstracts.Devices;
 using SoundFlow.Backends.MiniAudio;
 using SoundFlow.Components;
-using SoundFlow.Enums;
 using SoundFlow.Providers;
 using SoundFlow.Structs;
 using SoundFlow.Visualization;
@@ -18,13 +20,26 @@ using Timer = System.Timers.Timer;
 
 namespace QwQ_Music.Common.Audio;
 
+public enum MediaPlaybackStatus {
+    Changing, Fading, Playing, Paused, Stopped
+}
+
+public enum MediaPlaybackMode {
+    Repeat, List, ListRepeat, Shuffle
+}
+
 /// <summary>
 ///     基于SoundFlow实现的音频播放器
 /// </summary>
-public class AudioPlay : IAudioPlay {
+public class AudioPlayer : IAudioPlayer {
     private readonly PlayComponent _soundModifier = ConfigManager.SoundModifierConfig.PlayComponent;
     private static readonly MiniAudioEngine AudioEngine = Task.Run(() => new MiniAudioEngine()).Result;
-    public bool IsDisposed { get; private set; }
+    private static readonly ISystemMediaControlImpl SystemMedia = SystemMediaControl.CreateSystemMediaControl();
+    public Stream? Current { get; private set; }
+
+    public bool IsDisposed;
+
+    public MediaPlaybackStatus Status = MediaPlaybackStatus.Stopped;
 
     private AudioPlaybackDevice PlayerDevice {
         get {
@@ -35,16 +50,20 @@ public class AudioPlay : IAudioPlay {
                     ConfigManager.PlayerConfig.DeviceConfig);
             }
 
+            var a = field.Engine.PlaybackDevices.First().NativeDataFormats;
             return field;
         }
     }
 
+    private StreamDataProvider? _soundDataProvider;
+    private SoundPlayer? _soundPlayer;
+    private SpectrumAnalyzer? _spectrumAnalyzer;
 
     private Timer FadeOutTimer {
         get {
             // ReSharper disable once InvertIf
             if (field is null) {
-                field = new Timer();
+                field = new Timer { AutoReset = false };
                 field.Elapsed += FadeOutAwaiter;
             }
 
@@ -52,13 +71,8 @@ public class AudioPlay : IAudioPlay {
         }
     }
 
-// 添加一个字段来跟踪当前的淡出定时器
-    private DispatcherTimer ProgressTimer =>
+    private DispatcherTimer UpdateTimer =>
         field ??= new DispatcherTimer(TimeSpan.FromMilliseconds(1000), DispatcherPriority.Render, OnProgressTimerTick);
-
-    private StreamDataProvider? _soundDataProvider;
-    private SoundPlayer? _soundPlayer;
-    private SpectrumAnalyzer? _spectrumAnalyzer;
 
     private DispatcherTimer SpecTimer =>
         field ??= new DispatcherTimer(
@@ -69,7 +83,7 @@ public class AudioPlay : IAudioPlay {
     /// <summary>
     ///     音频格式
     /// </summary>
-    public AudioFormat AudioFormat { get; set; } = AudioFormat.DvdHq;
+    public AudioFormat AudioFormat = AudioFormat.DvdHq;
 
     /// <inheritdoc />
     public event EventHandler<double>? PositionChanged;
@@ -79,12 +93,7 @@ public class AudioPlay : IAudioPlay {
 
     /// <inheritdoc />
     public double Position {
-        get {
-            if (_soundPlayer != null)
-                return _soundPlayer.Time;
-
-            return -1;
-        }
+        get => _soundPlayer?.Time ?? -1;
         set => Seek(value);
     }
 
@@ -102,65 +111,77 @@ public class AudioPlay : IAudioPlay {
     public float Volume {
         get;
         set {
-            field = Math.Clamp(value, 0.0f, 1.0f);
-
-            _soundPlayer?.Volume = field;
+            field = value;
+            _soundPlayer?.Volume = value;
         }
-    } = 1.0f;
+    }
 
     /// <inheritdoc />
     public float Speed {
         get;
         set {
-            if (value <= 0f)
-                return;
-
             field = value;
-
-            _soundPlayer?.PlaybackSpeed = field;
+            _soundPlayer?.PlaybackSpeed = value;
         }
-    } = 1.0f;
+    }
 
     /// <summary>
     ///     开始播放
     /// </summary>
     public void Play() {
-        if (_soundPlayer == null)
+        Debug.Assert(_soundPlayer is not null);
+        if (Current is null) {
+            LoggerService.Warning("当前音频流已不可用");
             return;
+        }
+
+        if (Status is MediaPlaybackStatus.Playing) {
+            LoggerService.Warning("重复的播放请求");
+            return;
+        }
 
         // 检查淡入效果器是否启用
         if (_soundModifier.FadeModifier.Enabled) {
+            Status = MediaPlaybackStatus.Fading;
             // 应用淡入效果
-            ResetTimer(FadeOutTimer, -1);
+            ResetTimer(FadeOutTimer);
             _soundModifier.FadeModifier.BeginFadeIn();
         }
 
+        Status = MediaPlaybackStatus.Playing;
         PlayerDevice.Start();
         _soundPlayer.Play();
         SpecTimer.Start();
 
-        ProgressTimer.Start();
+        UpdateTimer.Start();
     }
 
     /// <summary>
     ///     暂停播放
     /// </summary>
     public void Pause() {
-        if (_soundPlayer is not { State: PlaybackState.Playing })
+        if (Status is not MediaPlaybackStatus.Playing and not MediaPlaybackStatus.Fading) {
+            // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
+            if (Status is MediaPlaybackStatus.Paused)
+                LoggerService.Warning("重复的暂停请求");
+            else
+                LoggerService.Warning($"错误的预期状态。预期{nameof(MediaPlaybackStatus.Paused)}，实际为{Status.ToString()}");
             return;
+        }
 
         // 检查淡出效果器是否启用
         if (_soundModifier.FadeModifier.Enabled) {
+            Status = MediaPlaybackStatus.Fading;
             // 应用淡出效果
             _soundModifier.FadeModifier.BeginFadeOut();
-
             // 重置淡出计时器，等待淡出效果完成
             ResetTimer(FadeOutTimer, _soundModifier.FadeModifier.FadeOutTimeMs);
             FadeOutTimer.Start();
         } else {
             // 直接暂停
-            _soundPlayer.Pause();
-            ProgressTimer.Stop();
+            Debug.Assert(_soundPlayer is not null);
+            _soundPlayer?.Pause();
+            UpdateTimer.Stop();
             SpecTimer.Stop();
         }
     }
@@ -169,14 +190,21 @@ public class AudioPlay : IAudioPlay {
     ///     停止播放并释放资源
     /// </summary>
     public void Stop() {
-        ProgressTimer.Stop();
+        Pause();
+        Status = MediaPlaybackStatus.Stopped;
+        UpdateTimer.Stop();
         SpecTimer.Stop();
         PlayerDevice.Stop();
+        Current?.Dispose();
         _soundDataProvider?.Dispose();
         if (_soundPlayer is null)
             return;
-        PlayerDevice.MasterMixer.RemoveComponent(_soundPlayer);
-        _soundPlayer.Stop();
+        Debug.Assert(PlayerDevice.MasterMixer.Components.Count == 1);
+        foreach (SoundComponent comp in PlayerDevice.MasterMixer.Components) {
+            PlayerDevice.MasterMixer.RemoveComponent(comp);
+        }
+
+        _soundPlayer.Dispose();
     }
 
     /// <summary>
@@ -185,6 +213,12 @@ public class AudioPlay : IAudioPlay {
     public void Seek(double positionInSeconds) {
         _soundPlayer?.Seek((float)Math.Clamp(positionInSeconds, 0, _soundPlayer.Duration));
     }
+
+    public void InitializeAudio(string filePath, double replayGain) {
+        InitializeAudioAsync(filePath, replayGain).Wait();
+    }
+
+    public void InitializeAudio(Stream stream, double replayGain) { InitializeAudioAsync(stream, replayGain).Wait(); }
 
     /// <summary>
     ///     释放所有资源
@@ -198,8 +232,8 @@ public class AudioPlay : IAudioPlay {
     }
 
     /// <inheritdoc />
-    public void InitializeAudio(string filePath, double replayGain) {
-        InitializeAudio(File.OpenRead(filePath), replayGain);
+    public async Task InitializeAudioAsync(string filePath, double replayGain) {
+        await InitializeAudioAsync(File.OpenRead(filePath), replayGain);
     }
 
     /// <summary>
@@ -211,24 +245,31 @@ public class AudioPlay : IAudioPlay {
     ///     淡出定时器事件处理
     /// </summary>
     private void FadeOutAwaiter(object? sender, EventArgs e) {
-        // 实际执行暂停操作
-        if (_soundPlayer is not { State: PlaybackState.Playing })
+        if (Status is MediaPlaybackStatus.Playing) {
+            LoggerService.Warning("警告：已忽略的暂停");
             return;
+        }
+
+        Debug.Assert(_soundPlayer is not null);
+        Status = MediaPlaybackStatus.Paused;
         _soundPlayer.Pause();
-        ProgressTimer.Stop();
+        UpdateTimer.Stop();
         SpecTimer.Stop();
     }
 
-    public void InitializeAudio(Stream audioStream, double replayGain) {
+    public async Task InitializeAudioAsync(Stream audioStream, double replayGain) {
         Stop();
+        if (AudioFormat != PlayerDevice.Format)
+            PlayerDevice.Dispose();
+        Current = audioStream;
         try {
-            InitializeNewTrack(audioStream, replayGain);
+            await InitializeNewTrackAsync(audioStream, replayGain).ConfigureAwait(false);
         } catch (Exception ex) {
-            Console.WriteLine($"初始化音轨失败: {ex}");
+            await LoggerService.ErrorAsync($"初始化音轨失败: {ex}").ConfigureAwait(false);
         }
     }
 
-    private static void ResetTimer(Timer timer, double milliseconds) {
+    private static void ResetTimer(Timer timer, double milliseconds = 1000) {
         timer.Stop();
         if (milliseconds > 0)
             timer.Interval = milliseconds;
@@ -237,12 +278,14 @@ public class AudioPlay : IAudioPlay {
     /// <summary>
     ///     初始化新音轨
     /// </summary>
-    private void InitializeNewTrack(Stream audioStream, double replayGain) {
+    private async Task InitializeNewTrackAsync(Stream audioStream, double replayGain) {
+        MediaPlaybackStatus oldStatus = Status;
+        Status = MediaPlaybackStatus.Changing;
         _soundDataProvider = new StreamDataProvider(AudioEngine, AudioFormat, audioStream);
-
+        await LoggerService.DebugAsync($"Volume:{Volume},Speed:{Speed}");
         _soundPlayer =
             new SoundPlayer(AudioEngine, AudioFormat, _soundDataProvider) {
-                Volume = Volume, Mute = IsMute, PlaybackSpeed = Speed,
+                Volume = Volume, Mute = IsMute, PlaybackSpeed = Speed
             };
 
         // 设置播放完成事件
@@ -261,10 +304,14 @@ public class AudioPlay : IAudioPlay {
 
             SpecTimer.Interval = TimeSpan.FromMilliseconds(ConfigManager.UiConfig.SpectrumConfig.UpdateIntervalMs);
         }
+
+        Status = MediaPlaybackStatus.Paused;
     }
 
     private void OnSpectrumVisualizer(object? sender, EventArgs eventArgs) {
-        if (_spectrumAnalyzer == null || !ConfigManager.UiConfig.SpectrumConfig.IsEnabled || !DrawerStatusViewModel.Default.IsMusicPlayerPanelVisible)
+        if (_spectrumAnalyzer == null ||
+            !ConfigManager.UiConfig.SpectrumConfig.IsEnabled ||
+            !DrawerStatusViewModel.Default.IsMusicPlayerPanelVisible)
             return;
 
         var spectrumData = _spectrumAnalyzer.SpectrumData;
@@ -314,6 +361,7 @@ public class AudioPlay : IAudioPlay {
     ///     播放完成事件处理
     /// </summary>
     private void OnPlaybackCompleted(object? sender, EventArgs e) {
+        Status = MediaPlaybackStatus.Stopped;
         // 触发播放完成事件
         PlaybackCompleted?.Invoke(this, EventArgs.Empty);
     }
@@ -322,8 +370,8 @@ public class AudioPlay : IAudioPlay {
     ///     进度定时器事件处理
     /// </summary>
     private void OnProgressTimerTick(object? sender, EventArgs e) {
-        if (_soundPlayer is not { State: PlaybackState.Playing })
-            return;
+        Debug.Assert(_soundPlayer is not null);
+        Debug.Assert(Status is MediaPlaybackStatus.Playing or MediaPlaybackStatus.Fading);
 
         // 触发位置变化事件
         PositionChanged?.Invoke(this, _soundPlayer.Time);

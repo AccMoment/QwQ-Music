@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Avalonia.Input;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Models.ConfigModels;
 
 namespace QwQ_Music.Common.Services;
@@ -71,7 +71,7 @@ public enum HotkeyFunction
     /// <summary>
     ///     页面后退
     /// </summary>
-    ViewBackward,
+    ViewBackward
 }
 
 /// <summary>
@@ -297,7 +297,7 @@ public static class HotkeyService
             HotkeyFunction.ShowCurrentInfo => "显示当前播放信息",
             HotkeyFunction.ViewForward => "页面前进",
             HotkeyFunction.ViewBackward => "页面后退",
-            _ => "未知功能",
+            _ => "未知功能"
         };
     }
 

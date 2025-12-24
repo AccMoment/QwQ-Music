@@ -4,7 +4,7 @@ using Avalonia.Collections;
 using QwQ_Music.Common.Interfaces;
 using QwQ_Music.Models.ConfigModels;
 
-namespace QwQ_Music.Common.Manager;
+namespace QwQ_Music.Common.Managers;
 
 public class SoundModifierManager
 {
@@ -35,7 +35,7 @@ public class SoundModifierManager
                 ("Delay", false),
                 ("FrequencyBand", false),
                 ("ParametricEqualizer", false),
-                ("TrebleBooster", false),
+                ("TrebleBooster", false)
             };
 
             foreach ((string name, bool enabled) in defaults)
@@ -70,7 +70,7 @@ public class SoundModifierManager
             "Compressor" => SoundEffectConfig.Compressor,
             "Delay" => SoundEffectConfig.Delay,
             // TODO: 补充其他效果的映射，暂时这样吧，现在懒得写了
-            _ => null,
+            _ => null
         };
 
         if (model != null)

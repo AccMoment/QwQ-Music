@@ -9,6 +9,7 @@
       xmlns:models="clr-namespace:QwQ_Music.Models"
       xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
       xmlns:panels="clr-namespace:QwQ_Music.ViewModels.Panels"
+      xmlns:vm="clr-namespace:QwQ_Music.ViewModels"
       mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
       x:DataType="panels:MusicListDetailsPanelViewModel"
       x:Class="QwQ_Music.Views.Panels.MusicListDetailsPanel"
@@ -118,10 +119,11 @@
               CanUserReorderColumns="True"
               CanUserResizeColumns="True"
               CanUserSortColumns="True"
-              SelectedItem="{Binding SelectedItem}"
+              SelectedItem="{Binding SelectedItems}"
+              SelectionMode="Extended"
               IsReadOnly="True"
               ItemsSource="{Binding MusicItems}"
-              behaviors:ScrollToItemBehavior.ScrollToItem="{Binding SelectedItem}">
+              behaviors:ScrollToItemBehavior.ScrollToItem="{Binding SelectedItems}">
 
         <DataGrid.Styles>
 
@@ -131,8 +133,8 @@
                         <ContextMenu>
 
                             <MenuItem
-                                Command="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicPlayerViewModel.PlayThisMusicCommand}"
-                                CommandParameter="{Binding}"
+                                Command="{Binding SetMusicCommand}"
+                                CommandParameter="{Binding SelectedItems}"
                                 Header="立即播放">
                                 <MenuItem.Icon>
                                     <PathIcon Data="{StaticResource SemiIconPlay}" Margin="2" />
@@ -149,8 +151,8 @@
 
                                 <MenuItem
                                     Header="已有歌单"
-                                    IsVisible="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicListsManager.MusicLists.Count}"
-                                    ItemsSource="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicListsManager.MusicLists}">
+                                    IsVisible="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicListsManager.SongLists.Count}"
+                                    ItemsSource="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicListsManager.SongLists}">
 
                                     <MenuItem.ItemContainerTheme>
                                         <ControlTheme TargetType="MenuItem"
@@ -158,7 +160,7 @@
                                                       BasedOn="{StaticResource BigIconMenuItem}">
                                             <Setter Property="Header" Value="{Binding Name}" />
                                             <Setter Property="Command"
-                                                    Value="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).AddToMusicListCommand}" />
+                                                    Value="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicListsManager.AddToMusicListCommand}" />
                                             <Setter Property="CommandParameter" Value="{Binding}" />
                                             <Setter Property="Icon">
                                                 <Template>
@@ -177,11 +179,11 @@
 
                                 <Separator
                                     Margin="0,5"
-                                    IsVisible="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicListsManager.MusicLists.Count}" />
+                                    IsVisible="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicListsManager.SongLists.Count}" />
 
                                 <MenuItem Header="下一首"
                                           Command="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).AddToPlaylistNextCommand}"
-                                          CommandParameter="{Binding $parent[DataGrid].SelectedItems}">
+                                          CommandParameter="{Binding SelectedItems}">
                                     <MenuItem.Icon>
                                         <PathIcon Data="{StaticResource SemiIconTriangleDown}" Margin="2" />
                                     </MenuItem.Icon>
@@ -189,7 +191,7 @@
 
                                 <MenuItem Header="新建歌单"
                                           Command="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicListsManager.CreatePlaylistWithMusicItemCommand}"
-                                          CommandParameter="{Binding $parent[DataGrid].SelectedItems}">
+                                          CommandParameter="{Binding SelectedItems}">
                                     <MenuItem.Icon>
                                         <PathIcon Data="{StaticResource SemiIconMusic}" Margin="2" />
                                     </MenuItem.Icon>
@@ -198,8 +200,8 @@
                             </MenuItem>
 
                             <MenuItem
-                                Command="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicPlayerViewModel.ClearPlayDurationCommand}"
-                                CommandParameter="{Binding}"
+                                Command="{Binding (vm:MusicPlayerViewModel).Current.ClearPlayDurationCommand}"
+                                CommandParameter="{Binding SelectedItems}"
                                 Header="清空播放时长">
                                 <MenuItem.Icon>
                                     <PathIcon Data="{StaticResource ClearEmpty}" Margin="2" />
@@ -207,7 +209,7 @@
                             </MenuItem>
 
                             <MenuItem
-                                Command="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).RemoveInMusicListCommand}"
+                                Command="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).RemoveSelectingFromCommand}"
                                 CommandParameter="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicListModel}"
                                 Header="移出歌单">
                                 <MenuItem.Icon>
@@ -218,8 +220,8 @@
                             </MenuItem>
 
                             <MenuItem
-                                Command="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicItemManager.ShowDetailedInfoCommand}"
-                                CommandParameter="{Binding}"
+                                Command="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicItemsManager.ShowDetailedInfoCommand}"
+                                CommandParameter="{Binding $parent[DataGrid].SelectedItems[0],Mode=OneWay}"
                                 Header="详细信息">
                                 <MenuItem.Icon>
                                     <PathIcon Data="{StaticResource SemiIconArticle}" Margin="2" />
@@ -228,8 +230,8 @@
 
                             <!--  在文件中打开  -->
                             <MenuItem
-                                Command="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicItemManager.OpenInExplorerCommand}"
-                                CommandParameter="{Binding}"
+                                Command="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicItemsManager.OpenInExplorerCommand}"
+                                CommandParameter="{Binding $parent[DataGrid].SelectedItems[0],Mode=OneWay}"
                                 Header="在文件中打开">
                                 <MenuItem.Icon>
                                     <PathIcon Data="{StaticResource SemiIconFolder}" Margin="2" />
@@ -239,7 +241,7 @@
                             <!--  删除  -->
                             <MenuItem
                                 Command="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).DeleteMusicItemsCommand}"
-                                CommandParameter="{Binding $parent[DataGrid].SelectedItems}"
+                                CommandParameter="{Binding SelectedItems}"
                                 Header="删除音乐">
                                 <MenuItem.Icon>
                                     <PathIcon Data="{StaticResource SemiIconDelete}" Margin="1"
@@ -309,12 +311,13 @@
 
                             <!--  ReSharper disable Xaml.PossibleNullReferenceException  -->
                             <userControls:MusicAlbumButton
-                                Command="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicPlayerViewModel.PlayThisMusicCommand}"
+                                x:DataType="vm:MusicPlayerViewModel"
+                                Command="{Binding Current.PlayThisMusicCommand}"
                                 CommandParameter="{Binding}"
                                 CornerRadius="8"
-                                CurrentMusicItem="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicPlayerViewModel.CurrentMusicItem}"
+                                CurrentMusicItem="{Binding Current.CurrentMusicItem}"
                                 ExternalMouseTouch="{Binding $parent[DataGridRow].IsPointerOver}"
-                                IsPlaying="{Binding $parent[DataGrid].((panels:MusicListDetailsPanelViewModel)DataContext).MusicPlayerViewModel.IsPlaying}">
+                                IsPlaying="{Binding Current.IsPlaying}">
 
                                 <!--<Button.Effect>
                                             <DropShadowEffect
@@ -362,7 +365,7 @@
                             <TextBlock
                                 Classes="Tertiary"
                                 FontSize="12"
-                                Text="{Binding Current, Mode=OneWay, Converter={StaticResource TruncateDecimalConverter}, StringFormat='已播放到 : {0}'}" />
+                                Text="{Binding Record, Mode=OneWay, Converter={StaticResource TruncateDecimalConverter}, StringFormat='已播放到 : {0}'}" />
                         </StackPanel>
                     </DataTemplate>
                 </DataGridTemplateColumn.CellTemplate>
@@ -386,12 +389,12 @@
         <Interaction.Behaviors>
 
             <DoubleTappedTrigger>
-                <InvokeCommandAction Command="{Binding ToggleMusicCommand}" />
+                <InvokeCommandAction Command="{Binding SetMusicCommand}" />
             </DoubleTappedTrigger>
 
             <RoutedEventTriggerBehavior RoutedEvent="{x:Static DataGrid.SelectionChangedEvent}">
                 <InvokeCommandAction
-                    Command="{Binding SelectedItemChangedCommand}"
+                    Command="{Binding SelectingItemsChangedCommand}"
                     CommandParameter="{Binding $parent[DataGrid].SelectedItems}" />
             </RoutedEventTriggerBehavior>
 
@@ -418,7 +421,7 @@
 
         <Button Classes="FloatButton"
                 IsVisible="{Binding MusicItems.Count}"
-                Command="{Binding SelectedCurrentMusicItemCommand}"
+                Command="{Binding SelectCurrentMusicItemCommand}"
                 ToolTip.Tip="跳转当前音乐">
             <PathIcon Data="{StaticResource SemiIconAlignCenterVertical}" />
         </Button>

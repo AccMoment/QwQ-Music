@@ -5,7 +5,7 @@ using QwQ_Music.Common.Services.ConfigIO;
 using QwQ_Music.Models.ConfigModels;
 using UserConfigJsonSerializerContext = QwQ_Music.Models.ConfigModels.UserConfigJsonSerializerContext;
 
-namespace QwQ_Music.Common.Manager;
+namespace QwQ_Music.Common.Managers;
 
 public static class ConfigManager
 {
@@ -37,10 +37,9 @@ public static class ConfigManager
             ? lrc
             : 3;
 
-        string? levelStr = ini.Get("Level", "LoggerService");
-
-        if (Enum.TryParse(levelStr, out LogLevel level))
-            config.LoggerServiceConfig.Level = level;
+        config.LoggerServiceConfig.Level = Enum.TryParse(ini.Get("Level", "LoggerService"), out LogLevel level) ?
+            level :
+            LogLevel.Basic;
 
         return config;
     }

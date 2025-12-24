@@ -8,7 +8,7 @@ public static class LanguageModel
     public enum Language
     {
         EnUs,
-        ZhCn,
+        ZhCn
     }
 
     private static readonly Dictionary<Language, Dictionary<string, string>> _characterSet = new()
@@ -39,9 +39,9 @@ public static class LanguageModel
                 ["LyricAltTopColorName"] = "备选歌词顶部",
                 ["LyricAltBottomColorName"] = "备选歌词底部",
                 ["LyricAltBorderColorName"] = "备选歌词描边",
-                ["Loading..."] = "加载中...",
+                ["Loading..."] = "加载中..."
             }
-        },
+        }
     };
 
     public static Language CurrentLanguage { get; set; } = Language.ZhCn;

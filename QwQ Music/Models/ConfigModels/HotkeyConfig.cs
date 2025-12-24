@@ -71,21 +71,21 @@ public class HotkeyConfig
             [HotkeyFunction.PreviousSong] =
             [
                 new SerializableKeyGesture(Key.MediaPreviousTrack),
-                new SerializableKeyGesture(Key.Left, KeyModifiers.Control),
+                new SerializableKeyGesture(Key.Left, KeyModifiers.Control)
             ],
 
             // 下一首 - 支持媒体键和自定义热键
             [HotkeyFunction.NextSong] =
             [
                 new SerializableKeyGesture(Key.MediaNextTrack),
-                new SerializableKeyGesture(Key.Right, KeyModifiers.Control),
+                new SerializableKeyGesture(Key.Right, KeyModifiers.Control)
             ],
 
             // 播放/暂停 - 支持媒体键和自定义热键
             [HotkeyFunction.PlayPause] =
             [
                 new SerializableKeyGesture(Key.MediaPlayPause),
-                new SerializableKeyGesture(Key.Space, KeyModifiers.Control),
+                new SerializableKeyGesture(Key.Space, KeyModifiers.Control)
             ],
 
             // 音量控制
@@ -97,7 +97,7 @@ public class HotkeyConfig
             [HotkeyFunction.TogglePlayMode] = [new SerializableKeyGesture(Key.R, KeyModifiers.Control)],
             [HotkeyFunction.RefreshCurrentMusic] = [new SerializableKeyGesture(Key.F5)],
             [HotkeyFunction.ShowPlaylistInfo] = [new SerializableKeyGesture(Key.L, KeyModifiers.Control)],
-            [HotkeyFunction.ShowCurrentInfo] = [new SerializableKeyGesture(Key.F1)],
+            [HotkeyFunction.ShowCurrentInfo] = [new SerializableKeyGesture(Key.F1)]
         };
     }
 }

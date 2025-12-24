@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Input;
@@ -7,42 +8,38 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Helper;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Services.Shader;
-using QwQ_Music.Common.Utilities;
 using QwQ_Music.Models;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels.Bases;
+using MusicItemsManager = QwQ_Music.Common.Managers.MusicItemsManager;
 
 namespace QwQ_Music.ViewModels.Drawers;
 
-public partial class MusicCoverPageViewModel : NavigationViewModel
-{
+public partial class MusicCoverPageViewModel : NavigationViewModel {
     private const int COLOR_COUNT = 4;
 
     private static readonly CoverConfig _coverConfig = ConfigManager.UiConfig.CoverConfig;
 
-    private static readonly List<Color> _defaultColors =
-    [
-        Color.Parse("#FFE2D9"),
-        Color.Parse("#F3ECFE"),
-        Color.Parse("#DFE7FF"),
-        Color.Parse("#E4F2FF"),
+    private static readonly List<Color> _defaultColors = [
+        Color.Parse("#FFE2D9"), Color.Parse("#F3ECFE"), Color.Parse("#DFE7FF"), Color.Parse("#E4F2FF")
     ];
+
     private readonly IBrush _darkThemeBrush = Brush.Parse("#22FFFFFF");
 
     private readonly IBrush _lightThemeBrush = Brush.Parse("#88FFFFFF");
 
-    public MusicCoverPageViewModel()
-        : base("播放")
-    {
-        if (MusicPlayerViewModel.CurrentMusicItem != MusicPlayListManager.DefaultMusicItem)
-        {
-            MusicPlayerViewModelOnPlayerItemChanged(null, MusicPlayerViewModel.CurrentMusicItem);
+    public MusicCoverPageViewModel() : base("播放") {
+        if (MusicPlayerViewModel.CurrentMusicItem != PlaylistItemModel.RefDefault) {
+            OnMusicItemChanged(
+                this,
+                new MusicItemChangedEventArgs(PlaylistItemModel.RefDefault, MusicPlayerViewModel.CurrentMusicItem));
         }
 
-        MusicPlayerViewModel.PlayerItemChanged += MusicPlayerViewModelOnPlayerItemChanged;
+        MusicPlayerViewModel.MusicItemChanged += OnMusicItemChanged;
         AppDomain.CurrentDomain.ProcessExit += CurrentDomain_OnProcessExit;
     }
 
@@ -50,7 +47,7 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
 
     public static string OffsetName => LanguageModel.Lang[nameof(OffsetName)];
 
-    public static MusicPlayerViewModel MusicPlayerViewModel => MusicPlayerViewModel.Default;
+    public static MusicPlayerViewModel MusicPlayerViewModel => MusicPlayerViewModel.Current;
 
     public static RolledLyricConfig RolledLyric { get; } = ConfigManager.LyricConfig.RolledLyric;
 
@@ -58,76 +55,58 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
 
     public static string ShaderCode => ShaderConstants.WaveWarpShader;
 
-    public double SelectLyricsTimePoint
-    {
+    public double SelectLyricsTimePoint {
         get;
-        set
-        {
-            if (SetProperty(ref field, value))
-            {
+        set {
+            if (SetProperty(ref field, value)) {
                 MusicPlayerViewModel.Position = field;
             }
         }
     }
 
-    [ObservableProperty] public partial List<Color> ColorsList { get; set; } = _defaultColors;
+    [ObservableProperty]
+    public partial List<Color> ColorsList { get; set; } = _defaultColors;
 
-    [ObservableProperty] public partial IBrush SpectrumVisualizerBrush { get; set; } = Brushes.White;
+    [ObservableProperty]
+    public partial IBrush SpectrumVisualizerBrush { get; set; } = Brushes.White;
 
-    private void CurrentDomain_OnProcessExit(object? sender, EventArgs e)
-    {
-        MusicPlayerViewModel.PlayerItemChanged -= MusicPlayerViewModelOnPlayerItemChanged;
+    private void CurrentDomain_OnProcessExit(object? sender, EventArgs e) {
+        MusicPlayerViewModel.MusicItemChanged -= OnMusicItemChanged;
         AppDomain.CurrentDomain.ProcessExit -= CurrentDomain_OnProcessExit;
     }
 
-    private async void MusicPlayerViewModelOnPlayerItemChanged(object? sender, MusicItemModel musicItem)
-    {
-        try
-        {
-            // 合并封面图片和颜色列表更新任务
-            var coverTask = UpdateCoverImage(musicItem);
-            var colorsTask = UpdateColorsList(musicItem);
+    private void OnMusicItemChanged(object? sender, MusicItemChangedEventArgs args) {
+        try {
+            args.OldItem.Model.DisposeCurrent();
 
-            await Task.WhenAll(coverTask, colorsTask);
-
-            UpdateThemeVariantFromColors();
-        }
-        catch (Exception ex)
-        {
-            await LoggerService.ErrorAsync($"{nameof(MusicPlayerViewModelOnPlayerItemChanged)} 发生错误 : {ex.Message}");
+            args.NewItem.Model.LoadCurrentAsync()
+                .ConfigureAwait(false)
+                .GetAwaiter()
+                .OnCompleted(() => {
+                    MusicPlayerViewModel.LyricsModel = new LyricsModel {
+                        Offset = args.NewItem.Model.LyricOffset, Lyrics = args.NewItem.Model.Lyrics
+                    };
+                    MusicPlayerViewModel.CoverImage = args.NewItem.Model.CoverImage;
+                    UpdateColorsListAsync(args.NewItem.Model)
+                        .ConfigureAwait(false)
+                        .GetAwaiter()
+                        .OnCompleted(() => Dispatcher.UIThread.Post(UpdateThemeVariantFromColors));
+                });
+        } catch (Exception ex) {
+            LoggerService.Error($"{nameof(OnMusicItemChanged)} 发生错误 : {ex.Message}");
         }
     }
 
-    private async Task UpdateCoverImage(MusicItemModel musicItem)
-    {
-        var bitmap = await MusicExtractor.GetCoverFromAudioAsync(musicItem.FilePath);
-
-        if (bitmap != null)
-        {
-            if (!ConfigManager.UiConfig.CoverConfig.AllowNonSquareCover)
-            {
-                MusicPlayerViewModel.CoverImage = await Dispatcher.UIThread.InvokeAsync(() => BitmapCropper.Crop(bitmap, 1.0));
-
-                return;
-            }
-        }
-
-        MusicPlayerViewModel.CoverImage = bitmap;
-    }
-
-    private async Task UpdateColorsList(MusicItemModel musicItem)
-    {
+    private async Task UpdateColorsListAsync(MusicItemModel musicItem) {
         // 如果没有封面Id，直接使用默认颜色
-        if (string.IsNullOrWhiteSpace(musicItem.CoverId))
-        {
+        if (string.IsNullOrWhiteSpace(musicItem.CoverId)) {
             ColorsList = _defaultColors;
 
             return;
         }
 
         // 尝试从已缓存的颜色中获取
-        if (musicItem.CoverColors is { Length: >= COLOR_COUNT })
-        {
+        if (musicItem.CoverColors is { Length: >= COLOR_COUNT }) {
             ColorsList = [.. musicItem.CoverColors.Select(Color.Parse)];
 
             return;
@@ -140,24 +119,22 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
         ColorsList = colorsList ?? _defaultColors;
 
         // 缓存提取的颜色
-        if (colorsList != null)
-        {
+        if (colorsList != null) {
             musicItem.CoverColors = colorsList.Select(x => x.ToString()).ToArray();
 
-            _ = Task.Run(() =>
-            {
-                MusicItemManager.Update(musicItem, new Dictionary<string, object?>
-                {
-                    [nameof(MusicItemModel.CoverColors)] = string.Join("、", musicItem.CoverColors),
-                });
+            await Task.Run(() => {
+                MusicItemsManager.Update(
+                    musicItem,
+                    new Dictionary<string, object?> {
+                        [nameof(MusicItemModel.CoverColors)] = string.Join("、", musicItem.CoverColors)
+                    });
             });
         }
     }
 
-    private void UpdateThemeVariantFromColors()
-    {
-        if (ColorsList.Count == 0)
-        {
+    private void UpdateThemeVariantFromColors() {
+        Debug.Assert(Dispatcher.UIThread.CheckAccess());
+        if (ColorsList.Count == 0) {
             DrawerStatusViewModel.Default.MusicPlayerPanelThemeVariant = "Default";
 
             return;
@@ -174,31 +151,28 @@ public partial class MusicCoverPageViewModel : NavigationViewModel
         DrawerStatusViewModel.Default.MusicPlayerPanelThemeVariant = isHighLuminance ? "Light" : "Dark";
     }
 
-    private static async Task<List<Color>?> GetColorPalette(string imagePath, int colorCount = 5)
-    {
+    private static async Task<List<Color>?> GetColorPalette(string imagePath, int colorCount = 5) {
         // 尝试使用缓存的位图
-        var bitmap = await MusicExtractor.LoadBitmapFromFileAsync(StaticConfig.GetMusicCoverFullPath(imagePath));
+        var bitmap = await ImageHelper.LoadFromFileAsync(StaticConfig.GetMusicCoverFullPath(imagePath)).ConfigureAwait(false);
 
-        return bitmap == null
-            ? null // 缓存不存在直接返回null
-            : ColorExtraction.GetColorPaletteFromBitmap(
+        return bitmap == null ?
+            null // 缓存不存在直接返回null
+            :
+            ColorExtraction.GetColorPaletteFromBitmap(
                 bitmap,
                 colorCount,
                 _coverConfig.SelectedColorExtractionAlgorithm,
                 _coverConfig.IgnoreWhite,
                 _coverConfig.ToLab,
-                _coverConfig.UseKMeansPp
-            );
+                _coverConfig.UseKMeansPp);
     }
 
     [RelayCommand]
-    private static void OnVolumeBarPointerWheelChanged(PointerWheelEventArgs e)
-    {
+    private static void OnVolumeBarPointerWheelChanged(PointerWheelEventArgs e) {
         // 阻止事件冒泡到父级元素
         e.Handled = true;
 
-        switch (e.Delta.Y)
-        {
+        switch (e.Delta.Y) {
             // 根据你的需求处理滚轮滚动事件
             case > 0:
                 MusicPlayerViewModel.Volume += 2;

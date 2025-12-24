@@ -21,7 +21,7 @@ public class Love
         Colors.Purple,
         Colors.Gold,
         Colors.LimeGreen,
-        Colors.DeepSkyBlue,
+        Colors.DeepSkyBlue
     ];
 
     private readonly string[] _contents =
@@ -43,7 +43,7 @@ public class Love
         "🥁",
         "🎧",
         "🎼",
-        "📯",
+        "📯"
     ];
 
     private static IEnumerable<PixelPoint> GenerateHeartPoints()

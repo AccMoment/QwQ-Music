@@ -28,14 +28,14 @@ public class NcmMusicTagExtractor(string filePath) : IMusicTagExtractor
     {
         if (audioStream == null)
         {
-            LoggerService.Error($"无法提取音频文件流\n 文件路径: {filePath}");
+            LoggerService.Error($"无法提取{filePath}的音频文件流。");
 
             return null;
         }
 
         if (crypt.Metadata == null)
         {
-            LoggerService.Error($"Ncm音频元数据为 null\n 文件路径: {filePath}");
+            LoggerService.Error($"NCM文件{filePath}不存在元数据。");
 
             return null;
         }
@@ -46,7 +46,7 @@ public class NcmMusicTagExtractor(string filePath) : IMusicTagExtractor
         {
             Title = metadata.Name,
             Artist = metadata.Artist,
-            Album = metadata.Album,
+            Album = metadata.Album
         };
 
         if (crypt.ImageData != null)

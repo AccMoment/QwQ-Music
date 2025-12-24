@@ -183,7 +183,7 @@ public class LruCache<TKey, TValue>
     {
         _cache[key] = entry with
         {
-            LastAccess = DateTime.Now,
+            LastAccess = DateTime.Now
         };
     }
 

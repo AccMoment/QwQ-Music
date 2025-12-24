@@ -36,13 +36,13 @@ public partial class ImageCroppingViewModel(Bitmap sourceImage) : ObservableObje
                 [
                     new FilePickerFileType("PNG图片")
                     {
-                        Patterns = ["*.png"],
+                        Patterns = ["*.png"]
                     },
                     new FilePickerFileType("JPEG图片")
                     {
-                        Patterns = ["*.jpg", "*.jpeg"],
-                    },
-                ],
+                        Patterns = ["*.jpg", "*.jpeg"]
+                    }
+                ]
             }
         );
 

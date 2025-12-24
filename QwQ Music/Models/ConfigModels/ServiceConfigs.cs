@@ -17,5 +17,5 @@ public class LoggerServiceConfig
     /// <summary>
     ///     日志过滤级别
     /// </summary>
-    public LogLevel Level { get; set; } = LogLevel.Info;
+    public LogLevel Level { get; set; } = LogLevel.Basic;
 }

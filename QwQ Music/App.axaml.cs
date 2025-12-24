@@ -48,7 +48,7 @@ public class App : Application
 
             desktop.MainWindow = TopLevel = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = new MainWindowViewModel()
             };
 
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;

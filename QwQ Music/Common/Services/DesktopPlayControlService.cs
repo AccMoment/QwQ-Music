@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Input;
 using Avalonia.Threading;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.Views.Windows;
 
@@ -14,7 +14,7 @@ namespace QwQ_Music.Common.Services;
 ///     在鼠标进入屏幕顶部中心 1/3 区域时，以鼠标为中心显示 DesktopPlayControlWindow；
 ///     当鼠标既不在窗口上方，也不在该区域时隐藏窗口。
 /// </summary>
-public static class DesktopPlayControlService
+public static partial class DesktopPlayControlService
 {
     private static readonly TimeSpan _pollInterval = TimeSpan.FromMilliseconds(120);
     private static readonly DesktopLyricConfig _desktopLyricConfig = ConfigManager.UserConfig.LyricConfig.DesktopLyric;
@@ -31,11 +31,11 @@ public static class DesktopPlayControlService
     private struct WinPoint { public int X; public int Y; }
 
     // macOS (CoreGraphics)
-    [DllImport("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics")]
-    private static extern IntPtr CGEventCreate(IntPtr source);
+    [LibraryImport("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", EntryPoint = "CGEventCreateA")]
+    private static partial IntPtr CGEventCreate(IntPtr source);
 
-    [DllImport("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics")]
-    private static extern CgPoint CGEventGetLocation(IntPtr @event);
+    [LibraryImport("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics")]
+    private static partial CgPoint CGEventGetLocation(IntPtr @event);
 
     [DllImport("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation")]
     private static extern void CFRelease(IntPtr cf);
@@ -44,14 +44,14 @@ public static class DesktopPlayControlService
     private struct CgPoint { public double X; public double Y; }
 
     // Linux (X11) - Wayland 不支持时优雅降级
-    [DllImport("libX11")]
-    private static extern IntPtr XOpenDisplay(IntPtr display);
+    [LibraryImport("libX11")]
+    private static partial IntPtr XOpenDisplay(IntPtr display);
 
-    [DllImport("libX11")]
-    private static extern int XCloseDisplay(IntPtr display);
+    [LibraryImport("libX11")]
+    private static partial int XCloseDisplay(IntPtr display);
 
-    [DllImport("libX11")]
-    private static extern IntPtr XDefaultRootWindow(IntPtr display);
+    [LibraryImport("libX11")]
+    private static partial IntPtr XDefaultRootWindow(IntPtr display);
 
     [DllImport("libX11")]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
@@ -74,7 +74,7 @@ public static class DesktopPlayControlService
 
         timer = new DispatcherTimer
         {
-            Interval = _pollInterval,
+            Interval = _pollInterval
         };
 
         timer.Tick += OnTick;

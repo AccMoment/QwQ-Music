@@ -138,7 +138,7 @@ public class LyricConfig : ObservableObject
     {
         [HorizontalAlignment.Left] = "左对齐",
         [HorizontalAlignment.Center] = "居中",
-        [HorizontalAlignment.Right] = "右对齐",
+        [HorizontalAlignment.Right] = "右对齐"
     };
 }
 

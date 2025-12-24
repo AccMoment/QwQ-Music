@@ -2,7 +2,8 @@ using System;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
-using QwQ_Music.Common.Manager;
+using Avalonia.Threading;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models.Enums;
 using QwQ_Music.ViewModels;
@@ -51,7 +52,7 @@ public partial class MainWindow : Window
 
         SetValue(ContentProperty, new FatalExceptionView
         {
-            DataContext = fatalExceptionViewModel,
+            DataContext = fatalExceptionViewModel
         });
     }
 
@@ -64,7 +65,7 @@ public partial class MainWindow : Window
         _lastContent = null;
     }
 
-    protected override async void OnClosing(WindowClosingEventArgs e)
+    protected override void OnClosing(WindowClosingEventArgs e)
     {
         try
         {
@@ -75,11 +76,11 @@ public partial class MainWindow : Window
 
             e.Cancel = true;
 
-            await HandleWindowClosingAsync();
+            Dispatcher.UIThread.Invoke(HandleWindowClosingAsync);
         }
         catch (Exception ex)
         {
-            await LoggerService.ErrorAsync($"在程序退出时发生错误 : \n {ex.Message}");
+            LoggerService.ErrorAsync($"在程序退出时发生错误 : \n {ex.Message}");
         }
     }
 
@@ -130,7 +131,7 @@ public partial class MainWindow : Window
         var options = new OverlayDialogOptions
         {
             Title = "确认关闭?",
-            Mode = DialogMode.Question,
+            Mode = DialogMode.Question
         };
 
         var model = new ExitConfirmViewModel();

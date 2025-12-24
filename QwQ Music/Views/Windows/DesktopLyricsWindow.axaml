@@ -109,7 +109,7 @@
                     LetterSpacing="{Binding LyricConfig.LyricMainLetterSpacing}"
                     Stroke="{Binding LyricConfig.LyricMainBorderColor,Converter={StaticResource ToBrushConverter}}"
                     FontSize="{Binding LyricConfig.LyricMainFontSize}"
-                    Text="{Binding MusicPlayerViewModel.LyricsModel.CurrentLyric.Primary}">
+                    Text="{Binding MusicPlayerViewModel.LyricsModel.Current.Primary}">
 
                     <control:TextPath.Foreground>
                         <LinearGradientBrush EndPoint="100% 50%" StartPoint="0% 50%">
@@ -126,11 +126,11 @@
                     LetterSpacing="{Binding LyricConfig.LyricMainLetterSpacing}"
                     Stroke="{Binding LyricConfig.LyricMainBorderColor,Converter={StaticResource ToBrushConverter}}"
                     FontSize="{Binding LyricConfig.LyricMainFontSize}"
-                    Text="{Binding MusicPlayerViewModel.LyricsModel.CurrentLyric.Translation}">
+                    Text="{Binding MusicPlayerViewModel.LyricsModel.Current.Translation}">
 
                     <control:TextPath.IsVisible>
                         <MultiBinding Converter="{x:Static BoolConverters.And}">
-                            <Binding Path="MusicPlayerViewModel.LyricsModel.CurrentLyric.Translation"
+                            <Binding Path="MusicPlayerViewModel.LyricsModel.Current.Translation"
                                      Converter="{x:Static ObjectConverters.IsNotNull}" />
                             <Binding Path="LyricConfig.LyricIsDualLang" />
                         </MultiBinding>
@@ -155,7 +155,7 @@
                     LetterSpacing="{Binding LyricConfig.LyricAltLetterSpacing}"
                     Stroke="{Binding LyricConfig.LyricAltBorderColor,Converter={StaticResource ToBrushConverter}}"
                     FontSize="{Binding LyricConfig.LyricAltFontSize}"
-                    Text="{Binding MusicPlayerViewModel.LyricsModel.NextLyricLine.Primary}">
+                    Text="{Binding MusicPlayerViewModel.LyricsModel.Next.Primary}">
 
                     <control:TextPath.Foreground>
                         <LinearGradientBrush EndPoint="100% 50%" StartPoint="0% 50%">
@@ -172,11 +172,11 @@
                     LetterSpacing="{Binding LyricConfig.LyricAltLetterSpacing}"
                     Stroke="{Binding LyricConfig.LyricAltBorderColor,Converter={StaticResource ToBrushConverter}}"
                     FontSize="{Binding LyricConfig.LyricAltFontSize}"
-                    Text="{Binding MusicPlayerViewModel.LyricsModel.NextLyricLine.Translation}">
+                    Text="{Binding MusicPlayerViewModel.LyricsModel.Next.Translation}">
 
                     <control:TextPath.IsVisible>
                         <MultiBinding Converter="{x:Static BoolConverters.And}">
-                            <Binding Path="MusicPlayerViewModel.LyricsModel.NextLyricLine.Translation"
+                            <Binding Path="MusicPlayerViewModel.LyricsModel.Next.Translation"
                                      Converter="{x:Static ObjectConverters.IsNotNull}" />
                             <Binding Path="LyricConfig.LyricIsDualLang" />
                         </MultiBinding>

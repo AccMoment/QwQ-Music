@@ -26,7 +26,7 @@ public class AlgorithmicReverbModel : ObservableObject, ISoundModifierModel<Algo
             Damp = Damp,
             Width = Width,
             PreDelay = PreDelay,
-            Mix = Mix,
+            Mix = Mix
         };
     }
 

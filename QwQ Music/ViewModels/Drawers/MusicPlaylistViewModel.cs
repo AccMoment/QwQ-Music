@@ -1,28 +1,32 @@
 using System.Collections;
 using System.Linq;
+using Avalonia.Collections;
 using Avalonia.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Models;
 using QwQ_Music.ViewModels.Bases;
 
 namespace QwQ_Music.ViewModels.Drawers;
 
-public partial class MusicPlayListViewModel() : DataGridViewModelBase(MusicPlayList.PlayList)
-{
+public partial class MusicPlaylistViewModel : DataGridViewModelBase {
+    public static PlaylistManager PlaylistManager => PlaylistManager.Instance;
     public static DrawerStatusViewModel DrawerStatusViewModel => DrawerStatusViewModel.Default;
 
+    public static MusicItemsManager MusicItemsManager => MusicItemsManager.All;
+    
     [RelayCommand]
     private static void RemoveInPlaylist(IList items)
     {
-        var musicItems = items.Cast<MusicItemModel>().ToList();
-
-        MusicPlayList.Remove(musicItems);
+        var musicItems = items.Cast<PlaylistItemModel>().ToList();
+        PlaylistManager.Instance.RemoveRange(musicItems);
     }
 
     [RelayCommand]
     private static void ClearMusicPlayList()
     {
-        MusicPlayList.Clear();
+        PlaylistManager.Instance.Clear();
     }
     
     [RelayCommand]

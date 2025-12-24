@@ -44,12 +44,12 @@ public interface IMusicPlayer
     /// <summary>
     ///     下一首
     /// </summary>
-    public Task NextSong();
+    public Task NextSongAsync();
 
     /// <summary>
     ///     上一首
     /// </summary>
-    public Task PreviousSong();
+    public Task PreviousSongAsync();
 
     /// <summary>
     ///     播放此音乐

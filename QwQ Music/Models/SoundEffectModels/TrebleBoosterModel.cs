@@ -22,7 +22,7 @@ public class TrebleBoosterModel : ObservableObject, ISoundModifierModel<TrebleBo
         {
             Cutoff = Cutoff,
             BoostGain = BoostGain,
-            Enabled = Enabled,
+            Enabled = Enabled
         };
 
         Modifier = modifier;

@@ -28,8 +28,8 @@ public class ValueComparisonConverter : IValueConverter
             return parts.Length switch
             {
                 < 3 => false,
-                3 => EvaluateSingleComparison(parts, currentValue), // 处理单个比较表达式
-                _ => EvaluateRangeComparison(parts, currentValue), // 处理范围比较表达式
+                3   => EvaluateSingleComparison(parts, currentValue), // 处理单个比较表达式
+                _   => EvaluateRangeComparison(parts, currentValue)   // 处理范围比较表达式
             };
         }
         catch
@@ -58,7 +58,7 @@ public class ValueComparisonConverter : IValueConverter
                 "!=" => Math.Abs(currentValue - compareValue) > double.Epsilon,
                 ">=" => currentValue >= compareValue,
                 "<=" => currentValue <= compareValue,
-                _ => false,
+                _ => false
             };
         }
 
@@ -77,7 +77,7 @@ public class ValueComparisonConverter : IValueConverter
                 "!=" => Math.Abs(compareValue - currentValue) > double.Epsilon,
                 ">=" => compareValue >= currentValue,
                 "<=" => compareValue <= currentValue,
-                _ => false,
+                _ => false
             };
         }
     }

@@ -2,7 +2,7 @@ using System;
 using Avalonia.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels.Bases;
@@ -29,7 +29,7 @@ public partial class MusicPlayerTrayViewModel : ViewModelBase
 
     [ObservableProperty] public partial bool IsSoundEffectView { get; set; }
 
-    public static MusicPlayerViewModel MusicPlayerViewModel => MusicPlayerViewModel.Default;
+    public static MusicPlayerViewModel MusicPlayerViewModel => MusicPlayerViewModel.Current;
 
     private void CurrentViewChanged(string name)
     {

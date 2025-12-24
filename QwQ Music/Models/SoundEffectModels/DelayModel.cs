@@ -25,7 +25,7 @@ public class DelayModel : ObservableObject, ISoundModifierModel<DelayModifier>
             WetMix,
             Cutoff)
         {
-            Enabled = Enabled,
+            Enabled = Enabled
         };
 
         Modifier = modifier;

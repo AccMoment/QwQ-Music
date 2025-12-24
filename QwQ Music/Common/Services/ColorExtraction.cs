@@ -24,7 +24,7 @@ public enum ColorExtractionAlgorithm
     /// <summary>
     ///     八叉树算法 —— 快速取色
     /// </summary>
-    OctTree,
+    OctTree
 }
 
 /// <summary>
@@ -71,7 +71,7 @@ public static class ColorExtraction
                 .GetAwaiter()
                 .GetResult(),
 
-            _ => throw new ArgumentException("不支持的颜色提取算法", nameof(algorithm)),
+            _ => throw new ArgumentException("不支持的颜色提取算法", nameof(algorithm))
         };
 
         // 将结果转换回Avalonia颜色格式
@@ -161,8 +161,8 @@ public static class ColorExtraction
         {
             // 根据图像大小动态调整采样率
             > 1000000 => 8, // 大图像使用较大步长
-            > 250000 => 4, // 中等图像使用中等步长
-            _ => 2, // 小图像使用较小步长
+            > 250000  => 4, // 中等图像使用中等步长
+            _         => 2  // 小图像使用较小步长
         };
     }
 

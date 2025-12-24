@@ -118,7 +118,7 @@ public static class FileOperationService
                 {
                     FileName = "explorer.exe",
                     Arguments = $"/select,\"{path}\"",
-                    UseShellExecute = true,
+                    UseShellExecute = true
                 });
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -127,7 +127,7 @@ public static class FileOperationService
                 {
                     FileName = "open",
                     Arguments = $"-R \"{path}\"",
-                    UseShellExecute = true,
+                    UseShellExecute = true
                 });
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -138,7 +138,7 @@ public static class FileOperationService
                 {
                     FileName = "xdg-open",
                     Arguments = $"\"{dir}\"",
-                    UseShellExecute = true,
+                    UseShellExecute = true
                 });
             }
             else
@@ -169,7 +169,7 @@ public static class FileOperationService
         {
             Title = title ?? "保存文件",
             FileTypeChoices = fileTypes?.ToList(),
-            SuggestedFileName = suggestedFileName,
+            SuggestedFileName = suggestedFileName
         };
 
         var file = await topLevel.StorageProvider.SaveFilePickerAsync(options);
@@ -192,9 +192,9 @@ public static class FileOperationService
                 [
                     new FilePickerFileType("图片文件")
                     {
-                        Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp"],
-                    },
-                ],
+                        Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp"]
+                    }
+                ]
             }
         );
 

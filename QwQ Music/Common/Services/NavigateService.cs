@@ -43,9 +43,9 @@ public static class NavigateService
                 "颤音效果",
                 "压缩器",
                 "均衡器",
-                "噪音减少",
+                "噪音减少"
             ]
-        },
+        }
     };
 
     // 标记是否为内部导航（前进/后退），避免重复记录历史
@@ -92,7 +92,7 @@ public static class NavigateService
     {
         var result = new Dictionary<string, (string?, int, int)>
         {
-            ["窗口"] = (null, -1, 0), // 添加根节点
+            ["窗口"] = (null, -1, 0) // 添加根节点
         };
 
         // 使用队列进行广度优先遍历，确保父节点先被处理
@@ -100,7 +100,7 @@ public static class NavigateService
 
         var processed = new HashSet<string>
         {
-            "窗口",
+            "窗口"
         }; // 防止重复处理
 
         while (queue.Count > 0)

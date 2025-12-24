@@ -11,7 +11,7 @@ public static class AudioQualityDetector
 {
     public static readonly string[] LosslessFormats =
     [
-        "FLAC", "APE", "WAV", "TTA", "WV", "TAK", "ALAC", "WMA LOSSLESS",
+        "FLAC", "APE", "WAV", "TTA", "WV", "TAK", "ALAC", "WMA LOSSLESS"
     ];
 
     /// <summary>
@@ -81,7 +81,7 @@ public static class AudioQualityDetector
 
             // 低采样率
             >= 22050 when bitrate >= 128 => AudioQualityLevel.PQ,
-            _ => AudioQualityLevel.Poor,
+            _ => AudioQualityLevel.Poor
         };
     }
 
@@ -101,7 +101,7 @@ public static class AudioQualityDetector
             AudioQualityLevel.HQ => "高品质",
             AudioQualityLevel.SQ => "无损",
             AudioQualityLevel.HR => "高解析",
-            _ => "未知",
+            _ => "未知"
         };
     }
 
@@ -120,7 +120,7 @@ public static class AudioQualityDetector
             AudioQualityLevel.HQ => "高质量音频，提供更好的听觉体验",
             AudioQualityLevel.SQ => "无损音频，保持原始音质",
             AudioQualityLevel.HR => "高解析度音频，超越CD音质",
-            _ => "未知音质级别",
+            _ => "未知音质级别"
         };
     }
 }

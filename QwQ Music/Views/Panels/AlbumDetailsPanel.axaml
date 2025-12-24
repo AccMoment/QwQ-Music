@@ -7,6 +7,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:panels="clr-namespace:QwQ_Music.ViewModels.Panels"
+      xmlns:vm="clr-namespace:QwQ_Music.ViewModels"
       d:DesignHeight="450"
       d:DesignWidth="800"
       mc:Ignorable="d"
@@ -17,7 +18,7 @@
         <ColumnDefinition Width="1*" MinWidth="200" />
         <ColumnDefinition Width="3*" />
     </Grid.ColumnDefinitions>
-    
+
     <Grid.Styles>
 
         <Style Selector="u|IconButton.WithTextIconButton">
@@ -27,12 +28,12 @@
         </Style>
 
     </Grid.Styles>
-    
+
     <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*,Auto"
           RowSpacing="10">
 
-        <DockPanel HorizontalSpacing="10" 
-                   VerticalSpacing="10"    
+        <DockPanel HorizontalSpacing="10"
+                   VerticalSpacing="10"
                    Margin="10,0">
 
             <u:IconButton ToolTip.Tip="返回全部专辑页面"
@@ -68,9 +69,9 @@
 
         </DockPanel>
 
-        <Grid Grid.Row="1" 
-              ColumnDefinitions="*,Auto" 
-              ColumnSpacing="10"      
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,Auto"
+              ColumnSpacing="10"
               Margin="10,0">
 
             <StackPanel Orientation="Horizontal" Spacing="10">
@@ -88,7 +89,7 @@
                               Icon="{StaticResource SemiIconPlusCircleStroked}"
                               IsEnabled="{Binding MusicItems.Count}"
                               Command="{Binding AddToPlaylistNextCommand}"
-                              CommandParameter="{Binding MusicItems}" />
+                              CommandParameter="{Binding SelectedItems}" />
 
             </StackPanel>
 
@@ -106,7 +107,8 @@
 
         <ListBox Grid.Row="2"
                  ItemsSource="{Binding MusicItems}"
-                 SelectedItem="{Binding SelectedItem}"
+                 SelectedItems="{Binding SelectedItems}"
+                 SelectionMode="Multiple"
                  AutoScrollToSelectedItem="True"
                  u:ScrollTo.Direction="Top">
 
@@ -116,12 +118,12 @@
                         <StackPanel Orientation="Horizontal">
 
                             <userControls1:MusicAlbumButton
-                                Command="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).MusicPlayerViewModel.PlayThisMusicCommand}"
+                                Command="{Binding $parent.((panels:AlbumDetailsPanelViewModel)DataContext).AddToPlaylistNextCommand}"
                                 CommandParameter="{Binding}"
                                 CornerRadius="8"
-                                CurrentMusicItem="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).MusicPlayerViewModel.CurrentMusicItem}"
+                                CurrentMusicItem="{Binding (vm:MusicPlayerViewModel).Current.CurrentMusicItem}"
                                 ExternalMouseTouch="{Binding $parent[ListBoxItem].IsPointerOver}"
-                                IsPlaying="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).MusicPlayerViewModel.IsPlaying}" />
+                                IsPlaying="{Binding IsCurrent}" />
 
                             <StackPanel Spacing="5" VerticalAlignment="Center">
                                 <TextBlock FontWeight="Bold" Text="{Binding Title}" />
@@ -148,8 +150,8 @@
                             <ContextMenu>
 
                                 <MenuItem
-                                    Command="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).MusicPlayerViewModel.PlayThisMusicCommand}"
-                                    CommandParameter="{Binding}"
+                                    Command="{Binding SetMusicCommand}"
+                                    CommandParameter="{Binding SelectedItems}"
                                     Header="立即播放">
                                     <MenuItem.Icon>
                                         <PathIcon Data="{StaticResource SemiIconPlay}" Margin="2" />
@@ -167,15 +169,15 @@
 
                                     <MenuItem
                                         Header="已有歌单"
-                                        IsVisible="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).MusicListsManager.MusicLists.Count}"
-                                        ItemsSource="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).MusicListsManager.MusicLists}">
+                                        IsVisible="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).MusicListsManager.SongLists.Count}"
+                                        ItemsSource="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).MusicListsManager.SongLists}">
 
                                         <MenuItem.ItemContainerTheme>
                                             <ControlTheme TargetType="MenuItem" x:DataType="models:MusicListModel"
                                                           BasedOn="{StaticResource BigIconMenuItem}">
                                                 <Setter Property="Header" Value="{Binding Name}" />
                                                 <Setter Property="Command"
-                                                        Value="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).AddToMusicListCommand}" />
+                                                        Value="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).AddSelectingToCommand}" />
                                                 <Setter Property="CommandParameter" Value="{Binding}" />
                                                 <Setter Property="Icon">
                                                     <Template>
@@ -195,11 +197,11 @@
 
                                     <Separator
                                         Margin="0,5"
-                                        IsVisible="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).MusicListsManager.MusicLists.Count}" />
+                                        IsVisible="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).MusicListsManager.SongLists.Count}" />
 
                                     <MenuItem Header="下一首"
                                               Command="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).AddToPlaylistNextCommand}"
-                                              CommandParameter="{Binding $parent[ListBox].SelectedItems}">
+                                              CommandParameter="{Binding SelectedItems}">
                                         <MenuItem.Icon>
                                             <PathIcon Data="{StaticResource SemiIconTriangleDown}" Margin="2" />
                                         </MenuItem.Icon>
@@ -207,7 +209,7 @@
 
                                     <MenuItem Header="新建歌单"
                                               Command="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).MusicListsManager.CreatePlaylistWithMusicItemCommand}"
-                                              CommandParameter="{Binding $parent[ListBox].SelectedItems}">
+                                              CommandParameter="{Binding  SelectedItems}">
                                         <MenuItem.Icon>
                                             <PathIcon Data="{StaticResource SemiIconMusic}" Margin="2" />
                                         </MenuItem.Icon>
@@ -217,8 +219,8 @@
 
                                 <!--  在文件中打开  -->
                                 <MenuItem
-                                    Command="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).MusicItemManager.OpenInExplorerCommand}"
-                                    CommandParameter="{Binding}"
+                                    Command="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).MusicItemsManager.OpenInExplorerCommand}"
+                                    CommandParameter="{Binding $parent[ListBox].SelectedItems[0],Mode=OneWay}"
                                     Header="在文件中打开">
                                     <MenuItem.Icon>
                                         <PathIcon Data="{StaticResource SemiIconFolder}" Margin="2" />
@@ -226,8 +228,8 @@
                                 </MenuItem>
 
                                 <MenuItem
-                                    Command="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).MusicItemManager.ShowDetailedInfoCommand}"
-                                    CommandParameter="{Binding}"
+                                    Command="{Binding $parent[ListBox].((panels:AlbumDetailsPanelViewModel)DataContext).MusicItemsManager.ShowDetailedInfoCommand}"
+                                    CommandParameter="{Binding $parent[ListBox].SelectedItems[0],Mode=OneWay}"
                                     Header="详细信息">
                                     <MenuItem.Icon>
                                         <PathIcon Data="{StaticResource SemiIconArticle}" Margin="2" />
@@ -245,13 +247,13 @@
             <Interaction.Behaviors>
 
                 <DoubleTappedTrigger>
-                    <InvokeCommandAction Command="{Binding ToggleMusicCommand}" />
+                    <InvokeCommandAction Command="{Binding SetMusicCommand}" />
                 </DoubleTappedTrigger>
 
                 <RoutedEventTriggerBehavior RoutedEvent="{x:Static SelectingItemsControl.SelectionChangedEvent}">
                     <InvokeCommandAction
-                        Command="{Binding SelectedItemChangedCommand}"
-                        CommandParameter="{Binding $parent[ListBox].SelectedItems}" />
+                        Command="{Binding SelectingItemsChangedCommand}"
+                        CommandParameter="{Binding SelectedItems}" />
                 </RoutedEventTriggerBehavior>
 
             </Interaction.Behaviors>
@@ -296,14 +298,14 @@
                              IsVisible="{Binding AlbumItemModel.Description,Converter={x:Static ObjectConverters.IsNotNull}}"
                              Command="{Binding ViewCompleteIntroductionCommand}" />
         </Panel>
-        
+
         <TextBlock Grid.Row="2" TextWrapping="Wrap"
                    Classes="Secondary"
                    LetterSpacing="1"
                    LineSpacing="2"
                    TextTrimming="CharacterEllipsis"
                    Text="{Binding AlbumItemModel.Description}" />
-        
+
     </Grid>
-    
+
 </Grid>

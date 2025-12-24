@@ -72,7 +72,7 @@ public class DynamicCornerBehavior
         return control switch
         {
             Layoutable layoutable => (layoutable.Bounds.Width, layoutable.Bounds.Height),
-            _ => (control.Width, control.Height),
+            _ => (control.Width, control.Height)
         };
     }
 
@@ -90,7 +90,7 @@ public class DynamicCornerBehavior
                 Math.Min(width, height * aspect) / 2.0,
                 Math.Min(width * aspect, height) / 2.0
             ),
-            _ => throw new ArgumentOutOfRangeException(),
+            _ => throw new ArgumentOutOfRangeException()
         };
     }
 
@@ -198,5 +198,5 @@ public enum ShapeMode
     Ellipse,
 
     /// <summary> 混合模式（根据方向自适应）</summary>
-    Hybrid,
+    Hybrid
 }

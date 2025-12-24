@@ -88,7 +88,7 @@ public class AudioGainCalculator : IDisposable
         {
             Format = SampleFormat.F32,
             SampleRate = sampleRate,
-            Channels = channels,
+            Channels = channels
         }, stream);
 
         float[] buffer = new float[sampleRate * channels]; // 1秒缓冲

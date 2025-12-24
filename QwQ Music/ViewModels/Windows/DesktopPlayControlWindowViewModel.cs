@@ -5,7 +5,7 @@ namespace QwQ_Music.ViewModels.Windows;
 
 public partial class DesktopPlayControlWindowViewModel : ViewModelBase
 {
-    public static MusicPlayerViewModel MusicPlayerViewModel { get; } = MusicPlayerViewModel.Default;
+    public static MusicPlayerViewModel MusicPlayerViewModel { get; } = MusicPlayerViewModel.Current;
 
     public DrawerStatusViewModel DrawerStatusViewModel { get; } = DrawerStatusViewModel.Default;
     

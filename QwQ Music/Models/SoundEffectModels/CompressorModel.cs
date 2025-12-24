@@ -26,7 +26,7 @@ public class CompressorModel : ObservableObject, ISoundModifierModel<CompressorM
             KneeDb,
             MakeupGainDb)
         {
-            Enabled = Enabled,
+            Enabled = Enabled
         };
 
         Modifier = modifier;

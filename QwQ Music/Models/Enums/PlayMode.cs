@@ -19,4 +19,9 @@ public enum PlayMode
     ///     单曲循环
     /// </summary>
     SingleLoop,
+    
+    /// <summary>
+    ///     列表循环
+    /// </summary>
+    Loop
 }

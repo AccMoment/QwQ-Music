@@ -47,7 +47,7 @@
 
                                 <MenuItem
                                     Command="{Binding #MusicListsContainer.((panels:AllMusicListPanelViewModel)DataContext).TogglePlaylistCommand}"
-                                    CommandParameter="{Binding}"
+                                    CommandParameter="{Binding MusicListsManager.Selected}"
                                     Header="播放">
                                     <MenuItem.Icon>
                                         <PathIcon Data="{StaticResource SemiIconPlay}" Margin="4" />
@@ -63,7 +63,7 @@
                                     <MenuItem
                                         Header="图标"
                                         Command="{Binding #MusicListsContainer.((panels:AllMusicListPanelViewModel)DataContext).MusicListsManager.EditMusicListCoverCommand}"
-                                        CommandParameter="{Binding }">
+                                        CommandParameter="{Binding MusicListsManager.Selected}">
                                         <MenuItem.Icon>
                                             <PathIcon Data="{StaticResource SemiIconImage}"
                                                       Margin="2" />
@@ -73,7 +73,7 @@
                                     <MenuItem
                                         Header="名称"
                                         Command="{Binding #MusicListsContainer.((panels:AllMusicListPanelViewModel)DataContext).MusicListsManager.EditMusicListNameCommand}"
-                                        CommandParameter="{Binding }">
+                                        CommandParameter="{Binding MusicListsManager.Selected}">
                                         <MenuItem.Icon>
                                             <PathIcon Data="{StaticResource SemiIconFontColor}"
                                                       Margin="2" />
@@ -83,7 +83,7 @@
                                     <MenuItem
                                         Header="描述"
                                         Command="{Binding #MusicListsContainer.((panels:AllMusicListPanelViewModel)DataContext).MusicListsManager.EditMusicListDescriptionCommand}"
-                                        CommandParameter="{Binding }">
+                                        CommandParameter="{Binding MusicListsManager.Selected}">
                                         <MenuItem.Icon>
                                             <PathIcon Data="{StaticResource SemiIconFontColor}"
                                                       Margin="2" />
@@ -95,7 +95,7 @@
 
                                 <MenuItem
                                     Command="{Binding #MusicListsContainer.((panels:AllMusicListPanelViewModel)DataContext).MusicListsManager.DeleteMusicListCommand}"
-                                    CommandParameter="{Binding}"
+                                    CommandParameter="{Binding MusicListsManager.Selected}"
                                     Header="删除">
                                     <MenuItem.Icon>
                                         <PathIcon Foreground="{DynamicResource SemiRed5}"
@@ -316,6 +316,6 @@
             Theme="{StaticResource OutlineButton}"
             Margin="10,5"
             Command="{Binding MusicListsManager.CreateMusicListCommand}"
-            IsVisible="{Binding !MusicListsManager.MusicLists.Count}" Content="新建歌单" />
+            IsVisible="{Binding !MusicListsManager.SongLists.Count}" Content="新建歌单" />
 
 </Grid>

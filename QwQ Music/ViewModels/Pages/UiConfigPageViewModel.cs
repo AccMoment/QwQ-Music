@@ -3,10 +3,11 @@ using System.Threading.Tasks;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels.Bases;
+using MusicItemsManager = QwQ_Music.Common.Managers.MusicItemsManager;
 
 namespace QwQ_Music.ViewModels.Pages;
 
@@ -26,7 +27,7 @@ public partial class UiConfigPageViewModel() : NavigationViewModel("界面")
             if (DrawerStatusViewModel.Default.IsMusicPlayerPanelVisible)
                 return;
 
-            object brush;
+            IBrush brush;
 
             if (UiConfig.ThemeConfig.Theme == "Default")
             {
@@ -49,14 +50,14 @@ public partial class UiConfigPageViewModel() : NavigationViewModel("界面")
     public Dictionary<ColorExtractionAlgorithm, string> ColorExtractionAlgorithms { get; set; } = new()
     {
         [ColorExtractionAlgorithm.KMeans] = "K-means 聚类算法 —— 精确取色",
-        [ColorExtractionAlgorithm.OctTree] = "八叉树算法 —— 快速取色",
+        [ColorExtractionAlgorithm.OctTree] = "八叉树算法 —— 快速取色"
     };
 
     public Dictionary<string, string> ThemeModes { get; set; } = new()
     {
         ["Default"] = "跟随系统",
         ["Light"] = "亮色",
-        ["Dark"] = "暗色",
+        ["Dark"] = "暗色"
     };
 
     [RelayCommand]
@@ -64,14 +65,14 @@ public partial class UiConfigPageViewModel() : NavigationViewModel("界面")
     {
         await Task.Run(() =>
         {
-            foreach (var item in MusicItemManager.Default.MusicItems)
+            foreach (var item in MusicItemsManager.All.MusicItems.Values)
             {
                 if (item.CoverColors == null)
                     continue;
 
                 item.CoverColors = null;
             }
-        });
+        }).ConfigureAwait(false);
         
         NotificationService.Info("封面颜色缓存已经清空，切换音乐时将会重新提取并缓存~");
     }

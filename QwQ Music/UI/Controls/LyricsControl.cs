@@ -44,7 +44,7 @@ public class LyricsControl : TemplatedControl
         // 合并渲染相关属性的处理
         var renderProperties = new AvaloniaProperty[]
         {
-            ShowTranslationProperty, LyricTextAlignmentProperty, LineHeightProperty, LineSpacingProperty, TextMarginProperty,
+            ShowTranslationProperty, LyricTextAlignmentProperty, LineHeightProperty, LineSpacingProperty, TextMarginProperty
         };
 
         foreach (var property in renderProperties)
@@ -81,7 +81,7 @@ public class LyricsControl : TemplatedControl
     {
         _renderDebounceTimer = new DispatcherTimer
         {
-            Interval = _renderDebounceInterval,
+            Interval = _renderDebounceInterval
         };
 
         _renderDebounceTimer.Tick += (_, _) =>
@@ -190,11 +190,11 @@ public class LyricsControl : TemplatedControl
         ClearLyricResources();
 
         // 检查LyricsData是否有效
-        if (LyricsData.Lyrics.Count == 0)
+        if (LyricsData.Data.Count == 0)
             return;
 
         // 设置歌词数据
-        _lyrics = LyricsData.Lyrics;
+        _lyrics = LyricsData.Data;
 
         // 渲染歌词
         RenderLyrics();
@@ -236,7 +236,7 @@ public class LyricsControl : TemplatedControl
                 TextAlignment = LyricTextAlignment,
                 Width = availableWidth,
                 TextMargin = TextMargin,
-                TranslationSpacing = TranslationSpacing,
+                TranslationSpacing = TranslationSpacing
             };
 
             if (string.IsNullOrWhiteSpace(primaryText))
@@ -362,9 +362,9 @@ public class LyricsControl : TemplatedControl
                         new Setter
                         {
                             Property = ScrollViewer.OffsetProperty,
-                            Value = _scrollViewer.Offset,
-                        },
-                    },
+                            Value = _scrollViewer.Offset
+                        }
+                    }
                 },
                 new KeyFrame
                 {
@@ -374,11 +374,11 @@ public class LyricsControl : TemplatedControl
                         new Setter
                         {
                             Property = ScrollViewer.OffsetProperty,
-                            Value = new Vector(_scrollViewer.Offset.X, targetOffset),
-                        },
-                    },
-                },
-            },
+                            Value = new Vector(_scrollViewer.Offset.X, targetOffset)
+                        }
+                    }
+                }
+            }
         };
 
         // 使用 RunAsync 并捕获 TaskCanceledException

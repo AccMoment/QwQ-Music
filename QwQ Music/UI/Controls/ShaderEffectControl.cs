@@ -113,7 +113,7 @@ public class ShaderEffectControl : Control
 
         _shaderService = new ShaderService(shaderCode)
         {
-            Colors = Colors,
+            Colors = Colors
         };
 
         InvalidateVisual();
@@ -161,7 +161,7 @@ public class ShaderEffectControl : Control
         {
             _animationTimer = new DispatcherTimer
             {
-                Interval = GetTimerInterval(),
+                Interval = GetTimerInterval()
             };
 
             _animationTimer.Tick += AnimationTimer_Tick;
@@ -196,7 +196,7 @@ public class ShaderEffectControl : Control
             ShaderPerformanceMode.HighQuality => TimeSpan.FromMilliseconds(16), // ~60fps
             ShaderPerformanceMode.Balanced => TimeSpan.FromMilliseconds(33), // ~30fps
             ShaderPerformanceMode.PowerSaver => TimeSpan.FromMilliseconds(66), // ~15fps
-            _ => TimeSpan.FromMilliseconds(33),
+            _ => TimeSpan.FromMilliseconds(33)
         };
     }
 
@@ -218,7 +218,7 @@ public class ShaderEffectControl : Control
             ShaderPerformanceMode.HighQuality => 16, // ~60fps
             ShaderPerformanceMode.Balanced => 33, // ~30fps
             ShaderPerformanceMode.PowerSaver => 66, // ~15fps
-            _ => 33,
+            _ => 33
         };
 
         // 限制帧率，避免过度渲染
@@ -348,5 +348,5 @@ public enum ShaderPerformanceMode
     /// <summary>
     ///     省电模式 (~15fps)
     /// </summary>
-    PowerSaver,
+    PowerSaver
 }

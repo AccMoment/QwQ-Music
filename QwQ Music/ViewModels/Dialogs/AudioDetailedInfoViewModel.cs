@@ -75,7 +75,7 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase
             1 => "流式传输，无损数据",
             2 => "带嵌入式音源库的序列化",
             3 => "带编解码器或硬件相关音源库的序列化",
-            _ => "未知",
+            _ => "未知"
         };
     }
 
@@ -86,7 +86,7 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase
         var items = new AvaloniaList<MusicInfoKeyValuePair>();
         AddInfo(items, "标题", _musicItem.Title);
         AddInfo(items, "文件路径", _musicItem.FilePath);
-        AddInfo(items, "文件大小", _musicItem.FileSize ?? "未知");
+        AddInfo(items, "文件大小", _musicItem.FileSize);
         AddInfo(items, "添加时间", _musicItem.InsertTime.ToString("yyyy-MM-dd HH:mm:ss"));
         AddInfo(items, "修改时间", _musicItem.ModificationTime.ToString("yyyy-MM-dd HH:mm:ss"));
         AddInfo(items, "编码格式", _track?.AudioFormat.ShortName ?? "未知");

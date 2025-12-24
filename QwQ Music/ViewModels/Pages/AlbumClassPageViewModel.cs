@@ -21,12 +21,12 @@ public partial class AlbumClassPageViewModel : NavigationViewModel
         [
             new AllAlbumsPanel
             {
-                DataContext = _allAlbumsPanelViewModel,
+                DataContext = _allAlbumsPanelViewModel
             },
             new AlbumDetailsPanel
             {
-                DataContext = _albumDetailsPanelViewModel,
-            },
+                DataContext = _albumDetailsPanelViewModel
+            }
         ];
     }
 

@@ -7,51 +7,53 @@ using System.Timers;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Audio;
-using QwQ_Music.Common.Interfaces;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.Models.Enums;
 using QwQ_Music.ViewModels.Bases;
-using Log = QwQ_Music.Common.Services.LoggerService;
+using MusicItemsManager = QwQ_Music.Common.Managers.MusicItemsManager;
 
 namespace QwQ_Music.ViewModels;
 
-public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
-{
+public class MusicItemChangedEventArgs(PlaylistItemModel oldItem, PlaylistItemModel newItem) : EventArgs {
+    public readonly PlaylistItemModel OldItem = oldItem;
+    public readonly PlaylistItemModel NewItem = newItem;
+}
+
+public partial class MusicPlayerViewModel : ViewModelBase {
     #region 音频处理
 
-    private async Task SetCurrentMusicItem(MusicItemModel musicItem, bool restart = false)
-    {
-        try
-        {
-            _ = Task.Run(() => _audioPreprocessor.UpdateMusicPlayProgress(musicItem, restart));
-
-            await Task.WhenAll(
-                _audioPreprocessor.InitializeAudioTrackAsync(musicItem),
-                LyricsModel.UpdateLyricsDataAsync(musicItem.FilePath)
-            );
-
-            // 使 View 中的 Slider 控件当前值归 0，
-            // 避免因为当前值大于下一首音乐最大时长，导致下一首音乐当前播放时间被修改为 0
-            Position = 0;
-
-            CurrentMusicItem = musicItem;
-
-            _audioPreprocessor.InitialTime = musicItem.Current;
-            LyricOffset = musicItem.LyricOffset;
-            Position = musicItem.Current.TotalSeconds;
-
-            PlayerItemChanged?.Invoke(this, musicItem);
+    private async Task SetCurrentMusicItemAsync(PlaylistItemModel musicItem, bool restart = false) {
+        if (VerifyMusicItem(musicItem)) {
+            OnPlayingChanged(false);
         }
-        catch (Exception ex)
-        {
+
+        try {
+            if (musicItem == PlaylistItemModel.RefDefault) {
+                _audioPreprocessor.UpdateMusicPlayProgress(musicItem.Model, restart);
+
+                await _audioPreprocessor.InitializeAudioTrackAsync(musicItem.Model).ConfigureAwait(false);
+            }
+
+            Position = 0;
+            var oldItem = CurrentMusicItem;
+            CurrentMusicItem = musicItem;
+            Position = musicItem.Model.Record.TotalSeconds;
+
+            _audioPreprocessor.InitialTime = musicItem.Model.Record;
+            LyricOffset = musicItem.Model.LyricOffset;
+
+            MusicItemChanged?.Invoke(this, new MusicItemChangedEventArgs(oldItem, musicItem));
+        } catch (Exception ex) {
             OnPlayingChanged(false);
 
-            await Log.ErrorAsync($"初始化新音轨失败:\n{ex.Message}\n{ex.StackTrace}");
+            await LoggerService.ErrorAsync($"初始化新音轨失败:\n{ex.Message}\n{ex.StackTrace}").ConfigureAwait(false);
 
-            NotificationService.Error("播放失败", $"初始化新音轨失败: {ex.Message}\n可能的原因: 当前{musicItem.EncodingFormat}格式不支持解码");
+            NotificationService.Error(
+                "播放失败",
+                $"初始化新音轨失败: {ex.Message}\n可能的原因: 当前{musicItem.Model.EncodingFormat}格式不支持解码");
         }
     }
 
@@ -62,8 +64,7 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
     /// <summary>
     ///     注册热键功能
     /// </summary>
-    private void RegisterHotkeyFunctions()
-    {
+    private void RegisterHotkeyFunctions() {
         HotkeyService.RegisterFunctionAction(HotkeyFunction.PreviousSong, () => PreviousSongCommand.Execute(null));
 
         HotkeyService.RegisterFunctionAction(HotkeyFunction.NextSong, () => NextSongCommand.Execute(null));
@@ -75,76 +76,65 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
         HotkeyService.RegisterFunctionAction(HotkeyFunction.TogglePlayMode, () => TogglePlayModeCommand.Execute(null));
 
         HotkeyService.RegisterFunctionAction(
-            HotkeyFunction.VolumeUp, () =>
-            {
+            HotkeyFunction.VolumeUp,
+            () => {
                 if (Volume < 100)
                     Volume += 5;
-            }
-        );
+            });
 
         HotkeyService.RegisterFunctionAction(
-            HotkeyFunction.VolumeDown, () =>
-            {
+            HotkeyFunction.VolumeDown,
+            () => {
                 if (Volume > 0)
                     Volume -= 5;
-            }
-        );
+            });
 
         HotkeyService.RegisterFunctionAction(
             HotkeyFunction.RefreshCurrentMusic,
-            () => RefreshPlaybackCommand.Execute(null)
-        );
+            () => RefreshPlaybackCommand.Execute(null));
 
         HotkeyService.RegisterFunctionAction(
-            HotkeyFunction.ShowPlaylistInfo, () =>
-            {
-                NotificationService.Info("你知道吗？",
-                    $"当前播放列表有: {MusicPlayListManager.Count} 首音乐！\n" +
-                    $"现在正在播放第 {MusicPlayListManager.CurrentIndex} 首");
-            }
-        );
+            HotkeyFunction.ShowPlaylistInfo,
+            () => {
+                NotificationService.Info(
+                    "你知道吗？",
+                    $"当前播放列表有: {PlaylistManager.Count} 首音乐！\n" + $"现在正在播放第 {PlaylistManager.CurrentIndex} 首");
+            });
 
         HotkeyService.RegisterFunctionAction(
-            HotkeyFunction.ShowCurrentInfo, () =>
-            {
-                NotificationService.Info("你知道吗？",
-                    $"{(IsPlaying ? "正在播放" : "已暂停")}的音乐叫做: {CurrentMusicItem.Title} 哦！\n" +
-                    $"你的音量是: {Volume}% "
-                );
-            }
-        );
+            HotkeyFunction.ShowCurrentInfo,
+            () => {
+                NotificationService.Info(
+                    "你知道吗？",
+                    $"{(IsPlaying ? "正在播放" : "已暂停")}的音乐叫做: {CurrentMusicItem.Model.Title} 哦！\n" + $"你的音量是: {Volume}% ");
+            });
     }
 
     #endregion
 
     #region 属性和字段
 
-    public AudioPlay AudioPlay { get; }
+    public AudioPlayer AudioPlayer { get; }
 
     private readonly AudioPreprocessor _audioPreprocessor;
 
-    private readonly Timer _lyricsTimer;
+    private readonly Timer _lrcTimer;
 
-    public static MusicItemManager MusicItemManager => MusicItemManager.Default;
+    public static PlaylistManager PlaylistManager => PlaylistManager.Instance;
 
-    public static MusicPlayListManager MusicPlayListManager => MusicPlayListManager.Default;
-
-    public MusicItemModel CurrentMusicItem
-    {
-        get => MusicPlayListManager.CurrentMusicItem;
-        set
-        {
-            MusicPlayListManager.CurrentMusicItem = value;
+    public PlaylistItemModel CurrentMusicItem {
+        get => PlaylistManager.CurrentItem;
+        set {
+            PlaylistManager.CurrentItem = value;
             OnPropertyChanged();
         }
     }
 
-    public Bitmap? CoverImage
-    {
+    public Bitmap? CoverImage {
         get => field ?? CacheManager.Default;
-        set
-        {
-            if (field == value) return;
+        set {
+            if (field == value)
+                return;
 
             field?.Dispose();
 
@@ -153,11 +143,9 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
         }
     }
 
-    public bool IsPlaying
-    {
+    public bool IsPlaying {
         get;
-        set
-        {
+        set {
             if (!SetProperty(ref field, value))
                 return;
 
@@ -167,7 +155,7 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
 
     public PlayerConfig PlayerConfig { get; } = ConfigManager.PlayerConfig;
 
-    public LyricsModel LyricsModel { get; } = new();
+    public LyricsModel LyricsModel { get; set; } = new();
 
     private double _position;
 
@@ -184,55 +172,46 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
         get => _position;
         set {
             _position = value;
-            AudioPlay.Seek(value);
+            AudioPlayer.Seek(value);
             OnPropertyChanged();
             UpdateCurrentLyric();
         }
     }
 
-    public int Volume
-    {
+    public int Volume {
         get => PlayerConfig.Volume;
-        set
-        {
+        set {
             int result = Math.Clamp(value, 0, 100);
 
             if (result == PlayerConfig.Volume)
                 return;
 
             PlayerConfig.Volume = result;
-            AudioPlay.Volume = NormalVolume(result);
+            AudioPlayer.Volume = NormalVolume(result);
 
             IsMuted = result == 0f;
             OnPropertyChanged();
         }
     }
 
-    public static float NormalVolume(int volume)
-    {
-        return volume / 100f;
-    }
+    public static float NormalVolume(int volume) { return volume / 100f; }
 
-    public bool IsMuted
-    {
+    public bool IsMuted {
         get => PlayerConfig.IsMuted;
-        set
-        {
+        set {
             if (value == PlayerConfig.IsMuted)
                 return;
 
             PlayerConfig.IsMuted = value;
-            AudioPlay.IsMute = value;
+            AudioPlayer.IsMute = value;
 
             OnPropertyChanged();
         }
     }
 
-    public float Speed
-    {
+    public float Speed {
         get => PlayerConfig.PlaybackSpeed;
-        set
-        {
+        set {
             float result = Math.Clamp(value, 0.5f, 1.5f);
 
             if (Math.Abs(PlayerConfig.PlaybackSpeed - result) < 1e-6f)
@@ -240,17 +219,15 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
 
             PlayerConfig.PlaybackSpeed = result;
             OnPropertyChanged();
-            AudioPlay.Speed = result;
+            AudioPlayer.Speed = result;
         }
     }
 
-    public int LyricOffset
-    {
-        get => LyricsModel.LyricOffset;
-        set
-        {
-            LyricsModel.LyricOffset = value;
-            CurrentMusicItem.LyricOffset = value;
+    public double LyricOffset {
+        get => LyricsModel.Offset;
+        set {
+            LyricsModel.Offset = value;
+            CurrentMusicItem.Model.LyricOffset = value;
 
             OnPropertyChanged();
         }
@@ -262,148 +239,138 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
 
     public event EventHandler<bool>? PlaybackStateChanged;
 
-    public event EventHandler<MusicItemModel>? PlayerItemChanged;
+    public event EventHandler<MusicItemChangedEventArgs>? MusicItemChanged;
 
     #endregion
 
     #region 初始化方法
 
-    private MusicPlayerViewModel()
-    {
-        InitializeAsync();
+    private MusicPlayerViewModel() {
+        InitializeAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
 
-        AudioPlay = new AudioPlay();
-        _audioPreprocessor = new AudioPreprocessor(AudioPlay);
+        AudioPlayer = new AudioPlayer();
+        _audioPreprocessor = new AudioPreprocessor(AudioPlayer);
 
-        AudioPlay.Volume = NormalVolume(Volume);
-        AudioPlay.IsMute = IsMuted;
-        AudioPlay.Speed = Speed;
+        AudioPlayer.Volume = NormalVolume(Volume);
+        AudioPlayer.IsMute = IsMuted;
+        AudioPlayer.Speed = Speed;
 
-        AudioPlay.PositionChanged += OnPositionChanged;
-        AudioPlay.PlaybackCompleted += AudioPlayOnPlaybackCompleted;
+        AudioPlayer.PositionChanged += OnPositionChanged;
+        AudioPlayer.PlaybackCompleted += AudioPlayerOnPlaybackCompleted;
 
         // 初始化歌词滚动定时器
-        _lyricsTimer = new Timer();
-        _lyricsTimer.Elapsed += OnLyricsTimerElapsed;
-        _lyricsTimer.AutoReset = false;
+        _lrcTimer = new Timer();
+        _lrcTimer.Elapsed += OnLrcTimerElapsed;
+        _lrcTimer.AutoReset = false;
 
         // 注册热键功能
         RegisterHotkeyFunctions();
     }
 
-    public static MusicPlayerViewModel Default { get; } = new();
+    public static MusicPlayerViewModel Current { get; } = new();
 
-    private async void InitializeAsync()
-    {
-        try
-        {
-            await MusicItemManager.Initialize();
-            await MusicPlayListManager.Initialize();
-
+    private async Task InitializeAsync() {
+        try {
             if (PlayerConfig.LastPlayedFilePath == null)
                 return;
 
-            foreach (var item in MusicPlayListManager.PlayList.Where(item => item.FilePath == PlayerConfig.LastPlayedFilePath))
-            {
-                await SetCurrentMusicItem(item);
+            foreach (var item in PlaylistManager.Instance.ActualPlaylist.Where(item => item.Model.FilePath ==
+                                                                                   PlayerConfig.LastPlayedFilePath)) {
+                await SetCurrentMusicItemAsync(item).ConfigureAwait(false);
             }
-        }
-        catch (Exception e)
-        {
-            await Log.ErrorAsync($"初始化播放器模型出错！\n{e.Message}").ConfigureAwait(false);
+        } catch (Exception e) {
+            await LoggerService.ErrorAsync($"初始化播放器模型出错！\n{e.Message}").ConfigureAwait(false);
         }
     }
 
-    public void Shutdown()
-    {
-        AudioPlay.PositionChanged -= OnPositionChanged;
-        AudioPlay.PlaybackCompleted -= AudioPlayOnPlaybackCompleted;
-        _lyricsTimer.Elapsed -= OnLyricsTimerElapsed;
-        _lyricsTimer.Dispose();
+    [RelayCommand]
+    public async Task InsertToNextAndPlayAsync(IEnumerable<MusicItemModel> musicItems) {
+        PlaylistManager.InsertToNext(musicItems);
+        await SetAndPlayAsync(PlaylistManager.CurrentIndex + 1).ConfigureAwait(false);
+    }
 
-        AudioPlay.Dispose();
+    [RelayCommand]
+    public async Task ReplaceAndPlayAsync(IEnumerable<MusicItemModel> musicItems) {
+        PlaylistManager.Replace(musicItems);
+        await SetAndPlayAsync(0).ConfigureAwait(false);
+    }
+
+    public void Shutdown() {
+        AudioPlayer.PositionChanged -= OnPositionChanged;
+        AudioPlayer.PlaybackCompleted -= AudioPlayerOnPlaybackCompleted;
+        _lrcTimer.Elapsed -= OnLrcTimerElapsed;
+        _lrcTimer.Dispose();
+
+        AudioPlayer.Dispose();
 
         SaveFinalState();
     }
 
-    private void SaveFinalState()
-    {
-        PlayerConfig.LastPlayedFilePath = CurrentMusicItem.FilePath;
+    private void SaveFinalState() {
+        PlayerConfig.LastPlayedFilePath = CurrentMusicItem.Model.FilePath;
 
-        _audioPreprocessor.UpdateMusicPlayProgress(CurrentMusicItem);
+        _audioPreprocessor.UpdateMusicPlayProgress(CurrentMusicItem.Model);
     }
 
     #endregion
 
     #region 事件处理
 
-    private void OnPositionChanged(object? sender, double positionInSeconds)
-    {
-        CurrentMusicItem.Current = TimeSpan.FromSeconds(positionInSeconds);
+    private void OnPositionChanged(object? sender, double positionInSeconds) {
+        CurrentMusicItem.Model.Record = TimeSpan.FromSeconds(positionInSeconds);
         _position = positionInSeconds;
         OnPropertyChanged(nameof(Position));
         UpdateCurrentLyric();
     }
 
-    private void UpdateLyricsTimer()
-    {
+    private void UpdateLyricsTimer() {
         if (!IsPlaying)
             return;
 
         // 停止当前定时器
-        _lyricsTimer.Stop();
+        _lrcTimer.Stop();
 
         // 计算到下一句歌词的时间间隔
-        double nextInterval = LyricsModel.GetNextLyricsInterval(AudioPlay.Position);
+        double nextInterval = LyricsModel.GetNextLyricsInterval(AudioPlayer.Position);
 
         if (!(nextInterval > 0))
             return;
 
         // 设置定时器间隔为到下一句歌词的时间
-        _lyricsTimer.Interval = nextInterval * 1000; // 转换为毫秒
-        _lyricsTimer.Start();
+        _lrcTimer.Interval = nextInterval * 1000; // 转换为毫秒
+        _lrcTimer.Start();
     }
 
-    private void OnLyricsTimerElapsed(object? sender, ElapsedEventArgs e)
-    {
+    private void OnLrcTimerElapsed(object? sender, ElapsedEventArgs e) {
         // 更新当前歌词
-        LyricsModel.UpdateLyricsIndex(AudioPlay.Position);
+        LyricsModel.UpdateLyricsIndex(AudioPlayer.Position);
 
         // 计算到下一句歌词的时间间隔
-        double nextInterval = LyricsModel.GetNextLyricsInterval(AudioPlay.Position);
+        double nextInterval = LyricsModel.GetNextLyricsInterval(AudioPlayer.Position);
 
         if (!(nextInterval > 0))
             return;
 
         // 设置定时器间隔为到下一句歌词的时间
-        _lyricsTimer.Interval = nextInterval * 1000; // 转换为毫秒
-        _lyricsTimer.Start();
+        _lrcTimer.Interval = nextInterval * 1000; // 转换为毫秒
+        _lrcTimer.Start();
     }
 
-    private async void AudioPlayOnPlaybackCompleted(object? sender, EventArgs e)
-    {
-        try
-        {
-            CurrentMusicItem.Current = TimeSpan.Zero;
+    private void AudioPlayerOnPlaybackCompleted(object? sender, EventArgs e) {
+        try {
+            CurrentMusicItem.Model.Record = TimeSpan.Zero;
 
             // 根据播放模式处理播放完成后的行为
-            if (PlayerConfig.PlayMode == PlayMode.SingleLoop)
-            {
+            if (PlayerConfig.PlayMode == PlayMode.SingleLoop) {
                 RefreshPlayback(); // 单曲循环模式下，重新播放当前歌曲
-            }
-            else if (PlayerConfig.AutoSwitchNext)
-            {
-                await NextSong();
-            }
-            else
-            {
+            } else if (PlayerConfig.AutoSwitchNext) {
+                NextSongAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
+            } else {
                 OnPlayingChanged(false);
             }
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             NotificationService.Error($"音频播放完成后切换下一首音频时遇到错误：{ex.Message}");
-            await Log.ErrorAsync($"音频播放完成后切换下一首音频时遇到错误：{ex.Message}\n{ex.StackTrace}");
+            LoggerService.Error($"音频播放完成后切换下一首音频时遇到错误：{ex.Message}\n{ex.StackTrace}");
         }
     }
 
@@ -412,75 +379,51 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
     #region 播放控制方法
 
     [RelayCommand]
-    public async Task TogglePlayStace()
-    {
-        if (MusicItemManager.Count == 0)
-        {
+    public async Task TogglePlayStace() {
+        if (MusicItemsManager.All.Count == 0) {
             NotificationService.Info("音乐库中一首音乐也没有啦，需要我为你播放一首空空如也吗？");
 
             return;
         }
 
-        if (CurrentMusicItem == MusicPlayListManager.DefaultMusicItem)
-        {
-            await SetCurrentMusicItem(MusicItemManager.MusicItems.First());
+        if (CurrentMusicItem == PlaylistItemModel.RefDefault) {
+            await SetCurrentMusicItemAsync(PlaylistManager.First()).ConfigureAwait(false);
         }
 
-        if (VerifyMusicItem(CurrentMusicItem))
-        {
+        if (VerifyMusicItem(CurrentMusicItem)) {
             OnPlayingChanged(!IsPlaying);
         }
     }
 
     [RelayCommand]
-    public async Task PlayThisMusic(MusicItemModel musicItem)
-    {
-        if (!VerifyMusicItem(musicItem))
-        {
+    public async Task PlayThisMusicAsync(PlaylistItemModel? musicItem) {
+        if (!VerifyMusicItem(musicItem)) {
             return;
         }
 
-        if (CurrentMusicItem.Equals(musicItem))
-        {
+        if (CurrentMusicItem.Equals(musicItem)) {
             OnPlayingChanged(!IsPlaying);
-        }
-        else
-        {
-            await SetCurrentMusicItem(musicItem, true);
+        } else {
+            await SetCurrentMusicItemAsync(musicItem!.Value, true).ConfigureAwait(false);
             OnPlayingChanged(true);
         }
     }
 
-    public async Task ToggleMusicAsync(MusicItemModel musicItem)
-    {
-        if (VerifyMusicItem(musicItem))
-        {
-            OnPlayingChanged(false);
-            await SetCurrentMusicItem(musicItem);
-        }
+    [RelayCommand]
+    public async Task PreviousSongAsync() {
+        await SetAndPlayAsync(GetMusicItemIndex(PlaylistManager.CurrentIndex, -1)).ConfigureAwait(false);
     }
 
     [RelayCommand]
-    public async Task PreviousSong()
-    {
-        await SetAndPlay(GetMusicItemIndex(MusicPlayListManager.CurrentIndex, false));
+    public async Task NextSongAsync() {
+        await SetAndPlayAsync(GetMusicItemIndex(PlaylistManager.CurrentIndex, 1)).ConfigureAwait(false);
     }
 
     [RelayCommand]
-    public async Task NextSong()
-    {
-        await SetAndPlay(GetMusicItemIndex(MusicPlayListManager.CurrentIndex));
-    }
+    public void ToggleMute() { IsMuted = !IsMuted; }
 
     [RelayCommand]
-    public void ToggleMute()
-    {
-        IsMuted = !IsMuted;
-    }
-
-    [RelayCommand]
-    public void RefreshPlayback()
-    {
+    public void RefreshPlayback() {
         if (!VerifyMusicItem(CurrentMusicItem))
             return;
 
@@ -489,131 +432,112 @@ public partial class MusicPlayerViewModel : ViewModelBase, IMusicPlayer
     }
 
     [RelayCommand]
-    public void ClearPlayDuration(MusicItemModel musicItem)
-    {
+    public void ClearPlayDuration(PlaylistItemModel musicItem) {
         if (musicItem.Equals(CurrentMusicItem))
             Position = 0;
         else
-            musicItem.Current = TimeSpan.Zero;
+            musicItem.Model.Record = TimeSpan.Zero;
     }
 
-    public void CheckForRemovedItems(List<MusicItemModel> successItems)
-    {
-        if (!successItems.Contains(CurrentMusicItem))
+    public void CheckForRemovedItems(IEnumerable<MusicItemModel> successItems) {
+        if (!successItems.Contains(CurrentMusicItem.Model))
             return;
 
-        if (IsPlaying)
-        {
+        if (IsPlaying) {
             IsPlaying = false;
-            AudioPlay.Stop();
+            AudioPlayer.Stop();
         }
 
-        CurrentMusicItem = MusicPlayListManager.DefaultMusicItem;
-
-        NotificationService.Warning($"当前音乐《{CurrentMusicItem.Title}》被移除了哦~");
+        NotificationService.Warning($"当前音乐《{CurrentMusicItem.Model.Title}》被移除了哦~");
+        NextSongAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 
     #endregion
 
     #region 辅助方法
 
-    private void OnPlayingChanged(bool value)
-    {
-        IsPlaying = value;
+    private void OnPlayingChanged(bool isPlayNow) {
+        IsPlaying = isPlayNow;
 
-        if (value)
-        {
-            AudioPlay.Play();
+        if (isPlayNow) {
+            AudioPlayer.Play();
             UpdateLyricsTimer();
-        }
-        else
-        {
-            AudioPlay.Pause();
-            _lyricsTimer.Stop();
+        } else {
+            AudioPlayer.Pause();
+            _lrcTimer.Stop();
         }
     }
 
-    private static bool VerifyMusicItem(MusicItemModel musicItem)
-    {
-        if (!File.Exists(musicItem.FilePath))
-        {
-            NotificationService.Error($"当前音乐不存在，请切换音乐！\n无法找到音乐文件:  {musicItem.FilePath}");
+    private static bool VerifyMusicItem(PlaylistItemModel? musicItem) {
+        if (musicItem is not { } item || !File.Exists(item.Model.FilePath)) {
+            NotificationService.Error($"当前音乐不存在，请切换音乐！\n无法找到音乐文件:  {musicItem?.Model.FilePath}");
 
             return false;
         }
 
-        if (MusicPlayListManager.Count == 0)
-        {
-            MusicPlayListManager.AddRange(MusicItemManager.MusicItems);
-            NotificationService.Info($"当前播放列表为空，已自动填充为全部音乐！共 {MusicPlayListManager.Count} 首~");
+        if (PlaylistManager.Count == 0) {
+            PlaylistManager.AddRange(MusicItemsManager.All.MusicItems.Values);
+            NotificationService.Info($"当前播放列表为空，已自动填充为全部音乐！共 {PlaylistManager.Count} 首~");
         }
 
-        if (MusicPlayListManager.PlayList.Contains(musicItem))
+        if (PlaylistManager.Instance.ActualPlaylist.Contains(item))
             return true;
 
-        MusicPlayListManager.Add(musicItem);
+        PlaylistManager.Instance.Add(item.Model);
 
-        NotificationService.Info($"当前音乐《{musicItem.Title}》不在播放列表中，已自动添加到播放列表末尾~");
+        NotificationService.Info($"当前音乐《{item.Model.Title}》不在播放列表中，已自动添加到播放列表末尾~");
 
         return true;
     }
 
-    private async Task SetAndPlay(int index)
-    {
-        if (index < 0 || index >= MusicPlayListManager.Count)
+    private async Task SetAndPlayAsync(int index) {
+        if (index < 0 || index >= PlaylistManager.Count)
             return;
 
-        var musicItem = MusicPlayListManager.PlayList[index];
+        var musicItem = PlaylistManager.Instance.ActualPlaylist[index];
 
-        if (MusicPlayListManager.Count == 1)
-        {
-            NotificationService.Info("当前音乐列表中只有一首音乐哦~");
-        }
-
-        if (VerifyMusicItem(musicItem))
-        {
-            await SetCurrentMusicItem(musicItem, PlayerConfig.IsRestartPlay);
+        if (VerifyMusicItem(musicItem)) {
+            await SetCurrentMusicItemAsync(musicItem, PlayerConfig.IsRestartPlay).ConfigureAwait(false);
             OnPlayingChanged(true);
         }
     }
 
     [RelayCommand]
-    private void TogglePlayMode()
-    {
+    private void TogglePlayMode() {
         // 循环切换播放模式
-        var previousMode = PlayerConfig.PlayMode;
         PlayerConfig.PlayMode = (PlayMode)(((int)PlayerConfig.PlayMode + 1) % 3);
 
-        // 如果切换到随机播放模式，则打乱播放列表
-        if (previousMode != PlayMode.Random && PlayerConfig is { PlayMode: PlayMode.Random, IsRealRandom: false })
-        {
-            MusicPlayListManager.Shuffle();
-        }
+        PlaylistManager.PlayMode = PlayMode.Random;
 
         OnPropertyChanged(nameof(PlayModeName));
     }
 
-    private int GetMusicItemIndex(int current, bool isNext = true)
-    {
-        return MusicPlayListManager.Count switch
-        {
-            <= 0 => -1,
-            1 => 0,
-            _ => PlayerConfig is { PlayMode: PlayMode.Random, IsRealRandom: true }
-                ? PlayedIndicesService.GetNonRepeatingRandomIndex(current, MusicPlayListManager.Count)
-                : isNext
-                    ? (current + 1) % MusicPlayListManager.Count
-                    : (current - 1 + MusicPlayListManager.Count) % MusicPlayListManager.Count,
-        };
+    private int GetMusicItemIndex(int current, int offset) {
+        //Count=0时返回-1; =1时返回 0
+        int result = PlaylistManager.Count - 1;
+        current += offset;
+        // current的边界判断
+        // current越上界时，返回列表中的最后可用项。
+        if (result <= 0 || current < 0) {
+            return result;
+        }
+
+        // 此处复用 result 作为下界。       
+        // current越下界时意味着歌单播放完毕。模式为顺序播放时直接返回，后续有判断。循环播放时返回首项。
+        if (current > result) {
+            return PlaylistManager.PlayMode == PlayMode.Sequential ? result : 0;
+        }
+
+        return current;
     }
 
     public string PlayModeName =>
-        PlayerConfig.PlayMode switch
-        {
+        PlayerConfig.PlayMode switch {
             PlayMode.Sequential => "顺序播放",
-            PlayMode.Random => "随机播放",
+            PlayMode.Random     => "随机播放",
             PlayMode.SingleLoop => "单曲循环",
-            _ => "未知模式",
+            PlayMode.Loop       => "列表循环",
+            _                   => throw new IndexOutOfRangeException($"不存在的播放模式:{PlayerConfig.PlayMode}")
         };
 
     #endregion

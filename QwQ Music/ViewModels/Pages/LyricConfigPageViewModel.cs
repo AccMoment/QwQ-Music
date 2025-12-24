@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels.Bases;
@@ -196,7 +196,7 @@ public partial class LyricConfigPageViewModel : ViewModelBase
         _desktopLyricsWindow = new DesktopLyricsWindow
         {
             DataContext = new DesktopLyricsWindowViewModel(),
-            Width = LyricWidowWidth,
+            Width = LyricWidowWidth
         };
 
         _desktopLyricsWindow.Show();
@@ -243,7 +243,7 @@ public partial class LyricConfigPageViewModel : ViewModelBase
 
             // ReSharper disable once PossibleLossOfFraction
             ["↓"] = () => new PixelPoint((int)(screenWidth / 2 - windowWidth / 2), (int)(screenHeight - windowHeight)),
-            ["↘"] = () => new PixelPoint((int)(screenWidth - windowWidth), (int)(screenHeight - windowHeight)),
+            ["↘"] = () => new PixelPoint((int)(screenWidth - windowWidth), (int)(screenHeight - windowHeight))
         };
 
         if (positions.TryGetValue(position, out var getPosition))

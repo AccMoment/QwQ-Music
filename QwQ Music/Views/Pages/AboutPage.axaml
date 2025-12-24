@@ -40,7 +40,7 @@
                           Icon="{StaticResource SemiIconPaperclip}" />
 
             <u:IconButton Theme="{StaticResource BorderlessIconButton}"
-                          Command="{Binding OpenContributorFromGayhubCommand}"
+                          Command="{Binding OpenContributorFromGayHubCommand}"
                           CommandParameter="Mioter/QwQ-Music"
                           CornerRadius="8"
                           ToolTip.Tip="访问本项目Github仓库"
@@ -87,7 +87,7 @@
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" Margin="30">
 
                     <Button Classes="None"
-                            Command="{Binding OpenContributorFromGayhubCommand}"
+                            Command="{Binding OpenContributorFromGayHubCommand}"
                             CommandParameter="Mioter/QwQ-Music"
                             CornerRadius="40"
                             Height="70"
@@ -253,8 +253,8 @@
 
                                 <Button Height="50" Width="50"
                                         Classes="None"
-                                        ToolTip.Tip="{Binding Speak}"
-                                        Command="{Binding #AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenContributorFromGayhubCommand}"
+                                        ToolTip.Tip="{Binding Comment}"
+                                        Command="{Binding !#AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenContributorFromGayHubCommand}"
                                         CommandParameter="{Binding Name}"
                                         CornerRadius="30"
                                         Background="{DynamicResource SemiColorBackground2}">
@@ -307,7 +307,7 @@
                         <Button Classes="None"
                                 Width="150"
                                 Background="Transparent"
-                                Command="{Binding #AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenContributorFromGayhubCommand}"
+                                Command="{Binding !#AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenContributorFromGayHubCommand}"
                                 CommandParameter="{Binding RepoUrl}">
 
                             <DockPanel HorizontalSpacing="10" VerticalSpacing="5">
@@ -361,7 +361,7 @@
                         <Button Classes="None"
                                 Width="150"
                                 Background="Transparent"
-                                Command="{Binding #AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenUriCommand}"
+                                Command="{Binding !#AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenUriCommand}"
                                 CommandParameter="{Binding Uri}">
 
                             <DockPanel HorizontalSpacing="10" VerticalSpacing="5">

@@ -14,7 +14,7 @@ public static class NotificationService
             ? manager
             : new WindowNotificationManager(App.TopLevel)
             {
-                Margin = new Thickness(0, 40, 0, 0),
+                Margin = new Thickness(0, 40, 0, 0)
             };
 
     public static double CharactersPerMinute { get; set; } = 200.0;

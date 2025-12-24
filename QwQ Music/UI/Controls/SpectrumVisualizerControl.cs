@@ -29,7 +29,7 @@ public class SpectrumVisualizerControl : Control
         // 初始化动画定时器
         _animationTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(16), // ~60fps
+            Interval = TimeSpan.FromMilliseconds(16) // ~60fps
         };
 
         _animationTimer.Tick += OnAnimationTick;
@@ -122,7 +122,7 @@ public class SpectrumVisualizerControl : Control
 
         var pen = new Pen(LineBrush, LineThickness)
         {
-            LineCap = PenLineCap.Round,
+            LineCap = PenLineCap.Round
         };
 
         context.DrawLine(pen, new Point(0, baselineY), new Point(bounds.Width, baselineY));
@@ -165,7 +165,7 @@ public class SpectrumVisualizerControl : Control
         var figure = new PathFigure
         {
             StartPoint = points[0],
-            IsClosed = false,
+            IsClosed = false
         };
 
         if (figure.Segments == null)
@@ -196,7 +196,7 @@ public class SpectrumVisualizerControl : Control
 
                 figure.Segments.Add(new LineSegment
                 {
-                    Point = interpolatedPoint,
+                    Point = interpolatedPoint
                 });
             }
         }
@@ -207,7 +207,7 @@ public class SpectrumVisualizerControl : Control
         var pen = new Pen(LineBrush, LineThickness)
         {
             LineCap = PenLineCap.Round,
-            LineJoin = PenLineJoin.Round,
+            LineJoin = PenLineJoin.Round
         };
 
         context.DrawGeometry(null, pen, geometry);

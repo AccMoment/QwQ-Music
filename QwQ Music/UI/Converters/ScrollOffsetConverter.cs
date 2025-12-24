@@ -19,7 +19,7 @@ public class ScrollOffsetConverter : IValueConverter
             "nottop" => Math.Abs(offset.Y) >= 0.001,
             "isleft" => Math.Abs(offset.X) < 0.001,
             "notright" => Math.Abs(offset.X) >= 0.001,
-            _ => Math.Abs(offset.Y) < 0.001,
+            _ => Math.Abs(offset.Y) < 0.001
         };
     }
 

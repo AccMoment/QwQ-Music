@@ -25,7 +25,7 @@ public class CalcConverter : IValueConverter
         },
         {
             '%', 2
-        },
+        }
     };
 
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -166,7 +166,7 @@ public class CalcConverter : IValueConverter
             '*' => a * b,
             '/' => a / b,
             '%' => a % b,
-            _ => throw new ArgumentException($"Invalid operator: {op}"),
+            _ => throw new ArgumentException($"Invalid operator: {op}")
         };
     }
 }

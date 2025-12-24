@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.ViewModels.Bases;
 using QwQ_Music.ViewModels.Dialogs;
 using QwQ_Music.Views.Dialogs;
@@ -17,7 +17,7 @@ public partial class SoundEffectConfigViewModel() : NavigationViewModel("音效"
     {
         var options = new OverlayDialogOptions
         {
-            Title = "管理音效",
+            Title = "管理音效"
         };
 
         bool result = await OverlayDialog.ShowCustomModal<ManageSoundModifier, ManageSoundEffectViewModel,bool>(

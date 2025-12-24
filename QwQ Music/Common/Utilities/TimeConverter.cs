@@ -57,7 +57,7 @@ public static class TimeConverter
             0 => ParseSecondsFromSingleValue(timeString),
             1 => ParseSecondsFromMinutesAndSeconds(timeString),
             2 => ParseSecondsFromTimeSpan(timeString),
-            _ => throw new FormatException($"Invalid time format: {timeString}"),
+            _ => throw new FormatException($"Invalid time format: {timeString}")
         };
     }
 

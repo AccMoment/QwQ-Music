@@ -90,12 +90,12 @@
 
             <TextBlock FontSize="18"
                        FontWeight="Bold"
-                       Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Title}"
+                       Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.Title}"
                        TextTrimming="CharacterEllipsis"
                        ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
             <TextBlock Classes="Tertiary"
                        FontSize="15"
-                       Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Artists}"
+                       Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.Artists}"
                        TextTrimming="CharacterEllipsis"
                        ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
 
@@ -104,11 +104,11 @@
     </Grid>
 
     <controls:LyricsControl ClickedLyricTime="{Binding SelectLyricsTimePoint}"
-                            CurrentLyricIndex="{Binding MusicPlayerViewModel.LyricsModel.LyricsIndex}"
+                            CurrentLyricIndex="{Binding MusicPlayerViewModel.LyricsModel.CurrentIndex}"
                             Grid.Row="1" Grid.Column="1"
                             Margin="10,20"
                             LyricTextAlignment="{Binding RolledLyric.LyricTextAlignment}"
-                            LyricsData="{Binding MusicPlayerViewModel.LyricsModel.LyricsData}"
+                            LyricsData="{Binding MusicPlayerViewModel.LyricsModel.Lyrics}"
                             ShowTranslation="{Binding RolledLyric.ShowTranslation}"
                             TextMargin="30,10"
                             LineSpacing="{Binding RolledLyric.LyricsLineSpacing}"
@@ -202,7 +202,7 @@
                     Command="{Binding MusicPlayerViewModel.RefreshPlaybackCommand}"
                     Foreground="{DynamicResource TextBlockDefaultForeground}"
                     Height="25"
-                    IsEnabled="{Binding MusicPlayerViewModel.CurrentMusicItem.FilePath, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=''}"
+                    IsEnabled="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.FilePath, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=''}"
                     behaviors:DynamicCornerBehavior.IsEnabled="True">
                 <PathIcon Data="{StaticResource SemiIconRefresh2}" Margin="5" />
             </Button>
@@ -612,7 +612,7 @@
         <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3">
 
             <!--  进度条  -->
-            <Slider Maximum="{Binding MusicPlayerViewModel.CurrentMusicItem.Duration.TotalSeconds}"
+            <Slider Maximum="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.Duration.TotalSeconds}"
                     Value="{Binding MusicPlayerViewModel.Position}">
                 <Slider.Transitions>
                     <Transitions>
@@ -630,7 +630,7 @@
 
                 <TextBlock FontSize="13"
                            HorizontalAlignment="Right"
-                           Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Duration, Mode=OneWay, Converter={StaticResource TruncateDecimalConverter}}" />
+                           Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.Duration, Mode=OneWay, Converter={StaticResource TruncateDecimalConverter}}" />
 
             </Panel>
         </StackPanel>

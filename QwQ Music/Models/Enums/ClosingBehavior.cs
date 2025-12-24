@@ -15,5 +15,5 @@ public enum ClosingBehavior
     /// <summary>
     ///     隐藏到系统托盘
     /// </summary>
-    HideToTray,
+    HideToTray
 }

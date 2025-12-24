@@ -3,7 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.ViewModels;
 using MusicCoverPageViewModel = QwQ_Music.ViewModels.Drawers.MusicCoverPageViewModel;
 
@@ -19,11 +19,10 @@ public partial class MusicPlayerPanel : Grid
         PointerMoved += OnPointerMoved;
         Unloaded += OnUnloaded;
 
-        // 假设你有一个 AudioPlay 实例
-        MusicPlayerViewModel.Default.AudioPlay.SpectrumDataUpdated += AudioPlayOnSpectrumDataUpdated;
+        MusicPlayerViewModel.Current.AudioPlayer.SpectrumDataUpdated += OnSpectrumUpdated;
     }
 
-    private void AudioPlayOnSpectrumDataUpdated(object? sender, float[] e)
+    private void OnSpectrumUpdated(object? sender, float[] e)
     {
         SpectrumVisualizer.SpectrumData = e;
     }
@@ -31,7 +30,7 @@ public partial class MusicPlayerPanel : Grid
     private void OnUnloaded(object? sender, RoutedEventArgs e)
     {
         PointerMoved -= OnPointerMoved;
-        MusicPlayerViewModel.Default.AudioPlay.SpectrumDataUpdated -= AudioPlayOnSpectrumDataUpdated;
+        MusicPlayerViewModel.Current.AudioPlayer.SpectrumDataUpdated -= OnSpectrumUpdated;
     }
 
     private void OnPointerMoved(object? sender, PointerEventArgs e)

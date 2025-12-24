@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 using Avalonia.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models;
 using QwQ_Music.Models.ConfigModels;
+using MusicItemsManager = QwQ_Music.Common.Managers.MusicItemsManager;
 
 namespace QwQ_Music.ViewModels.Panels;
 
@@ -21,7 +22,7 @@ public partial class AllAlbumsPanelViewModel : ObservableObject
     {
         RebuildAllAlbumItems();
         OnSearchTextChanged(SearchText);
-        MusicItemManager.Default.MusicItems.CollectionChanged += MusicItemsOnCollectionChanged;
+        MusicItemsManager.All.MusicItems.CollectionChanged += MusicItemsOnCollectionChanged;
         AppDomain.CurrentDomain.ProcessExit += CurrentDomain_OnProcessExit;
     }
 
@@ -45,7 +46,7 @@ public partial class AllAlbumsPanelViewModel : ObservableObject
 
     private void CurrentDomain_OnProcessExit(object? sender, EventArgs e)
     {
-        MusicItemManager.Default.MusicItems.CollectionChanged -= MusicItemsOnCollectionChanged;
+        MusicItemsManager.All.MusicItems.CollectionChanged -= MusicItemsOnCollectionChanged;
         AppDomain.CurrentDomain.ProcessExit -= CurrentDomain_OnProcessExit;
     }
 
@@ -122,7 +123,7 @@ public partial class AllAlbumsPanelViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(musicItem.Album) || string.IsNullOrWhiteSpace(musicItem.Artists))
             return;
 
-        bool hasOtherMusicsInSameAlbum = MusicItemManager.Default.MusicItems.Any(m =>
+        bool hasOtherMusicsInSameAlbum = MusicItemsManager.All.MusicItems.Values.Any(m =>
             m.Album == musicItem.Album &&
             m.Artists == musicItem.Artists);
 
@@ -142,8 +143,8 @@ public partial class AllAlbumsPanelViewModel : ObservableObject
     {
         _allAlbumList.Clear();
 
-        var validMusicItems = MusicItemManager.Default
-            .MusicItems
+        var validMusicItems = MusicItemsManager.All
+            .MusicItems.Values
             .Where(music => !string.IsNullOrWhiteSpace(music.Album))
             .ToList();
 
@@ -153,7 +154,7 @@ public partial class AllAlbumsPanelViewModel : ObservableObject
             .GroupBy(music => new
             {
                 Album = music.Album.Trim(),
-                AlbumArtist = music.AlbumArtist.Trim(),
+                AlbumArtist = music.AlbumArtist.Trim()
             })
             .OrderBy(g => g.Key.Album)
             .ThenBy(g => g.Key.AlbumArtist)
@@ -178,7 +179,7 @@ public partial class AllAlbumsPanelViewModel : ObservableObject
                 {
                     1 => distinctArtists[0],
                     > 1 => "群星",
-                    _ => "未知艺术家",
+                    _ => "未知艺术家"
                 };
             }
             
@@ -218,14 +219,9 @@ public partial class AllAlbumsPanelViewModel : ObservableObject
 
         try
         {
-            var musicItems = SearchMusicItems(albumItem);
+            PlaylistManager.Instance.Replace(SearchMusicItems(albumItem));
 
-            if (musicItems.Count < 0)
-                return;
-
-            MusicPlayListManager.Default.Toggle(musicItems);
-
-            await MusicPlayerViewModel.Default.PlayThisMusic(MusicPlayListManager.Default.First());
+            await MusicPlayerViewModel.Current.PlayThisMusicAsync(PlaylistManager.Instance.First()).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -237,8 +233,8 @@ public partial class AllAlbumsPanelViewModel : ObservableObject
     private static List<MusicItemModel> SearchMusicItems(AlbumItemModel albumItem)
     {
         // 找到该专辑对应的所有音乐项
-        var albumMusicItems = MusicItemManager.Default
-            .MusicItems.Where(music => music.Album == albumItem.Name && music.Artists == albumItem.Artist)
+        var albumMusicItems = MusicItemsManager.All
+            .MusicItems.Values.Where(music => music.Album == albumItem.Name && music.Artists == albumItem.Artist)
             .ToList();
 
         return albumMusicItems;

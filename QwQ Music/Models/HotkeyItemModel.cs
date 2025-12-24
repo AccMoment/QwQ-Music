@@ -76,7 +76,7 @@ public partial class HotkeyItemModel : ObservableObject
     {
         var options = new OverlayDialogOptions
         {
-            Title = "修改按键",
+            Title = "修改按键"
         };
 
         var keyGesture = await OverlayDialog.ShowCustomModal<KeyGestureInput, KeyGestureInputViewModel, KeyGesture>(

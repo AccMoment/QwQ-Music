@@ -166,8 +166,8 @@ public static class MousePenetrate
                             x = 0,
                             y = 0,
                             width = (ushort)attr.width,
-                            height = (ushort)attr.height,
-                        },
+                            height = (ushort)attr.height
+                        }
                     ];
 
                     XShapeCombineRectangles(display, handle, 0, 0, 0, rects, 1, 0, 0);

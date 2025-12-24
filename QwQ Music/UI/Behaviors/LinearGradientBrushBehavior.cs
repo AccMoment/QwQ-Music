@@ -165,7 +165,7 @@ internal static class LinearGradientBrushBehaviorCore
                 new RelativePoint(0.5, 1.0, RelativeUnit.Relative),
                 new RelativePoint(0.5, 0.0, RelativeUnit.Relative)
             ),
-            _ => default,
+            _ => default
         };
 
         if (start == default)

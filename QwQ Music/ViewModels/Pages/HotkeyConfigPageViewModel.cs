@@ -5,7 +5,7 @@ using Avalonia.Collections;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using CommunityToolkit.Mvvm.Input;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models;
 using QwQ_Music.Models.ConfigModels;
@@ -16,12 +16,8 @@ using KeyGestureInput = QwQ_Music.Views.Dialogs.KeyGestureInput;
 
 namespace QwQ_Music.ViewModels.Pages;
 
-public partial class HotkeyConfigPageViewModel : ViewModelBase
-{
-    public HotkeyConfigPageViewModel()
-    {
-        InitializeHotkeyItems();
-    }
+public partial class HotkeyConfigPageViewModel : ViewModelBase {
+    public HotkeyConfigPageViewModel() { InitializeHotkeyItems(); }
 
     public HotkeyConfig HotkeyConfig { get; } = ConfigManager.HotkeyConfig;
 
@@ -33,70 +29,58 @@ public partial class HotkeyConfigPageViewModel : ViewModelBase
     /// <summary>
     ///     初始化热键配置项
     /// </summary>
-    private void InitializeHotkeyItems()
-    {
+    private void InitializeHotkeyItems() {
         HotkeyItems.Clear();
 
         // 为每个功能创建配置项
-        foreach (var function in Enum.GetValues<HotkeyFunction>())
-        {
+        foreach (HotkeyFunction function in Enum.GetValues<HotkeyFunction>()) {
             var item = new HotkeyItemModel(function, HotkeyConfig);
             HotkeyItems.Add(item);
         }
     }
 
     [RelayCommand]
-    private async Task AddNewHotkey(HotkeyFunction function)
-    {
+    private async Task AddNewHotkey(HotkeyFunction function) {
         var item = HotkeyItems.FirstOrDefault(item => item.Function == function);
 
         if (item == null)
             return;
 
-        var options = new OverlayDialogOptions
-        {
-            Title = "添加按键",
-        };
+        var options = new OverlayDialogOptions { Title = "添加按键" };
 
         var keyGesture = await OverlayDialog.ShowCustomModal<KeyGestureInput, KeyGestureInputViewModel, KeyGesture>(
             new KeyGestureInputViewModel(item, options.Title),
-            options: options
-        );
+            options: options).ConfigureAwait(false);
 
-        if (keyGesture != null)
-        {
+        if (keyGesture != null) {
             item.AddKeyGesture(keyGesture);
             HotkeyService.RegisterHotkey(item.Function, keyGesture);
         }
     }
 
     [RelayCommand]
-    private void ResetToDefault()
-    {
+    private void ResetToDefault() {
         HotkeyService.ResetToDefaultHotkeys();
 
         // 重新初始化所有配置项
-        foreach (var item in HotkeyItems)
-        {
+        foreach (var item in HotkeyItems) {
             item.UpdateKeyGestures();
         }
     }
 
     [RelayCommand]
-    private async Task ClearKeyGestures()
-    {
+    private async Task ClearKeyGestures() {
         var result = await MessageBox.ShowOverlayAsync(
-            "你真的要清除使用热键配置吗?",
-            "警告",
-            icon: MessageBoxIcon.Warning,
-            button: MessageBoxButton.YesNo
-        );
+                                         "你真的要清除使用热键配置吗?",
+                                         "警告",
+                                         icon: MessageBoxIcon.Warning,
+                                         button: MessageBoxButton.YesNo)
+                                     .ConfigureAwait(false);
 
         if (result != MessageBoxResult.Yes)
             return;
 
-        foreach (var item in HotkeyItems)
-        {
+        foreach (HotkeyItemModel item in HotkeyItems) {
             item.ClearKeyGestures();
         }
 
@@ -104,18 +88,15 @@ public partial class HotkeyConfigPageViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private static void ValidateConfig()
-    {
-        (bool isValid, var errors) = HotkeyService.ValidateConfiguration();
+    private static void ValidateConfig() {
+        var (isValid, errors) = HotkeyService.ValidateConfiguration();
 
         NotificationService.Show(
             "热键验证",
             $"热键配置验证结果: {(isValid ? "有效" : "无效")}",
-            isValid ? NotificationType.Success : NotificationType.Warning
-        );
+            isValid ? NotificationType.Success : NotificationType.Warning);
 
-        if (!isValid)
-        {
+        if (!isValid) {
             LoggerService.Error($"热键配置验证错误！\n信息: {string.Join("\n", errors)}");
         }
     }

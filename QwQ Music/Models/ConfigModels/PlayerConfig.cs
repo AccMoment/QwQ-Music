@@ -4,6 +4,15 @@ using SoundFlow.Backends.MiniAudio.Devices;
 
 namespace QwQ_Music.Models.ConfigModels;
 
+public enum AddMusicBehavior {
+    //添加到下一首
+    AddToNext,
+    //将播放列表替换为此歌曲
+    SetToList,
+    //将播放列表替换为此歌曲所在的列表
+    ReplaceList
+}
+
 public partial class PlayerConfig : ObservableObject
 {
     /// <summary>
@@ -20,10 +29,12 @@ public partial class PlayerConfig : ObservableObject
     public bool AutoSwitchNext { get; set; } = true;
 
     public bool IsRestartPlay { get; set; } = true;
+    
+    public AddMusicBehavior AddMusicBehavior { get; set; } = AddMusicBehavior.SetToList;
 
     public bool IsRealRandom { get; set; }
 
-    [ObservableProperty] public partial bool IsAutoSetSampleRate { get; set; } = true;
+    [ObservableProperty] public partial bool IsAutoReSample { get; set; } = true;
 
     public string? LastPlayedFilePath { get; set; }
     

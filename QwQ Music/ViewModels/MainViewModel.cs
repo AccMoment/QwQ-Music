@@ -49,20 +49,20 @@ public partial class MainViewModel : NavigationViewModel
     [
         new AllMusicPage
         {
-            DataContext = new AllMusicPageViewModel(),
+            DataContext = new AllMusicPageViewModel()
         },
         new ClassificationPage
         {
-            DataContext = new ClassificationPageViewModel(),
+            DataContext = new ClassificationPageViewModel()
         },
         new OtherPage
         {
-            DataContext = new OtherPageViewModel(),
+            DataContext = new OtherPageViewModel()
         },
         new ConfigMainPage
         {
-            DataContext = new ConfigPageViewModel(),
-        },
+            DataContext = new ConfigPageViewModel()
+        }
     ];
 
     [ObservableProperty]

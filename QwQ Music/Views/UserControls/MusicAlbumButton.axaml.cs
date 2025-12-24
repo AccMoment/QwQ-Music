@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using QwQ_Music.Models;
 
 namespace QwQ_Music.Views.UserControls;
 
@@ -10,9 +11,9 @@ public partial class MusicAlbumButton : Button
         bool
     >(nameof(ExternalMouseTouch));
 
-    public static readonly StyledProperty<object> CurrentMusicItemProperty = AvaloniaProperty.Register<
+    public static readonly StyledProperty<MusicItemModel> CurrentMusicItemProperty = AvaloniaProperty.Register<
         MusicAlbumButton,
-        object
+        MusicItemModel
     >(nameof(CurrentMusicItem));
 
     public static readonly StyledProperty<bool> IsPlayingProperty = AvaloniaProperty.Register<MusicAlbumButton, bool>(
@@ -30,7 +31,7 @@ public partial class MusicAlbumButton : Button
         set => SetValue(ExternalMouseTouchProperty, value);
     }
 
-    public object CurrentMusicItem
+    public MusicItemModel CurrentMusicItem
     {
         get => GetValue(CurrentMusicItemProperty);
         set => SetValue(CurrentMusicItemProperty, value);

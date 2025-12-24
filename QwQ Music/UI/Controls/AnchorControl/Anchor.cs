@@ -10,11 +10,11 @@ using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
+using QwQ_Music.Common.Services;
 
 namespace QwQ_Music.UI.Controls.AnchorControl;
 
-public class Anchor : ItemsControl
-{
+public class Anchor : ItemsControl {
     public static readonly StyledProperty<SelectingItemsControl?> IndexSourceProperty =
         AvaloniaProperty.Register<Anchor, SelectingItemsControl?>(nameof(IndexSource));
 
@@ -30,9 +30,11 @@ public class Anchor : ItemsControl
     public static readonly StyledProperty<object?> StickyHeaderProperty =
         AvaloniaProperty.Register<Anchor, object?>(nameof(StickyHeader));
 
-    public static readonly StyledProperty<double> HeaderHeightProperty = AnchorItem.HeaderHeightProperty.AddOwner<Anchor>();
+    public static readonly StyledProperty<double> HeaderHeightProperty =
+        AnchorItem.HeaderHeightProperty.AddOwner<Anchor>();
 
-    public static readonly StyledProperty<IDataTemplate?> HeaderTemplateProperty = AnchorItem.HeaderTemplateProperty.AddOwner<Anchor>();
+    public static readonly StyledProperty<IDataTemplate?> HeaderTemplateProperty =
+        AnchorItem.HeaderTemplateProperty.AddOwner<Anchor>();
 
     private bool _disableSync;
     private bool _isSyncing;
@@ -41,57 +43,48 @@ public class Anchor : ItemsControl
     private ScrollViewer? _scrollViewer;
     private Control? _stickyHeader;
 
-    public SelectingItemsControl? IndexSource
-    {
+    public SelectingItemsControl? IndexSource {
         get => GetValue(IndexSourceProperty);
         set => SetValue(IndexSourceProperty, value);
     }
 
-    public bool AnimatedScroll
-    {
+    public bool AnimatedScroll {
         get => GetValue(AnimatedScrollProperty);
         set => SetValue(AnimatedScrollProperty, value);
     }
 
-    public TimeSpan ScrollDuration
-    {
+    public TimeSpan ScrollDuration {
         get => GetValue(ScrollDurationProperty);
         set => SetValue(ScrollDurationProperty, value);
     }
 
-    public Easing ScrollEasing
-    {
+    public Easing ScrollEasing {
         get => GetValue(ScrollEasingProperty);
         set => SetValue(ScrollEasingProperty, value);
     }
 
-    public object? StickyHeader
-    {
+    public object? StickyHeader {
         get => GetValue(StickyHeaderProperty);
         set => SetValue(StickyHeaderProperty, value);
     }
 
-    public double HeaderHeight
-    {
+    public double HeaderHeight {
         get => GetValue(HeaderHeightProperty);
         set => SetValue(HeaderHeightProperty, value);
     }
 
-    public IDataTemplate? HeaderTemplate
-    {
+    public IDataTemplate? HeaderTemplate {
         get => GetValue(HeaderTemplateProperty);
         set => SetValue(HeaderTemplateProperty, value);
     }
 
-    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
-    {
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e) {
         base.OnApplyTemplate(e);
 
         _scrollViewer = e.NameScope.Find<ScrollViewer>("PART_ScrollViewer");
         _stickyHeader = e.NameScope.Find<Control>("PART_StickyHeader");
 
-        if (_scrollViewer != null)
-        {
+        if (_scrollViewer != null) {
             _scrollViewer.ScrollChanged += OnScrollChanged;
             _scrollViewer.SizeChanged += OnScrollViewerSizeChanged;
         }
@@ -100,8 +93,7 @@ public class Anchor : ItemsControl
         UpdateLastItemMinHeight();
     }
 
-    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
-    {
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change) {
         base.OnPropertyChanged(change);
 
         if (change.Property != IndexSourceProperty)
@@ -111,44 +103,40 @@ public class Anchor : ItemsControl
         HookIndexSource();
     }
 
-    private void HookIndexSource()
-    {
+    private void HookIndexSource() {
         if (IndexSource != null)
             IndexSource.SelectionChanged += OnIndexSourceSelectionChanged;
     }
 
-    private void UnhookIndexSource()
-    {
+    private void UnhookIndexSource() {
         if (IndexSource != null)
             IndexSource.SelectionChanged -= OnIndexSourceSelectionChanged;
     }
 
-    private void OnScrollChanged(object? sender, ScrollChangedEventArgs e)
-    {
+    private void OnScrollChanged(object? sender, ScrollChangedEventArgs e) {
         UpdateStickyHeader();
 
-        if (_isSyncing || _disableSync) return;
+        if (_isSyncing || _disableSync)
+            return;
 
         SyncListBoxSelection();
     }
 
-    private void OnIndexSourceSelectionChanged(object? sender, SelectionChangedEventArgs e)
-    {
-        if (_isSyncing) return;
+    private void OnIndexSourceSelectionChanged(object? sender, SelectionChangedEventArgs e) {
+        if (_isSyncing)
+            return;
 
         int? selectedIndex = IndexSource?.SelectedIndex;
 
-        if (selectedIndex is not ({ } idx and >= 0) || idx >= Items.Count) return;
+        if (selectedIndex is not ({ } idx and >= 0) || idx >= Items.Count)
+            return;
 
         _isSyncing = true;
         _disableSync = true;
 
-        try
-        {
+        try {
             ScrollToAnchor(idx);
-        }
-        finally
-        {
+        } finally {
             _isSyncing = false;
         }
     }
@@ -156,20 +144,21 @@ public class Anchor : ItemsControl
     /// <summary>
     ///     查找当前应该吸附的锚点索引
     /// </summary>
-    private int FindStickyIndex()
-    {
-        if (_scrollViewer == null || Items.Count == 0) return 0;
+    private int FindStickyIndex() {
+        if (_scrollViewer == null || Items.Count == 0)
+            return 0;
 
         int stickyIndex = 0;
         double minDistance = double.MaxValue;
 
-        for (int i = 0; i < Items.Count; i++)
-        {
-            if (Items[i] is not AnchorItem item) continue;
+        for (int i = 0; i < Items.Count; i++) {
+            if (Items[i] is not AnchorItem item)
+                continue;
 
             var point = item.TranslatePoint(new Point(0, 0), _scrollViewer);
 
-            if (!point.HasValue) continue;
+            if (!point.HasValue)
+                continue;
 
             double distance = Math.Abs(point.Value.Y);
 
@@ -184,19 +173,16 @@ public class Anchor : ItemsControl
         return stickyIndex;
     }
 
-    private void UpdateStickyHeader()
-    {
-        if (_scrollViewer == null || _stickyHeader == null) return;
+    private void UpdateStickyHeader() {
+        if (_scrollViewer == null || _stickyHeader == null)
+            return;
 
         int stickyIndex = FindStickyIndex();
 
         // 更新粘性头部内容
-        if (stickyIndex < Items.Count && Items[stickyIndex] is AnchorItem stickyItem)
-        {
+        if (stickyIndex < Items.Count && Items[stickyIndex] is AnchorItem stickyItem) {
             StickyHeader = stickyItem.Header;
-        }
-        else
-        {
+        } else {
             StickyHeader = null;
         }
 
@@ -204,10 +190,11 @@ public class Anchor : ItemsControl
         UpdateStickyHeaderAnimation(stickyIndex);
     }
 
-    private void UpdateStickyHeaderAnimation(int stickyIndex)
-    {
-        if (_scrollViewer == null || _stickyHeader == null || stickyIndex + 1 >= Items.Count || Items[stickyIndex + 1] is not AnchorItem nextItem)
-        {
+    private void UpdateStickyHeaderAnimation(int stickyIndex) {
+        if (_scrollViewer == null ||
+            _stickyHeader == null ||
+            stickyIndex + 1 >= Items.Count ||
+            Items[stickyIndex + 1] is not AnchorItem nextItem) {
             ResetStickyHeaderTransform();
 
             return;
@@ -215,143 +202,113 @@ public class Anchor : ItemsControl
 
         var nextPoint = nextItem.TranslatePoint(new Point(0, 0), _scrollViewer);
 
-        if (!nextPoint.HasValue)
-        {
+        if (!nextPoint.HasValue) {
             ResetStickyHeaderTransform();
 
             return;
         }
 
         // 当下一个项目进入粘性头部区域时，应用推出动画
-        if (nextPoint.Value.Y < _stickyHeader.Bounds.Height && nextPoint.Value.Y > 0)
-        {
+        if (nextPoint.Value.Y < _stickyHeader.Bounds.Height && nextPoint.Value.Y > 0) {
             _stickyHeader.RenderTransform = new TranslateTransform(0, nextPoint.Value.Y - _stickyHeader.Bounds.Height);
-        }
-        else
-        {
+        } else {
             ResetStickyHeaderTransform();
         }
     }
 
-    private void ResetStickyHeaderTransform()
-    {
-        _stickyHeader?.RenderTransform = new TranslateTransform(0, 0);
-    }
+    private void ResetStickyHeaderTransform() { _stickyHeader?.RenderTransform = new TranslateTransform(0, 0); }
 
-    private void SyncListBoxSelection()
-    {
-        if (IndexSource == null) return;
+    private void SyncListBoxSelection() {
+        if (IndexSource == null)
+            return;
 
         int stickyIndex = FindStickyIndex();
 
-        if (IndexSource.SelectedIndex == stickyIndex) return;
+        if (IndexSource.SelectedIndex == stickyIndex)
+            return;
 
         _isSyncing = true;
 
-        try
-        {
+        try {
             IndexSource.SelectedIndex = stickyIndex;
-        }
-        finally
-        {
+        } finally {
             _isSyncing = false;
         }
     }
 
-    private void ScrollToAnchor(int index)
-    {
-        if (_scrollViewer == null || index < 0 || index >= Items.Count) return;
-        if (Items[index] is not AnchorItem item) return;
+    private void ScrollToAnchor(int index) {
+        if (_scrollViewer == null || index < 0 || index >= Items.Count)
+            return;
+        if (Items[index] is not AnchorItem item)
+            return;
 
-        ScrollToItem(item, _scrollViewer);
+        ScrollToItemAsync(item, _scrollViewer).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 
-    private async void ScrollToItem(AnchorItem container, ScrollViewer scrollViewer)
-    {
-        try
-        {
+    private async Task ScrollToItemAsync(AnchorItem container, ScrollViewer scrollViewer) {
+        try {
             var point = container.TranslatePoint(new Point(0, 0), scrollViewer);
 
-            if (!point.HasValue) return;
+            if (!point.HasValue)
+                return;
 
             double from = scrollViewer.Offset.Y;
             double to = from + point.Value.Y;
 
-            if (Math.Abs(to - from) < 1)
-            {
+            if (Math.Abs(to - from) < 1) {
                 scrollViewer.Offset = new Vector(scrollViewer.Offset.X, to);
 
                 return;
             }
 
-            if (AnimatedScroll)
-            {
+            if (AnimatedScroll) {
                 await AnimateScrollAsync(scrollViewer, to);
-            }
-            else
-            {
+            } else {
                 scrollViewer.Offset = new Vector(scrollViewer.Offset.X, to);
             }
-        }
-        catch (Exception)
-        {
+        } catch (Exception) {
             // 忽略异常
-        }
-        finally
-        {
+        } finally {
             _disableSync = false;
         }
     }
 
-    private async Task AnimateScrollAsync(ScrollViewer scrollViewer, double to)
-    {
-        if (_scrollCts != null)
-        {
+    private async Task AnimateScrollAsync(ScrollViewer scrollViewer, double to) {
+        if (_scrollCts != null) {
             await _scrollCts.CancelAsync();
         }
 
         _scrollCts = new CancellationTokenSource();
         var token = _scrollCts.Token;
 
-        var animation = new Animation
-        {
+        var animation = new Animation {
             Duration = ScrollDuration,
             Easing = ScrollEasing,
             FillMode = FillMode.Forward,
-            Children =
-            {
-                new KeyFrame
-                {
+            Children = {
+                new KeyFrame {
                     Cue = new Cue(1d),
-                    Setters =
-                    {
-                        new Setter(ScrollViewer.OffsetProperty, new Vector(scrollViewer.Offset.X, to)),
-                    },
-                },
-            },
+                    Setters = { new Setter(ScrollViewer.OffsetProperty, new Vector(scrollViewer.Offset.X, to)) }
+                }
+            }
         };
 
-        try
-        {
+        try {
             await animation.RunAsync(scrollViewer, token);
-        }
-        catch (OperationCanceledException)
-        {
+        } catch (OperationCanceledException) {
             // 动画被打断，忽略
         }
     }
 
-    private void OnScrollViewerSizeChanged(object? sender, SizeChangedEventArgs sizeChangedEventArgs)
-    {
-        if (sizeChangedEventArgs.HeightChanged)
-        {
+    private void OnScrollViewerSizeChanged(object? sender, SizeChangedEventArgs sizeChangedEventArgs) {
+        if (sizeChangedEventArgs.HeightChanged) {
             UpdateLastItemMinHeight();
         }
     }
 
-    private void UpdateLastItemMinHeight()
-    {
-        if (_scrollViewer == null || Items.Count == 0) return;
+    private void UpdateLastItemMinHeight() {
+        if (_scrollViewer == null || Items.Count == 0)
+            return;
 
         // 获取最后一个 AnchorItem
         if (Items[^1] is not AnchorItem lastItem)
@@ -373,12 +330,10 @@ public class Anchor : ItemsControl
         lastItem.MinHeight = Math.Max(viewportHeight, lastItem.HeaderHeight);
     }
 
-    protected override void OnUnloaded(RoutedEventArgs e)
-    {
+    protected override void OnUnloaded(RoutedEventArgs e) {
         base.OnUnloaded(e);
 
-        if (_scrollViewer != null)
-        {
+        if (_scrollViewer != null) {
             _scrollViewer.ScrollChanged -= OnScrollChanged;
             _scrollViewer.SizeChanged -= OnScrollViewerSizeChanged;
         }

@@ -57,7 +57,7 @@
                         Width="180"
                         FontWeight="Bold"
                         VerticalAlignment="Center"
-                        Text="{Binding SelectedAlbumItem.Name,FallbackValue='请选择专辑'}" /> 
+                        Text="{Binding SelectedAlbumItem.Name,FallbackValue='请选择专辑'}" />
                     <!-- RunningText.Text在使用高强度更改选中专辑会导致UI堵塞-->
 
                     <Button
@@ -91,7 +91,7 @@
 
                                 <MenuItem
                                     Command="{Binding #AllAlbumsContainer.((panels:AllAlbumsPanelViewModel)DataContext).PlayAlbumMusicCommand}"
-                                    CommandParameter="{Binding}"
+                                    CommandParameter="{Binding SelectedAlbumItem }"
                                     Header="播放">
                                     <MenuItem.Icon>
                                         <PathIcon Data="{StaticResource SemiIconPlay}" Margin="4" />
@@ -114,7 +114,7 @@
 
             <Interaction.Behaviors>
                 <IfElseTrigger Condition="{Binding #CardStyle1.IsChecked}">
-                    
+
                     <IfElseTrigger.IfActions>
                         <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ItemsControl.ItemTemplateProperty}">
                             <ChangeAvaloniaPropertyAction.Value>
@@ -205,7 +205,7 @@
                             </ChangeAvaloniaPropertyAction.Value>
                         </ChangeAvaloniaPropertyAction>
                     </IfElseTrigger.IfActions>
-                    
+
                 </IfElseTrigger>
 
                 <IfElseTrigger Condition="{Binding #CardStyle2.IsChecked}">
@@ -329,7 +329,7 @@
                             </ChangeAvaloniaPropertyAction.Value>
                         </ChangeAvaloniaPropertyAction>
                     </IfElseTrigger.IfActions>
-                    
+
                 </IfElseTrigger>
 
                 <IfElseTrigger Condition="{Binding #CardStyle3.IsChecked}">

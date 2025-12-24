@@ -1,98 +1,56 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
+using QwQ_Music.Common.Services.Databases;
 using QwQ_Music.Models.ConfigModels;
-using QwQ_Music.Models.Enums;
 
 namespace QwQ_Music.Models;
 
-public partial class MusicListModel : ObservableObject
-{
-    // 添加一个标志表示图片是否正在加载
-    private LoadingState? _loadingState;
+public enum SortMode {
+    Custom, AddTimeAscending, AddTimeDescending, NameAscending, NameDescending
+}
 
-    public required string IdStr { get; set; }
+public partial class MusicListModel : ObservableObject {
+    public bool IsSelecting { get; set; }
 
-    [ObservableProperty] public partial string Name { get; set; } = "未命名歌单";
+    [ObservableProperty]
+    public required partial string Name { get; set; }
 
-    [ObservableProperty] public partial string Description { get; set; } = "暂无简介";
+    [ObservableProperty]
+    public partial string Description { get; set; } = "暂无简介";
 
-    public bool IsCoverExist { get; set; }
+    public SortMode SortMode { get; set; } = SortMode.Custom;
+    public bool IsCoverExist => CoverImage != CacheManager.NotExist;
 
-    public Bitmap? CoverImage
-    {
-        get
-        {
-            // 如果封面路径不存在，返回不存在封面
-            if (!IsCoverExist || _loadingState == LoadingState.NotExist)
-                return CacheManager.NotExist;
-
-            // 如果正在加载中，返回加载中封面
-            if (_loadingState == LoadingState.Loading)
-                return CacheManager.Loading;
-
-            // 尝试从缓存获取图片
-            if (CacheManager.ImageCache.TryGetValue(IdStr, out var bitmap) && bitmap != null)
-            {
-                _loadingState = LoadingState.Loaded;
-
-                return bitmap;
-            }
-
-            // 缓存未命中，标记为正在加载
-            _loadingState = LoadingState.Loading;
-
-            // 启动异步加载任务
-            Task.Run(async () =>
-            {
-                try
-                {
-                    var dbBitmap = await MusicExtractor.LoadCompressedBitmapFromFileAsync(
-                        StaticConfig.GetMusicListCoverFullPath(IdStr));
-
-                    if (dbBitmap == null)
-                    {
-                        _loadingState = LoadingState.NotExist;
-                        OnPropertyChanged();
-
-                        return;
-                    }
-
-                    CacheManager.ImageCache.Add(IdStr, dbBitmap);
-                    _loadingState = LoadingState.Loaded;
-                    OnPropertyChanged(); // 通知 UI 更新
-                }
-                catch (Exception e)
-                {
-                    await LoggerService.ErrorAsync($"音乐列表'{Name}'在异步加载其封面时发生错误 : {e}");
-                }
-            });
-
-            // 首次或加载中时返回加载中封面
-            return CacheManager.Loading;
-        }
-        set
-        {
-            if (value != null)
-            {
-                IsCoverExist = true;
-                _loadingState = LoadingState.Loaded;
-                CacheManager.SetImage(IdStr, value);
-            }
-            else
-            {
-                if (!IsCoverExist)
-                    return;
-
-                CacheManager.DeleteImage(IdStr);
-                IsCoverExist = false;
-                _loadingState = LoadingState.NotExist;
-            }
-
+    public Bitmap CoverImage {
+        get =>
+            CacheManager.TryLoadCacheFromFile(
+                Name,
+                "音乐列表",
+                "封面",
+                StaticConfig.GetMusicListCoverFullPath(Name),
+                () => OnPropertyChanged());
+        set {
+            CacheManager.SetImage(Name, value);
             OnPropertyChanged();
         }
     }
+
+    public DateTime CreateTime { get; init; }
+    public DateTime ModifyTime { get; set; }
+
+    public List<MusicItemModel>? Musics { get; private set; }
+
+    public Task LoadCurrentAsync() {
+        return Task.Run(() => Musics = MusicListItemsRepository.Instance.GetAll(Name)
+                                                               .Select(path => MusicItemsManager.All.MusicItems[path])
+                                                               .ToList());
+    }
+
+    public void DisposeCurrent() { Musics = null; }
 }

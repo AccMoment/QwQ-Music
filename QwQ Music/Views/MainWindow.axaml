@@ -207,7 +207,7 @@
 
                 <userControls:MusicAlbumCover Classes.AlbumCoverRotate="{Binding MusicPlayerViewModel.IsPlaying}"
                                               Classes="RoundAlbum"
-                                              CoverImage="{Binding MusicPlayerViewModel.CurrentMusicItem.CoverImage}"
+                                              CoverImage="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.CoverImage}"
                                               DataContext="{Binding #MusicPlayerTray.((viewModels11:MusicPlayerTrayViewModel)DataContext)}">
 
                     <userControls:MusicAlbumCover.RenderTransform>

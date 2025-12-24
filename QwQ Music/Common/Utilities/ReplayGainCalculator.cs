@@ -72,7 +72,7 @@ public static class ReplayGainCalculator
             MusicReplayGainStandard.EbuR128 => EBU_R128_TARGET_LUFS,
             MusicReplayGainStandard.ReplayGain2 => REPLAY_GAIN2_TARGET_LUFS,
             MusicReplayGainStandard.Custom => customTarget,
-            _ => STREAMING_TARGET_LUFS,
+            _ => STREAMING_TARGET_LUFS
         };
     }
 
@@ -249,5 +249,5 @@ public enum MusicReplayGainStandard
     /// <summary>
     ///     自定义目标响度
     /// </summary>
-    Custom,
+    Custom
 }

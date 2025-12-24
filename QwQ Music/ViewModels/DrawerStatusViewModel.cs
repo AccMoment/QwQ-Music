@@ -3,7 +3,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 
 namespace QwQ_Music.ViewModels;
@@ -146,7 +146,7 @@ public partial class DrawerStatusViewModel : ObservableObject
 
                 // 向下滚动
                 false,
-            _ => IsMusicPlayerTrayVisible,
+            _ => IsMusicPlayerTrayVisible
         };
 
         /*

@@ -11,7 +11,7 @@ public static class EnumDescriptionStore
         // ClosingBehavior
         ["AskAbout"] = "询问",
         ["Exit"] = "直接退出",
-        ["HideToTray"] = "隐藏到系统托盘",
+        ["HideToTray"] = "隐藏到系统托盘"
     };
 }
 

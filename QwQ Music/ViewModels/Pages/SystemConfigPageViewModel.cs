@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using QwQ_Music.Common.Helper;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.Models.Enums;

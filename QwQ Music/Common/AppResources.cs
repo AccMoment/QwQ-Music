@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 
 namespace QwQ_Music.Common;
@@ -27,7 +27,7 @@ public class AppResources : ObservableObject
     public IReadOnlyDictionary<string, FontFamily> CustomFonts { get; } = new Dictionary<string, FontFamily>
     {
         [DEFAULT_FONT_KEY] = FontFamily.Default,
-        ["CJTW85"] = new("resm:QwQ_Music.Assets.EmbeddedRes.Fonts.CJTW85.ttf#公众号-犬神志"),
+        ["CJTW85"] = new("resm:QwQ_Music.Assets.EmbeddedRes.Fonts.CJTW85.ttf#公众号-犬神志")
     };
 
     public IReadOnlyDictionary<string, FontFamily> SystemFonts => _systemFontsLazy.Value;

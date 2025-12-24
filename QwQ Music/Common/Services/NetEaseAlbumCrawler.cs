@@ -107,7 +107,7 @@ public class NetEaseAlbumCrawler : IDisposable
             return albumId == null
                 ? new AlbumDetail
                 {
-                    Description = _options.NotFoundMessage,
+                    Description = _options.NotFoundMessage
                 }
                 : await GetAlbumDetailAsync(albumId, cancellationToken);
         }
@@ -115,14 +115,14 @@ public class NetEaseAlbumCrawler : IDisposable
         {
             return new AlbumDetail
             {
-                Description = "操作已取消",
+                Description = "操作已取消"
             };
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
             return new AlbumDetail
             {
-                Description = $"网络请求失败: {ex.Message}",
+                Description = $"网络请求失败: {ex.Message}"
             };
         }
     }
@@ -248,7 +248,7 @@ public class NetEaseAlbumCrawler : IDisposable
             {
                 return new AlbumDetail
                 {
-                    Description = "未找到专辑信息",
+                    Description = "未找到专辑信息"
                 };
             }
 
@@ -258,7 +258,7 @@ public class NetEaseAlbumCrawler : IDisposable
             {
                 Description = !string.IsNullOrWhiteSpace(album.Description) ? album.Description : "暂无专辑简介",
                 PublishTime = FormatPublishTime(album.PublishTime),
-                Company = !string.IsNullOrWhiteSpace(album.Company) ? album.Company : string.Empty,
+                Company = !string.IsNullOrWhiteSpace(album.Company) ? album.Company : string.Empty
             };
         }
         catch (JsonException ex)

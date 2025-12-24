@@ -1,6 +1,6 @@
 ﻿using System;
 using Avalonia;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Utilities;
 using QwQ_Music.ViewModels;
@@ -69,7 +69,7 @@ public static class Program
 
     private static void Shutdown()
     {
-        MusicPlayerViewModel.Default.Shutdown();
+        MusicPlayerViewModel.Current.Shutdown();
 
         ConfigManager.SaveConfig();
 

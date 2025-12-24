@@ -19,7 +19,7 @@ public partial class ChorusModel : ObservableObject, ISoundModifierModel<ChorusM
     {
         var modifier = new ChorusModifier(audioFormat, DepthMs, RateHz, Feedback, WetDryMix)
         {
-            Enabled = Enabled,
+            Enabled = Enabled
         };
 
         Modifier = modifier;

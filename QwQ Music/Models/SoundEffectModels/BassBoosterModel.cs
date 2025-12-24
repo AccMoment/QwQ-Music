@@ -20,7 +20,7 @@ public class BassBoosterModel : ObservableObject, ISoundModifierModel<BassBooste
         var modifier = new BassBoosterModifier(audioFormat)
         {
             Cutoff = Cutoff,
-            BoostGain = BoostGain,
+            BoostGain = BoostGain
         };
 
         Modifier = modifier;

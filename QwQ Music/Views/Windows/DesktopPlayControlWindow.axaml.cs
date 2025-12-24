@@ -3,69 +3,58 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using QwQ_Music.Common.Services;
 using QwQ_Music.ViewModels.Windows;
 
 namespace QwQ_Music.Views.Windows;
 
-public partial class DesktopPlayControlWindow : Window
-{
-    public DesktopPlayControlWindow()
-    {
+public partial class DesktopPlayControlWindow : Window {
+    public DesktopPlayControlWindow() {
         InitializeComponent();
         DataContext = new DesktopPlayControlWindowViewModel();
     }
 
-    public static readonly StyledProperty<bool> StartMovingOutProperty = AvaloniaProperty.Register<DesktopPlayControlWindow, bool>(
-        nameof(StartMovingOut));
+    public static readonly StyledProperty<bool> StartMovingOutProperty =
+        AvaloniaProperty.Register<DesktopPlayControlWindow, bool>(nameof(StartMovingOut));
 
-    public bool StartMovingOut
-    {
+    public bool StartMovingOut {
         get => GetValue(StartMovingOutProperty);
         set => SetValue(StartMovingOutProperty, value);
     }
 
-    public static readonly StyledProperty<TimeSpan> RemoveAnimationDurationProperty = AvaloniaProperty.Register<DesktopPlayControlWindow, TimeSpan>(
-        nameof(RemoveAnimationDuration));
+    public static readonly StyledProperty<TimeSpan> RemoveAnimationDurationProperty =
+        AvaloniaProperty.Register<DesktopPlayControlWindow, TimeSpan>(nameof(RemoveAnimationDuration));
 
-    public TimeSpan RemoveAnimationDuration
-    {
+    public TimeSpan RemoveAnimationDuration {
         get => GetValue(RemoveAnimationDurationProperty);
         set => SetValue(RemoveAnimationDurationProperty, value);
     }
 
     // 监听 StartMovingOut 属性变化
-    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
-    {
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change) {
         base.OnPropertyChanged(change);
 
-        if (change.Property == IsVisibleProperty)
-        {
+        if (change.Property == IsVisibleProperty) {
             object? newValue = change.NewValue;
 
-            if (newValue is true)
-            {
+            if (newValue is true) {
                 StartMovingOut = false;
             }
         }
 
-        if (change.Property == StartMovingOutProperty)
-        {
-            object? newValue = change.NewValue;
+        if (change.Property != StartMovingOutProperty)
+            return;
 
-            if (newValue is true)
-            {
-                _ = HandleStartMovingOutAsync();
-            }
+        if (change.NewValue is true) {
+            BeginFadeOut();
         }
-        
     }
 
-    private async Task HandleStartMovingOutAsync()
-    {
-        // 等待指定的动画时长
-        await Task.Delay(RemoveAnimationDuration);
-
-        // 在UI线程上隐藏窗口
-        await Dispatcher.UIThread.InvokeAsync(Hide);
+    private void BeginFadeOut() {
+        // 等待指定的动画时长后，在 UI线程上隐藏窗口
+        Task.Delay(RemoveAnimationDuration)
+            .ContinueWith(_ => Dispatcher.UIThread.Post(Hide))
+            .ContinueWith(LoggerService.HandleException)
+            .ConfigureAwait(false);
     }
 }

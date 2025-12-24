@@ -52,7 +52,7 @@ public static class ColorGenerator
             2 => Color.FromRgb(pByte, vByte, tByte),
             3 => Color.FromRgb(pByte, qByte, vByte),
             4 => Color.FromRgb(tByte, pByte, vByte),
-            _ => Color.FromRgb(vByte, pByte, qByte),
+            _ => Color.FromRgb(vByte, pByte, qByte)
         };
     }
 }

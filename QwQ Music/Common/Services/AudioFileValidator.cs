@@ -8,7 +8,7 @@ public static class AudioFileValidator
 {
     public enum ExtendAudioFormats
     {
-        Ncm,
+        Ncm
     }
 
     public static readonly List<string> SupportedAudioFormats =
@@ -128,13 +128,13 @@ public static class AudioFileValidator
 
         // Windows Media Audio/Advanced Systems Format
         ".WMA",
-        ".ASF",
+        ".ASF"
     ];
 
     public static Dictionary<ExtendAudioFormats, string> AudioFormatsExtendToNameMap { get; } =
         new()
         {
-            [ExtendAudioFormats.Ncm] = ".NCM",
+            [ExtendAudioFormats.Ncm] = ".NCM"
         };
 
     private static bool IsAudioFile(string filePath)

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Collections;
@@ -6,33 +7,31 @@ using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using QwQ_Music.Common.Manager;
+using QwQ_Music.Common.Helper;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Services.Databases;
 using QwQ_Music.Models;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels.Bases;
+using MusicItemsManager = QwQ_Music.Common.Managers.MusicItemsManager;
 
 namespace QwQ_Music.ViewModels.Panels;
 
-public partial class MusicListDetailsPanelViewModel : DataGridViewModelBase
-{
+public partial class MusicListDetailsPanelViewModel : DataGridViewModelBase {
     private readonly AvaloniaList<MusicItemModel> _filterSource = [];
 
-    [ObservableProperty]
-    public partial MusicListModel MusicListModel { get; set; } = new()
-    {
-        Name = "Error",
-        Description = "#警告！你已进入未知空域，请立即离开此处（",
-        IdStr = "$Default",
-    };
+    public MusicListsManager MusicListsManager => MusicListsManager.Instance;
+    public MusicItemsManager MusicItemsManager => MusicItemsManager.All;
 
-    public Bitmap? CoverImage
-    {
+    [ObservableProperty]
+    public partial MusicListModel? MusicListModel { get; set; }
+
+    public Bitmap? CoverImage {
         get => field ?? CacheManager.Default;
-        set
-        {
-            if (field == value) return;
+        set {
+            if (field == value)
+                return;
 
             field?.Dispose();
 
@@ -41,20 +40,19 @@ public partial class MusicListDetailsPanelViewModel : DataGridViewModelBase
         }
     }
 
-    [ObservableProperty] public partial double DataGridHorizontalScrollValue { get; set; }
+    [ObservableProperty]
+    public partial double DataGridHorizontalScrollValue { get; set; }
 
-    protected override void OnSearchTextChanged(string? value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            MusicItems = MusicListsManager.CurrentMusicList.MusicItems;
+    protected override void OnSearchTextChanged(string? value) {
+        if (string.IsNullOrEmpty(value)) {
+            MusicItems = new AvaloniaList<MusicItemModel>(MusicListsManager.Selected!.Musics!);
 
             return;
         }
 
-        var source = string.IsNullOrEmpty(value)
-            ? MusicListsManager.CurrentMusicList.MusicItems
-            : MusicListsManager.CurrentMusicList.MusicItems.Where(MatchesSearchCriteria);
+        IEnumerable<MusicItemModel> source = string.IsNullOrEmpty(value) ?
+            MusicListsManager.Selected!.Musics! :
+            MusicListsManager.Selected!.Musics!.Where(MatchesSearchCriteria);
 
         _filterSource.Clear();
         _filterSource.AddRange(source);
@@ -62,82 +60,64 @@ public partial class MusicListDetailsPanelViewModel : DataGridViewModelBase
 
         return;
 
-        bool MatchesSearchCriteria(MusicItemModel item)
-        {
-            return item.Title.Contains(value, StringComparison.OrdinalIgnoreCase)
-             || item.Artists.Contains(value, StringComparison.OrdinalIgnoreCase)
-             || item.Album.Contains(value, StringComparison.OrdinalIgnoreCase);
+        bool MatchesSearchCriteria(MusicItemModel item) {
+            return item.Title.Contains(value, StringComparison.OrdinalIgnoreCase) ||
+                   item.Artists.Contains(value, StringComparison.OrdinalIgnoreCase) ||
+                   item.Album.Contains(value, StringComparison.OrdinalIgnoreCase);
         }
     }
 
-    public async void UpdateMusicListModel(MusicListModel musicListModel)
-    {
-        try
-        {
-            if (musicListModel.IdStr == MusicListModel.IdStr)
+    public async Task UpdateMusicListModelAsync(MusicListModel musicListModel) {
+        try {
+            if (musicListModel.Name == MusicListModel?.Name)
                 return;
 
             MusicListModel = musicListModel;
-            UpdateCoverImage(musicListModel);
+            await UpdateCoverImageAsync(musicListModel).ConfigureAwait(true);
 
-            using var musicListMapRepository = new MusicListItemRepository(musicListModel.IdStr, StaticConfig.DatabasePath);
-            var paths = await Task.Run(() => musicListMapRepository.GetAll());
+            MusicListsManager.Selected?.Name = musicListModel.Name;
 
-            MusicListsManager.CurrentMusicList.IdStr = musicListModel.IdStr;
+            MusicListsManager.Selected!.Musics!.Clear();
+            MusicListsManager.Selected.Musics.AddRange(
+                MusicListItemsRepository.Instance.GetAll(MusicListModel.Name)
+                                        .Select(path => MusicItemsManager.All.MusicItems[path]));
 
-            if (paths.Count > 0)
-            {
-                // 使用 LINQ 简化过滤逻辑
-                MusicListsManager.CurrentMusicList.MusicItems.Clear();
-                MusicListsManager.CurrentMusicList.MusicItems.AddRange(MusicItemManager.Default.MusicItems.Where(item => paths.Contains(item.FilePath)));
-            }
-
-            MusicItems = MusicListsManager.CurrentMusicList.MusicItems;
-        }
-        catch (Exception e)
-        {
-            await LoggerService.ErrorAsync($"更新歌单信息时发生错误！\n{e.Message}\n{e.StackTrace}");
+            MusicItems = new AvaloniaList<MusicItemModel>(MusicListsManager.Selected.Musics);
+        } catch (Exception e) {
+            await LoggerService.ErrorAsync($"更新歌单信息时发生错误！\n{e.Message}\n{e.StackTrace}").ConfigureAwait(false);
             NotificationService.Error($"更新歌单信息时发生错误！\n{e.Message}");
         }
     }
 
-    private async void UpdateCoverImage(MusicListModel musicList)
-    {
-        try
-        {
+    private async Task UpdateCoverImageAsync(MusicListModel musicList) {
+        try {
             if (!musicList.IsCoverExist)
                 return;
 
-            CoverImage = await MusicExtractor.LoadBitmapFromFileAsync(StaticConfig.GetMusicListCoverFullPath(musicList.IdStr));
-        }
-        catch (Exception e)
-        {
+            // ReSharper disable once UseConfigureAwaitFalse
+            CoverImage = await ImageHelper.LoadFromFileAsync(StaticConfig.GetMusicListCoverFullPath(musicList.Name));
+        } catch (Exception e) {
             NotificationService.Error("加载大专辑封面时出错！");
-            await LoggerService.ErrorAsync($"更新专辑详情页封面时出错 : \n{e.Message}\n{e.StackTrace}");
+            await LoggerService.ErrorAsync($"更新专辑详情页封面时出错 : \n{e.Message}\n{e.StackTrace}").ConfigureAwait(false);
         }
     }
 
     [RelayCommand]
-    private async Task PlayMusicList()
-    {
+    private async Task PlayMusicList() {
         if (MusicItems.Count <= 0)
             return;
 
-        MusicPlayList.Toggle(MusicItems);
+        PlaylistManager.Instance.Replace(MusicItems);
 
-        await MusicPlayerViewModel.PlayThisMusic(MusicPlayList.First());
+        await MusicPlayerViewModel.Current.PlayThisMusicAsync(PlaylistManager.Instance.First()).ConfigureAwait(false);
     }
 
     [RelayCommand]
-    private void JumpToTop(DataGrid dataGrid)
-    {
+    private void JumpToTop(DataGrid dataGrid) {
         // 滚动到第一行（第一行数据）
         dataGrid.ScrollIntoView(dataGrid.CollectionView.Cast<MusicItemModel>().FirstOrDefault(), null);
     }
 
     [RelayCommand]
-    private static void BackAllAlMusicList()
-    {
-        NavigateService.NavigateTo("全部歌单");
-    }
+    private static void BackAllAlMusicList() { NavigateService.NavigateTo("全部歌单"); }
 }

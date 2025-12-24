@@ -28,7 +28,7 @@ public class FrequencyBandModel : ObservableObject, ISoundModifierModel<Frequenc
             LowCutoffFrequency,
             HighCutoffFrequency)
         {
-            Enabled = Enabled,
+            Enabled = Enabled
         };
 
         Modifier = modifier;
