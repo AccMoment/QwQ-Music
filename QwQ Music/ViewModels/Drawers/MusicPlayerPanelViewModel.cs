@@ -33,21 +33,21 @@ public partial class MusicCoverPageViewModel : NavigationViewModel {
     private readonly IBrush _lightThemeBrush = Brush.Parse("#88FFFFFF");
 
     public MusicCoverPageViewModel() : base("播放") {
-        if (MusicPlayerViewModel.CurrentMusicItem != PlaylistItemModel.RefDefault) {
+        if (AudioPlayManager.CurrentMusicItem != PlaylistItemModel.RefDefault) {
             OnMusicItemChanged(
                 this,
-                new MusicItemChangedEventArgs(PlaylistItemModel.RefDefault, MusicPlayerViewModel.CurrentMusicItem));
+                new MusicItemChangedEventArgs(PlaylistItemModel.RefDefault, AudioPlayManager.CurrentMusicItem));
         }
 
-        MusicPlayerViewModel.MusicItemChanged += OnMusicItemChanged;
+        AudioPlayManager.MusicItemChanged += OnMusicItemChanged;
         AppDomain.CurrentDomain.ProcessExit += CurrentDomain_OnProcessExit;
     }
 
-    public static DrawerStatusViewModel DrawerStatusViewModel => DrawerStatusViewModel.Default;
+    public static DrawerManager DrawerManager => DrawerManager.Instance;
 
     public static string OffsetName => LanguageModel.Lang[nameof(OffsetName)];
 
-    public static MusicPlayerViewModel MusicPlayerViewModel => MusicPlayerViewModel.Current;
+    public static AudioPlayManager AudioPlayManager => AudioPlayManager.Instance;
 
     public static RolledLyricConfig RolledLyric { get; } = ConfigManager.LyricConfig.RolledLyric;
 
@@ -59,7 +59,7 @@ public partial class MusicCoverPageViewModel : NavigationViewModel {
         get;
         set {
             if (SetProperty(ref field, value)) {
-                MusicPlayerViewModel.Position = field;
+                AudioPlayManager.Position = field;
             }
         }
     }
@@ -71,7 +71,7 @@ public partial class MusicCoverPageViewModel : NavigationViewModel {
     public partial IBrush SpectrumVisualizerBrush { get; set; } = Brushes.White;
 
     private void CurrentDomain_OnProcessExit(object? sender, EventArgs e) {
-        MusicPlayerViewModel.MusicItemChanged -= OnMusicItemChanged;
+        AudioPlayManager.MusicItemChanged -= OnMusicItemChanged;
         AppDomain.CurrentDomain.ProcessExit -= CurrentDomain_OnProcessExit;
     }
 
@@ -83,10 +83,10 @@ public partial class MusicCoverPageViewModel : NavigationViewModel {
                 .ConfigureAwait(false)
                 .GetAwaiter()
                 .OnCompleted(() => {
-                    MusicPlayerViewModel.LyricsModel = new LyricsModel {
+                    AudioPlayManager.LyricsModel = new LyricsModel {
                         Offset = args.NewItem.Model.LyricOffset, Lyrics = args.NewItem.Model.Lyrics
                     };
-                    MusicPlayerViewModel.CoverImage = args.NewItem.Model.CoverImage;
+                    AudioPlayManager.CoverImage = args.NewItem.Model.CoverImage;
                     UpdateColorsListAsync(args.NewItem.Model)
                         .ConfigureAwait(false)
                         .GetAwaiter()
@@ -135,7 +135,7 @@ public partial class MusicCoverPageViewModel : NavigationViewModel {
     private void UpdateThemeVariantFromColors() {
         Debug.Assert(Dispatcher.UIThread.CheckAccess());
         if (ColorsList.Count == 0) {
-            DrawerStatusViewModel.Default.MusicPlayerPanelThemeVariant = "Default";
+            DrawerManager.Instance.MusicPlayerPanelThemeVariant = "Default";
 
             return;
         }
@@ -148,7 +148,7 @@ public partial class MusicCoverPageViewModel : NavigationViewModel {
         bool isHighLuminance = avgLuminance > 0.5;
 
         SpectrumVisualizerBrush = isHighLuminance ? _lightThemeBrush : _darkThemeBrush;
-        DrawerStatusViewModel.Default.MusicPlayerPanelThemeVariant = isHighLuminance ? "Light" : "Dark";
+        DrawerManager.Instance.MusicPlayerPanelThemeVariant = isHighLuminance ? "Light" : "Dark";
     }
 
     private static async Task<List<Color>?> GetColorPalette(string imagePath, int colorCount = 5) {
@@ -175,11 +175,11 @@ public partial class MusicCoverPageViewModel : NavigationViewModel {
         switch (e.Delta.Y) {
             // 根据你的需求处理滚轮滚动事件
             case > 0:
-                MusicPlayerViewModel.Volume += 2;
+                AudioPlayManager.Volume += 2;
 
                 break;
             case < 0:
-                MusicPlayerViewModel.Volume -= 2;
+                AudioPlayManager.Volume -= 2;
 
                 break;
         }

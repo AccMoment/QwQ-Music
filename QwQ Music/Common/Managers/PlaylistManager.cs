@@ -1,44 +1,38 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models;
 using QwQ_Music.Models.Enums;
 
 namespace QwQ_Music.Common.Managers;
 
-public readonly record struct PlaylistItemModel {
-    public static readonly PlaylistItemModel RefDefault = new(MusicItemModel.Default, 0);
-
-    private PlaylistItemModel(MusicItemModel model, ulong id) {
-        Model = model;
-        Id = id;
-    }
-
-    public PlaylistItemModel(MusicItemModel model) { Model = model; }
-
-    private static ulong IdAllocator {
-        get => field++;
-        set;
-    } = 1;
-
-    public MusicItemModel Model { get; }
-    public readonly ulong Id = IdAllocator;
-
-    public static void Reset() { IdAllocator = 1; }
-}
-
-public class PlaylistManager : ObservableObject {
-    public static readonly PlaylistManager Instance = new();
+public partial class PlaylistManager : ObservableObject {
+    public static PlaylistManager Instance { get; } = new();
 
     private PlaylistManager() {
-        Replace(
-            PlaylistRepository.ReadAsync()
-                              .ConfigureAwait(false)
-                              .GetAwaiter()
-                              .GetResult()
-                              .Select(path => MusicItemsManager.All.MusicItems[path]));
+        _ = ReplaceAsync(
+                PlaylistRepository.ReadAsync()
+                                  .ConfigureAwait(false)
+                                  .GetAwaiter()
+                                  .GetResult()
+                                  .Select(path => MusicItemsManager.All.MusicItems[path]),
+                false)
+            .ContinueWith(LoggerService.HandleException)
+            .ContinueWith(async Task (_) => {
+                await AudioPlayManager.Instance.SetThisMusicAsync(
+                                          ActualPlaylist.FirstOrDefault(
+                                              item => item.Model.FilePath ==
+                                                      AudioPlayManager.Instance.PlayerConfig.LastPlayedFilePath,
+                                              PlaylistItemModel.RefDefault),
+                                          false)
+                                      .ConfigureAwait(false);
+            })
+            .ConfigureAwait(false);
     }
 
     public PlaylistItemModel CurrentItem { get; set; } = PlaylistItemModel.RefDefault;
@@ -57,7 +51,7 @@ public class PlaylistManager : ObservableObject {
         }
     } = PlayMode.Sequential;
 
-    public int CurrentIndex => SequentialPlaylist.IndexOf(CurrentItem);
+    public int CurrentIndex => ActualPlaylist.IndexOf(CurrentItem);
 
     public AvaloniaList<PlaylistItemModel> ActualPlaylist { get; } = [];
 
@@ -68,7 +62,7 @@ public class PlaylistManager : ObservableObject {
 
     public PlaylistItemModel First() {
         if (ActualPlaylist.Count == 0) {
-            Replace(MusicItemsManager.All.MusicItems.Values);
+            ReplaceAsync(MusicItemsManager.All.MusicItems.Values, true).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         return ActualPlaylist.First();
@@ -101,8 +95,12 @@ public class PlaylistManager : ObservableObject {
         return InsertRange(CurrentItem, musicItems);
     }
 
+    [RelayCommand]
+    public void AddSelectedToNext(IEnumerable<MusicItemModel> musicItems) { InsertRange(CurrentItem, musicItems); }
+
     public void Remove(PlaylistItemModel musicItem) { RemoveRange([musicItem]); }
 
+    [RelayCommand]
     public void RemoveRange(IEnumerable<PlaylistItemModel> musicItems) {
         PlaylistItemModel[] items = musicItems.ToArray();
         items.AsParallel().ForAll(item => SequentialPlaylist.Remove(item));
@@ -111,8 +109,9 @@ public class PlaylistManager : ObservableObject {
 
     public void RemoveAllOf(IEnumerable<MusicItemModel> musicItems) {
         MusicItemModel[] items = musicItems.ToArray();
-        PlaylistItemModel[] playlistItems =
-            SequentialPlaylist.AsParallel().Where(item => items.Contains(item.Model)).ToArray();
+        PlaylistItemModel[] playlistItems = SequentialPlaylist.AsParallel()
+                                                              .Where(item => Enumerable.Contains(items, item.Model))
+                                                              .ToArray();
         playlistItems.AsParallel().ForAll(item => SequentialPlaylist.Remove(item));
         ActualPlaylist.RemoveAll(playlistItems);
     }
@@ -123,13 +122,16 @@ public class PlaylistManager : ObservableObject {
         PlaylistItemModel.Reset();
     }
 
-    public void Replace(IEnumerable<MusicItemModel> musicItems) {
+    public async Task ReplaceAsync(IEnumerable<MusicItemModel> musicItems, bool isPlayNow) {
+        AudioPlayManager.Instance.Pause();
         Clear();
         SequentialPlaylist.AddRange(musicItems.Select(item => new PlaylistItemModel(item)));
-        // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
-        if (PlayMode is PlayMode.Random)
-            ActualPlaylist.AddRange(SequentialPlaylist.Shuffle());
-        else
-            ActualPlaylist.AddRange(SequentialPlaylist);
+        ActualPlaylist.AddRange(PlayMode is PlayMode.Random ? SequentialPlaylist.Shuffle() : SequentialPlaylist);
+        if (isPlayNow) {
+            await AudioPlayManager.Instance.PlayThisMusicAsync(Instance.First()).ConfigureAwait(false);
+        }
     }
+
+    [RelayCommand]
+    public Task ReplaceAndPlayAsync(IEnumerable<MusicItemModel> musicItems) { return ReplaceAsync(musicItems, true); }
 }

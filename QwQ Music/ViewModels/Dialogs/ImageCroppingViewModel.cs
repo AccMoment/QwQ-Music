@@ -11,7 +11,7 @@ namespace QwQ_Music.ViewModels.Dialogs;
 
 public partial class ImageCroppingViewModel(Bitmap sourceImage) : ObservableObject, IDialogContext
 {
-    public Bitmap? SourceImage { get; set; } = sourceImage;
+    public Bitmap SourceImage { get; set; } = sourceImage;
 
     [ObservableProperty] public partial Bitmap? CroppedImage { get; set; }
 

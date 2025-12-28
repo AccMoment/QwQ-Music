@@ -19,13 +19,53 @@ public static class CacheManager {
         [AudioQualityLevel.HR] = GetBuiltInImage("HR.png")
     };
 
-    public static Bitmap NotExist { get; } = GetBuiltInImage("没有图片哦.webp");
+    public static Bitmap NotExist {
+        get {
+            try {
+                _ = field.PixelSize;
+            } catch (NullReferenceException) {
+                field = GetBuiltInImage("没有图片哦.webp");
+            }
 
-    public static Bitmap Loading { get; } = GetBuiltInImage("图片绘制中.webp");
+            return field;
+        }
+    } = GetBuiltInImage("没有图片哦.webp");
 
-    public static Bitmap Damaged { get; } = GetBuiltInImage("图片压坏了.webp");
+    public static Bitmap Loading {
+        get {
+            try {
+                _ = field.PixelSize;
+            } catch (NullReferenceException) {
+                field = GetBuiltInImage("图片绘制中.webp");
+            }
 
-    public static Bitmap Default { get; } = GetBuiltInImage("看我.webp");
+            return field;
+        }
+    } = GetBuiltInImage("图片绘制中.webp");
+
+    public static Bitmap Damaged {
+        get {
+            try {
+                _ = field.PixelSize;
+            } catch (NullReferenceException) {
+                field = GetBuiltInImage("图片压坏了.webp");
+            }
+
+            return field;
+        }
+    } = GetBuiltInImage("图片压坏了.webp");
+
+    public static Bitmap Default {
+        get {
+            try {
+                _ = field.PixelSize;
+            } catch (NullReferenceException) {
+                field = GetBuiltInImage("看我.webp");
+            }
+
+            return field;
+        }
+    } = GetBuiltInImage("看我.webp");
 
     public static WeakCache<string, Bitmap> ImageCache { get; } = new();
 
@@ -64,7 +104,7 @@ public static class CacheManager {
             return new Bitmap(stream);
         } catch (Exception) {
             // 如果资源加载失败，返回一个空位图
-            var bitmap = new RenderTargetBitmap(new PixelSize(100, 100));
+            var bitmap = new RenderTargetBitmap(new PixelSize(1, 1));
 
             return bitmap;
         }
@@ -89,7 +129,12 @@ public static class CacheManager {
             image != null &&
             image != Default &&
             image != Loading) {
-            return image;
+            try {
+                _ = image.PixelSize;
+                return image;
+            } catch (NullReferenceException) {
+                ImageCache.Remove($"{idType}:{id}");
+            }
         }
 
 
@@ -99,7 +144,7 @@ public static class CacheManager {
 
                 if (bitmap != null) {
                     ImageCache[$"{idType}:{id}"] = bitmap;
-                    await LoggerService.InfoAsync($"加载了{id}的{idType}").ConfigureAwait(false);
+                    await LoggerService.InfoAsync($"加载了{idType}({id})的{cacheType}").ConfigureAwait(false);
                     callIfExist?.Invoke();
                 } else {
                     ImageCache[$"{idType}:{id}"] = NotExist;
@@ -118,7 +163,7 @@ public static class CacheManager {
         string idType,
         string cacheType,
         Uri? uri,
-        Action? callIfExist = null,
+        Action? callIfExist,
         int defaultValue = 128) {
         return TryLoadCache(
             id,
@@ -135,7 +180,7 @@ public static class CacheManager {
         string idType,
         string cacheType,
         string? path,
-        Action? callIfExist = null,
+        Action? callIfExist,
         int defaultValue = -1) {
         return TryLoadCache(id, idType, cacheType, path, defaultValue, ImageHelper.LoadFromFileAsync, callIfExist);
     }

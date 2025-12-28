@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using ATL;
 using Avalonia.Media.Imaging;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
@@ -28,6 +28,7 @@ public partial class MusicItemModel : ObservableObject {
 
     [ObservableProperty]
     public partial string Artists { get; set; } = "未知歌手";
+    //TODO SEPARATE ARTISTS
 
     [ObservableProperty]
     public partial string? Composer { get; set; }
@@ -66,7 +67,12 @@ public partial class MusicItemModel : ObservableObject {
     public string Comment { get; set; } = "";
 
     public Bitmap CoverImage =>
-        CacheManager.TryLoadCacheFromFile(CoverId, "音频", "封面", StaticConfig.GetMusicCoverFullPath(CoverId));
+        CacheManager.TryLoadCacheFromFile(
+            CoverId,
+            "音频",
+            "封面",
+            StaticConfig.GetMusicCoverFullPath(CoverId),
+            () => OnPropertyChanged());
 
     [ObservableProperty]
     public partial string Remarks { get; set; } = "";
@@ -88,6 +94,9 @@ public partial class MusicItemModel : ObservableObject {
             CacheManager.DeleteImage(CoverId);
         CoverId = null;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ClearRecord() { Record = TimeSpan.Zero; }
 
     public async Task<Track?> GetTrackAsync() {
         if (Extension == AudioFileValidator.AudioFormatsExtendToNameMap[AudioFileValidator.ExtendAudioFormats.Ncm]) {
@@ -153,7 +162,7 @@ public partial class MusicItemModel : ObservableObject {
         fileInfo ??= new FileInfo(FilePath);
 
         ModificationTime = fileInfo.LastWriteTimeUtc;
-
+        InsertTime = DateTime.Now;
         FileSize = StringFormatter.FormatFileSize(fileInfo.Length);
     }
 
@@ -230,33 +239,36 @@ public partial class MusicItemModel : ObservableObject {
 
     public async Task LoadCurrentAsync() {
         IsCurrent = true;
+        OriginalCover = CacheManager.Loading;
         if (string.IsNullOrWhiteSpace(FilePath) || await GetTrackAsync().ConfigureAwait(false) is not { } track)
             return;
         Track = track;
-        OriginalCover = new Bitmap(new MemoryStream(track.EmbeddedPictures[0].PictureData));
+        OriginalCover = track.EmbeddedPictures.Count > 0 ?
+            new Bitmap(new MemoryStream(track.EmbeddedPictures[0].PictureData)) :
+            CacheManager.NotExist;
+
         Lyrics = await LoadLyricsAsync(track).ConfigureAwait(false);
     }
 
     public void DisposeCurrent() {
         IsCurrent = false;
         Track = null;
-        OriginalCover = null;
+        OriginalCover = CacheManager.Loading;
         Lyrics = LyricsData.Loading;
     }
 
     #region 播放歌曲前加载的属性
 
-    public Bitmap? OriginalCover {
+    public Bitmap OriginalCover {
         get;
         private set {
-            if (value is null ||
-                value.Size is { AspectRatio: 1 } ||
-                ConfigManager.UiConfig.CoverConfig.AllowNonSquareCover)
+            if (value.Size is { AspectRatio: 1 } || ConfigManager.UiConfig.CoverConfig.AllowNonSquareCover)
                 field = value;
             else
                 field = BitmapCropper.Crop(value, 1.0);
+            OnPropertyChanged();
         }
-    }
+    } = CacheManager.Default;
 
     public LyricsData Lyrics { get; private set; } = LyricsData.Loading;
 
@@ -264,4 +276,25 @@ public partial class MusicItemModel : ObservableObject {
     public Track? Track { get; private set; }
 
     #endregion 播放歌曲前加载的属性
+}
+
+public readonly record struct PlaylistItemModel {
+    public static readonly PlaylistItemModel RefDefault = new(MusicItemModel.Default, 0);
+
+    private PlaylistItemModel(MusicItemModel model, ulong id) {
+        Model = model;
+        Id = id;
+    }
+
+    public PlaylistItemModel(MusicItemModel model) { Model = model; }
+
+    private static ulong IdAllocator {
+        get => field++;
+        set;
+    } = 1;
+
+    public MusicItemModel Model { get; }
+    public readonly ulong Id = IdAllocator;
+
+    public static void Reset() { IdAllocator = 1; }
 }

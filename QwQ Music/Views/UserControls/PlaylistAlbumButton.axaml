@@ -4,7 +4,7 @@
     xmlns:custom="clr-namespace:QwQ_Music.Views.UserControls"
     xmlns:models="clr-namespace:QwQ_Music.Models"
     xmlns:managers="clr-namespace:QwQ_Music.Common.Managers"
-    x:Class="QwQ_Music.Views.UserControls.MusicAlbumButton"
+    x:Class="QwQ_Music.Views.UserControls.PlaylistAlbumButton"
     Classes="None"
     Foreground="{DynamicResource SemiColorBackground4}"
     Height="50"
@@ -12,13 +12,13 @@
     Width="50"
     ClipToBounds="True">
     <custom:MusicAlbumButton.Template>
-        <ControlTemplate x:DataType="models:MusicItemModel">
+        <ControlTemplate x:DataType="models:PlaylistItemModel">
             <Panel>
-                <Image Source="{Binding CoverImage}" />
+                <Image Source="{Binding Model.CoverImage}" />
                 <Panel IsVisible="{TemplateBinding ExternalPointerOver}">
                     <Border Background="#33000000" Name="CoverLayer" />
                     <PathIcon Name="PART_PlayIcon" Data="{StaticResource PlayIconData}"
-                              IsVisible="{Binding !IsCurrent}" />
+                              IsVisible="{Binding !Model.IsCurrent}" />
                     <Panel IsVisible="{Binding !#PART_PlayIcon.IsVisible}">
                         <PathIcon Name="PART_PauseIcon"
                                   IsVisible="{Binding (managers:AudioPlayManager).Instance.IsPlaying}" />

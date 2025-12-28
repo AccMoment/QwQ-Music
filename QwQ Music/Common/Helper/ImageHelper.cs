@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Utilities;
 
@@ -26,13 +27,14 @@ public static class ImageHelper {
         using var httpClient = new HttpClient();
 
         try {
-            var response = await httpClient.GetAsync(url);
+            var response = await httpClient.GetAsync(url).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
-            byte[] data = await response.Content.ReadAsByteArrayAsync();
+            byte[] data = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
 
             return new Bitmap(new MemoryStream(data));
         } catch (HttpRequestException ex) {
-            await LoggerService.ErrorAsync($"An error occurred while downloading image '{url}' : {ex.Message}");
+            await LoggerService.ErrorAsync($"An error occurred while downloading image '{url}' : {ex.Message}")
+                               .ConfigureAwait(false);
 
             return null;
         }
@@ -48,16 +50,17 @@ public static class ImageHelper {
         using var httpClient = new HttpClient();
 
         try {
-            var response = await httpClient.GetAsync(url);
+            var response = await httpClient.GetAsync(url).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
-            byte[] data = await response.Content.ReadAsByteArrayAsync();
+            byte[] data = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
 
             // 压缩图片
             var originalBitmap = new Bitmap(new MemoryStream(data));
 
-            return await BitmapCompression.CompressBitmapAsync(originalBitmap, maxSizeInBytes);
+            return await BitmapCompression.CompressBitmapAsync(originalBitmap, maxSizeInBytes).ConfigureAwait(false);
         } catch (HttpRequestException ex) {
-            await LoggerService.ErrorAsync($"An error occurred while downloading image '{url}' : {ex.Message}");
+            await LoggerService.ErrorAsync($"An error occurred while downloading image '{url}' : {ex.Message}")
+                               .ConfigureAwait(false);
 
             return null;
         }
@@ -73,14 +76,15 @@ public static class ImageHelper {
         using var httpClient = new HttpClient();
 
         try {
-            var response = await httpClient.GetAsync(url);
+            var response = await httpClient.GetAsync(url).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
-            byte[] data = await response.Content.ReadAsByteArrayAsync();
+            byte[] data = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
 
             // 压缩图片
-            return await Task.Run(() => Bitmap.DecodeToWidth(new MemoryStream(data), width));
+            return await Task.Run(() => Bitmap.DecodeToWidth(new MemoryStream(data), width)).ConfigureAwait(false);
         } catch (HttpRequestException ex) {
-            await LoggerService.ErrorAsync($"An error occurred while downloading image '{url}' : {ex.Message}");
+            await LoggerService.ErrorAsync($"An error occurred while downloading image '{url}' : {ex.Message}")
+                               .ConfigureAwait(false);
 
             return null;
         }

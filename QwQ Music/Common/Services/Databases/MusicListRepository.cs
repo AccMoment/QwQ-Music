@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Avalonia.Logging;
 using QwQ_Music.Common.Interfaces;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Models;
@@ -127,6 +126,7 @@ public class MusicListRepository : IDatabaseRepository<MusicListModel> {
             var model = new MusicListModel {
                 Name = (string)dict[nameof(MusicListModel.Name)]!,
                 Description = (string)dict[nameof(MusicListModel.Description)]!,
+                
                 CreateTime =
                     new DateTime(
                         ParseHelpers.TryParse<long>(dict, nameof(MusicListModel.CreateTime)) ?? DateTime.Now.Ticks),

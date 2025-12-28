@@ -6,7 +6,7 @@ namespace QwQ_Music.ViewModels.Windows;
 
 public class DesktopLyricsWindowViewModel : ViewModelBase
 {
-    public static MusicPlayerViewModel MusicPlayerViewModel => MusicPlayerViewModel.Current;
+    public static AudioPlayManager AudioPlayManager => AudioPlayManager.Instance;
 
     public static DesktopLyricConfig LyricConfig => ConfigManager.LyricConfig.DesktopLyric;
 }

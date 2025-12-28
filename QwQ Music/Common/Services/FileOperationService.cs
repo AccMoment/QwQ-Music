@@ -172,7 +172,7 @@ public static class FileOperationService
             SuggestedFileName = suggestedFileName
         };
 
-        var file = await topLevel.StorageProvider.SaveFilePickerAsync(options);
+        var file = await topLevel.StorageProvider.SaveFilePickerAsync(options).ConfigureAwait(false);
 
         return file?.Path.LocalPath;
     }
@@ -196,7 +196,7 @@ public static class FileOperationService
                     }
                 ]
             }
-        );
+        ).ConfigureAwait(false);
 
         if (files.Count <= 0)
             return null;

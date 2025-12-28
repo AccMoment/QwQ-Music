@@ -13,13 +13,13 @@ public partial class MusicPlayerTrayViewModel : ViewModelBase
 {
     public MusicPlayerTrayViewModel()
     {
-        MusicPlayerViewModel.PlaybackStateChanged += MusicPlayerViewModelOnPlaybackStateChanged;
+        AudioPlayManager.PlaybackStateChanged += AudioPlayManagerOnPlaybackStateChanged;
 
         NavigateService.CurrentViewChanged += CurrentViewChanged;
         AppDomain.CurrentDomain.ProcessExit += CurrentDomain_OnProcessExit;
     }
 
-    public static DrawerStatusViewModel DrawerStatusViewModel => DrawerStatusViewModel.Default;
+    public static DrawerManager DrawerManager => DrawerManager.Instance;
 
     public RolledLyricConfig RolledLyric { get; } = ConfigManager.LyricConfig.RolledLyric;
 
@@ -29,7 +29,7 @@ public partial class MusicPlayerTrayViewModel : ViewModelBase
 
     [ObservableProperty] public partial bool IsSoundEffectView { get; set; }
 
-    public static MusicPlayerViewModel MusicPlayerViewModel => MusicPlayerViewModel.Current;
+    public static AudioPlayManager AudioPlayManager => AudioPlayManager.Instance;
 
     private void CurrentViewChanged(string name)
     {
@@ -38,7 +38,7 @@ public partial class MusicPlayerTrayViewModel : ViewModelBase
 
     private void CurrentDomain_OnProcessExit(object? sender, EventArgs e)
     {
-        MusicPlayerViewModel.PlaybackStateChanged -= MusicPlayerViewModelOnPlaybackStateChanged;
+        AudioPlayManager.PlaybackStateChanged -= AudioPlayManagerOnPlaybackStateChanged;
         NavigateService.CurrentViewChanged -= CurrentViewChanged;
         AppDomain.CurrentDomain.ProcessExit -= CurrentDomain_OnProcessExit;
     }
@@ -52,7 +52,7 @@ public partial class MusicPlayerTrayViewModel : ViewModelBase
     [RelayCommand]
     private static void ResetPlaybackSpeed()
     {
-        MusicPlayerViewModel.Speed = 1.0f;
+        AudioPlayManager.Speed = 1.0f;
     }
 
     [RelayCommand]
@@ -65,11 +65,11 @@ public partial class MusicPlayerTrayViewModel : ViewModelBase
         {
             // 根据你的需求处理滚轮滚动事件
             case > 0:
-                MusicPlayerViewModel.Volume += 2;
+                AudioPlayManager.Volume += 2;
 
                 break;
             case < 0:
-                MusicPlayerViewModel.Volume -= 2;
+                AudioPlayManager.Volume -= 2;
 
                 break;
         }
@@ -83,11 +83,11 @@ public partial class MusicPlayerTrayViewModel : ViewModelBase
         switch (e.Delta.Y)
         {
             case > 0:
-                MusicPlayerViewModel.Speed += 0.01f;
+                AudioPlayManager.Speed += 0.01f;
 
                 break;
             case < 0:
-                MusicPlayerViewModel.Speed -= 0.01f;
+                AudioPlayManager.Speed -= 0.01f;
 
                 break;
         }
@@ -96,16 +96,16 @@ public partial class MusicPlayerTrayViewModel : ViewModelBase
     [RelayCommand]
     private static void PlaySpeedUp()
     {
-        MusicPlayerViewModel.Speed += 0.1f;
+        AudioPlayManager.Speed += 0.1f;
     }
 
     [RelayCommand]
     private static void PlaySpeedDown()
     {
-        MusicPlayerViewModel.Speed -= 0.1f;
+        AudioPlayManager.Speed -= 0.1f;
     }
 
-    private void MusicPlayerViewModelOnPlaybackStateChanged(object? sender, bool e)
+    private void AudioPlayManagerOnPlaybackStateChanged(object? sender, bool e)
     {
         if (e)
             return;

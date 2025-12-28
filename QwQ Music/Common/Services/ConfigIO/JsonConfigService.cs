@@ -44,7 +44,7 @@ public class JsonConfigService(JsonSerializerContext jsonContext, string savePat
         EnsureDirectoryExists(fullPath);
 
         string json = JsonSerializer.Serialize(data, typeof(T), jsonContext);
-        await File.WriteAllTextAsync(fullPath, json);
+        await File.WriteAllTextAsync(fullPath, json).ConfigureAwait(false);
     }
 
     // 同步加载
@@ -65,7 +65,7 @@ public class JsonConfigService(JsonSerializerContext jsonContext, string savePat
         string fullPath = GetFullPath(fileName);
         if (!File.Exists(fullPath)) return default;
 
-        string json = await File.ReadAllTextAsync(fullPath);
+        string json = await File.ReadAllTextAsync(fullPath).ConfigureAwait(false);
         return jsonContext.GetTypeInfo(typeof(T)) is JsonTypeInfo<T> info
             ? JsonSerializer.Deserialize(json, info)
             : default;

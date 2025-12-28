@@ -53,13 +53,13 @@
 
     <controls:ShaderEffectControl Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" Grid.ColumnSpan="2"
                                   Colors="{Binding ColorsList}"
-                                  IsEnableAnimation="{Binding DrawerStatusViewModel.IsMusicPlayerPanelVisible}"
+                                  IsEnableAnimation="{Binding DrawerManager.IsMusicPlayerPanelVisible}"
                                   PerformanceMode="HighQuality"
                                   ShaderCode="{Binding ShaderCode}" />
 
     <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Name="TopPanel" Background="Transparent">
         <u:IconButton
-            Command="{Binding DrawerStatusViewModel.ToggleMusicPlayerPageCommand}"
+            Command="{Binding DrawerManager.ToggleMusicPlayerPageCommand}"
             HorizontalAlignment="Left"
             Icon="{StaticResource SemiIconChevronDown}"
             Margin="5" />
@@ -78,7 +78,7 @@
                 HorizontalAlignment="Center">
             <Border ClipToBounds="True" CornerRadius="20">
                 <!--  专辑封面 Image 控件  -->
-                <Image Source="{Binding MusicPlayerViewModel.CoverImage}" />
+                <Image Source="{Binding AudioPlayManager.CurrentMusicItem.Model.OriginalCover}" />
             </Border>
         </Border>
 
@@ -90,12 +90,12 @@
 
             <TextBlock FontSize="18"
                        FontWeight="Bold"
-                       Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.Title}"
+                       Text="{Binding AudioPlayManager.CurrentMusicItem.Model.Title}"
                        TextTrimming="CharacterEllipsis"
                        ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
             <TextBlock Classes="Tertiary"
                        FontSize="15"
-                       Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.Artists}"
+                       Text="{Binding AudioPlayManager.CurrentMusicItem.Model.Artists}"
                        TextTrimming="CharacterEllipsis"
                        ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
 
@@ -104,11 +104,11 @@
     </Grid>
 
     <controls:LyricsControl ClickedLyricTime="{Binding SelectLyricsTimePoint}"
-                            CurrentLyricIndex="{Binding MusicPlayerViewModel.LyricsModel.CurrentIndex}"
+                            CurrentLyricIndex="{Binding AudioPlayManager.LyricsModel.CurrentIndex}"
                             Grid.Row="1" Grid.Column="1"
                             Margin="10,20"
                             LyricTextAlignment="{Binding RolledLyric.LyricTextAlignment}"
-                            LyricsData="{Binding MusicPlayerViewModel.LyricsModel.Lyrics}"
+                            LyricsData="{Binding AudioPlayManager.LyricsModel.Lyrics}"
                             ShowTranslation="{Binding RolledLyric.ShowTranslation}"
                             TextMargin="30,10"
                             LineSpacing="{Binding RolledLyric.LyricsLineSpacing}"
@@ -199,17 +199,17 @@
 
             <!--  刷新播放  -->
             <Button Classes="Icon"
-                    Command="{Binding MusicPlayerViewModel.RefreshPlaybackCommand}"
+                    Command="{Binding AudioPlayManager.ReplayCommand}"
                     Foreground="{DynamicResource TextBlockDefaultForeground}"
                     Height="25"
-                    IsEnabled="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.FilePath, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=''}"
+                    IsEnabled="{Binding AudioPlayManager.CurrentMusicItem.Model.FilePath, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=''}"
                     behaviors:DynamicCornerBehavior.IsEnabled="True">
                 <PathIcon Data="{StaticResource SemiIconRefresh2}" Margin="5" />
             </Button>
 
             <!--  上一首  -->
             <Button Classes="Icon"
-                    Command="{Binding MusicPlayerViewModel.PreviousSongCommand}"
+                    Command="{Binding AudioPlayManager.PreviousSongCommand}"
                     Foreground="{DynamicResource TextBlockDefaultForeground}"
                     behaviors:DynamicCornerBehavior.IsEnabled="True">
                 <PathIcon
@@ -223,7 +223,7 @@
 
             <!--  下一首  -->
             <Button Classes="Icon"
-                    Command="{Binding MusicPlayerViewModel.NextSongCommand}"
+                    Command="{Binding AudioPlayManager.NextSongCommand}"
                     Foreground="{DynamicResource TextBlockDefaultForeground}"
                     behaviors:DynamicCornerBehavior.IsEnabled="True">
                 <PathIcon Data="{StaticResource PlayIconData}"
@@ -232,11 +232,11 @@
 
             <!--  播放模式  -->
             <Button Classes="Icon"
-                    Command="{Binding MusicPlayerViewModel.TogglePlayModeCommand}"
+                    Command="{Binding AudioPlayManager.TogglePlayModeCommand}"
                     Foreground="{DynamicResource TextBlockDefaultForeground}"
                     Height="25"
                     ToolTip.Placement="Top"
-                    ToolTip.Tip="{Binding MusicPlayerViewModel.PlayModeName}"
+                    ToolTip.Tip="{Binding AudioPlayManager.PlayModeName}"
                     ToolTip.VerticalOffset="-10"
                     behaviors:DynamicCornerBehavior.IsEnabled="True">
 
@@ -244,7 +244,7 @@
 
                     <Interaction.Behaviors>
 
-                        <DataTrigger Binding="{Binding MusicPlayerViewModel.PlayerConfig.PlayMode}"
+                        <DataTrigger Binding="{Binding AudioPlayManager.PlayerConfig.PlayMode}"
                                      Value="{x:Static enums:PlayMode.Sequential}">
 
                             <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
@@ -253,7 +253,7 @@
                                                           Value="{StaticResource Sequential}" />
                         </DataTrigger>
 
-                        <DataTrigger Binding="{Binding MusicPlayerViewModel.PlayerConfig.PlayMode}"
+                        <DataTrigger Binding="{Binding AudioPlayManager.PlayerConfig.PlayMode}"
                                      Value="{x:Static enums:PlayMode.Random}">
 
                             <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
@@ -263,7 +263,7 @@
 
                         </DataTrigger>
 
-                        <DataTrigger Binding="{Binding MusicPlayerViewModel.PlayerConfig.PlayMode}"
+                        <DataTrigger Binding="{Binding AudioPlayManager.PlayerConfig.PlayMode}"
                                      Value="{x:Static enums:PlayMode.SingleLoop}">
 
                             <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
@@ -302,7 +302,7 @@
 
             <Button
                 Classes="Icon"
-                Classes.Full="{Binding MusicPlayerViewModel.Volume,Converter={StaticResource ValueComparisonConverter},ConverterParameter='@VALUE > 0'}"
+                Classes.Full="{Binding AudioPlayManager.Volume,Converter={StaticResource ValueComparisonConverter},ConverterParameter='@VALUE > 0'}"
                 ToolTip.Placement="Top"
                 ToolTip.VerticalOffset="-10">
 
@@ -330,7 +330,7 @@
                             <Template>
                                 <TextBlock>
                                     <Run Text="当前音量：" />
-                                    <Run Text="{Binding MusicPlayerViewModel.Volume}" />
+                                    <Run Text="{Binding AudioPlayManager.Volume}" />
                                     <Run Text="%" />
                                 </TextBlock>
                             </Template>
@@ -352,11 +352,11 @@
                 </Button.Styles>
 
                 <PathIcon Height="15"
-                          Classes.Half="{Binding MusicPlayerViewModel.Volume,Converter={StaticResource ValueComparisonConverter},
+                          Classes.Half="{Binding AudioPlayManager.Volume,Converter={StaticResource ValueComparisonConverter},
                                 ConverterParameter='@VALUE > 0'}"
-                          Classes.Full="{Binding MusicPlayerViewModel.Volume,Converter={StaticResource ValueComparisonConverter},
+                          Classes.Full="{Binding AudioPlayManager.Volume,Converter={StaticResource ValueComparisonConverter},
                                                                                                   ConverterParameter='@VALUE > 50'}"
-                          Classes.Empty="{Binding MusicPlayerViewModel.Volume,Converter={StaticResource ValueComparisonConverter},
+                          Classes.Empty="{Binding AudioPlayManager.Volume,Converter={StaticResource ValueComparisonConverter},
                                                                                                                                  ConverterParameter='@VALUE == 0'}" />
 
                 <Button.Flyout>
@@ -370,17 +370,17 @@
                                        FontWeight="Bold"
                                        HorizontalAlignment="Center"
                                        Margin="0,0,0,3"
-                                       Text="{Binding MusicPlayerViewModel.Volume}" />
+                                       Text="{Binding AudioPlayManager.Volume}" />
 
                             <Slider Grid.Row="1"
                                     HorizontalAlignment="Center"
                                     Maximum="100"
                                     Orientation="Vertical"
-                                    Value="{Binding MusicPlayerViewModel.Volume}" />
+                                    Value="{Binding AudioPlayManager.Volume}" />
 
                             <Button Classes="Icon"
-                                    Classes.Silent="{Binding MusicPlayerViewModel.IsMuted}"
-                                    Command="{Binding MusicPlayerViewModel.ToggleMuteCommand}"
+                                    Classes.Silent="{Binding AudioPlayManager.IsMuted}"
+                                    Command="{Binding AudioPlayManager.ToggleMuteCommand}"
                                     CornerRadius="8"
                                     Grid.Row="2"
                                     Margin="8"
@@ -461,7 +461,7 @@
 
                                                         <TextBlock Text="{Binding OffsetName}" />
                                                         <u:NumericIntUpDown InnerRightContent="ms"
-                                                                            Value="{Binding MusicPlayerViewModel.LyricOffset}" />
+                                                                            Value="{Binding AudioPlayManager.LyricOffset}" />
 
 
                                                         <CheckBox Content="显示翻译"
@@ -602,7 +602,7 @@
             </Button>
 
             <Button Classes="Icon"
-                    Command="{Binding DrawerStatusViewModel.ShowMusicPlaylistCommand}">
+                    Command="{Binding DrawerManager.ShowMusicPlaylistCommand}">
                 <PathIcon
                     Data="{StaticResource SemiIconDescend2}" />
             </Button>
@@ -612,8 +612,8 @@
         <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3">
 
             <!--  进度条  -->
-            <Slider Maximum="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.Duration.TotalSeconds}"
-                    Value="{Binding MusicPlayerViewModel.Position}">
+            <Slider Maximum="{Binding AudioPlayManager.CurrentMusicItem.Model.Duration.TotalSeconds}"
+                    Value="{Binding AudioPlayManager.Position}">
                 <Slider.Transitions>
                     <Transitions>
                         <BrushTransition Duration="0:0:0.2" Property="Foreground" />
@@ -626,11 +626,11 @@
             <Panel>
 
                 <TextBlock FontSize="13"
-                           Text="{Binding MusicPlayerViewModel.Position, Mode=OneWay, Converter={StaticResource SecondsToStringConverter}}" />
+                           Text="{Binding AudioPlayManager.Position, Mode=OneWay, Converter={StaticResource SecondsToStringConverter}}" />
 
                 <TextBlock FontSize="13"
                            HorizontalAlignment="Right"
-                           Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.Duration, Mode=OneWay, Converter={StaticResource TruncateDecimalConverter}}" />
+                           Text="{Binding AudioPlayManager.CurrentMusicItem.Model.Duration, Mode=OneWay, Converter={StaticResource TruncateDecimalConverter}}" />
 
             </Panel>
         </StackPanel>

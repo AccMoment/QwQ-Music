@@ -1,114 +1,118 @@
-<Button x:Class="QwQ_Music.Views.UserControls.MusicPlayButton"
-        x:DataType="userControls:MusicPlayButtonViewModel"
-        xmlns="https://github.com/avaloniaui"
+<Button xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:userControls="clr-namespace:QwQ_Music.ViewModels.UserControls"
+        xmlns:custom="clr-namespace:QwQ_Music.ViewModels.UserControls"
         xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
+        x:Class="QwQ_Music.Views.UserControls.MusicPlayButton"
+        x:DataType="custom:MusicPlayButtonViewModel"
         Classes="None"
         HorizontalAlignment="Center" VerticalAlignment="Center"
         behaviors:DynamicCornerBehavior.IsEnabled="True"
-        Command="{Binding MusicPlayerViewModel.TogglePlayStaceCommand}"
-        Name="PlayButton">
+        Command="{Binding AudioPlayManager.TogglePlayStateCommand}">
+    <Button.Template>
+        <ControlTemplate>
+            <Panel>
+                <Border
+                    Background="#FF51C5FF"
+                    Classes.Reduction="{TemplateBinding IsPointerOver}"
+                    Classes.Run="{TemplateBinding IsPointerOver}"
+                    ClipToBounds="True"
+                    Padding="{Binding PlayButtonPadding, Mode=OneWayToSource}"
+                    behaviors:DynamicCornerBehavior.IsEnabled="True">
+                    <Border.RenderTransform>
+                        <RotateTransform Angle="{Binding PlayButtonAngle, Mode=OneWayToSource}" />
+                    </Border.RenderTransform>
 
-    <Panel>
-        <Border
-            Background="#FF51C5FF"
-            Classes.Reduction="{Binding !#PlayButton.IsPointerOver}"
-            Classes.Run="{Binding #PlayButton.IsPointerOver}"
-            ClipToBounds="True"
-            Padding="{Binding PlayButtonPadding, Mode=OneWayToSource}"
-            behaviors:DynamicCornerBehavior.IsEnabled="True">
-            <Border.RenderTransform>
-                <RotateTransform Angle="{Binding PlayButtonAngle, Mode=OneWayToSource}" />
-            </Border.RenderTransform>
+                    <Border.Styles>
 
-            <Border.Styles>
+                        <Style Selector="Border.Reduction">
+                            <Style.Animations>
+                                <Animation
+                                    Duration="0:0:1"
+                                    Easing="QuadraticEaseIn"
+                                    FillMode="Forward">
+                                    <KeyFrame Cue="0%" KeySpline="0.3,1.3,1,0.13">
+                                        <Setter Property="RotateTransform.Angle" Value="{Binding PlayButtonAngle}" />
+                                        <Setter Property="Padding" Value="{Binding PlayButtonPadding}" />
+                                    </KeyFrame>
+                                    <KeyFrame Cue="100%" KeySpline="0.3,1.3,1,1.13">
+                                        <Setter Property="RotateTransform.Angle" Value="0" />
+                                        <Setter Property="Padding" Value="0" />
+                                    </KeyFrame>
+                                </Animation>
+                            </Style.Animations>
+                        </Style>
 
-                <Style Selector="Border.Reduction">
-                    <Style.Animations>
-                        <Animation
-                            Duration="0:0:1"
-                            Easing="QuadraticEaseIn"
-                            FillMode="Forward">
-                            <KeyFrame Cue="0%" KeySpline="0.3,1.3,1,0.13">
-                                <Setter Property="RotateTransform.Angle" Value="{Binding PlayButtonAngle}" />
-                                <Setter Property="Padding" Value="{Binding PlayButtonPadding}" />
-                            </KeyFrame>
-                            <KeyFrame Cue="100%" KeySpline="0.3,1.3,1,1.13">
-                                <Setter Property="RotateTransform.Angle" Value="0" />
-                                <Setter Property="Padding" Value="0" />
-                            </KeyFrame>
-                        </Animation>
-                    </Style.Animations>
-                </Style>
+                        <Style Selector="Border.Run">
+                            <Style.Animations>
+                                <Animation
+                                    Duration="0:0:1"
+                                    Easing="QuadraticEaseIn"
+                                    FillMode="Forward">
+                                    <KeyFrame Cue="0%" KeySpline="0.3,1.3,1,0.13">
+                                        <Setter Property="RotateTransform.Angle" Value="{Binding PlayButtonAngle}" />
+                                        <Setter Property="Padding" Value="{Binding PlayButtonPadding}" />
+                                    </KeyFrame>
+                                    <KeyFrame Cue="100%" KeySpline="0.3,1.3,1,1.13">
+                                        <Setter Property="RotateTransform.Angle" Value="180" />
+                                        <Setter Property="Padding" Value="5" />
+                                    </KeyFrame>
+                                </Animation>
+                            </Style.Animations>
+                        </Style>
 
-                <Style Selector="Border.Run">
-                    <Style.Animations>
-                        <Animation
-                            Duration="0:0:1"
-                            Easing="QuadraticEaseIn"
-                            FillMode="Forward">
-                            <KeyFrame Cue="0%" KeySpline="0.3,1.3,1,0.13">
-                                <Setter Property="RotateTransform.Angle" Value="{Binding PlayButtonAngle}" />
-                                <Setter Property="Padding" Value="{Binding PlayButtonPadding}" />
-                            </KeyFrame>
-                            <KeyFrame Cue="100%" KeySpline="0.3,1.3,1,1.13">
-                                <Setter Property="RotateTransform.Angle" Value="180" />
-                                <Setter Property="Padding" Value="5" />
-                            </KeyFrame>
-                        </Animation>
-                    </Style.Animations>
-                </Style>
+                    </Border.Styles>
 
-            </Border.Styles>
+                    <Ellipse Fill="#FF7BE0FF" Margin="3">
+                        <Ellipse.RenderTransform>
+                            <TranslateTransform X="-8" Y="8" />
+                        </Ellipse.RenderTransform>
+                    </Ellipse>
 
-            <Ellipse Fill="#FF7BE0FF" Margin="3">
-                <Ellipse.RenderTransform>
-                    <TranslateTransform X="-8" Y="8" />
-                </Ellipse.RenderTransform>
-            </Ellipse>
+                </Border>
 
-        </Border>
-        
-        <PathIcon
-            Foreground="White"
-            Height="30"
-            Width="30">
+                <PathIcon
+                    Foreground="White"
+                    Height="30"
+                    Width="30">
 
-            <Interaction.Behaviors>
+                    <Interaction.Behaviors>
 
-                <IfElseTrigger Condition="{Binding MusicPlayerViewModel.IsPlaying}">
+                        <IfElseTrigger Condition="{Binding AudioPlayManager.IsPlaying}">
 
-                    <IfElseTrigger.IfActions>
+                            <IfElseTrigger.IfActions>
 
-                        <ChangeAvaloniaPropertyAction
-                            TargetProperty="{x:Static PathIcon.DataProperty}"
-                            Value="{StaticResource PauseIconData}" />
+                                <ChangeAvaloniaPropertyAction
+                                    TargetProperty="{x:Static PathIcon.DataProperty}"
+                                    Value="{StaticResource PauseIconData}" />
 
-                    </IfElseTrigger.IfActions>
+                            </IfElseTrigger.IfActions>
 
-                    <IfElseTrigger.ElseActions>
+                            <IfElseTrigger.ElseActions>
 
-                        <ChangeAvaloniaPropertyAction
-                            TargetProperty="{x:Static PathIcon.DataProperty}"
-                            Value="{StaticResource PlayIconData}" />
+                                <ChangeAvaloniaPropertyAction
+                                    TargetProperty="{x:Static PathIcon.DataProperty}"
+                                    Value="{StaticResource PlayIconData}" />
 
-                    </IfElseTrigger.ElseActions>
+                            </IfElseTrigger.ElseActions>
 
-                </IfElseTrigger>
+                        </IfElseTrigger>
 
-            </Interaction.Behaviors>
-            
-        </PathIcon>
+                    </Interaction.Behaviors>
 
-    </Panel>
+                </PathIcon>
+
+            </Panel>
+
+        </ControlTemplate>
+    </Button.Template>
+
 
     <ToolTip.Tip>
-        
+
         <TextBlock>
             <Interaction.Behaviors>
 
-                <IfElseTrigger Condition="{Binding MusicPlayerViewModel.IsPlaying}">
+                <IfElseTrigger Condition="{Binding AudioPlayManager.IsPlaying}">
 
                     <IfElseTrigger.IfActions>
 
@@ -133,6 +137,5 @@
         </TextBlock>
 
     </ToolTip.Tip>
-
 
 </Button>

@@ -1,9 +1,6 @@
 using System;
 using System.IO;
-using System.Threading.Tasks;
-using Avalonia.Media.Imaging;
 using QwQ_Music.Common.Utilities;
-using QwQ_Music.Models;
 
 namespace QwQ_Music.Common.Services;
 

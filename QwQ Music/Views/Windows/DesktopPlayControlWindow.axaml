@@ -103,7 +103,7 @@
                     <!--  上一首  -->
                     <Button Theme="{DynamicResource BorderlessButton}"
                             ToolTip.Tip="上一首"
-                            Command="{Binding MusicPlayerViewModel.PreviousSongCommand}"
+                            Command="{Binding AudioPlayManager.PreviousSongCommand}"
                             Foreground="{DynamicResource TextBlockDefaultForeground}"
                             behaviors:DynamicCornerBehavior.IsEnabled="True">
                         <PathIcon
@@ -119,7 +119,7 @@
                     <Button
                         Classes="Icon"
                         ToolTip.Tip="下一首"
-                        Command="{Binding MusicPlayerViewModel.NextSongCommand}"
+                        Command="{Binding AudioPlayManager.NextSongCommand}"
                         Foreground="{DynamicResource TextBlockDefaultForeground}"
                         behaviors:DynamicCornerBehavior.IsEnabled="True">
                         <PathIcon Data="{StaticResource PlayIconData}" Height="30" />
@@ -139,7 +139,7 @@
                     </Style>
                 </StackPanel.Styles>
 
-                <TextBlock Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.Title}"
+                <TextBlock Text="{Binding AudioPlayManager.CurrentMusicItem.Model.Title}"
                            FontWeight="Bold" 
                            Padding="0" />
 
@@ -149,9 +149,9 @@
                            TextTrimming="CharacterEllipsis"
                            TextWrapping="Wrap"
                            ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}">
-                    <Run Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.Artists}" />
+                    <Run Text="{Binding AudioPlayManager.CurrentMusicItem.Model.Artists}" />
                     -
-                    <Run Text="{Binding MusicPlayerViewModel.CurrentMusicItem.Model.Album}" />
+                    <Run Text="{Binding AudioPlayManager.CurrentMusicItem.Model.Album}" />
                 </TextBlock>
 
             </StackPanel>
@@ -163,7 +163,7 @@
                 <userControls:MusicAlbumCover
                     IsAutoRoundedCorners="False"
                     CornerRadius="10"
-                    CoverImage="{Binding MusicPlayerViewModel.CoverImage}" />
+                    CoverImage="{Binding AudioPlayManager.CurrentMusicItem.Model.OriginalCover}" />
             </Button>
 
         </StackPanel>

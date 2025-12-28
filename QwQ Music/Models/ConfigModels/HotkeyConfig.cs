@@ -68,21 +68,21 @@ public class HotkeyConfig
         return new Dictionary<HotkeyFunction, List<SerializableKeyGesture>>
         {
             // 上一首 - 支持媒体键和自定义热键
-            [HotkeyFunction.PreviousSong] =
+            [HotkeyFunction.Previous] =
             [
                 new SerializableKeyGesture(Key.MediaPreviousTrack),
                 new SerializableKeyGesture(Key.Left, KeyModifiers.Control)
             ],
 
             // 下一首 - 支持媒体键和自定义热键
-            [HotkeyFunction.NextSong] =
+            [HotkeyFunction.Next] =
             [
                 new SerializableKeyGesture(Key.MediaNextTrack),
                 new SerializableKeyGesture(Key.Right, KeyModifiers.Control)
             ],
 
             // 播放/暂停 - 支持媒体键和自定义热键
-            [HotkeyFunction.PlayPause] =
+            [HotkeyFunction.TogglePlay] =
             [
                 new SerializableKeyGesture(Key.MediaPlayPause),
                 new SerializableKeyGesture(Key.Space, KeyModifiers.Control)
@@ -94,10 +94,10 @@ public class HotkeyConfig
 
             // 其他功能
             [HotkeyFunction.ToggleMute] = [new SerializableKeyGesture(Key.M, KeyModifiers.Control)],
-            [HotkeyFunction.TogglePlayMode] = [new SerializableKeyGesture(Key.R, KeyModifiers.Control)],
-            [HotkeyFunction.RefreshCurrentMusic] = [new SerializableKeyGesture(Key.F5)],
+            [HotkeyFunction.SwitchPlayMode] = [new SerializableKeyGesture(Key.R, KeyModifiers.Control)],
+            [HotkeyFunction.Replay] = [new SerializableKeyGesture(Key.F5)],
             [HotkeyFunction.ShowPlaylistInfo] = [new SerializableKeyGesture(Key.L, KeyModifiers.Control)],
-            [HotkeyFunction.ShowCurrentInfo] = [new SerializableKeyGesture(Key.F1)]
+            [HotkeyFunction.ShowAudioInfo] = [new SerializableKeyGesture(Key.F1)]
         };
     }
 }

@@ -4,7 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using QwQ_Music.Common.Managers;
-using QwQ_Music.ViewModels;
+using AudioPlayManager = QwQ_Music.Common.Managers.AudioPlayManager;
 using MusicCoverPageViewModel = QwQ_Music.ViewModels.Drawers.MusicCoverPageViewModel;
 
 namespace QwQ_Music.Views.Drawers;
@@ -19,7 +19,7 @@ public partial class MusicPlayerPanel : Grid
         PointerMoved += OnPointerMoved;
         Unloaded += OnUnloaded;
 
-        MusicPlayerViewModel.Current.AudioPlayer.SpectrumDataUpdated += OnSpectrumUpdated;
+        AudioPlayManager.Instance.AudioPlayer.SpectrumDataUpdated += OnSpectrumUpdated;
     }
 
     private void OnSpectrumUpdated(object? sender, float[] e)
@@ -30,7 +30,7 @@ public partial class MusicPlayerPanel : Grid
     private void OnUnloaded(object? sender, RoutedEventArgs e)
     {
         PointerMoved -= OnPointerMoved;
-        MusicPlayerViewModel.Current.AudioPlayer.SpectrumDataUpdated -= OnSpectrumUpdated;
+        AudioPlayManager.Instance.AudioPlayer.SpectrumDataUpdated -= OnSpectrumUpdated;
     }
 
     private void OnPointerMoved(object? sender, PointerEventArgs e)

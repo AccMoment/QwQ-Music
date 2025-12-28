@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using QwQ_Music.Common.Helper;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.ViewModels.Bases;

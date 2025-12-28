@@ -5,14 +5,14 @@ namespace QwQ_Music.ViewModels.Windows;
 
 public partial class DesktopPlayControlWindowViewModel : ViewModelBase
 {
-    public static MusicPlayerViewModel MusicPlayerViewModel { get; } = MusicPlayerViewModel.Current;
+    public static Common.Managers.AudioPlayManager AudioPlayManager { get; } = Common.Managers.AudioPlayManager.Instance;
 
-    public DrawerStatusViewModel DrawerStatusViewModel { get; } = DrawerStatusViewModel.Default;
+    public Common.Managers.DrawerManager DrawerManager { get; } = Common.Managers.DrawerManager.Instance;
     
     [RelayCommand]
     private void ShowMusicPlayerPage()
     {
         ApplicationViewModel.ShowMainWindow(true);
-        DrawerStatusViewModel.IsMusicPlayerPanelVisible = true;
+        DrawerManager.IsMusicPlayerPanelVisible = true;
     }
 }

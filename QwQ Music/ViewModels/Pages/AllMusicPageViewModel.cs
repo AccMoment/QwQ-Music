@@ -1,9 +1,10 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
@@ -17,37 +18,23 @@ using MusicItemsManager = QwQ_Music.Common.Managers.MusicItemsManager;
 
 namespace QwQ_Music.ViewModels.Pages;
 
-public partial class AllMusicPageViewModel : DataGridViewModelBase {
+public partial class AllMusicPageViewModel : MusicItemsViewModelBase {
+    public AllMusicPageViewModel() {
+        SetAllItems(MusicItemsManager.All.MusicItems.Values.ToList());
+        MusicItemsManager.All.MusicItemsChanged += OnMusicsChanged;
+        return;
+        void OnMusicsChanged(object? sender, MusicItemsChangedEventArgs e) { ChangeAllItems(e.OldItems, e.NewItems); }
+    }
+
+    // public new IList SelectedItems {
+    //     set => base.SelectedItems = value.Cast<MusicItemModel>().ToList();
+    // }
 
     [ObservableProperty]
     public partial double DataGridHorizontalScrollValue { get; set; }
 
     public static MusicListsManager MusicListsManager => MusicListsManager.Instance;
 
-    public static MusicItemsManager MusicItemsManager => MusicItemsManager.All;
-    
-    
-    protected override void OnSearchTextChanged(string? value) {
-        if (string.IsNullOrEmpty(value)) {
-            MusicItems = new AvaloniaList<MusicItemModel>(MusicItemsManager.All.MusicItems.Values);
-
-            return;
-        }
-
-        var source = string.IsNullOrEmpty(value) ?
-            MusicItemsManager.All.MusicItems.Values :
-            MusicItemsManager.All.MusicItems.Values.Where(MatchesSearchCriteria);
-
-        MusicItems = new AvaloniaList<MusicItemModel>(source);
-
-        return;
-
-        bool MatchesSearchCriteria(MusicItemModel item) {
-            return item.Title.Contains(value, StringComparison.OrdinalIgnoreCase) ||
-                   item.Artists.Contains(value, StringComparison.OrdinalIgnoreCase) ||
-                   item.Album.Contains(value, StringComparison.OrdinalIgnoreCase);
-        }
-    }
 
     [RelayCommand]
     private static void JumpToTop(DataGrid dataGrid) {
@@ -61,7 +48,8 @@ public partial class AllMusicPageViewModel : DataGridViewModelBase {
             return;
 
         var items = await App.TopLevel.StorageProvider.OpenFilePickerAsync(
-            new FilePickerOpenOptions { Title = "选择音乐文件", AllowMultiple = true }).ConfigureAwait(false);
+                                 new FilePickerOpenOptions { Title = "选择音乐文件", AllowMultiple = true })
+                             .ConfigureAwait(false);
 
         if (items.Count == 0)
             return;
@@ -75,7 +63,8 @@ public partial class AllMusicPageViewModel : DataGridViewModelBase {
             return;
 
         var items = await App.TopLevel.StorageProvider.OpenFolderPickerAsync(
-            new FolderPickerOpenOptions { Title = "选择包含音乐的文件夹", AllowMultiple = true }).ConfigureAwait(false);
+                                 new FolderPickerOpenOptions { Title = "选择包含音乐的文件夹", AllowMultiple = true })
+                             .ConfigureAwait(false);
 
         if (items.Count == 0)
             return;
@@ -169,5 +158,30 @@ public partial class AllMusicPageViewModel : DataGridViewModelBase {
             messageParts.Add($"更新了 {updatedCount} 个音乐文件的信息");
 
         NotificationService.Success($"刷新完成！\n{string.Join("\n", messageParts)}");
+    }
+
+    private async Task DeleteMusicItemsAsync(IEnumerable items) {
+        MusicItemModel[] musicItems = (items switch {
+            IEnumerable<MusicItemModel> itemModels            => itemModels,
+            IEnumerable<PlaylistItemModel> playlistItemModels => playlistItemModels.Select(item => item.Model),
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(items),
+                $"{nameof(items)} must be IEnumerable of types of MusicItemModel or PlaylistItemModel.")
+        }).ToArray();
+        if (musicItems.Length == 0) {
+            NotificationService.Info("提示", "请先选择音乐项哦~");
+
+            return;
+        }
+
+        var successEnumerable = await MusicItemsManager.All.RemoveAsync(musicItems).ConfigureAwait(false);
+
+        if (successEnumerable?.ToArray() is not { Length: > 0 } successItems)
+            return;
+
+        AudioPlayManager.Instance.CheckForRemovedItems(successItems);
+        successItems.AsParallel().ForAll(item => MusicItemsManager.All.MusicItems.Remove(item.FilePath));
+        PlaylistManager.Instance.RemoveAllOf(successItems);
+        FilteredList.RemoveAll(successItems);
     }
 }

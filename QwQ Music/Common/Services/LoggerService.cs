@@ -127,7 +127,7 @@ public static class LoggerService {
         int line = 0,
         string? function = null,
         string? filename = null) {
-        if (Level.HasFlag(level) || _isDisposed)
+        if (!Level.HasFlag(level) || _isDisposed)
             return;
 
         string formatted = FormatMessage(status, message, line, function, filename);
@@ -141,7 +141,7 @@ public static class LoggerService {
         int line = 0,
         string? function = null,
         string? filename = null) {
-        if (level < Level || _isDisposed)
+        if (!Level.HasFlag(level) || _isDisposed)
             return Task.CompletedTask;
 
         string formatted = FormatMessage(status, message, line, function, filename);
@@ -179,6 +179,21 @@ public static class LoggerService {
         [CallerMemberName] string? function = null,
         [CallerFilePath] string? filename = null) {
         Log(LogLevel.Error, "ERROR", message, line, function, filename);
+    }
+
+    public static void Error(// TODO PARTIAL REPLACE ABOVE
+        string message,
+        Exception ex,
+        [CallerLineNumber] int line = 0,
+        [CallerMemberName] string? function = null,
+        [CallerFilePath] string? filename = null) {
+        Log(
+            LogLevel.Error,
+            "ERROR",
+            message + $"\n{ex.GetType()}: {ex.Message}\n{ex.StackTrace}",
+            line,
+            function,
+            filename);
     }
 
     public static void Fatal(
@@ -229,6 +244,21 @@ public static class LoggerService {
         [CallerMemberName] string? function = null,
         [CallerFilePath] string? filename = null) {
         return LogAsync(LogLevel.Error, "ERROR", message, line, function, filename);
+    }
+
+    public static Task ErrorAsync(// TODO PARTIAL REPLACE ABOVE
+        string message,
+        Exception ex,
+        [CallerLineNumber] int line = 0,
+        [CallerMemberName] string? function = null,
+        [CallerFilePath] string? filename = null) {
+        return LogAsync(
+            LogLevel.Error,
+            "ERROR",
+            message + $"\n{ex.GetType()}: {ex.Message}\n{ex.StackTrace}",
+            line,
+            function,
+            filename);
     }
 
     public static Task FatalAsync(

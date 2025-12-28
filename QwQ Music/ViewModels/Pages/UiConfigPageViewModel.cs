@@ -24,7 +24,7 @@ public partial class UiConfigPageViewModel() : NavigationViewModel("界面")
         {
             UiConfig.ThemeConfig.Theme = value;
 
-            if (DrawerStatusViewModel.Default.IsMusicPlayerPanelVisible)
+            if (DrawerManager.Instance.IsMusicPlayerPanelVisible)
                 return;
 
             IBrush brush;
@@ -33,7 +33,7 @@ public partial class UiConfigPageViewModel() : NavigationViewModel("界面")
             {
                 var color = ResourceAccessor.Get<Color>("SemiGrey0Color");
 
-                brush = DrawerStatusViewModel.IsBrightColor(color) ? Brushes.DimGray : Brushes.GhostWhite;
+                brush = DrawerManager.IsBrightColor(color) ? Brushes.DimGray : Brushes.GhostWhite;
             }
             else
             {

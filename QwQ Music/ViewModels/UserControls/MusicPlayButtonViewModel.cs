@@ -10,5 +10,5 @@ public partial class MusicPlayButtonViewModel : ViewModelBase
 
     [ObservableProperty] public partial Thickness PlayButtonPadding { get; set; }
 
-    public static MusicPlayerViewModel MusicPlayerViewModel => MusicPlayerViewModel.Current;
+    public static Common.Managers.AudioPlayManager AudioPlayManager => Common.Managers.AudioPlayManager.Instance;
 }

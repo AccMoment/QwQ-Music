@@ -236,14 +236,14 @@
 
     <TrayIcon.Icons>
         <TrayIcons>
-            <TrayIcon Icon="resm:QwQ_Music.Assets.EmbeddedRes.app-icon.ico" MacOSProperties.IsTemplateIcon="true"
+            <TrayIcon Icon="resm:QwQ_Music.Assets.EmbeddedRes.AppIcon.ico" MacOSProperties.IsTemplateIcon="true"
                       ToolTipText="QwQ Music"
                       Command="{Binding ShowMainWindowCommand}">
 
                 <TrayIcon.Menu>
                     <NativeMenu>
                         <NativeMenuItem Header="显示窗口" Command="{Binding ShowMainWindowCommand}" />
-                        <NativeMenuItem Header="退出" Command="{Binding ExitApplicationCommand}" />
+                        <NativeMenuItem Header="退出" Command="{Binding ShutdownCommand}" />
                     </NativeMenu>
                 </TrayIcon.Menu>
 

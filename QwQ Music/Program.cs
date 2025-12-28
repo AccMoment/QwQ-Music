@@ -3,7 +3,7 @@ using Avalonia;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Utilities;
-using QwQ_Music.ViewModels;
+using AudioPlayManager = QwQ_Music.Common.Managers.AudioPlayManager;
 
 namespace QwQ_Music;
 
@@ -69,7 +69,7 @@ public static class Program
 
     private static void Shutdown()
     {
-        MusicPlayerViewModel.Current.Shutdown();
+        AudioPlayManager.Instance.Shutdown();
 
         ConfigManager.SaveConfig();
 

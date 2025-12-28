@@ -1,79 +1,80 @@
-<Grid RowDefinitions="Auto,*"
-      d:DesignHeight="450"
-      d:DesignWidth="800"
-      mc:Ignorable="d"
-      x:Class="QwQ_Music.Views.Pages.ClassificationPage"
-      xmlns="https://github.com/avaloniaui"
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      x:DataType="pages:ClassificationPageViewModel"
-      xmlns:pages="clr-namespace:QwQ_Music.ViewModels.Pages"
-      xmlns:u="https://irihi.tech/ursa"
-      xmlns:pages1="clr-namespace:QwQ_Music.Views.Pages">
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:pageVms="clr-namespace:QwQ_Music.ViewModels.Pages"
+             xmlns:u="https://irihi.tech/ursa"
+             xmlns:pages="clr-namespace:QwQ_Music.Views.Pages"
+             d:DesignHeight="450"
+             d:DesignWidth="800"
+             mc:Ignorable="d"
+             x:Class="QwQ_Music.Views.Pages.ClassificationPage"
+             x:DataType="pageVms:ClassificationPageViewModel">
+    <Grid RowDefinitions="Auto,*">
 
-    <u:SelectionList HorizontalAlignment="Left"
-                     SelectedIndex="{Binding NavigationIndex}">
+        <u:SelectionList Grid.Row="0" HorizontalAlignment="Left"
+                         SelectedIndex="{Binding NavigationIndex}">
 
-        <u:SelectionList.Styles>
+            <u:SelectionList.Styles>
 
-            <Style Selector="u|SelectionListItem">
-                <Setter Property="Padding" Value="10" />
-                <Setter Property="RenderTransformOrigin" Value="50%,100%" />
-                <Setter Property="Transitions">
-                    <Transitions>
-                        <TransformOperationsTransition Duration="0:0:0.2" Easing="QuadraticEaseIn"
-                                                       Property="RenderTransform" />
-                    </Transitions>
-                </Setter>
+                <Style Selector="u|SelectionListItem">
+                    <Setter Property="Padding" Value="10" />
+                    <Setter Property="RenderTransformOrigin" Value="50%,100%" />
+                    <Setter Property="Transitions">
+                        <Transitions>
+                            <TransformOperationsTransition Duration="0:0:0.2" Easing="QuadraticEaseIn"
+                                                           Property="RenderTransform" />
+                        </Transitions>
+                    </Setter>
 
-                <Style Selector="^:selected">
-                    <Setter Property="FontWeight" Value="Bold" />
-                    <Setter Property="RenderTransform" Value="scale(1.2)" />
+                    <Style Selector="^:selected">
+                        <Setter Property="FontWeight" Value="Bold" />
+                        <Setter Property="RenderTransform" Value="scale(1.2)" />
+                    </Style>
                 </Style>
-            </Style>
 
-        </u:SelectionList.Styles>
+            </u:SelectionList.Styles>
 
-        <u:SelectionList.ItemsPanel>
-            <ItemsPanelTemplate>
-                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" />
-            </ItemsPanelTemplate>
-        </u:SelectionList.ItemsPanel>
+            <u:SelectionList.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </u:SelectionList.ItemsPanel>
 
-        <u:SelectionList.Indicator>
+            <u:SelectionList.Indicator>
 
-            <Rectangle RadiusX="2.5" RadiusY="2.5" Height="5" Margin="10,5"
-                       Fill="{DynamicResource SemiBlue4Color}"
-                       VerticalAlignment="Bottom">
-                <Rectangle.Effect>
-                    <DropShadowEffect Color="{DynamicResource SemiBlue2Color}" />
-                </Rectangle.Effect>
-            </Rectangle>
+                <Rectangle RadiusX="2.5" RadiusY="2.5" Height="5" Margin="10,5"
+                           Fill="{DynamicResource SemiBlue4Color}"
+                           VerticalAlignment="Bottom">
+                    <Rectangle.Effect>
+                        <DropShadowEffect Color="{DynamicResource SemiBlue2Color}" />
+                    </Rectangle.Effect>
+                </Rectangle>
 
-        </u:SelectionList.Indicator>
+            </u:SelectionList.Indicator>
 
-        <TextBlock Text="歌单" />
-        <TextBlock Text="专辑" />
-        <!--<TextBlock Text="歌手" />-->
-        <!--<TextBlock Text="风格" />-->
+            <TextBlock Text="歌单" />
+            <TextBlock Text="专辑" />
+            <!--<TextBlock Text="歌手" />-->
+            <!--<TextBlock Text="风格" />-->
 
-    </u:SelectionList>
+        </u:SelectionList>
 
-    <Carousel Grid.Row="1" SelectedIndex="{Binding NavigationIndex}">
-        <Carousel.PageTransition>
-            <CompositePageTransition>
-                <CrossFade Duration="0:0:0.5" />
-                <PageSlide Duration="0:0:0.3"
-                           Orientation="Horizontal"
-                           SlideInEasing="QuadraticEaseIn"
-                           SlideOutEasing="QuadraticEaseOut" />
-            </CompositePageTransition>
-        </Carousel.PageTransition>
+        <Carousel Grid.Row="1" SelectedIndex="{Binding NavigationIndex}">
+            <Carousel.PageTransition>
+                <CompositePageTransition>
+                    <CrossFade Duration="0:0:0.5" />
+                    <PageSlide Duration="0:0:0.3"
+                               Orientation="Horizontal"
+                               SlideInEasing="QuadraticEaseIn"
+                               SlideOutEasing="QuadraticEaseOut" />
+                </CompositePageTransition>
+            </Carousel.PageTransition>
 
-        <pages1:MusicListClassPage />
-        <pages1:AlbumClassPage />
+            <pages:MusicListClassPage PanelName="歌单" />
+            <pages:MusicListClassPage PanelName="专辑"/><!-- TODO i18n -->
 
-    </Carousel>
+        </Carousel>
 
-</Grid>
+    </Grid>
+</UserControl>

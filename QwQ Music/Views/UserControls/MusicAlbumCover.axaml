@@ -1,10 +1,10 @@
-<userControls:MusicAlbumCover xmlns="https://github.com/avaloniaui"
-                              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                              xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
-                              xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
-                              x:Class="QwQ_Music.Views.UserControls.MusicAlbumCover">
+<custom:MusicAlbumCover xmlns="https://github.com/avaloniaui"
+                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:custom="clr-namespace:QwQ_Music.Views.UserControls"
+                        xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
+                        x:Class="QwQ_Music.Views.UserControls.MusicAlbumCover">
 
-    <userControls:MusicAlbumCover.Template>
+    <custom:MusicAlbumCover.Template>
         <ControlTemplate>
             <Border
                 Background="{TemplateBinding Background}"
@@ -25,7 +25,7 @@
 
             </Border>
         </ControlTemplate>
-    </userControls:MusicAlbumCover.Template>
+    </custom:MusicAlbumCover.Template>
 
 
-</userControls:MusicAlbumCover>
+</custom:MusicAlbumCover>

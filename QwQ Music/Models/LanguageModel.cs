@@ -16,6 +16,7 @@ public static class LanguageModel
         {
             Language.ZhCn, new Dictionary<string, string>
             {
+                ["Window"] = "窗口",
                 ["MusicName"] = "音乐",
                 ["ClassificationName"] = "分类",
                 ["OtherName"] = "其他",

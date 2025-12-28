@@ -4,38 +4,30 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Services;
 using QwQ_Music.ViewModels.Bases;
-using QwQ_Music.ViewModels.Pages;
 using QwQ_Music.Views.Pages;
 using static QwQ_Music.Models.LanguageModel;
 
 namespace QwQ_Music.ViewModels;
 
-public partial class MainViewModel : NavigationViewModel
-{
-    public MainViewModel()
-        : base("窗口")
-    {
+public partial class MainViewModel : NavigationViewModel {
+    public MainViewModel() : base(Lang["Window"]) {
         // 注册热键功能
         HotkeyService.RegisterFunctionAction(
-            HotkeyFunction.ViewForward,
-            () =>
-            {
+            HotkeyFunction.NextPage,
+            () => {
                 if (CanGoForward)
                     ViewForwardCommand.Execute(null);
-            }
-        );
+            });
 
         HotkeyService.RegisterFunctionAction(
-            HotkeyFunction.ViewBackward,
-            () =>
-            {
+            HotkeyFunction.PrevPage,
+            () => {
                 if (CanGoBack)
                     ViewBackwardCommand.Execute(null);
-            }
-        );
+            });
     }
 
-    public static DrawerStatusViewModel DrawerStatusViewModel => DrawerStatusViewModel.Default;
+    public static Common.Managers.DrawerManager DrawerManager => Common.Managers.DrawerManager.Instance;
 
     public static string MusicName => Lang[nameof(MusicName)];
 
@@ -45,24 +37,8 @@ public partial class MainViewModel : NavigationViewModel
 
     public static string SettingsName => Lang[nameof(SettingsName)];
 
-    public AvaloniaList<Control> Pages { get; } =
-    [
-        new AllMusicPage
-        {
-            DataContext = new AllMusicPageViewModel()
-        },
-        new ClassificationPage
-        {
-            DataContext = new ClassificationPageViewModel()
-        },
-        new OtherPage
-        {
-            DataContext = new OtherPageViewModel()
-        },
-        new ConfigMainPage
-        {
-            DataContext = new ConfigPageViewModel()
-        }
+    public AvaloniaList<Control> Pages { get; } = [
+        new AllMusicPage()//, new ClassificationPage(), new OtherPage(), new ConfigMainPage()
     ];
 
     [ObservableProperty]
@@ -73,8 +49,7 @@ public partial class MainViewModel : NavigationViewModel
     [NotifyCanExecuteChangedFor(nameof(ViewForwardCommand))]
     public partial bool CanGoForward { get; set; }
 
-    protected override void OnNavigateTo(int index)
-    {
+    protected override void OnNavigateTo(int index) {
         base.OnNavigateTo(index);
 
         if (index >= Pages.Count || index < 0)
@@ -85,16 +60,14 @@ public partial class MainViewModel : NavigationViewModel
     }
 
     [RelayCommand(CanExecute = nameof(CanGoForward))]
-    private void ViewForward()
-    {
+    private void ViewForward() {
         NavigateService.GoForward();
         CanGoBack = NavigateService.CanGoBack;
         CanGoForward = NavigateService.CanGoForward;
     }
 
     [RelayCommand(CanExecute = nameof(CanGoBack))]
-    private void ViewBackward()
-    {
+    private void ViewBackward() {
         NavigateService.GoBack();
         CanGoBack = NavigateService.CanGoBack;
         CanGoForward = NavigateService.CanGoForward;

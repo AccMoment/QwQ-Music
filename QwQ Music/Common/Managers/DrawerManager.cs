@@ -3,22 +3,25 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 
-namespace QwQ_Music.ViewModels;
+namespace QwQ_Music.Common.Managers;
 
-public partial class DrawerStatusViewModel : ObservableObject
-{
-    public static DrawerStatusViewModel Default { get; } = new();
+public partial class DrawerManager : ObservableObject {
+    protected DrawerManager() { }
+    public static DrawerManager Instance { get; } = new();
 
-    [ObservableProperty] public partial double MusicPlayerTrayYaxisOffset { get; set; }
+    [ObservableProperty]
+    public partial double MusicPlayerTrayYAxisOffset { get; set; }
 
-    [ObservableProperty] public partial double MusicPlayListXaxisOffset { get; set; }
+    [ObservableProperty]
+    public partial double MusicPlayListXAxisOffset { get; set; }
 
-    [ObservableProperty] public partial double MusicAlbumCoverPanelXaxisOffset { get; set; }
+    [ObservableProperty]
+    public partial double MusicAlbumCoverPanelXAxisOffset { get; set; }
 
-    [ObservableProperty] public partial double MusicCoverPageYaxisOffset { get; set; }
+    [ObservableProperty]
+    public partial double MusicCoverPageYAxisOffset { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(MusicPlayerTrayWidth), nameof(MusicPlayListWidth))]
@@ -34,17 +37,16 @@ public partial class DrawerStatusViewModel : ObservableObject
 
     public int MusicPlayerPanelHeight => IsMusicPlayerPanelVisible ? WindowHeight : 0;
 
-    [ObservableProperty] public partial bool IsMusicPlayerTrayVisible { get; set; } = true;
+    [ObservableProperty]
+    public partial bool IsMusicPlayerTrayVisible { get; set; } = true;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(MusicPlayListWidth))]
     public partial bool IsMusicPlayListVisible { get; set; }
 
-    public bool IsMusicPlayerPanelVisible
-    {
+    public bool IsMusicPlayerPanelVisible {
         get;
-        set
-        {
+        set {
             if (!SetProperty(ref field, value))
                 return;
 
@@ -52,25 +54,16 @@ public partial class DrawerStatusViewModel : ObservableObject
 
             IBrush brush;
 
-            if (field)
-            {
+            if (field) {
                 brush = MusicPlayerPanelThemeVariant == "Light" ? Brushes.DimGray : Brushes.GhostWhite;
                 MusicPlayListThemeVariant = MusicPlayerPanelThemeVariant;
-            }
-            else
-            {
-                if (ConfigManager.UiConfig.ThemeConfig.Theme == "Default")
-                {
+            } else {
+                if (ConfigManager.UiConfig.ThemeConfig.Theme == "Default") {
                     var color = ResourceAccessor.Get<Color>("SemiGrey0Color");
 
                     brush = IsBrightColor(color) ? Brushes.DimGray : Brushes.GhostWhite;
-                }
-                else
-                {
-                    brush =
-                        ConfigManager.UiConfig.ThemeConfig.Theme == "Light"
-                            ? Brushes.DimGray
-                            : Brushes.GhostWhite;
+                } else {
+                    brush = ConfigManager.UiConfig.ThemeConfig.Theme == "Light" ? Brushes.DimGray : Brushes.GhostWhite;
                 }
 
                 MusicPlayListThemeVariant = ConfigManager.UiConfig.ThemeConfig.Theme;
@@ -80,11 +73,9 @@ public partial class DrawerStatusViewModel : ObservableObject
         }
     }
 
-    public string MusicPlayerPanelThemeVariant
-    {
+    public string MusicPlayerPanelThemeVariant {
         get;
-        set
-        {
+        set {
             if (!SetProperty(ref field, value))
                 return;
 
@@ -93,19 +84,18 @@ public partial class DrawerStatusViewModel : ObservableObject
 
             MusicPlayListThemeVariant = field;
 
-            Dispatcher.UIThread.Post(() =>
-            {
+            Dispatcher.UIThread.Post(() => {
                 ResourceAccessor.Set(
                     "CaptionButtonForeground",
-                    field == "Light" ? Brushes.DimGray : Brushes.GhostWhite
-                );
+                    field == "Light" ? Brushes.DimGray : Brushes.GhostWhite);
             });
 
             OnPropertyChanged();
         }
     } = "Default";
 
-    [ObservableProperty] public partial string MusicPlayListThemeVariant { set; get; } = "Default";
+    [ObservableProperty]
+    public partial string MusicPlayListThemeVariant { set; get; } = "Default";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NavigationWidth), nameof(IsMusicAlbumCoverTrayVisible))]
@@ -120,23 +110,15 @@ public partial class DrawerStatusViewModel : ObservableObject
     public double NavigationWidth => IsNavigationExpand ? 130 : 55;
 
     [RelayCommand]
-    private void ShowMusicPlaylist()
-    {
-        IsMusicPlayListVisible = !IsMusicPlayListVisible;
-    }
+    private void ShowMusicPlaylist() { IsMusicPlayListVisible = !IsMusicPlayListVisible; }
 
     [RelayCommand]
-    private void ToggleMusicPlayerPage()
-    {
-        IsMusicPlayerPanelVisible = !IsMusicPlayerPanelVisible;
-    }
-    
-    
+    private void ToggleMusicPlayerPage() { IsMusicPlayerPanelVisible = !IsMusicPlayerPanelVisible; }
+
+
     [RelayCommand]
-    private void PointerWheelChanged(PointerWheelEventArgs e)
-    {
-        IsMusicPlayerTrayVisible = e.Delta.Y switch
-        {
+    private void PointerWheelChanged(PointerWheelEventArgs e) {
+        IsMusicPlayerTrayVisible = e.Delta.Y switch {
             // 检查滚动的方向
             > 0 =>
 
@@ -158,8 +140,7 @@ public partial class DrawerStatusViewModel : ObservableObject
         */
     }
 
-    public static bool IsBrightColor(Color color)
-    {
+    public static bool IsBrightColor(Color color) {
         // 亮度归一化到0~1
         double luminance = (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255.0;
 

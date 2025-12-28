@@ -1,10 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Microsoft.Data.Sqlite;
 
 namespace QwQ_Music.Common.Services.Databases;
@@ -152,10 +149,10 @@ public class DatabaseService : IDisposable {
             int countCopy = count;
             string paramNames = string.Join(
                 ", ",
-                data.Keys.Select(key => $"@{key}{alreadyExistedParamsCount + countCopy}"));
+                data.Keys.Select(key => $"@{key}__ID_{alreadyExistedParamsCount + countCopy}"));
             foreach ((string key, object? value) in data) {
                 command.Parameters.AddWithValue(
-                    $"@{key}{alreadyExistedParamsCount + countCopy}",
+                    $"@{key}__ID_{alreadyExistedParamsCount + countCopy}",
                     value ?? DBNull.Value);
             }
 
@@ -235,18 +232,17 @@ public class DatabaseService : IDisposable {
 
             string setClause = string.Join(
                 ", ",
-                data.Keys.Select(key => $"{EscapeIdentifier(key)} = @{key}[{alreadyExistedParamsCount + countCopy}]"));
+                data.Keys.Select(key => $"{EscapeIdentifier(key)} = @{key}__ID_{alreadyExistedParamsCount + countCopy
+                }"));
 
             foreach ((string key, object? value) in data) {
                 command.Parameters.AddWithValue(
-                    $"@{key}[{alreadyExistedParamsCount + countCopy}]",
+                    $"@{key}__ID_{alreadyExistedParamsCount + countCopy}",
                     value ?? DBNull.Value);
             }
 
             foreach ((string key, object? value) in whereParams) {
-                command.Parameters.AddWithValue(
-                    $"@{key}[{alreadyExistedParamsCount + countCopy}]",
-                    value ?? DBNull.Value);
+                command.Parameters.AddWithValue($"@{key}", value ?? DBNull.Value);
             }
 
             command.CommandText += $"UPDATE {EscapeIdentifier(tableName)} SET {setClause} WHERE {whereClause};";
@@ -469,9 +465,11 @@ public class DatabaseService : IDisposable {
 
 public static class ParseHelpers {
     public static T? TryParse<T>(Dictionary<string, object?> dict, string key) where T : struct, IParsable<T> {
-        if (!dict.TryGetValue(key, out object? value) || value is not string valueString)
+        if (!dict.TryGetValue(key, out object? value) || value is null)
             return null;
-        T.TryParse(valueString, null, out T result);
+        if (value is T rst)
+            return rst;
+        T.TryParse(value.ToString(), null, out T result);
         return result;
     }
 

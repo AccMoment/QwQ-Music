@@ -9,7 +9,7 @@
         Background="{Binding LyricConfig.LyricBackground,Converter={StaticResource ToBrushConverter}}"
         WindowStartupLocation="Manual"
         Title="QwQ Music • 桌面歌词"
-        Icon="resm:QwQ_Music.Assets.EmbeddedRes.app-icon.ico"
+        Icon="resm:QwQ_Music.Assets.EmbeddedRes.AppIcon.ico"
         x:Class="QwQ_Music.Views.Windows.DesktopLyricsWindow"
         x:DataType="windows:DesktopLyricsWindowViewModel"
         xmlns="https://github.com/avaloniaui"
@@ -109,7 +109,7 @@
                     LetterSpacing="{Binding LyricConfig.LyricMainLetterSpacing}"
                     Stroke="{Binding LyricConfig.LyricMainBorderColor,Converter={StaticResource ToBrushConverter}}"
                     FontSize="{Binding LyricConfig.LyricMainFontSize}"
-                    Text="{Binding MusicPlayerViewModel.LyricsModel.Current.Primary}">
+                    Text="{Binding AudioPlayManager.LyricsModel.Current.Primary}">
 
                     <control:TextPath.Foreground>
                         <LinearGradientBrush EndPoint="100% 50%" StartPoint="0% 50%">
@@ -126,11 +126,11 @@
                     LetterSpacing="{Binding LyricConfig.LyricMainLetterSpacing}"
                     Stroke="{Binding LyricConfig.LyricMainBorderColor,Converter={StaticResource ToBrushConverter}}"
                     FontSize="{Binding LyricConfig.LyricMainFontSize}"
-                    Text="{Binding MusicPlayerViewModel.LyricsModel.Current.Translation}">
+                    Text="{Binding AudioPlayManager.LyricsModel.Current.Translation}">
 
                     <control:TextPath.IsVisible>
                         <MultiBinding Converter="{x:Static BoolConverters.And}">
-                            <Binding Path="MusicPlayerViewModel.LyricsModel.Current.Translation"
+                            <Binding Path="AudioPlayManager.LyricsModel.Current.Translation"
                                      Converter="{x:Static ObjectConverters.IsNotNull}" />
                             <Binding Path="LyricConfig.LyricIsDualLang" />
                         </MultiBinding>
@@ -155,7 +155,7 @@
                     LetterSpacing="{Binding LyricConfig.LyricAltLetterSpacing}"
                     Stroke="{Binding LyricConfig.LyricAltBorderColor,Converter={StaticResource ToBrushConverter}}"
                     FontSize="{Binding LyricConfig.LyricAltFontSize}"
-                    Text="{Binding MusicPlayerViewModel.LyricsModel.Next.Primary}">
+                    Text="{Binding AudioPlayManager.LyricsModel.Next.Primary}">
 
                     <control:TextPath.Foreground>
                         <LinearGradientBrush EndPoint="100% 50%" StartPoint="0% 50%">
@@ -172,11 +172,11 @@
                     LetterSpacing="{Binding LyricConfig.LyricAltLetterSpacing}"
                     Stroke="{Binding LyricConfig.LyricAltBorderColor,Converter={StaticResource ToBrushConverter}}"
                     FontSize="{Binding LyricConfig.LyricAltFontSize}"
-                    Text="{Binding MusicPlayerViewModel.LyricsModel.Next.Translation}">
+                    Text="{Binding AudioPlayManager.LyricsModel.Next.Translation}">
 
                     <control:TextPath.IsVisible>
                         <MultiBinding Converter="{x:Static BoolConverters.And}">
-                            <Binding Path="MusicPlayerViewModel.LyricsModel.Next.Translation"
+                            <Binding Path="AudioPlayManager.LyricsModel.Next.Translation"
                                      Converter="{x:Static ObjectConverters.IsNotNull}" />
                             <Binding Path="LyricConfig.LyricIsDualLang" />
                         </MultiBinding>

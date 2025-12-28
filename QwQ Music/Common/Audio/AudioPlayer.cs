@@ -8,7 +8,6 @@ using QwQ_Music.Common.Interfaces;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models.ConfigModels;
-using QwQ_Music.ViewModels;
 using SoundFlow.Abstracts;
 using SoundFlow.Abstracts.Devices;
 using SoundFlow.Backends.MiniAudio;
@@ -16,6 +15,7 @@ using SoundFlow.Components;
 using SoundFlow.Providers;
 using SoundFlow.Structs;
 using SoundFlow.Visualization;
+using DrawerManager = QwQ_Music.Common.Managers.DrawerManager;
 using Timer = System.Timers.Timer;
 
 namespace QwQ_Music.Common.Audio;
@@ -191,7 +191,6 @@ public class AudioPlayer : IAudioPlayer {
     /// </summary>
     public void Stop() {
         Pause();
-        Status = MediaPlaybackStatus.Stopped;
         UpdateTimer.Stop();
         SpecTimer.Stop();
         PlayerDevice.Stop();
@@ -205,6 +204,7 @@ public class AudioPlayer : IAudioPlayer {
         }
 
         _soundPlayer.Dispose();
+        Status = MediaPlaybackStatus.Stopped;
     }
 
     /// <summary>
@@ -279,10 +279,9 @@ public class AudioPlayer : IAudioPlayer {
     ///     初始化新音轨
     /// </summary>
     private async Task InitializeNewTrackAsync(Stream audioStream, double replayGain) {
-        MediaPlaybackStatus oldStatus = Status;
         Status = MediaPlaybackStatus.Changing;
         _soundDataProvider = new StreamDataProvider(AudioEngine, AudioFormat, audioStream);
-        await LoggerService.DebugAsync($"Volume:{Volume},Speed:{Speed}");
+        await LoggerService.DebugAsync($"Volume:{Volume},Speed:{Speed}").ConfigureAwait(false);
         _soundPlayer =
             new SoundPlayer(AudioEngine, AudioFormat, _soundDataProvider) {
                 Volume = Volume, Mute = IsMute, PlaybackSpeed = Speed
@@ -311,7 +310,7 @@ public class AudioPlayer : IAudioPlayer {
     private void OnSpectrumVisualizer(object? sender, EventArgs eventArgs) {
         if (_spectrumAnalyzer == null ||
             !ConfigManager.UiConfig.SpectrumConfig.IsEnabled ||
-            !DrawerStatusViewModel.Default.IsMusicPlayerPanelVisible)
+            !DrawerManager.Instance.IsMusicPlayerPanelVisible)
             return;
 
         var spectrumData = _spectrumAnalyzer.SpectrumData;
@@ -321,20 +320,6 @@ public class AudioPlayer : IAudioPlayer {
 
         // 触发频谱数据更新事件
         SpectrumDataUpdated?.Invoke(this, spectrumData.ToArray());
-
-/*
-#if DEBUG
-        // 调试输出（可选）
-        Console.Write("Spectrum: ");
-
-        for (int i = 0; i < Math.Min(10, spectrumData.Length); i++)
-        {
-            Console.Write($"{spectrumData[i]:F2} ");
-        }
-
-        Console.WriteLine();
-#endif
-*/
     }
 
     /// <summary>

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia.Collections;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -19,22 +18,17 @@ using Ursa.Controls;
 namespace QwQ_Music.Common.Managers;
 
 public partial class MusicListsManager : ObservableObject {
-    public static MusicListsManager Instance = new();
+    public static MusicListsManager Instance { get; } = new();
     private MusicListsManager() { InitializeAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false); }
 
-    public AvaloniaList<MusicListModel> SongLists { get; set; } = [];
+    public List<MusicListModel> MusicLists { get; set; } = [];
 
-    public static MusicListModel? Selected { get; private set; }
+    public MusicListModel? Selected { get; private set; }
 
-    public void Select(MusicListModel musicList) {
-        Selected?.DisposeCurrent();
-        Selected = musicList;
-        musicList.LoadCurrentAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
-    }
 
     private async Task InitializeAsync() {
         try {
-            SongLists.AddRange(await Task.Run(() => MusicListRepository.Instance.GetAll()).ConfigureAwait(true));
+            MusicLists.AddRange(await Task.Run(() => MusicListRepository.Instance.GetAll()).ConfigureAwait(true));
         } catch (Exception e) {
             NotificationService.Error("歌单信息加载失败！\n" + $"{e.Message}");
 
@@ -49,7 +43,7 @@ public partial class MusicListsManager : ObservableObject {
     private void AddMusicList(MusicListModel model) {
         MusicListRepository.Instance.Insert(model);
 
-        SongLists.Add(model);
+        MusicLists.Add(model);
         NotificationService.Success("成功", $"歌单《{model.Name}》创建成功！");
     }
 
@@ -79,7 +73,7 @@ public partial class MusicListsManager : ObservableObject {
 
             string coverFullPath = StaticConfig.GetMusicListCoverFullPath(model.Name);
 
-            if (model.CoverImage == null)
+            if (model.CoverImage == CacheManager.NotExist)
                 return model;
 
             if (!await FileOperationService.SaveImageAsync(model.CoverImage, coverFullPath, true)
@@ -103,7 +97,7 @@ public partial class MusicListsManager : ObservableObject {
     /// </summary>
     /// <param name="musicItems">音乐项列表</param>
     /// <param name="musicList">歌单项</param>
-    public async Task AddToMusicList(List<MusicItemModel> musicItems, MusicListModel musicList) {
+    public async Task AddToMusicList(IList<MusicItemModel> musicItems, MusicListModel musicList) {
         if (musicItems.Count == 0)
             return;
 
@@ -157,7 +151,7 @@ public partial class MusicListsManager : ObservableObject {
     /// </summary>
     /// <param name="musicItems">音乐项列表</param>
     /// <param name="musicList">歌单项</param>
-    public async Task RemoveToMusicList(List<MusicItemModel> musicItems, MusicListModel musicList) {
+    public async Task RemoveToMusicList(IList<MusicItemModel> musicItems, MusicListModel musicList) {
         if (musicItems.Count == 0)
             return;
 
@@ -175,7 +169,7 @@ public partial class MusicListsManager : ObservableObject {
                       }
                   })
                   .ConfigureAwait(false);
-        List<MusicItemModel> successItems;
+        IList<MusicItemModel> successItems;
         if (failedItems.Count == 0) {
             successItems = musicItems;
         } else {
@@ -191,7 +185,9 @@ public partial class MusicListsManager : ObservableObject {
             NotificationService.Success($"已将歌曲{successTitles}从歌单 {musicList.Name} 中移除！");
 
             if (musicList.Name == Selected?.Name) {
-                successItems.ForEach(item => Selected.Musics!.Remove(item));
+                foreach (MusicItemModel successItem in successItems) {
+                    Selected.Musics!.Remove(successItem);
+                }
             }
         }
     }
@@ -229,7 +225,7 @@ public partial class MusicListsManager : ObservableObject {
                       })
                       .ConfigureAwait(false);
 
-            SongLists.Remove(musicList);
+            MusicLists.Remove(musicList);
 
             NotificationService.Success($"歌单《{musicList.Name}》删除成功！");
         } catch (Exception ex) {

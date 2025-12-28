@@ -44,134 +44,77 @@ public class MusicListItemsRepository : IDisposable {
         GC.SuppressFinalize(this);
     }
 
-
-    /// <summary>
-    /// 更新歌单区域
-    /// </summary>
-    /// <param name="playlistName">歌单名</param>
-    /// <param name="playlist">歌曲列表</param>
-    /// <param name="range">更新区域</param>
-    public void UpdateRange(string playlistName, IList<MusicItemModel> playlist, Range range) {
-        _db.BeginTransaction();
-        SqliteCommand command = _db.NewCommand();
-        long now = DateTime.Now.Ticks;
-
-        int max = playlist.Count;
-        // ReSharper disable JoinDeclarationAndInitializer
-
-        // ReSharper restore JoinDeclarationAndInitializer
-        var (start, len) = range.GetOffsetAndLength(max);
-        var end = start + len;
-        try {
-            var data = new Dictionary<string, object?>[len];
-
-            #region FirstItem
-
-            string? prevPath = start > 0 ? playlist[start - 1].FilePath : null;
-            string path = playlist[start].FilePath;
-            string? nextPath = start + 1 < max - 1 ? playlist[start + 1].FilePath : null;
-            data[0] = new Dictionary<string, object?> {
-                [nameof(MusicListModel.Name)] = playlistName,
-                [nameof(MusicItemModel.FilePath)] = path,
-                [NextPath] = nextPath,
-                [AddTime] = now
-            };
-            if (prevPath is not null) {
-                _db.UpdateNonExecute(
-                    ref command,
-                    TABLE_NAME,
-                    new Dictionary<string, object?> { [NextPath] = path },
-                    $"{nameof(MusicItemModel.FilePath)} = @{nameof(MusicItemModel.FilePath)}",
-                    new Dictionary<string, object?> { [nameof(MusicItemModel.FilePath)] = prevPath });
-            }
-
-            #endregion FirstItem
-
-            if (len == 1) {
-                _db.InsertNonExecute(ref command, TABLE_NAME, data[0]);
-                _db.Execute(command);
-                _db.Commit();
-                return;
-            }
-
-
-            #region LastItem
-
-            path = playlist[end].FilePath;
-            nextPath = end < max - 2 ? playlist[end + 1].FilePath : null;
-            data[len - 1] = new Dictionary<string, object?> {
-                [nameof(MusicListModel.Name)] = playlistName,
-                [nameof(MusicItemModel.FilePath)] = path,
-                [NextPath] = nextPath,
-                [AddTime] = now + len - 1
-            };
-
-            #endregion LastItem
-
-            #region OtherItems
-
-            nextPath = playlist[start + 1].FilePath;
-            for (int curr = 1; curr < len; curr++) {
-                path = nextPath;
-                nextPath = playlist[start + curr + 1].FilePath;
-                data[curr] = new Dictionary<string, object?> {
-                    [nameof(MusicListModel.Name)] = playlistName,
-                    [nameof(MusicItemModel.FilePath)] = path,
-                    [NextPath] = nextPath,
-                    [AddTime] = now + curr
-                };
-            }
-
-            #endregion OtherItems
-
-            _db.InsertMultipleNonExecute(ref command, TABLE_NAME, data);
-            _db.Execute(command);
-            _db.Commit();
-        } catch {
-            _db.Rollback();
-
-            throw;
-        }
+    private string GetFirst(string musicListName) {
+        return (_db.Query(
+                $"SELECT {NextPath} from {TABLE_NAME} " +
+                $"WHERE {nameof(MusicItemModel.FilePath)} = @{nameof(MusicListModel.Name)}",
+                new Dictionary<string, object> {
+                    [nameof(MusicListModel.Name)] = $"QWQ_PLAYLIST_{musicListName}_HEAD"
+                })[0]
+            ["NextPath"] as string)!;
     }
-
-    /// <summary>
-    /// 更新歌单区域
-    /// </summary>
-    /// <param name="musicList">歌单</param>
-    /// <param name="range">更新区域</param>
-    public void UpdateRange(MusicListModel musicList, Range range) {
-        UpdateRange(musicList.Name, musicList.Musics!, range);
-    }
-
 
     /// <summary>
     ///     添加歌曲到歌单
     /// </summary>
-    public void Insert(MusicListModel musicList, IList<MusicItemModel> items) {
-        int index = musicList.Musics!.IndexOf(items.First());
-        UpdateRange(musicList.Name, musicList.Musics!, index..(index + items.Count));
+    public void InsertRange(MusicListModel musicList, IEnumerable<MusicItemModel> items) {
+        string musicListName = musicList.Name;
+        //  在此处将原本的第一首加到列表末尾，以便创建 data时直接 Select更新 items的尾项。
+        string[] itemsArray = items.Select(item => item.FilePath).Append(GetFirst(musicListName)).ToArray();
+        long time = DateTime.Now.Ticks;
+        //  更新 HEAD，将首项更换为 items的首项。
+        SqliteCommand cmd = _db.UpdateNonExecute(
+            TABLE_NAME,
+            new Dictionary<string, object?> { [NextPath] = itemsArray.First() },
+            $"{nameof(MusicListModel.Name)} = @{nameof(MusicListModel.Name)}",
+            new Dictionary<string, object?> { [nameof(MusicListModel.Name)] = musicList.Name });
+        var data = itemsArray.Take(..^1)
+                             .Select((item, index) => new Dictionary<string, object?> {
+                                 [nameof(MusicListModel.Name)] = musicListName,
+                                 [nameof(MusicItemModel.FilePath)] = item,
+                                 [AddTime] = time,
+                                 [NextPath] = itemsArray[index + 1]
+                             });
+
+        _db.InsertMultipleNonExecute(ref cmd, TABLE_NAME, data);
+        _db.Execute(cmd);
     }
+
     /// <summary>
     ///     添加歌曲到歌单
     /// </summary>
-    public void Insert(MusicListModel musicList, MusicItemModel item) {
-        Insert(musicList, [item]);
-    }
+    public void Insert(MusicListModel musicList, MusicItemModel item) { InsertRange(musicList, [item]); }
 
     /// <summary>
     ///     从歌单中删除指定歌曲
     /// </summary>
-    public void Remove(MusicListModel musicList, MusicItemModel item) {
-        var whereParams = new Dictionary<string, object> {
-            [nameof(MusicListModel.Name)] = musicList.Name, [nameof(MusicItemModel.FilePath)] = item.FilePath
-        };
-
-        _db.Delete(
-            TABLE_NAME,
-            $"{nameof(MusicListModel.Name)} = @{nameof(MusicListModel.Name)} AND {nameof(MusicItemModel.FilePath)} = @{
-                nameof(MusicItemModel.FilePath)}",
-            whereParams);
+    public void RemoveRange(MusicListModel musicList, IEnumerable<MusicItemModel> items) {
+        SqliteCommand cmd = _db.NewCommand();
+        items.AsParallel()
+             .ForAll(item => {
+                 _db.UpdateNonExecute(
+                     ref cmd,
+                     TABLE_NAME,
+                     new Dictionary<string, object?> { [NextPath] = null },
+                     $"{nameof(MusicListModel.Name)} = @{nameof(MusicListModel.Name)} AND {NextPath} = @{NextPath}",
+                     new Dictionary<string, object?> {
+                         [nameof(MusicListModel.Name)] = musicList.Name, [NextPath] = item.FilePath
+                     });
+                 _db.DeleteNonExecute(
+                     ref cmd,
+                     TABLE_NAME,
+                     $"{nameof(MusicListModel.Name)} = @{nameof(MusicListModel.Name)} AND {
+                         nameof(MusicItemModel.FilePath)
+                     } = @{nameof(MusicItemModel.FilePath)}",
+                     new Dictionary<string, object> {
+                         [nameof(MusicListModel.Name)] = musicList.Name,
+                         [nameof(MusicItemModel.FilePath)] = item.FilePath
+                     });
+             });
+        _db.Execute(cmd);
     }
+
+    public void Remove(MusicListModel musicList, MusicItemModel item) { RemoveRange(musicList, [item]); }
 
     /// <summary>
     ///     清空整个歌单

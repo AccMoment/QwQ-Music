@@ -5,21 +5,20 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using QwQ_Music.Common.Managers;
 
 namespace QwQ_Music.UI.Controls;
 
 /// <summary>
 ///     图片裁剪控件，支持自由比例和固定比例裁剪，提供直观的交互体验
 /// </summary>
-public class ImageCropperControl : Control
-{
+public class ImageCropperControl : Control {
     #region 构造函数
 
     /// <summary>
     ///     初始化图片裁剪控件
     /// </summary>
-    public ImageCropperControl()
-    {
+    public ImageCropperControl() {
         ClipToBounds = true;
         _cropRect = new Rect(0, 0, MIN_CROP_SIZE, MIN_CROP_SIZE);
     }
@@ -32,8 +31,7 @@ public class ImageCropperControl : Control
     ///     获取裁剪后的图片
     /// </summary>
     /// <returns>裁剪后的图片，如果源图片为空则返回null</returns>
-    public Bitmap? GetCroppedImage()
-    {
+    public Bitmap? GetCroppedImage() {
         if (_sourceImage == null)
             return null;
 
@@ -41,15 +39,13 @@ public class ImageCropperControl : Control
             (int)((_cropRect.X - _imageOffset.X) / _imageScale),
             (int)((_cropRect.Y - _imageOffset.Y) / _imageScale),
             (int)(_cropRect.Width / _imageScale),
-            (int)(_cropRect.Height / _imageScale)
-        );
+            (int)(_cropRect.Height / _imageScale));
 
         var croppedBitmap = new WriteableBitmap(
             cropRect.Size,
             _sourceImage.Dpi,
             _sourceImage.Format,
-            _sourceImage.AlphaFormat
-        );
+            _sourceImage.AlphaFormat);
 
         using var fb = croppedBitmap.Lock();
         _sourceImage.CopyPixels(cropRect, fb.Address, fb.RowBytes * cropRect.Height, fb.RowBytes);
@@ -64,13 +60,8 @@ public class ImageCropperControl : Control
     /// <summary>
     ///     调整手柄类型
     /// </summary>
-    private enum ResizeHandle
-    {
-        None,
-        TopLeft,
-        TopRight,
-        BottomLeft,
-        BottomRight
+    private enum ResizeHandle {
+        None, TopLeft, TopRight, BottomLeft, BottomRight
     }
 
     #endregion
@@ -140,27 +131,20 @@ public class ImageCropperControl : Control
     /// <summary>
     ///     源图片
     /// </summary>
-    public static readonly StyledProperty<Bitmap?> SourceImageProperty = AvaloniaProperty.Register<
-        ImageCropperControl,
-        Bitmap?
-    >(nameof(SourceImage));
+    public static readonly StyledProperty<Bitmap?> SourceImageProperty =
+        AvaloniaProperty.Register<ImageCropperControl, Bitmap?>(nameof(SourceImage));
 
     /// <summary>
     ///     裁剪框宽高比，0表示自由比例
     /// </summary>
-    public static readonly StyledProperty<double> AspectRatioProperty = AvaloniaProperty.Register<
-        ImageCropperControl,
-        double
-    >(nameof(AspectRatio), 1.0);
+    public static readonly StyledProperty<double> AspectRatioProperty =
+        AvaloniaProperty.Register<ImageCropperControl, double>(nameof(AspectRatio), 1.0);
 
     /// <summary>
     ///     裁剪后的图片
     /// </summary>
-    public static readonly DirectProperty<ImageCropperControl, Bitmap?> CroppedImageProperty =
-        AvaloniaProperty.RegisterDirect<ImageCropperControl, Bitmap?>(
-            nameof(CroppedImage),
-            o => o.CroppedImage
-        );
+    public static readonly DirectProperty<ImageCropperControl, Bitmap> CroppedImageProperty =
+        AvaloniaProperty.RegisterDirect<ImageCropperControl, Bitmap>(nameof(CroppedImage), o => o.CroppedImage);
 
     #endregion
 
@@ -169,8 +153,7 @@ public class ImageCropperControl : Control
     /// <summary>
     ///     获取或设置源图片
     /// </summary>
-    public Bitmap? SourceImage
-    {
+    public Bitmap? SourceImage {
         get => GetValue(SourceImageProperty);
         set => SetValue(SourceImageProperty, value);
     }
@@ -178,8 +161,7 @@ public class ImageCropperControl : Control
     /// <summary>
     ///     获取或设置裁剪框宽高比，0表示自由比例
     /// </summary>
-    public double AspectRatio
-    {
+    public double AspectRatio {
         get => GetValue(AspectRatioProperty);
         set => SetValue(AspectRatioProperty, value);
     }
@@ -187,11 +169,10 @@ public class ImageCropperControl : Control
     /// <summary>
     ///     获取裁剪后的图片
     /// </summary>
-    public Bitmap? CroppedImage
-    {
+    public Bitmap CroppedImage {
         get;
         private set => SetAndRaise(CroppedImageProperty, ref field, value);
-    }
+    } = CacheManager.Loading;
 
     #endregion
 
@@ -200,51 +181,33 @@ public class ImageCropperControl : Control
     /// <summary>
     ///     获取调整手柄类型
     /// </summary>
-    private ResizeHandle GetResizeHandle(Point point)
-    {
+    private ResizeHandle GetResizeHandle(Point point) {
         if (_aspectRatio != 0)
             return ResizeHandle.None;
 
         double handleSize = RESIZE_HANDLE_SIZE * 2;
 
-        var handles = new[]
-        {
-            (
-                ResizeHandle.TopLeft,
-                new Rect(
-                    _cropRect.Left - RESIZE_HANDLE_SIZE,
-                    _cropRect.Top - RESIZE_HANDLE_SIZE,
-                    handleSize,
-                    handleSize
-                )
-            ),
-            (
-                ResizeHandle.TopRight,
-                new Rect(
-                    _cropRect.Right - RESIZE_HANDLE_SIZE,
-                    _cropRect.Top - RESIZE_HANDLE_SIZE,
-                    handleSize,
-                    handleSize
-                )
-            ),
-            (
-                ResizeHandle.BottomLeft,
-                new Rect(
-                    _cropRect.Left - RESIZE_HANDLE_SIZE,
-                    _cropRect.Bottom - RESIZE_HANDLE_SIZE,
-                    handleSize,
-                    handleSize
-                )
-            ),
-            (
-                ResizeHandle.BottomRight,
-                new Rect(
-                    _cropRect.Right - RESIZE_HANDLE_SIZE,
-                    _cropRect.Bottom - RESIZE_HANDLE_SIZE,
-                    handleSize,
-                    handleSize
-                )
-            )
+        var handles = new[] {
+            (ResizeHandle.TopLeft,
+             new Rect(_cropRect.Left - RESIZE_HANDLE_SIZE, _cropRect.Top - RESIZE_HANDLE_SIZE, handleSize, handleSize)),
+            (ResizeHandle.TopRight,
+             new Rect(
+                 _cropRect.Right - RESIZE_HANDLE_SIZE,
+                 _cropRect.Top - RESIZE_HANDLE_SIZE,
+                 handleSize,
+                 handleSize)),
+            (ResizeHandle.BottomLeft,
+             new Rect(
+                 _cropRect.Left - RESIZE_HANDLE_SIZE,
+                 _cropRect.Bottom - RESIZE_HANDLE_SIZE,
+                 handleSize,
+                 handleSize)),
+            (ResizeHandle.BottomRight,
+             new Rect(
+                 _cropRect.Right - RESIZE_HANDLE_SIZE,
+                 _cropRect.Bottom - RESIZE_HANDLE_SIZE,
+                 handleSize,
+                 handleSize))
         };
 
         return handles.FirstOrDefault(h => h.Item2.Contains(point)).Item1;
@@ -253,8 +216,7 @@ public class ImageCropperControl : Control
     /// <summary>
     ///     计算最佳初始缩放比例
     /// </summary>
-    private double CalculateInitialScale()
-    {
+    private double CalculateInitialScale() {
         if (_sourceImage == null)
             return MIN_SCALE;
 
@@ -275,8 +237,7 @@ public class ImageCropperControl : Control
     /// <summary>
     ///     计算最佳初始裁剪框尺寸和位置
     /// </summary>
-    private Rect CalculateInitialCropRect()
-    {
+    private Rect CalculateInitialCropRect() {
         if (_sourceImage == null)
             return new Rect(0, 0, MIN_CROP_SIZE, MIN_CROP_SIZE);
 
@@ -284,8 +245,7 @@ public class ImageCropperControl : Control
 
         var imageSize = new Size(
             _sourceImage.PixelSize.Width * _imageScale,
-            _sourceImage.PixelSize.Height * _imageScale
-        );
+            _sourceImage.PixelSize.Height * _imageScale);
 
         // 计算裁剪框尺寸
         var cropSize = CalculateCropSize(availableSize, imageSize);
@@ -299,38 +259,28 @@ public class ImageCropperControl : Control
     /// <summary>
     ///     计算裁剪框尺寸
     /// </summary>
-    private Size CalculateCropSize(Size availableSize, Size imageSize)
-    {
-        double width,
-            height;
+    private Size CalculateCropSize(Size availableSize, Size imageSize) {
+        double width, height;
 
-        if (_aspectRatio == 0)
-        {
+        if (_aspectRatio == 0) {
             // 自由比例：使用可用空间的默认比例
             width = Math.Min(availableSize.Width * DEFAULT_CROP_RATIO, imageSize.Width);
             height = Math.Min(availableSize.Height * DEFAULT_CROP_RATIO, imageSize.Height);
-        }
-        else
-        {
+        } else {
             // 固定比例：根据可用空间和比例计算
-            if (_aspectRatio > 1)
-            {
+            if (_aspectRatio > 1) {
                 width = Math.Min(availableSize.Width, imageSize.Width);
                 height = width / _aspectRatio;
 
-                if (height > availableSize.Height)
-                {
+                if (height > availableSize.Height) {
                     height = availableSize.Height;
                     width = height * _aspectRatio;
                 }
-            }
-            else
-            {
+            } else {
                 height = Math.Min(availableSize.Height, imageSize.Height);
                 width = height * _aspectRatio;
 
-                if (width > availableSize.Width)
-                {
+                if (width > availableSize.Width) {
                     width = availableSize.Width;
                     height = width / _aspectRatio;
                 }
@@ -347,8 +297,7 @@ public class ImageCropperControl : Control
     /// <summary>
     ///     计算居中位置
     /// </summary>
-    private Point CalculateCenteredPosition(Size size)
-    {
+    private Point CalculateCenteredPosition(Size size) {
         double x = (Bounds.Width - size.Width) / 2;
         double y = (Bounds.Height - size.Height) / 2;
 
@@ -362,34 +311,29 @@ public class ImageCropperControl : Control
     /// <summary>
     ///     获取可用空间大小
     /// </summary>
-    private Size GetAvailableSize()
-    {
+    private Size GetAvailableSize() {
         return new Size(
             Math.Max(MIN_CONTROL_SIZE, Bounds.Width - SAFE_MARGIN * 2),
-            Math.Max(MIN_CONTROL_SIZE, Bounds.Height - SAFE_MARGIN * 2)
-        );
+            Math.Max(MIN_CONTROL_SIZE, Bounds.Height - SAFE_MARGIN * 2));
     }
 
     /// <summary>
     ///     调整图片位置，确保裁剪框始终在图片范围内
     /// </summary>
-    private void AdjustImagePosition()
-    {
+    private void AdjustImagePosition() {
         if (_sourceImage == null)
             return;
 
         var imageSize = new Size(
             _sourceImage.PixelSize.Width * _imageScale,
-            _sourceImage.PixelSize.Height * _imageScale
-        );
+            _sourceImage.PixelSize.Height * _imageScale);
 
         // 计算裁剪框在图片坐标系中的位置
         var cropBounds = new Rect(
             _cropRect.Left - _imageOffset.X,
             _cropRect.Top - _imageOffset.Y,
             _cropRect.Width,
-            _cropRect.Height
-        );
+            _cropRect.Height);
 
         // 调整X偏移
         if (cropBounds.Left < 0)
@@ -407,37 +351,24 @@ public class ImageCropperControl : Control
     /// <summary>
     ///     更新裁剪后的图片
     /// </summary>
-    private void UpdateCroppedImage()
-    {
-        if (_sourceImage == null)
-        {
-            CroppedImage = null;
-
-            return;
-        }
-
-        try
-        {
-            CroppedImage = GetCroppedImage();
-        }
-        catch (Exception)
-        {
+    private void UpdateCroppedImage() {
+        try {
+            CroppedImage = GetCroppedImage() ?? CacheManager.NotExist;
+        } catch (Exception) {
             // 如果裁剪失败，设置为null
-            CroppedImage = null;
+            CroppedImage = CacheManager.Damaged;
         }
     }
 
     /// <summary>
     ///     初始化控件
     /// </summary>
-    private void Initialize()
-    {
+    private void Initialize() {
         if (_sourceImage == null)
             return;
 
         // 检查控件尺寸是否有效
-        if (Bounds.Width <= 0 || Bounds.Height <= 0)
-        {
+        if (Bounds.Width <= 0 || Bounds.Height <= 0) {
             _isControlSizeValid = false;
 
             return;
@@ -452,8 +383,7 @@ public class ImageCropperControl : Control
         // 2. 计算此时的最小缩放比例，确保裁剪框不会超出图片内容
         double minScale = CalculateMinScaleForCropBox();
 
-        if (_imageScale < minScale)
-        {
+        if (_imageScale < minScale) {
             _imageScale = minScale;
 
             // 用新的缩放比例重新计算裁剪框
@@ -463,13 +393,9 @@ public class ImageCropperControl : Control
         // 3. 计算初始偏移量，确保图片居中
         var imageSize = new Size(
             _sourceImage.PixelSize.Width * _imageScale,
-            _sourceImage.PixelSize.Height * _imageScale
-        );
+            _sourceImage.PixelSize.Height * _imageScale);
 
-        _imageOffset = new Point(
-            (Bounds.Width - imageSize.Width) / 2,
-            (Bounds.Height - imageSize.Height) / 2
-        );
+        _imageOffset = new Point((Bounds.Width - imageSize.Width) / 2, (Bounds.Height - imageSize.Height) / 2);
 
         // 调整图片位置，确保裁剪框在图片范围内
         AdjustImagePosition();
@@ -481,8 +407,7 @@ public class ImageCropperControl : Control
     /// <summary>
     ///     计算当前裁剪框下图片的最小缩放比例，保证裁剪框不会超出图片内容
     /// </summary>
-    private double CalculateMinScaleForCropBox()
-    {
+    private double CalculateMinScaleForCropBox() {
         if (_sourceImage == null)
             return MIN_SCALE;
 
@@ -506,8 +431,7 @@ public class ImageCropperControl : Control
 
     #region 重写方法
 
-    public override void Render(DrawingContext context)
-    {
+    public override void Render(DrawingContext context) {
         base.Render(context);
 
         if (_sourceImage == null)
@@ -516,8 +440,7 @@ public class ImageCropperControl : Control
         // 计算图片的实际大小和位置
         var imageSize = new Size(
             _sourceImage.PixelSize.Width * _imageScale,
-            _sourceImage.PixelSize.Height * _imageScale
-        );
+            _sourceImage.PixelSize.Height * _imageScale);
 
         var imageRect = new Rect(_imageOffset, imageSize);
 
@@ -530,12 +453,7 @@ public class ImageCropperControl : Control
         var rightRect = new Rect(_cropRect.Right, 0, Bounds.Width - _cropRect.Right, Bounds.Height);
         var topRect = new Rect(_cropRect.X, 0, _cropRect.Width, _cropRect.Y);
 
-        var bottomRect = new Rect(
-            _cropRect.X,
-            _cropRect.Bottom,
-            _cropRect.Width,
-            Bounds.Height - _cropRect.Bottom
-        );
+        var bottomRect = new Rect(_cropRect.X, _cropRect.Bottom, _cropRect.Width, Bounds.Height - _cropRect.Bottom);
 
         context.FillRectangle(overlayBrush, leftRect);
         context.FillRectangle(overlayBrush, rightRect);
@@ -553,52 +471,26 @@ public class ImageCropperControl : Control
             double handleSize = RESIZE_HANDLE_SIZE;
 
             // 绘制四个角的手柄
-            var handles = new[]
-            {
-                new Rect(
-                    _cropRect.Left - handleSize / 2,
-                    _cropRect.Top - handleSize / 2,
-                    handleSize,
-                    handleSize
-                ),
-                new Rect(
-                    _cropRect.Right - handleSize / 2,
-                    _cropRect.Top - handleSize / 2,
-                    handleSize,
-                    handleSize
-                ),
-                new Rect(
-                    _cropRect.Left - handleSize / 2,
-                    _cropRect.Bottom - handleSize / 2,
-                    handleSize,
-                    handleSize
-                ),
-                new Rect(
-                    _cropRect.Right - handleSize / 2,
-                    _cropRect.Bottom - handleSize / 2,
-                    handleSize,
-                    handleSize
-                )
+            var handles = new[] {
+                new Rect(_cropRect.Left - handleSize / 2, _cropRect.Top - handleSize / 2, handleSize, handleSize),
+                new Rect(_cropRect.Right - handleSize / 2, _cropRect.Top - handleSize / 2, handleSize, handleSize),
+                new Rect(_cropRect.Left - handleSize / 2, _cropRect.Bottom - handleSize / 2, handleSize, handleSize),
+                new Rect(_cropRect.Right - handleSize / 2, _cropRect.Bottom - handleSize / 2, handleSize, handleSize)
             };
 
-            foreach (var handle in handles)
-            {
+            foreach (var handle in handles) {
                 context.FillRectangle(handleBrush, handle);
             }
         }
     }
 
-    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
-    {
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change) {
         base.OnPropertyChanged(change);
 
-        if (change.Property == SourceImageProperty)
-        {
+        if (change.Property == SourceImageProperty) {
             _sourceImage = change.GetNewValue<Bitmap?>();
             Initialize();
-        }
-        else if (change.Property == AspectRatioProperty)
-        {
+        } else if (change.Property == AspectRatioProperty) {
             _aspectRatio = change.GetNewValue<double>();
 
             if (_sourceImage == null || !_isControlSizeValid)
@@ -615,8 +507,7 @@ public class ImageCropperControl : Control
         }
     }
 
-    protected override void OnSizeChanged(SizeChangedEventArgs e)
-    {
+    protected override void OnSizeChanged(SizeChangedEventArgs e) {
         base.OnSizeChanged(e);
 
         if (_sourceImage == null || e.NewSize == _lastControlSize)
@@ -625,18 +516,14 @@ public class ImageCropperControl : Control
         _lastControlSize = e.NewSize;
 
         // 如果控件尺寸变得太小，调整缩放比例
-        if (e.NewSize.Width < MIN_CONTROL_SIZE || e.NewSize.Height < MIN_CONTROL_SIZE)
-        {
+        if (e.NewSize.Width < MIN_CONTROL_SIZE || e.NewSize.Height < MIN_CONTROL_SIZE) {
             _imageScale = CalculateInitialScale();
         }
 
         // 如果控件尺寸变为有效，且之前未初始化，则进行初始化
-        if (!_isControlSizeValid && e.NewSize is { Width: > 0, Height: > 0 })
-        {
+        if (!_isControlSizeValid && e.NewSize is { Width: > 0, Height: > 0 }) {
             Initialize();
-        }
-        else if (_isControlSizeValid)
-        {
+        } else if (_isControlSizeValid) {
             // 重新计算裁剪框
             _cropRect = CalculateInitialCropRect();
 
@@ -648,8 +535,7 @@ public class ImageCropperControl : Control
         }
     }
 
-    protected override void OnPointerPressed(PointerPressedEventArgs e)
-    {
+    protected override void OnPointerPressed(PointerPressedEventArgs e) {
         base.OnPointerPressed(e);
 
         if (_sourceImage == null)
@@ -658,12 +544,9 @@ public class ImageCropperControl : Control
         var point = e.GetPosition(this);
         _activeHandle = GetResizeHandle(point);
 
-        if (_activeHandle != ResizeHandle.None)
-        {
+        if (_activeHandle != ResizeHandle.None) {
             _isResizing = true;
-        }
-        else
-        {
+        } else {
             _isDragging = true;
         }
 
@@ -671,8 +554,7 @@ public class ImageCropperControl : Control
         e.Pointer.Capture(this);
     }
 
-    protected override void OnPointerMoved(PointerEventArgs e)
-    {
+    protected override void OnPointerMoved(PointerEventArgs e) {
         base.OnPointerMoved(e);
 
         if (_sourceImage == null)
@@ -684,26 +566,21 @@ public class ImageCropperControl : Control
 
         bool needsUpdate = false;
 
-        if (_isResizing && _aspectRatio == 0)
-        {
+        if (_isResizing && _aspectRatio == 0) {
             // 调整裁剪框大小
             var newRect = CalculateNewCropRect(point);
 
-            if (newRect is { Width: >= MIN_CROP_SIZE, Height: >= MIN_CROP_SIZE })
-            {
+            if (newRect is { Width: >= MIN_CROP_SIZE, Height: >= MIN_CROP_SIZE }) {
                 _cropRect = newRect;
                 needsUpdate = true;
             }
-        }
-        else if (_isDragging)
-        {
+        } else if (_isDragging) {
             // 计算新的偏移量
             var newOffset = _imageOffset + delta;
 
             var imageSize = new Size(
                 _sourceImage.PixelSize.Width * _imageScale,
-                _sourceImage.PixelSize.Height * _imageScale
-            );
+                _sourceImage.PixelSize.Height * _imageScale);
 
             // 限制偏移量，确保裁剪框不会超出图片范围
             if (_cropRect.Left - newOffset.X < 0)
@@ -720,8 +597,7 @@ public class ImageCropperControl : Control
             needsUpdate = true;
         }
 
-        if (needsUpdate)
-        {
+        if (needsUpdate) {
             UpdateCroppedImage();
             InvalidateVisual();
         }
@@ -730,15 +606,13 @@ public class ImageCropperControl : Control
     /// <summary>
     ///     计算新的裁剪框
     /// </summary>
-    private Rect CalculateNewCropRect(Point point)
-    {
+    private Rect CalculateNewCropRect(Point point) {
         if (_sourceImage == null)
             return default;
 
         var imageSize = new Size(
             _sourceImage.PixelSize.Width * _imageScale,
-            _sourceImage.PixelSize.Height * _imageScale
-        );
+            _sourceImage.PixelSize.Height * _imageScale);
 
         double newWidth = _cropRect.Width;
         double newHeight = _cropRect.Height;
@@ -751,8 +625,7 @@ public class ImageCropperControl : Control
         double imageRight = imageLeft + imageSize.Width;
         double imageBottom = imageTop + imageSize.Height;
 
-        switch (_activeHandle)
-        {
+        switch (_activeHandle) {
             case ResizeHandle.TopLeft:
                 newWidth = _cropRect.Right - point.X;
                 newHeight = _cropRect.Bottom - point.Y;
@@ -780,56 +653,47 @@ public class ImageCropperControl : Control
         }
 
         // 限制裁剪框在图片范围内
-        if (newX < imageLeft)
-        {
+        if (newX < imageLeft) {
             newWidth += newX - imageLeft;
             newX = imageLeft;
         }
 
-        if (newY < imageTop)
-        {
+        if (newY < imageTop) {
             newHeight += newY - imageTop;
             newY = imageTop;
         }
 
-        if (newX + newWidth > imageRight)
-        {
+        if (newX + newWidth > imageRight) {
             newWidth = imageRight - newX;
         }
 
-        if (newY + newHeight > imageBottom)
-        {
+        if (newY + newHeight > imageBottom) {
             newHeight = imageBottom - newY;
         }
 
         // 限制裁剪框在控件安全范围内
-        if (newX < SAFE_MARGIN)
-        {
+        if (newX < SAFE_MARGIN) {
             newWidth += newX - SAFE_MARGIN;
             newX = SAFE_MARGIN;
         }
 
-        if (newY < SAFE_MARGIN)
-        {
+        if (newY < SAFE_MARGIN) {
             newHeight += newY - SAFE_MARGIN;
             newY = SAFE_MARGIN;
         }
 
-        if (newX + newWidth > Bounds.Width - SAFE_MARGIN)
-        {
+        if (newX + newWidth > Bounds.Width - SAFE_MARGIN) {
             newWidth = Bounds.Width - SAFE_MARGIN - newX;
         }
 
-        if (newY + newHeight > Bounds.Height - SAFE_MARGIN)
-        {
+        if (newY + newHeight > Bounds.Height - SAFE_MARGIN) {
             newHeight = Bounds.Height - SAFE_MARGIN - newY;
         }
 
         return new Rect(newX, newY, newWidth, newHeight);
     }
 
-    protected override void OnPointerReleased(PointerReleasedEventArgs e)
-    {
+    protected override void OnPointerReleased(PointerReleasedEventArgs e) {
         base.OnPointerReleased(e);
 
         if (!_isDragging && !_isResizing)
@@ -841,8 +705,7 @@ public class ImageCropperControl : Control
         e.Pointer.Capture(null);
     }
 
-    protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
-    {
+    protected override void OnPointerWheelChanged(PointerWheelEventArgs e) {
         base.OnPointerWheelChanged(e);
 
         if (_sourceImage == null)
@@ -852,11 +715,9 @@ public class ImageCropperControl : Control
         double delta = e.Delta.Y;
 
         // 计算缩放中心点相对于图片的偏移
-        double relativeX =
-            (point.X - _imageOffset.X) / (_sourceImage.PixelSize.Width * _imageScale);
+        double relativeX = (point.X - _imageOffset.X) / (_sourceImage.PixelSize.Width * _imageScale);
 
-        double relativeY =
-            (point.Y - _imageOffset.Y) / (_sourceImage.PixelSize.Height * _imageScale);
+        double relativeY = (point.Y - _imageOffset.Y) / (_sourceImage.PixelSize.Height * _imageScale);
 
         // 计算新的缩放比例
         double newScale = _imageScale * (1 + delta * SCALE_FACTOR);
@@ -870,23 +731,16 @@ public class ImageCropperControl : Control
             return;
 
         // 计算新的图片偏移，保持鼠标指向的点不变
-        var newSize = new Size(
-            _sourceImage.PixelSize.Width * newScale,
-            _sourceImage.PixelSize.Height * newScale
-        );
+        var newSize = new Size(_sourceImage.PixelSize.Width * newScale, _sourceImage.PixelSize.Height * newScale);
 
-        var newOffset = new Point(
-            point.X - relativeX * newSize.Width,
-            point.Y - relativeY * newSize.Height
-        );
+        var newOffset = new Point(point.X - relativeX * newSize.Width, point.Y - relativeY * newSize.Height);
 
         // 计算裁剪框在图片坐标系中的位置
         var cropBounds = new Rect(
             _cropRect.Left - newOffset.X,
             _cropRect.Top - newOffset.Y,
             _cropRect.Width,
-            _cropRect.Height
-        );
+            _cropRect.Height);
 
         // 限制偏移量，确保裁剪框不会超出图片范围
         if (cropBounds.Left < 0)

@@ -4,5 +4,5 @@ namespace QwQ_Music.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    public static DrawerStatusViewModel DrawerStatusViewModel => DrawerStatusViewModel.Default;
+    public static Common.Managers.DrawerManager DrawerManager => Common.Managers.DrawerManager.Instance;
 }

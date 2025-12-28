@@ -1,9 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia.Collections;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -16,17 +16,24 @@ using Ursa.Controls;
 
 namespace QwQ_Music.Common.Managers;
 
+public class MusicItemsChangedEventArgs : EventArgs {
+    public required List<MusicItemModel>? OldItems { get; init; }
+    public required List<MusicItemModel>? NewItems { get; init; }
+}
+
 public partial class MusicItemsManager : ObservableObject {
     private MusicItemsManager() { InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult(); }
     public static MusicItemsManager All { get; } = new();
 
-    public AvaloniaDictionary<string, MusicItemModel> MusicItems { get; private set; } = null!; //Initialized in .ctor
+    public event EventHandler<MusicItemsChangedEventArgs>? MusicItemsChanged;
+
+    public Dictionary<string, MusicItemModel> MusicItems { get; private set; } = new(); //Initialized in .ctor
     public MusicItemModel this[string key] => MusicItems[key];
     public int Count => MusicItems.Count;
 
     private async Task InitializeAsync() {
         try {
-            MusicItems = new AvaloniaDictionary<string, MusicItemModel>(
+            MusicItems = new Dictionary<string, MusicItemModel>(
                 await Task.Run(() => MusicItemRepository.Instance.GetAll()
                                                         .ToDictionary(item => item.FilePath, item => item))
                           .ConfigureAwait(false));
@@ -41,7 +48,7 @@ public partial class MusicItemsManager : ObservableObject {
         }
     }
 
-    public async Task AddAsync(IList<MusicItemModel> musicItems) {
+    public async Task<IEnumerable<MusicItemModel>> AddAsync(IList<MusicItemModel> musicItems) {
         var successItems = new List<MusicItemModel>();
 
         await Task.Run(() => {
@@ -75,6 +82,9 @@ public partial class MusicItemsManager : ObservableObject {
             string failedTitles = string.Join("、", failedItems.Select(item => $"《{item.Title}》"));
             NotificationService.Error($"歌曲 {failedTitles} 添加失败了！");
         }
+
+        MusicItemsChanged?.Invoke(this, new MusicItemsChangedEventArgs() { OldItems = null, NewItems = successItems });
+        return successItems;
     }
 
     public static void Update(MusicItemModel musicItem) {
@@ -140,7 +150,7 @@ public partial class MusicItemsManager : ObservableObject {
         }
     }
 
-    public async Task<IEnumerable<MusicItemModel>?> DeleteAsync(IEnumerable<MusicItemModel> musicItems) {
+    public async Task<IEnumerable<MusicItemModel>?> RemoveAsync(IEnumerable<MusicItemModel> musicItems) {
         var items = musicItems.ToArray();
         if (items.Length == 0)
             return null;
@@ -192,7 +202,20 @@ public partial class MusicItemsManager : ObservableObject {
             NotificationService.Error($"删除{failedTitles}失败了！");
         }
 
+        MusicItemsChanged?.Invoke(this, new MusicItemsChangedEventArgs() { OldItems = successItems, NewItems = null });
         return successItems;
+    }
+
+    [RelayCommand]
+    public void ClearRecords(IEnumerable items) {
+        IEnumerable<MusicItemModel> models = items switch {
+            IEnumerable<MusicItemModel> musicItems => musicItems,
+            IEnumerable<PlaylistItemModel> playlistItems => playlistItems.Select(item => item.Model),
+            _ => throw new ArgumentException($"未知的音频模型类型集合{items.GetType()}", nameof(items))
+        };
+        foreach (MusicItemModel model in models) {
+            model.ClearRecord();
+        }
     }
 
     [RelayCommand]
@@ -218,5 +241,10 @@ public partial class MusicItemsManager : ObservableObject {
             LoggerService.Error($"打开文件位置失败: {e.Message}");
             NotificationService.Error($"打开《{musicItem.Title}》文件位置时报错：{e.Message}");
         }
+    }
+
+    [RelayCommand]
+    public static async Task RemoveItemsAsync(IList<MusicItemModel> items) {
+        await All.RemoveAsync(items).ConfigureAwait(false);
     }
 }
