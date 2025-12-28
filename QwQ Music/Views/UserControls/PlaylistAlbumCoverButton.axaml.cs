@@ -3,11 +3,11 @@ using Avalonia.Controls;
 
 namespace QwQ_Music.Views.UserControls;
 
-public partial class PlaylistAlbumButton : Button {
+public partial class PlaylistAlbumCoverButton : Button {
     public static readonly StyledProperty<bool> ExternalPointerOverProperty =
-        AvaloniaProperty.Register<MusicAlbumButton, bool>(nameof(ExternalPointerOver));
+        AvaloniaProperty.Register<PlaylistAlbumCoverButton, bool>(nameof(ExternalPointerOver));
 
-    public PlaylistAlbumButton() { InitializeComponent(); }
+    public PlaylistAlbumCoverButton() { InitializeComponent(); }
 
     public bool ExternalPointerOver {
         get => GetValue(ExternalPointerOverProperty);

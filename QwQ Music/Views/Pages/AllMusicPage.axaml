@@ -276,13 +276,13 @@
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
 
-                                <userControls:MusicAlbumButton
+                                <userControls:MusicAlbumCoverButton
                                     Command="{Binding $parent[DataGrid].((page:AllMusicPageViewModel)DataContext).SetMusicCommand}"
                                     CommandParameter="{Binding $parent[DataGrid].((page:AllMusicPageViewModel)DataContext).SelectedItems}"
                                     CornerRadius="8"
                                     ExternalPointerOver="{Binding $parent[DataGridRow].IsPointerOver}">
 
-                                </userControls:MusicAlbumButton>
+                                </userControls:MusicAlbumCoverButton>
 
                                 <DockPanel HorizontalSpacing="5" VerticalSpacing="5" VerticalAlignment="Center">
                                     <TextBlock FontWeight="Bold" Text="{Binding Title}" DockPanel.Dock="Top" />

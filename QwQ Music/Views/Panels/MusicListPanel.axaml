@@ -307,7 +307,7 @@
                             <StackPanel Orientation="Horizontal">
 
                                 <!--  ReSharper disable Xaml.PossibleNullReferenceException  -->
-                                <custom:MusicAlbumButton
+                                <custom:MusicAlbumCoverButton
                                     x:DataType="managers:AudioPlayManager"
                                     Command="{Binding Instance.PlayThisMusicCommand}"
                                     CommandParameter="{Binding}"

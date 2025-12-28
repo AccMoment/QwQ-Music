@@ -1,17 +1,17 @@
-<custom:MusicAlbumButton
+<custom:MusicAlbumCoverButton
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:custom="clr-namespace:QwQ_Music.Views.UserControls"
     xmlns:models="clr-namespace:QwQ_Music.Models"
     xmlns:managers="clr-namespace:QwQ_Music.Common.Managers"
-    x:Class="QwQ_Music.Views.UserControls.MusicAlbumButton"
+    x:Class="QwQ_Music.Views.UserControls.MusicAlbumCoverButton"
     Classes="None"
     Foreground="{DynamicResource SemiColorBackground4}"
     Height="50"
     Margin="10"
     Width="50"
     ClipToBounds="True">
-    <custom:MusicAlbumButton.Template>
+    <custom:MusicAlbumCoverButton.Template>
         <ControlTemplate x:DataType="models:MusicItemModel">
             <Panel>
                 <Image Source="{Binding CoverImage}" />
@@ -116,6 +116,6 @@
                 </Panel>
             </Panel>
         </ControlTemplate>
-    </custom:MusicAlbumButton.Template>
+    </custom:MusicAlbumCoverButton.Template>
 
-</custom:MusicAlbumButton>
+</custom:MusicAlbumCoverButton>

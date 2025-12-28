@@ -83,7 +83,7 @@
                 <Panel>
                     <StackPanel Orientation="Horizontal">
 
-                        <userControls:PlaylistAlbumButton
+                        <userControls:PlaylistAlbumCoverButton
                             Command="{Binding (managers:AudioPlayManager).Instance.PlayThisMusicCommand}"
                             CommandParameter="{Binding }"
                             CornerRadius="8"

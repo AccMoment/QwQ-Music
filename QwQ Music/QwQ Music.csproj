@@ -69,9 +69,12 @@
       <Compile Update="Views\Panels\MusicListPanel.cs">
         <DependentUpon>MusicListPanel.axaml</DependentUpon>
       </Compile>
-      <Compile Update="Views\UserControls\PlaylistAlbumButton.axaml.cs">
-        <DependentUpon>PlaylistMusicAlbumButton.axaml</DependentUpon>
+      <Compile Update="Views\UserControls\PlaylistAlbumCoverButton.axaml.cs">
+        <DependentUpon>PlaylistAlbumCoverButton.axaml</DependentUpon>
         <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\UserControls\MusicAlbumCoverButton.axaml.cs">
+        <DependentUpon>MusicAlbumCoverButton.axaml</DependentUpon>
       </Compile>
     </ItemGroup>
 
