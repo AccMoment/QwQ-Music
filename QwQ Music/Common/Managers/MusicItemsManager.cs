@@ -23,7 +23,9 @@ public class MusicItemsChangedEventArgs : EventArgs {
 
 public partial class MusicItemsManager : ObservableObject {
     private MusicItemsManager() { InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult(); }
-    public static MusicItemsManager All { get; } = new();
+    public static MusicItemsManager All { get; } = new() { Name = "QWQ_MUSIC_LIST_ALL_MUSIC_LIST" };
+
+    public required string Name { get; init; }
 
     public event EventHandler<MusicItemsChangedEventArgs>? MusicItemsChanged;
 
@@ -130,7 +132,7 @@ public partial class MusicItemsManager : ObservableObject {
         try {
             MusicItemRepository.Instance.Update(musicItem.FilePath, fields);
         } catch (Exception e) {
-            LoggerService.ErrorAsync($"更新歌曲《{musicItem.Title}》信息到数据库时发生错误 : \n{e}");
+            LoggerService.Error($"更新歌曲《{musicItem.Title}》信息到数据库时发生错误 : \n{e}");
             NotificationService.Error($"更新歌曲《{musicItem.Title}》信息到数据库时发生错误 : \n{e.Message}");
         }
     }
@@ -219,13 +221,14 @@ public partial class MusicItemsManager : ObservableObject {
     }
 
     [RelayCommand]
-    public static async Task ShowDetailedInfo(MusicItemModel musicItem) {
+    public static void ShowDetailedInfo(MusicItemModel musicItem) {
         var options = new OverlayDialogOptions { Title = "详细信息", CanLightDismiss = true, Mode = DialogMode.Info };
 
-        await OverlayDialog.ShowCustomModal<AudioDetailedInfo, AudioDetailedInfoViewModel, DialogResult>(
-                               new AudioDetailedInfoViewModel(musicItem, musicItem.Track),
-                               options: options)
-                           .ConfigureAwait(false);
+        OverlayDialog.ShowCustomModal<AudioDetailedInfo, AudioDetailedInfoViewModel, DialogResult>(
+                         new AudioDetailedInfoViewModel(musicItem, musicItem.Track),
+                         options: options)
+                     .ContinueWith(LoggerService.HandleException)
+                     .ConfigureAwait(false);
     }
 
     [RelayCommand]
@@ -244,7 +247,7 @@ public partial class MusicItemsManager : ObservableObject {
     }
 
     [RelayCommand]
-    public static async Task RemoveItemsAsync(IList<MusicItemModel> items) {
-        await All.RemoveAsync(items).ConfigureAwait(false);
+    public static void RemoveItems(IList<MusicItemModel> items) {
+        All.RemoveAsync(items).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 }

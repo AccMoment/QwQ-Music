@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace QwQ_Music.Common.Helper;
+namespace QwQ_Music.Common.Helpers;
 
 public static class EnumDescriptionStore
 {

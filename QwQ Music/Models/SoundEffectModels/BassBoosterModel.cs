@@ -7,37 +7,31 @@ using SoundFlow.Structs;
 
 namespace QwQ_Music.Models.SoundEffectModels;
 
-public class BassBoosterModel : ObservableObject, ISoundModifierModel<BassBoosterModifier >
-{
-    [JsonIgnore] public BassBoosterModifier? Modifier { get; private set; }
+public class BassBoosterModel : ObservableObject, ISoundModifierModel<BassBoosterModifier> {
+    [JsonIgnore]
+    public BassBoosterModifier? Modifier { get; private set; }
 
-    [JsonIgnore] SoundModifier? ISoundModifierModel.Modifier => Modifier;
+    [JsonIgnore]
+    SoundModifier? ISoundModifierModel.Modifier => Modifier;
 
-    [JsonIgnore] public string Name { get; } = "低音增强";
+    [JsonIgnore]
+    public string Name { get; } = "低音增强";
 
-    public void Initialize(AudioFormat audioFormat)
-    {
-        var modifier = new BassBoosterModifier(audioFormat)
-        {
-            Cutoff = Cutoff,
-            BoostGain = BoostGain
+    public void Initialize(AudioFormat audioFormat) {
+        var modifier = new BassBoosterModifier(audioFormat) { Cutoff = Cutoff, 
+            // BoostGainDb = BoostGainDb
+            BoostGain = BoostGainDb
         };
 
         Modifier = modifier;
     }
 
-    public void Revoke()
-    {
-        Modifier = null;
-    }
-    
-    public bool Enabled
-    {
+    public void Revoke() { Modifier = null; }
+
+    public bool Enabled {
         get;
-        set
-        {
-            if (SetProperty(ref field, value))
-            {
+        set {
+            if (SetProperty(ref field, value)) {
                 Modifier?.Enabled = value;
             }
         }
@@ -46,13 +40,10 @@ public class BassBoosterModel : ObservableObject, ISoundModifierModel<BassBooste
     /// <summary>
     /// 获取或设置截止频率（Hz）。
     /// </summary>
-    public float Cutoff
-    {
+    public float Cutoff {
         get;
-        set
-        {
-            if (SetProperty(ref field, value))
-            {
+        set {
+            if (SetProperty(ref field, value)) {
                 Modifier?.Cutoff = value;
             }
         }
@@ -61,16 +52,13 @@ public class BassBoosterModel : ObservableObject, ISoundModifierModel<BassBooste
     /// <summary>
     /// 获取或设置以增益（dB）。
     /// </summary>
-    public float BoostGain
-    {
+    public float BoostGainDb {
         get;
-        set
-        {
-            if (SetProperty(ref field, value))
-            {
+        set {
+            if (SetProperty(ref field, value)) {
                 Modifier?.BoostGain = value;
+                // Modifier?.BoostGainDb = value;
             }
         }
     }
-
 }

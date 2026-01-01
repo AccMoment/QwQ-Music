@@ -72,10 +72,6 @@
                         SelectedValue="{Binding LoggerServiceConfig.Level}" />
                 </Panel>
 
-                <CheckBox
-                    Content="保持文件打开"
-                    IsChecked="{Binding LoggerServiceConfig.IsKeepOpen}" />
-
                 <TextBlock Text="重试次数" />
                 <u:NumericIntUpDown Minimum="0" Maximum="10"
                                     Value="{Binding LoggerServiceConfig.RetryCount}" />

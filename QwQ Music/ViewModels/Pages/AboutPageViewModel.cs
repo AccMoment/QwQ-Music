@@ -97,40 +97,38 @@ public partial class AboutPageViewModel : ViewModelBase {
     public static string VersionText => Program.VersionText;
 
     [RelayCommand]
-    private static async Task OpenContributorFromGayHub(string name) {
-        if (App.TopLevel == null)
-            return;
-
-        var launcher = App.TopLevel.Launcher;
-        await launcher.LaunchUriAsync(new Uri($"https://github.com/{name}")).ConfigureAwait(false);
+    private static void OpenContributorFromGayHub(string name) {
+        App.TopLevel?.Launcher.LaunchUriAsync(new Uri($"https://github.com/{name}"))
+           .ContinueWith(LoggerService.HandleException)
+           .ConfigureAwait(false);
     }
 
     [RelayCommand]
-    private static async Task OpenUri(string uri) {
-        if (App.TopLevel == null)
-            return;
-
-        var launcher = App.TopLevel.Launcher;
-        await launcher.LaunchUriAsync(new Uri(uri)).ConfigureAwait(false);
+    private static void OpenUri(string uri) {
+        App.TopLevel?.Launcher.LaunchUriAsync(new Uri(uri))
+           .ContinueWith(LoggerService.HandleException)
+           .ConfigureAwait(false);
     }
 
     [RelayCommand]
-    private static async Task CopyText() {
+    private static void CopyText() {
         // 使用topLevel进行操作
         var clipboard = App.TopLevel?.Clipboard;
 
         if (clipboard == null) {
-            await LoggerService.WarningAsync($"版本号复制失败：剪贴板不存在。TopLevel:{App.TopLevel}")
-                               .ContinueWith(LoggerService.HandleException)
-                               .ConfigureAwait(false);
+            LoggerService.Warning($"版本号复制失败：剪贴板不存在。TopLevel:{App.TopLevel}");
             NotificationService.Error($"版本号“{VersionText}”复制失败！\n无法找到剪贴板！〒▽〒");
-
             return;
         }
 
-        await clipboard.SetTextAsync(VersionText).ConfigureAwait(false);
-        await LoggerService.InfoAsync("版本号复制成功。").ConfigureAwait(false);
-        NotificationService.Success($"版本号“{VersionText}”复制成功！");
+        clipboard.SetTextAsync(VersionText)
+                 .ContinueWith(LoggerService.HandleException)
+                 .ConfigureAwait(false)
+                 .GetAwaiter()
+                 .OnCompleted(() => {
+                     LoggerService.Info("版本号复制成功。");
+                     NotificationService.Success($"版本号“{VersionText}”复制成功！");
+                 });
     }
 }
 

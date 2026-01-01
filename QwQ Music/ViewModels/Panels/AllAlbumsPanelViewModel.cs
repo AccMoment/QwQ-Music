@@ -7,6 +7,7 @@ using Avalonia.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Managers;
+using QwQ_Music.Common.Services;
 using QwQ_Music.Models;
 using QwQ_Music.Models.ConfigModels;
 using MusicItemsManager = QwQ_Music.Common.Managers.MusicItemsManager;
@@ -146,11 +147,13 @@ public partial class AllAlbumsPanelViewModel : ObservableObject {
     }
 
     [RelayCommand]
-    private static async Task PlayAlbumMusic(AlbumModel? albumItem) {
+    private static void PlayAlbumMusic(AlbumModel? albumItem) {
         if (albumItem == null)
             return;
-
-        await PlaylistManager.Instance.ReplaceAsync(SearchMusicItems(albumItem), true).ConfigureAwait(false);
+        var items = SearchMusicItems(albumItem);
+        PlaylistManager.Instance.ReplaceAsync(albumItem.Name, items, items[0], true)
+                       .ContinueWith(LoggerService.HandleException)
+                       .ConfigureAwait(false);
     }
 
     private static List<MusicItemModel> SearchMusicItems(AlbumModel album) {

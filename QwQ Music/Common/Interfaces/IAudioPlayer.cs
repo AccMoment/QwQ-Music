@@ -47,7 +47,7 @@ public interface IAudioPlayer : IDisposable
     /// <summary>
     ///     暂停播放
     /// </summary>
-    void Pause();
+    void Pause(bool instant);
 
     /// <summary>
     ///     停止播放并释放资源

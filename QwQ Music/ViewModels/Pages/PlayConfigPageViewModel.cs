@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Audio.SoundModifier;
@@ -34,11 +35,15 @@ public partial class PlayConfigPageViewModel : ViewModelBase {
     };
 
     [RelayCommand]
-    public async Task OpenCurrentStreamInfo() {
+    public void OpenCurrentStreamInfo() {
         // ReSharper disable once UseConfigureAwaitFalse
-        await OverlayDialog.ShowCustomModal<CurrentStreamInfo, ViewModelBase?, DialogResult>(
-            null,
-            options: new OverlayDialogOptions { Title = "详细信息", CanLightDismiss = true, Mode = DialogMode.Info });
+        OverlayDialog.ShowCustomModal<CurrentStreamInfo, ViewModelBase?, DialogResult>(
+                         null,
+                         options: new OverlayDialogOptions {
+                             Title = "详细信息", CanLightDismiss = true, Mode = DialogMode.Info
+                         })
+                     .ContinueWith(LoggerService.HandleException)
+                     .ConfigureAwait(false);
     }
 
     private void ComeToOneselfEvent() {
@@ -79,42 +84,41 @@ public partial class PlayConfigPageViewModel : ViewModelBase {
     }
 
     [RelayCommand]
-    private async Task ClearCallbackGain() {
-        if (await MessageBox.ShowOverlayAsync(
-                                "你真的要清空已经计算的回放增益值吗？",
-                                "警告",
-                                icon: MessageBoxIcon.Warning,
-                                button: MessageBoxButton.YesNo)
-                            .ConfigureAwait(true) !=
-            MessageBoxResult.Yes)
-            return;
-
-        var musicItems = MusicItemsManager.MusicItems.Values.Where(item => item.Gain > 0);
-
-        await Task.Run(() => {
-                      foreach (MusicItemModel musicItem in musicItems) {
+    private void ClearCallbackGain() {
+        MessageBox.ShowOverlayAsync(
+                      "你真的要清空已经计算的回放增益值吗？",
+                      "警告",
+                      icon: MessageBoxIcon.Warning,
+                      button: MessageBoxButton.YesNo)
+                  .ContinueWith(task => {
+                      if (task is not { IsCompletedSuccessfully: true, Result: MessageBoxResult.Yes })
+                          return;
+                      foreach (MusicItemModel musicItem in MusicItemsManager.MusicItems.Values.Where(item =>
+                                   item.Gain > 0)) {
                           musicItem.Gain = 0;
                           MusicItemsManager.Update(
                               musicItem,
                               new Dictionary<string, object?> { [nameof(MusicItemModel.Gain)] = musicItem.Gain });
                       }
                   })
-                  .ConfigureAwait(false);
-
-        NumberOfCompletedCalc = 0;
-
-        NotificationService.Info("回放增益值已清空！");
+                  .ContinueWith(LoggerService.HandleException)
+                  .ConfigureAwait(true)
+                  .GetAwaiter()
+                  .OnCompleted(() => {
+                      NumberOfCompletedCalc = 0;
+                      NotificationService.Info("回放增益值已清空！");
+                  });
     }
 
     [RelayCommand]
-    private async Task ToggleCalculation() {
+    private void ToggleCalculation() {
         if (MusicItemsManager.Count <= 0 || NumberOfCompletedCalc == MusicItemsManager.Count) {
             NotificationService.Info("已经没有需要计算回放增益的音乐啦~");
 
             return;
         }
 
-        await StartNewCalculationAsync().ConfigureAwait(false);
+        StartNewCalculationAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 
     private async Task StartNewCalculationAsync() {

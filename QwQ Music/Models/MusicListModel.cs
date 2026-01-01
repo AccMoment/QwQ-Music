@@ -47,7 +47,7 @@ public partial class MusicListModel : ObservableObject {
     public DateTime CreateTime { get; init; } // PublishTime for Album.
     public DateTime ModifyTime { get; set; }
 
-    public List<MusicItemModel>? Musics { get; private set; }
+    public virtual List<MusicItemModel>? Musics { get; private set; }
 
     public void AddRange(IEnumerable<MusicItemModel> musics) {
         if (!IsLoaded) {

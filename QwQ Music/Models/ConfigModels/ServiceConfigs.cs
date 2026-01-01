@@ -2,13 +2,7 @@ using QwQ_Music.Common.Services;
 
 namespace QwQ_Music.Models.ConfigModels;
 
-public class LoggerServiceConfig
-{
-    /// <summary>
-    ///     保存文件打开
-    /// </summary>
-    public bool IsKeepOpen { get; set; } = true;
-
+public class LoggerServiceConfig {
     /// <summary>
     ///     重试次数
     /// </summary>

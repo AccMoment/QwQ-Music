@@ -10,13 +10,11 @@ using QwQ_Music.ViewModels.Bases;
 
 namespace QwQ_Music.ViewModels.Dialogs;
 
-public partial class AudioDetailedInfoViewModel : ViewModelBase
-{
+public partial class AudioDetailedInfoViewModel : ViewModelBase {
     private readonly MusicItemModel _musicItem;
     private readonly Track? _track;
 
-    public AudioDetailedInfoViewModel(MusicItemModel musicItem, Track? track)
-    {
+    public AudioDetailedInfoViewModel(MusicItemModel musicItem, Track? track) {
         _musicItem = musicItem;
         _track = track;
         MusicInfoGroups = [];
@@ -29,8 +27,7 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase
 
     public string? SelectedText { get; set; }
 
-    private void InitializeMusicInfo()
-    {
+    private void InitializeMusicInfo() {
         AddFileInfoGroup();
         AddBasicMetadataGroup();
         AddPersonsAndRightsGroup();
@@ -47,30 +44,27 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase
 
     // --- 辅助方法 ---
 
-    private static void AddInfo(AvaloniaList<MusicInfoKeyValuePair> targetList, string key, string? value)
-    {
+    private static void AddInfo(AvaloniaList<MusicInfoKeyValuePair> targetList, string key, string? value) {
         // 只添加非空且有意义的信息
-        if (!string.IsNullOrWhiteSpace(value) && value != "0" && value != "0001-01-01 00:00:00")
-        {
+        if (!string.IsNullOrWhiteSpace(value) && value != "0" && value != "0001-01-01 00:00:00") {
             targetList.Add(new MusicInfoKeyValuePair(key, value));
         }
     }
 
-    private static string FormatValue(object? value, string? unit = null)
-    {
-        if (value == null) return "未知";
+    private static string FormatValue(object? value, string? unit = null) {
+        if (value == null)
+            return "未知";
 
         string? valueStr = value.ToString();
 
-        if (string.IsNullOrEmpty(valueStr) || valueStr == "0") return "未知";
+        if (string.IsNullOrEmpty(valueStr) || valueStr == "0")
+            return "未知";
 
         return string.IsNullOrEmpty(unit) ? valueStr : $"{valueStr} {unit}";
     }
 
-    private static string GetCodecFamilyDescription(int codecFamily)
-    {
-        return codecFamily switch
-        {
+    private static string GetCodecFamilyDescription(int codecFamily) {
+        return codecFamily switch {
             0 => "流式传输，有损数据",
             1 => "流式传输，无损数据",
             2 => "带嵌入式音源库的序列化",
@@ -81,8 +75,7 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase
 
     // --- 分组添加方法 ---
 
-    private void AddFileInfoGroup()
-    {
+    private void AddFileInfoGroup() {
         var items = new AvaloniaList<MusicInfoKeyValuePair>();
         AddInfo(items, "标题", _musicItem.Title);
         AddInfo(items, "文件路径", _musicItem.FilePath);
@@ -91,14 +84,12 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase
         AddInfo(items, "修改时间", _musicItem.ModificationTime.ToString("yyyy-MM-dd HH:mm:ss"));
         AddInfo(items, "编码格式", _track?.AudioFormat.ShortName ?? "未知");
 
-        if (items.Count > 0)
-        {
+        if (items.Count > 0) {
             MusicInfoGroups.Add(new MusicInfoGroup("文件信息", items));
         }
     }
 
-    private void AddBasicMetadataGroup()
-    {
+    private void AddBasicMetadataGroup() {
         var items = new AvaloniaList<MusicInfoKeyValuePair>();
         AddInfo(items, "标题", _track?.Title);
         AddInfo(items, "艺术家", _track?.Artist ?? _musicItem.Artists);
@@ -112,14 +103,12 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase
         AddInfo(items, "注释", _track?.Comment ?? _musicItem.Comment);
         AddInfo(items, "语言", _track?.Language);
 
-        if (items.Count > 0)
-        {
+        if (items.Count > 0) {
             MusicInfoGroups.Add(new MusicInfoGroup("基本元数据", items));
         }
     }
 
-    private void AddPersonsAndRightsGroup()
-    {
+    private void AddPersonsAndRightsGroup() {
         var items = new AvaloniaList<MusicInfoKeyValuePair>();
         AddInfo(items, "相关人员", _track?.InvolvedPeople);
         AddInfo(items, "版权", _track?.Copyright);
@@ -128,28 +117,24 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase
         AddInfo(items, "编码器信息", _track?.Encoder);
         AddInfo(items, "音频源 URL", _track?.AudioSourceUrl);
 
-        if (items.Count > 0)
-        {
+        if (items.Count > 0) {
             MusicInfoGroups.Add(new MusicInfoGroup("相关人员与权利", items));
         }
     }
 
-    private void AddClassificationAndSeriesGroup()
-    {
+    private void AddClassificationAndSeriesGroup() {
         var items = new AvaloniaList<MusicInfoKeyValuePair>();
         AddInfo(items, "流派", _track?.Genre);
         AddInfo(items, "内容组描述", _track?.Group);
         AddInfo(items, "系列标题/乐章名称", _track?.SeriesTitle);
         AddInfo(items, "系列部分/乐章索引", _track?.SeriesPart);
 
-        if (items.Count > 0)
-        {
+        if (items.Count > 0) {
             MusicInfoGroups.Add(new MusicInfoGroup("分类与系列", items));
         }
     }
 
-    private void AddDatesGroup()
-    {
+    private void AddDatesGroup() {
         var items = new AvaloniaList<MusicInfoKeyValuePair>();
 
         if (_track?.Date != null && _track.Date > DateTime.MinValue)
@@ -167,14 +152,12 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase
         if (_track?.PublishingDate != null && _track.PublishingDate > DateTime.MinValue)
             AddInfo(items, "发布日期", _track.PublishingDate.Value.ToString("yyyy-MM-dd HH:mm:ss"));
 
-        if (items.Count > 0)
-        {
+        if (items.Count > 0) {
             MusicInfoGroups.Add(new MusicInfoGroup("日期信息", items));
         }
     }
 
-    private void AddNumbersAndRatingsGroup()
-    {
+    private void AddNumbersAndRatingsGroup() {
         var items = new AvaloniaList<MusicInfoKeyValuePair>();
 
         AddInfo(items, "音轨编号", _track?.TrackNumber?.ToString() ?? _track?.TrackNumberStr);
@@ -190,81 +173,67 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase
 
         AddInfo(items, "回放增益", _musicItem.Gain > 0 ? $"{_musicItem.Gain:F2} dB" : null);
 
-        if (items.Count > 0)
-        {
+        if (items.Count > 0) {
             MusicInfoGroups.Add(new MusicInfoGroup("编号与评分", items));
         }
     }
 
-    private void AddIdentifiersGroup()
-    {
+    private void AddIdentifiersGroup() {
         var items = new AvaloniaList<MusicInfoKeyValuePair>();
         AddInfo(items, "产品 ID", _track?.ProductId);
         AddInfo(items, "ISRC", _track?.ISRC);
         AddInfo(items, "目录号", _track?.CatalogNumber);
 
-        if (items.Count > 0)
-        {
+        if (items.Count > 0) {
             MusicInfoGroups.Add(new MusicInfoGroup("标识符", items));
         }
     }
 
-    private void AddSortingGroup()
-    {
+    private void AddSortingGroup() {
         var items = new AvaloniaList<MusicInfoKeyValuePair>();
         AddInfo(items, "标题排序", _track?.SortTitle);
         AddInfo(items, "艺术家排序", _track?.SortArtist);
         AddInfo(items, "专辑排序", _track?.SortAlbum);
         AddInfo(items, "专辑艺术家排序", _track?.SortAlbumArtist);
 
-        if (items.Count > 0)
-        {
+        if (items.Count > 0) {
             MusicInfoGroups.Add(new MusicInfoGroup("排序信息", items));
         }
     }
 
-    private void AddLyricsAndChaptersGroup()
-    {
+    private void AddLyricsAndChaptersGroup() {
         var items = new AvaloniaList<MusicInfoKeyValuePair>();
 
         // 简化处理，只显示是否存在
-        if (_track?.Lyrics is { Count: > 0 })
-        {
+        if (_track?.Lyrics is { Count: > 0 }) {
             AddInfo(items, "歌词", "存在");
         }
 
-        if (_track?.Chapters is { Count: > 0 })
-        {
+        if (_track?.Chapters is { Count: > 0 }) {
             AddInfo(items, "章节", "存在");
             AddInfo(items, "章节表描述", _track.ChaptersTableDescription);
         }
 
-        if (items.Count > 0)
-        {
+        if (items.Count > 0) {
             MusicInfoGroups.Add(new MusicInfoGroup("歌词与章节", items));
         }
     }
 
-    private void AddAdditionalFieldsGroup()
-    {
-        if (_track?.AdditionalFields is { Count: > 0 })
-        {
+    private void AddAdditionalFieldsGroup() {
+        if (_track?.AdditionalFields is { Count: > 0 }) {
             var items = new AvaloniaList<MusicInfoKeyValuePair>();
 
-            foreach (var field in _track.AdditionalFields)
-            {
+            foreach (var field in _track.AdditionalFields) {
                 AddInfo(items, field.Key, field.Value);
             }
 
-            if (items.Count > 0)
-            {
+            if (items.Count > 0) {
                 MusicInfoGroups.Add(new MusicInfoGroup("附加字段", items));
             }
         }
     }
 
-    private void AddAudioTechnicalInfoGroup()
-    {
+    private void AddAudioTechnicalInfoGroup() {
         var items = new AvaloniaList<MusicInfoKeyValuePair>();
 
         AddInfo(items, "音频格式", _track?.AudioFormat?.Name ?? "未知");
@@ -277,48 +246,41 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase
         AddInfo(items, "声道数", _track?.ChannelsArrangement?.NbChannels.ToString());
         AddInfo(items, "编解码器族", GetCodecFamilyDescription(_track?.CodecFamily ?? -1));
 
-        if (items.Count > 0)
-        {
+        if (items.Count > 0) {
             MusicInfoGroups.Add(new MusicInfoGroup("音频技术信息", items));
         }
     }
 
-    private void AddMetadataFormatsGroup()
-    {
+    private void AddMetadataFormatsGroup() {
         var items = new AvaloniaList<MusicInfoKeyValuePair>();
 
-        if (_track?.MetadataFormats is { Count: > 0 })
-        {
+        if (_track?.MetadataFormats is { Count: > 0 }) {
             string[] formatNames = _track.MetadataFormats.Select(f => f.Name).ToArray();
             AddInfo(items, "存在的标签格式", string.Join(", ", formatNames));
         }
 
-        if (_track?.SupportedMetadataFormats is { Count: > 0 })
-        {
+        if (_track?.SupportedMetadataFormats is { Count: > 0 }) {
             string[] supportedFormatNames = _track.SupportedMetadataFormats.Select(f => f.Name).ToArray();
             AddInfo(items, "支持的标签格式", string.Join(", ", supportedFormatNames));
         }
 
-        if (items.Count > 0)
-        {
+        if (items.Count > 0) {
             MusicInfoGroups.Add(new MusicInfoGroup("元数据格式", items));
         }
     }
 
     [RelayCommand]
-    private async Task CopyText(MusicInfoKeyValuePair keyValuePair)
-    {
+    private void CopyText(MusicInfoKeyValuePair keyValuePair) {
         var clipboard = App.TopLevel?.Clipboard;
 
-        if (clipboard == null)
-        {
+        if (clipboard == null) {
             NotificationService.Error("复制失败！\n无法找到剪贴板！〒▽〒");
 
             return;
         }
 
         string textToCopy = SelectedText ?? $"{keyValuePair.Key} : {keyValuePair.Value}";
-        await clipboard.SetTextAsync(textToCopy);
+        clipboard.SetTextAsync(textToCopy).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 }
 

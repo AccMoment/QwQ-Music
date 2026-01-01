@@ -7,35 +7,27 @@ using UserConfigJsonSerializerContext = QwQ_Music.Models.ConfigModels.UserConfig
 
 namespace QwQ_Music.Common.Managers;
 
-public static class ConfigManager
-{
+public static class ConfigManager {
     private static readonly string _serviceConfigIniPath = Path.Combine(
         StaticConfig.ConfigSavePath,
-        $"{nameof(ServiceConfig).ToLower()}.QwQ.ini"
-    );
+        $"{nameof(ServiceConfig).ToLower()}.QwQ.ini");
 
-    private static JsonConfigService JsonConfigService => new(UserConfigJsonSerializerContext.Default, StaticConfig.ConfigSavePath);
+    private static JsonConfigService JsonConfigService =>
+        new(UserConfigJsonSerializerContext.Default, StaticConfig.ConfigSavePath);
 
-    static ConfigManager()
-    {
+    static ConfigManager() {
         ServiceConfig = GetServiceConfig();
 
-        UserConfig = JsonConfigService
-                .Load<UserConfig>(nameof(UserConfig).ToLower())
-         ?? new UserConfig();
+        UserConfig = JsonConfigService.Load<UserConfig>(nameof(UserConfig).ToLower()) ?? new UserConfig();
     }
 
-    private static ServiceConfig GetServiceConfig()
-    {
+    private static ServiceConfig GetServiceConfig() {
         var config = new ServiceConfig();
         var ini = new IniConfigService(_serviceConfigIniPath);
 
         // LoggerServiceConfig
-        config.LoggerServiceConfig.IsKeepOpen = ini.Get("IsKeepOpen", "LoggerService")?.ToLower() != "false";
-
-        config.LoggerServiceConfig.RetryCount = int.TryParse(ini.Get("RetryCount", "LoggerService"), out int lrc)
-            ? lrc
-            : 3;
+        config.LoggerServiceConfig.RetryCount =
+            int.TryParse(ini.Get("RetryCount", "LoggerService"), out int lrc) ? lrc : 3;
 
         config.LoggerServiceConfig.Level = Enum.TryParse(ini.Get("Level", "LoggerService"), out LogLevel level) ?
             level :
@@ -62,33 +54,18 @@ public static class ConfigManager
 
     public static LoggerServiceConfig LoggerServiceConfig => ServiceConfig.LoggerServiceConfig;
 
-    public static void SaveConfig()
-    {
-        try
-        {
-            JsonConfigService.Save(
-                UserConfig,
-                nameof(UserConfig).ToLower()
-            );
+    public static void SaveConfig() {
+        try {
+            JsonConfigService.Save(UserConfig, nameof(UserConfig).ToLower());
 
             SaveServiceConfig();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             LoggerService.Error($"保存配置文件时发生错误 : {e.Message}");
         }
     }
 
-    private static void SaveServiceConfig()
-    {
+    private static void SaveServiceConfig() {
         var ini = new IniConfigService();
-
-        // LoggerServiceConfig
-        ini.Set(
-            "IsKeepOpen",
-            ServiceConfig.LoggerServiceConfig.IsKeepOpen.ToString().ToLower(),
-            "LoggerService"
-        );
 
         ini.Set("RetryCount", ServiceConfig.LoggerServiceConfig.RetryCount.ToString(), "LoggerService");
         ini.Set("Level", ServiceConfig.LoggerServiceConfig.Level.ToString(), "LoggerService");

@@ -16,7 +16,7 @@
         xmlns:drawers="clr-namespace:QwQ_Music.Views.Drawers"
         xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
         xmlns:vm="clr-namespace:QwQ_Music.ViewModels.Drawers">
-
+    
     <!--
         亚克力效果
         Background="Transparent"

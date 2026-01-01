@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Managers;
+using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Services.Databases;
 using QwQ_Music.Models;
 using QwQ_Music.ViewModels.Bases;
@@ -21,15 +22,22 @@ public partial class AllMusicListPanelViewModel : ItemsViewModelBase<MusicListMo
     }
 
     [RelayCommand]
-    private static async Task TogglePlaylist(MusicListModel musicList) {
-        if (musicList.IsLoaded) {
-            await PlaylistManager.Instance.ReplaceAsync(musicList.Musics!, true).ConfigureAwait(false);
-        }
+    private static void TogglePlaylist(MusicListModel musicList) {
+        if (musicList.Name == PlaylistManager.Instance.CurrentListName)
+            if (musicList.IsLoaded) {
+                PlaylistManager.Instance.ReplaceAsync(musicList.Name, musicList.Musics!, isPlayNow: true)
+                               .ContinueWith(LoggerService.HandleException)
+                               .ConfigureAwait(false);
+                return;
+            }
 
-        await PlaylistManager.Instance.ReplaceAsync(
-                                 MusicListItemsRepository.Instance.GetAll(musicList.Name)
-                                                         .Select(path => MusicItemsManager.All.MusicItems[path]),
-                                 true)
-                             .ConfigureAwait(false);
+        PlaylistManager.Instance
+                       .ReplaceAsync(
+                           musicList.Name,
+                           MusicListItemsRepository.Instance.GetAll(musicList.Name)
+                                                   .Select(path => MusicItemsManager.All.MusicItems[path]),
+                           isPlayNow: true)
+                       .ContinueWith(LoggerService.HandleException)
+                       .ConfigureAwait(false);
     }
 }

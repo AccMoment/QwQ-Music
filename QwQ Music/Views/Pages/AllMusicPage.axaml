@@ -109,8 +109,8 @@
                             <ContextMenu x:DataType="models:MusicItemModel">
 
                                 <MenuItem
-                                    Command="{Binding $parent[DataGrid].((page:AllMusicPageViewModel)DataContext).SetMusicCommand}"
-                                    CommandParameter="{Binding $parent[DataGrid].SelectedItem}"
+                                    Command="{Binding $parent[DataGrid].((page:AllMusicPageViewModel)DataContext).SetMusicListCommand}"
+                                    CommandParameter="{Binding $parent[DataGrid].ItemsSource}"
                                     Header="立即播放">
                                     <MenuItem.Icon>
                                         <PathIcon Data="{StaticResource SemiIconPlay}" Margin="2" />
@@ -277,8 +277,8 @@
                             <StackPanel Orientation="Horizontal">
 
                                 <userControls:MusicAlbumCoverButton
-                                    Command="{Binding $parent[DataGrid].((page:AllMusicPageViewModel)DataContext).SetMusicCommand}"
-                                    CommandParameter="{Binding $parent[DataGrid].((page:AllMusicPageViewModel)DataContext).SelectedItems}"
+                                    Command="{Binding $parent[DataGrid].((page:AllMusicPageViewModel)DataContext).SetMusicListCommand}"
+                                    CommandParameter="{Binding $parent[DataGrid].ItemsSource}"
                                     CornerRadius="8"
                                     ExternalPointerOver="{Binding $parent[DataGridRow].IsPointerOver}">
 
@@ -348,7 +348,7 @@
             <Interaction.Behaviors>
 
                 <DoubleTappedTrigger>
-                    <InvokeCommandAction Command="{Binding SetMusicCommand}" />
+                    <InvokeCommandAction Command="{Binding SetMusicListCommand}" CommandParameter="{x:Null}" />
                 </DoubleTappedTrigger>
 
                 <RoutedEventTriggerBehavior RoutedEvent="{x:Static DataGrid.SelectionChangedEvent}">

@@ -20,5 +20,11 @@ public partial class AlbumModel(string name, string artist, string? coverFileNam
     public partial string? Company { get; set; }
 
     public Bitmap CoverImage =>
-        CacheManager.TryLoadCacheFromFile(coverFileName, "专辑", "封面", StaticConfig.GetMusicCoverFullPath(coverFileName),()=>OnPropertyChanged());
+        CacheManager.TryLoadCacheFromFile(
+            coverFileName,
+            "专辑",
+            "封面",
+            StaticConfig.GetMusicCoverFullPath(coverFileName),
+            () => OnPropertyChanged(),
+            Name);
 }

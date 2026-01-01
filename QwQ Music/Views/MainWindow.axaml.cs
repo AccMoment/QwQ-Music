@@ -20,7 +20,6 @@ public partial class MainWindow : Window {
 
     public MainWindow() {
         InitializeComponent();
-
         Width = 1200;
         Height = 800;
 
@@ -58,7 +57,7 @@ public partial class MainWindow : Window {
 
             Dispatcher.UIThread.Invoke(HandleWindowClosingAsync);
         } catch (Exception ex) {
-            LoggerService.ErrorAsync($"在程序退出时发生错误 : \n {ex.Message}");
+            LoggerService.Error($"在程序退出时发生错误 : \n {ex.Message}");
         }
     }
 

@@ -23,12 +23,12 @@
         Step="100"
         Value="{Binding Cutoff}" />
 
-    <TextBlock Text="{Binding BoostGain, StringFormat='增益 : {0:F3} dB'}" />
+    <TextBlock Text="{Binding BoostGainDb, StringFormat='增益 : {0:F3} dB'}" />
     <u:NumericFloatUpDown
         Maximum="12"
         Minimum="-12"
         InnerRightContent="dB"
         Step="0.1"
-        Value="{Binding BoostGain}" />
+        Value="{Binding BoostGainDb}" />
 
 </StackPanel>

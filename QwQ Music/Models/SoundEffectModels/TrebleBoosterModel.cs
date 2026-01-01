@@ -21,7 +21,8 @@ public class TrebleBoosterModel : ObservableObject, ISoundModifierModel<TrebleBo
         var modifier = new TrebleBoosterModifier(audioFormat)
         {
             Cutoff = Cutoff,
-            BoostGain = BoostGain,
+            BoostGain = BoostGainDb,
+            // BoostGainDb = BoostGainDb,
             Enabled = Enabled
         };
 
@@ -66,7 +67,7 @@ public class TrebleBoosterModel : ObservableObject, ISoundModifierModel<TrebleBo
     /// <summary>
     /// 获取或设置增益（dB）。
     /// </summary>
-    public float BoostGain
+    public float BoostGainDb
     {
         get;
         set
@@ -74,9 +75,9 @@ public class TrebleBoosterModel : ObservableObject, ISoundModifierModel<TrebleBo
             if (!SetProperty(ref field, value)) 
                 return;
 
-            if (Modifier == null) 
+            // Modifier?.BoostGainDb = value;
+            if (Modifier is null)
                 return;
-
             // 将 dB 转换为线性增益
             float linearGain = MathF.Pow(10, value / 20f);
             Modifier.BoostGain = linearGain;

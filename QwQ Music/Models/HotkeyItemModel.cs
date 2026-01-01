@@ -14,12 +14,10 @@ namespace QwQ_Music.Models;
 /// <summary>
 ///     热键配置项，用于在View中绑定单个功能的热键配置
 /// </summary>
-public partial class HotkeyItemModel : ObservableObject
-{
+public partial class HotkeyItemModel : ObservableObject {
     private readonly HotkeyConfig _config;
 
-    public HotkeyItemModel(HotkeyFunction function, HotkeyConfig config)
-    {
+    public HotkeyItemModel(HotkeyFunction function, HotkeyConfig config) {
         Function = function;
         _config = config;
         FunctionName = HotkeyService.GetFunctionDescription(function);
@@ -48,8 +46,7 @@ public partial class HotkeyItemModel : ObservableObject
     /// </summary>
     /// <param name="gesture">按键组合</param>
     /// <returns>是否添加成功</returns>
-    public bool AddKeyGesture(KeyGesture gesture)
-    {
+    public bool AddKeyGesture(KeyGesture gesture) {
         KeyGestures.Add(gesture);
 
         return true;
@@ -61,8 +58,7 @@ public partial class HotkeyItemModel : ObservableObject
     /// <param name="gesture">按键组合</param>
     /// <returns>是否移除成功</returns>
     [RelayCommand]
-    public void RemoveHotkey(KeyGesture gesture)
-    {
+    public void RemoveHotkey(KeyGesture gesture) {
         KeyGestures.Remove(gesture);
         HotkeyService.RemoveHotkey(Function, gesture);
     }
@@ -72,50 +68,40 @@ public partial class HotkeyItemModel : ObservableObject
     /// </summary>
     /// <param name="oldKeyGesture"></param>
     [RelayCommand]
-    private async Task ModifyGesture(KeyGesture oldKeyGesture)
-    {
-        var options = new OverlayDialogOptions
-        {
-            Title = "修改按键"
-        };
+    private void ModifyGesture(KeyGesture oldKeyGesture) {
+        var options = new OverlayDialogOptions { Title = "修改按键" };
 
-        var keyGesture = await OverlayDialog.ShowCustomModal<KeyGestureInput, KeyGestureInputViewModel, KeyGesture>(
-            new KeyGestureInputViewModel(this, options.Title, oldKeyGesture),
-            options: options
-        );
+        OverlayDialog.ShowCustomModal<KeyGestureInput, KeyGestureInputViewModel, KeyGesture>(
+                         new KeyGestureInputViewModel(this, options.Title, oldKeyGesture),
+                         options: options)
+                     .ContinueWith(task => {
+                         if (task is not { IsCompletedSuccessfully: true, Result: { } keyGesture })
+                             return;
+                         int index = KeyGestures.IndexOf(oldKeyGesture);
 
-        if (keyGesture != null)
-        {
-            int index = KeyGestures.IndexOf(oldKeyGesture);
+                         if (index == -1)
+                             return;
 
-            if (index == -1)
-                return;
-
-            KeyGestures[index] = keyGesture;
-            HotkeyService.ModifyHotkey(Function, oldKeyGesture, keyGesture);
-        }
+                         KeyGestures[index] = keyGesture;
+                         HotkeyService.ModifyHotkey(Function, oldKeyGesture, keyGesture);
+                     });
     }
 
     /// <summary>
     ///     清空所有按键
     /// </summary>
-    public void ClearKeyGestures()
-    {
-        KeyGestures.Clear();
-    }
+    public void ClearKeyGestures() { KeyGestures.Clear(); }
 
     /// <summary>
     ///     更新按键列表
     /// </summary>
-    public void UpdateKeyGestures()
-    {
+    public void UpdateKeyGestures() {
         KeyGestures.Clear();
 
         if (!_config.FunctionToKeyMap.TryGetValue(Function, out var gestures))
             return;
 
-        foreach (var gesture in gestures)
-        {
+        foreach (var gesture in gestures) {
             KeyGestures.Add(gesture.ToKeyGesture());
         }
     }

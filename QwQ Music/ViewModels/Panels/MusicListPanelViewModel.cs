@@ -24,13 +24,4 @@ public partial class MusicListPanelViewModel : MusicItemsViewModelBase {
         }
     }
 
-    [ObservableProperty]
-    public partial double DataGridHorizontalScrollValue { get; set; }
-
-
-    [RelayCommand]
-    private void ScrollToTop(DataGrid dataGrid) {
-        // 滚动到第一行（第一行数据）
-        dataGrid.ScrollIntoView(dataGrid.CollectionView.Cast<MusicItemModel>().FirstOrDefault(), null);
-    }
 }

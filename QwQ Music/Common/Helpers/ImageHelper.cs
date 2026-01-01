@@ -4,11 +4,10 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
-using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Utilities;
 
-namespace QwQ_Music.Common.Helper;
+namespace QwQ_Music.Common.Helpers;
 
 public static class ImageHelper {
     /// <summary>

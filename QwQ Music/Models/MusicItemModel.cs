@@ -72,7 +72,8 @@ public partial class MusicItemModel : ObservableObject {
             "音频",
             "封面",
             StaticConfig.GetMusicCoverFullPath(CoverId),
-            () => OnPropertyChanged());
+            () => OnPropertyChanged(),
+            Title);
 
     [ObservableProperty]
     public partial string Remarks { get; set; } = "";
@@ -238,6 +239,7 @@ public partial class MusicItemModel : ObservableObject {
     }
 
     public async Task LoadCurrentAsync() {
+        await LoggerService.DebugAsync($"正在异步加载音频《{Title}》的原始封面与歌词...").ConfigureAwait(false);
         IsCurrent = true;
         OriginalCover = CacheManager.Loading;
         if (string.IsNullOrWhiteSpace(FilePath) || await GetTrackAsync().ConfigureAwait(false) is not { } track)
@@ -248,20 +250,41 @@ public partial class MusicItemModel : ObservableObject {
             CacheManager.NotExist;
 
         Lyrics = await LoadLyricsAsync(track).ConfigureAwait(false);
+        await LoggerService.DebugAsync($"音频《{Title}》的原始封面与歌词加载完毕。").ConfigureAwait(false);
     }
 
     public void DisposeCurrent() {
         IsCurrent = false;
         Track = null;
+        Bitmap originalCover = OriginalCover;
         OriginalCover = CacheManager.Loading;
+        originalCover.Dispose();
         Lyrics = LyricsData.Loading;
+        LoggerService.Debug($"已释放音频《{Title}》的原始封面与歌词。");
     }
 
     #region 播放歌曲前加载的属性
 
     public Bitmap OriginalCover {
-        get;
+        get {
+            try {
+                return field.CreateScaledBitmap(field.PixelSize);
+            } catch (NullReferenceException) {
+                OriginalCover = Track?.EmbeddedPictures.Count > 0 ?
+                    new Bitmap(new MemoryStream(Track.EmbeddedPictures[0].PictureData)) :
+                    CacheManager.NotExist;
+                LoggerService.Warning($"歌曲《{Title}》的原始封面意外失效。已重新加载。");
+                return OriginalCover;
+            }
+        }
         private set {
+            try {
+                _ = value.PixelSize;
+            } catch (NullReferenceException) {
+                OriginalCover = CacheManager.Loading;
+                return;
+            }
+
             if (value.Size is { AspectRatio: 1 } || ConfigManager.UiConfig.CoverConfig.AllowNonSquareCover)
                 field = value;
             else

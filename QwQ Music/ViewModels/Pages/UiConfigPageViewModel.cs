@@ -11,17 +11,14 @@ using MusicItemsManager = QwQ_Music.Common.Managers.MusicItemsManager;
 
 namespace QwQ_Music.ViewModels.Pages;
 
-public partial class UiConfigPageViewModel() : NavigationViewModel("界面")
-{
+public partial class UiConfigPageViewModel() : NavigationViewModel("界面") {
     public UiConfig UiConfig { get; } = ConfigManager.UiConfig;
 
     public static AppResources AppResources => AppResources.Default;
 
-    public string ThemeMode
-    {
+    public string ThemeMode {
         get => UiConfig.ThemeConfig.Theme;
-        set
-        {
+        set {
             UiConfig.ThemeConfig.Theme = value;
 
             if (DrawerManager.Instance.IsMusicPlayerPanelVisible)
@@ -29,52 +26,38 @@ public partial class UiConfigPageViewModel() : NavigationViewModel("界面")
 
             IBrush brush;
 
-            if (UiConfig.ThemeConfig.Theme == "Default")
-            {
+            if (UiConfig.ThemeConfig.Theme == "Default") {
                 var color = ResourceAccessor.Get<Color>("SemiGrey0Color");
 
                 brush = DrawerManager.IsBrightColor(color) ? Brushes.DimGray : Brushes.GhostWhite;
-            }
-            else
-            {
-                brush =
-                    ConfigManager.UiConfig.ThemeConfig.Theme == "Light"
-                        ? Brushes.DimGray
-                        : Brushes.GhostWhite;
+            } else {
+                brush = ConfigManager.UiConfig.ThemeConfig.Theme == "Light" ? Brushes.DimGray : Brushes.GhostWhite;
             }
 
             ResourceAccessor.Set("CaptionButtonForeground", brush);
         }
     }
 
-    public Dictionary<ColorExtractionAlgorithm, string> ColorExtractionAlgorithms { get; set; } = new()
-    {
-        [ColorExtractionAlgorithm.KMeans] = "K-means 聚类算法 —— 精确取色",
-        [ColorExtractionAlgorithm.OctTree] = "八叉树算法 —— 快速取色"
+    public Dictionary<ColorExtractionAlgorithm, string> ColorExtractionAlgorithms { get; set; } = new() {
+        [ColorExtractionAlgorithm.KMeans] = "K-means 聚类算法 —— 精确取色", [ColorExtractionAlgorithm.OctTree] = "八叉树算法 —— 快速取色"
     };
 
-    public Dictionary<string, string> ThemeModes { get; set; } = new()
-    {
-        ["Default"] = "跟随系统",
-        ["Light"] = "亮色",
-        ["Dark"] = "暗色"
-    };
+    public Dictionary<string, string> ThemeModes { get; set; } =
+        new() { ["Default"] = "跟随系统", ["Light"] = "亮色", ["Dark"] = "暗色" };
 
     [RelayCommand]
-    private static async Task ClearCoverColor()
-    {
-        await Task.Run(() =>
-        {
-            foreach (var item in MusicItemsManager.All.MusicItems.Values)
-            {
-                if (item.CoverColors == null)
-                    continue;
+    private static void ClearCoverColor() {
+        Task.Run(() => {
+                foreach (var item in MusicItemsManager.All.MusicItems.Values) {
+                    if (item.CoverColors == null)
+                        continue;
 
-                item.CoverColors = null;
-            }
-        }).ConfigureAwait(false);
-        
-        NotificationService.Info("封面颜色缓存已经清空，切换音乐时将会重新提取并缓存~");
+                    item.CoverColors = null;
+                }
+            })
+            .ContinueWith(LoggerService.HandleException)
+            .ConfigureAwait(false)
+            .GetAwaiter()
+            .OnCompleted(() => NotificationService.Info("封面颜色缓存已经清空，切换音乐时将会重新提取并缓存~"));
     }
-
 }

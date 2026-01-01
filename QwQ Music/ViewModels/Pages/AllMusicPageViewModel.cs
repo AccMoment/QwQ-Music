@@ -30,9 +30,6 @@ public partial class AllMusicPageViewModel : MusicItemsViewModelBase {
     //     set => base.SelectedItems = value.Cast<MusicItemModel>().ToList();
     // }
 
-    [ObservableProperty]
-    public partial double DataGridHorizontalScrollValue { get; set; }
-
     public static MusicListsManager MusicListsManager => MusicListsManager.Instance;
 
 
@@ -43,37 +40,32 @@ public partial class AllMusicPageViewModel : MusicItemsViewModelBase {
     }
 
     [RelayCommand]
-    private static async Task OpenFileAsync() {
-        if (App.TopLevel == null)
-            return;
-
-        var items = await App.TopLevel.StorageProvider.OpenFilePickerAsync(
-                                 new FilePickerOpenOptions { Title = "选择音乐文件", AllowMultiple = true })
-                             .ConfigureAwait(false);
-
-        if (items.Count == 0)
-            return;
-
-        await AudioFileService.ProcessStorageItemsAsync(items).ConfigureAwait(false);
+    private static void OpenFile() {
+        App.TopLevel?.StorageProvider.OpenFilePickerAsync(
+               new FilePickerOpenOptions { Title = "选择音乐文件", AllowMultiple = true })
+           .ContinueWith(task => {
+               if (task is { IsCompletedSuccessfully: true, Result: { Count: > 0 } items })
+                   AudioFileService.ProcessStorageItemsAsync(items).ConfigureAwait(false);
+           })
+           .ContinueWith(LoggerService.HandleException)
+           .ConfigureAwait(false);
     }
 
     [RelayCommand]
-    private static async Task OpenFolderAsync() {
-        if (App.TopLevel == null)
-            return;
-
-        var items = await App.TopLevel.StorageProvider.OpenFolderPickerAsync(
-                                 new FolderPickerOpenOptions { Title = "选择包含音乐的文件夹", AllowMultiple = true })
-                             .ConfigureAwait(false);
-
-        if (items.Count == 0)
-            return;
-
-        await AudioFileService.ProcessStorageItemsAsync(items).ConfigureAwait(false);
+    private static void OpenFolder() {
+        App.TopLevel?.StorageProvider.OpenFolderPickerAsync(
+               new FolderPickerOpenOptions { Title = "选择包含音乐的文件夹", AllowMultiple = true })
+           .ContinueWith(task => {
+               if (task is { IsCompletedSuccessfully: true, Result: { Count: > 0 } items }) {
+                   AudioFileService.ProcessStorageItemsAsync(items).ConfigureAwait(false);
+               }
+           })
+           .ContinueWith(LoggerService.HandleException)
+           .ConfigureAwait(false);
     }
 
     [RelayCommand]
-    private static async Task DropFilesAsync(DragEventArgs? e) {
+    private static void DropFiles(DragEventArgs? e) {
         if (e?.DataTransfer.Contains(DataFormat.File) != true)
             return;
 
@@ -82,14 +74,20 @@ public partial class AllMusicPageViewModel : MusicItemsViewModelBase {
         if (items == null || items.Length == 0)
             return;
 
-        await AudioFileService.ProcessStorageItemsAsync(items).ConfigureAwait(false);
+        AudioFileService.ProcessStorageItemsAsync(items)
+                        .ContinueWith(LoggerService.HandleException)
+                        .ConfigureAwait(false);
     }
 
     [RelayCommand]
-    private async Task ForceRefreshMusicInfo() { await RefreshMusicItemsAsync(true).ConfigureAwait(false); }
+    private void ForceRefreshMusicInfo() {
+        RefreshMusicItemsAsync(true).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
+    }
 
     [RelayCommand]
-    private async Task RefreshMusicInfo() { await RefreshMusicItemsAsync().ConfigureAwait(false); }
+    private void RefreshMusicInfo() {
+        RefreshMusicItemsAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
+    }
 
     private async Task RefreshMusicItemsAsync(bool forceRefresh = false) {
         NotificationService.Info("正在刷新音乐信息...");
@@ -97,28 +95,29 @@ public partial class AllMusicPageViewModel : MusicItemsViewModelBase {
         var itemsToRemove = new List<MusicItemModel>();
         var itemsToUpdate = new List<MusicItemModel>();
 
-        await Parallel.ForEachAsync(
-                          MusicItemsManager.All.MusicItems.Values,
-                          async (item, _) => {
-                              if (!File.Exists(item.FilePath)) {
-                                  itemsToRemove.Add(item);
 
-                                  return;
-                              }
+        MusicItemsManager.All.MusicItems.Values.AsParallel()
+                         .ForAll(item => {
+                             if (!File.Exists(item.FilePath)) {
+                                 itemsToRemove.Add(item);
 
-                              try {
-                                  bool updated = await item.UpdateMetaDataAsync(forceRefresh).ConfigureAwait(false);
+                                 return;
+                             }
 
-                                  if (updated) {
-                                      itemsToUpdate.Add(item);
-                                  }
-                              } catch (Exception ex) {
-                                  await LoggerService.ErrorAsync($"刷新音乐信息失败: {ex.Message}\n{ex.StackTrace}")
-                                                     .ConfigureAwait(false);
-                                  itemsToRemove.Add(item);
-                              }
-                          })
-                      .ConfigureAwait(false);
+                             item.UpdateMetaDataAsync(forceRefresh)
+                                 .ContinueWith(task => {
+                                     if (!task.IsCompletedSuccessfully)
+                                         return;
+                                     if (task.Result) {
+                                         itemsToUpdate.Add(item);
+                                     } else {
+                                         LoggerService.Error($"刷新音乐信息失败。");
+                                         itemsToRemove.Add(item);
+                                     }
+                                 })
+                                 .ContinueWith(LoggerService.HandleException)
+                                 .ConfigureAwait(false);
+                         });
 
         await HandleBatchOperationsAsync(itemsToRemove, itemsToUpdate).ConfigureAwait(false);
 

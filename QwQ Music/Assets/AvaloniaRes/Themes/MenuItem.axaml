@@ -78,8 +78,7 @@
                                     HorizontalAlignment="Right"
                                     VerticalAlignment="Center"
                                     Foreground="{DynamicResource MenuItemInputGestureTextForeground}"
-                                    Text="{TemplateBinding InputGesture,
-                                    Converter={StaticResource KeyGestureConverter}}" />
+                                    Text="{TemplateBinding InputGesture, Converter={StaticResource KeyGestureConverter}}" />
 
                                 <PathIcon
                                     Name="PART_ExpandIcon"

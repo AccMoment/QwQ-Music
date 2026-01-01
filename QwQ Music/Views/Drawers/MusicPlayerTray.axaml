@@ -8,7 +8,6 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:drawers="clr-namespace:QwQ_Music.ViewModels.Drawers"
       xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
-      xmlns:enums="clr-namespace:QwQ_Music.Models.Enums"
       xmlns:managers="clr-namespace:QwQ_Music.Common.Managers"
       ColumnDefinitions="Auto,Auto,6*">
 
@@ -175,108 +174,7 @@
         Margin="0,0,0,10"
         RowDefinitions="*,Auto">
 
-        <!--  播放控制  -->
-        <StackPanel
-            HorizontalAlignment="Center"
-            Orientation="Horizontal"
-            Spacing="20">
-
-            <StackPanel.Styles>
-                <Style Selector="StackPanel > Button">
-                    <Setter Property="Padding" Value="0" />
-                </Style>
-            </StackPanel.Styles>
-
-            <!--  刷新播放  -->
-            <Button
-                Classes="Icon"
-                ToolTip.Tip="刷新播放"
-                Command="{Binding (managers:AudioPlayManager).Instance.ReplayCommand}"
-                Foreground="{DynamicResource TextBlockDefaultForeground}"
-                Height="25"
-                IsEnabled="{Binding (managers:AudioPlayManager).Instance.CurrentMusicItem.Model.FilePath, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=''}"
-                behaviors:DynamicCornerBehavior.IsEnabled="True">
-                <PathIcon Data="{StaticResource SemiIconRefresh2}" Margin="5" />
-            </Button>
-
-            <!--  上一首  -->
-            <Button
-                Classes="Icon"
-                ToolTip.Tip="上一首"
-                Command="{Binding (managers:AudioPlayManager).Instance.PreviousSongCommand}"
-                Foreground="{DynamicResource TextBlockDefaultForeground}"
-                behaviors:DynamicCornerBehavior.IsEnabled="True">
-                <PathIcon
-                    Data="{StaticResource PlayIconData}"
-                    Height="30"
-                    RenderTransform="rotate(180deg)" />
-            </Button>
-
-            <!--  播放/暂停 按钮  -->
-            <userControls:MusicPlayButton />
-
-            <!--  下一首  -->
-            <Button
-                Classes="Icon"
-                ToolTip.Tip="下一首"
-                Command="{Binding (managers:AudioPlayManager).Instance.NextSongCommand}"
-                Foreground="{DynamicResource TextBlockDefaultForeground}"
-                behaviors:DynamicCornerBehavior.IsEnabled="True">
-                <PathIcon Data="{StaticResource PlayIconData}" Height="30" />
-            </Button>
-
-            <!--  播放模式  -->
-            <Button
-                Classes="Icon"
-                Command="{Binding (managers:AudioPlayManager).Instance.TogglePlayModeCommand}"
-                Foreground="{DynamicResource TextBlockDefaultForeground}"
-                Height="25"
-                ToolTip.Placement="Top"
-                ToolTip.Tip="{Binding (managers:AudioPlayManager).Instance.PlayModeName}"
-                ToolTip.VerticalOffset="-10"
-                behaviors:DynamicCornerBehavior.IsEnabled="True">
-
-                <PathIcon>
-
-                    <Interaction.Behaviors>
-
-                        <DataTrigger Binding="{Binding (managers:AudioPlayManager).Instance.PlayerConfig.PlayMode}"
-                                     Value="{x:Static enums:PlayMode.Sequential}">
-
-                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
-                                                          Value="3.6" />
-                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
-                                                          Value="{StaticResource Sequential}" />
-                        </DataTrigger>
-
-                        <DataTrigger Binding="{Binding (managers:AudioPlayManager).Instance.PlayerConfig.PlayMode}"
-                                     Value="{x:Static enums:PlayMode.Random}">
-
-                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
-                                                          Value="4.8" />
-                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
-                                                          Value="{StaticResource Random}" />
-
-                        </DataTrigger>
-
-                        <DataTrigger Binding="{Binding (managers:AudioPlayManager).Instance.PlayerConfig.PlayMode}"
-                                     Value="{x:Static enums:PlayMode.SingleLoop}">
-
-                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
-                                                          Value="4" />
-                            <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
-                                                          Value="{StaticResource SingleLoop}" />
-
-                        </DataTrigger>
-
-                    </Interaction.Behaviors>
-
-                </PathIcon>
-
-            </Button>
-
-        </StackPanel>
-
+        <userControls:MusicPlayControllers Spacing="10"/>
         <!--  进度条  -->
         <Slider
             Grid.Column="0"

@@ -19,7 +19,7 @@
         <semi:ColorPickerSemiTheme />
         <semi:DataGridSemiTheme />
         <u-Semi:SemiTheme Locale="zh-CN" />
-
+        <StyleInclude Source="Views/UserControls/MusicPlayButton.axaml"/>
         <StyleInclude Source="Assets/AvaloniaRes/Styles/_indexes.axaml" />
         <StyleInclude Source="avares://QwQ.Avalonia.Control/Themes/_indexes.axaml" />
 

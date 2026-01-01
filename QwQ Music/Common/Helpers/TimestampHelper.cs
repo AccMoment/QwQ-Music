@@ -1,6 +1,6 @@
 using System;
 
-namespace QwQ_Music.Common.Helper;
+namespace QwQ_Music.Common.Helpers;
 
 public static class TimestampHelper
 {

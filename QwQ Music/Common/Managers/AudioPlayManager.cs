@@ -27,7 +27,9 @@ public partial class AudioPlayManager : ViewModelBase {
 
     #region 音频处理
 
-    private async Task SetCurrentMusicItemAsync(PlaylistItemModel musicItem, bool restart = false) {
+    private async Task SetCurrentMusicItemAsync(PlaylistItemModel musicItem, bool restart) {
+        await LoggerService.DebugAsync($"正在切换音频：由《{CurrentMusicItem.Model.Title}》切换到《{musicItem.Model.Title}》。")
+                           .ConfigureAwait(false);
         if (VerifyMusicItem(musicItem)) {
             OnPlayingChanged(false);
         }
@@ -43,10 +45,11 @@ public partial class AudioPlayManager : ViewModelBase {
                 LyricOffset = musicItem.Model.LyricOffset;
             }
 
-            var oldItem = CurrentMusicItem;
+            PlaylistItemModel oldItem = CurrentMusicItem;
             CurrentMusicItem = musicItem;
 
             MusicItemChanged?.Invoke(this, new MusicItemChangedEventArgs(oldItem, musicItem));
+            await LoggerService.InfoAsync($"已切换到《{musicItem.Model.Title}》。").ConfigureAwait(false);
         } catch (Exception ex) {
             OnPlayingChanged(false);
 
@@ -66,6 +69,7 @@ public partial class AudioPlayManager : ViewModelBase {
     ///     注册热键功能
     /// </summary>
     private void RegisterHotkeyFunctions() {
+        LoggerService.Debug("正在注册快捷键...");
         HotkeyService.RegisterFunctionAction(HotkeyFunction.Previous, () => PreviousSongCommand.Execute(null));
 
         HotkeyService.RegisterFunctionAction(HotkeyFunction.Next, () => NextSongCommand.Execute(null));
@@ -108,6 +112,7 @@ public partial class AudioPlayManager : ViewModelBase {
                     "你知道吗？",
                     $"{(IsPlaying ? "正在播放" : "已暂停")}的音乐叫做: {CurrentMusicItem.Model.Title} 哦！\n" + $"你的音量是: {Volume}% ");
             });
+        LoggerService.Debug("快捷键注册完毕。");
     }
 
     #endregion
@@ -341,7 +346,11 @@ public partial class AudioPlayManager : ViewModelBase {
     #region 播放控制方法
 
     [RelayCommand]
-    public async Task TogglePlayState() {
+    public void TogglePlayState() {
+        TogglePlayStateAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
+    }
+
+    public async Task TogglePlayStateAsync() {
         if (MusicItemsManager.All.Count == 0) {
             NotificationService.Info("音乐库中一首音乐也没有啦，需要我为你播放一首空空如也吗？");
 
@@ -349,7 +358,7 @@ public partial class AudioPlayManager : ViewModelBase {
         }
 
         if (CurrentMusicItem == PlaylistItemModel.RefDefault) {
-            await SetCurrentMusicItemAsync(PlaylistManager.Instance.First()).ConfigureAwait(false);
+            await SetCurrentMusicItemAsync(PlaylistManager.Instance.First(), true).ConfigureAwait(false);
         }
 
         if (VerifyMusicItem(CurrentMusicItem)) {
@@ -358,8 +367,8 @@ public partial class AudioPlayManager : ViewModelBase {
     }
 
     [RelayCommand]
-    public async Task PlayThisMusicAsync(PlaylistItemModel? musicItem) {
-        await SetThisMusicAsync(musicItem, true).ConfigureAwait(false);
+    public void PlayThisMusic(PlaylistItemModel? musicItem) {
+        SetThisMusicAsync(musicItem, true).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 
     public async Task SetThisMusicAsync(PlaylistItemModel? musicItem, bool isPlaynow) {
@@ -370,20 +379,27 @@ public partial class AudioPlayManager : ViewModelBase {
         if (CurrentMusicItem.Equals(item)) {
             OnPlayingChanged(!IsPlaying);
         } else {
-            await SetCurrentMusicItemAsync(item, true).ConfigureAwait(false);
-            OnPlayingChanged(true);
+            await SetCurrentMusicItemAsync(item, !isPlaynow).ConfigureAwait(false);
+            OnPlayingChanged(isPlaynow);
         }
     }
 
-    [RelayCommand]
     public async Task PreviousSongAsync() {
         await SetAndPlayAsync(GetMusicItemIndex(PlaylistManager.Instance.CurrentIndex, -1)).ConfigureAwait(false);
     }
 
-    [RelayCommand]
+
     public async Task NextSongAsync() {
         await SetAndPlayAsync(GetMusicItemIndex(PlaylistManager.Instance.CurrentIndex, 1)).ConfigureAwait(false);
     }
+
+    [RelayCommand]
+    public void PreviousSong() {
+        PreviousSongAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
+    }
+
+    [RelayCommand]
+    public void NextSong() { NextSongAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false); }
 
     public void Pause() {
         if (!IsPlaying)
@@ -460,6 +476,13 @@ public partial class AudioPlayManager : ViewModelBase {
     }
 
     private async Task SetAndPlayAsync(int index) {
+        if (index == -1) {
+            OnPlayingChanged(false);
+            await SetCurrentMusicItemAsync(PlaylistItemModel.RefDefault, true).ConfigureAwait(false);
+
+            return;
+        }
+
         if (index < 0 || index >= PlaylistManager.Instance.Count)
             return;
 
@@ -486,15 +509,15 @@ public partial class AudioPlayManager : ViewModelBase {
         int result = PlaylistManager.Instance.Count - 1;
         current += offset;
         // current的边界判断
-        // current越上界时，返回列表中的最后可用项。
+        // current越上界时，返回最后一项。
         if (result <= 0 || current < 0) {
             return result;
         }
 
         // 此处复用 result 作为下界。       
-        // current越下界时意味着歌单播放完毕。模式为顺序播放时直接返回，后续有判断。循环播放时返回首项。
+        // current越下界时意味着歌单播放完毕。模式为顺序播放时返回-1，其它时返回首项。
         if (current > result) {
-            return PlaylistManager.Instance.PlayMode == PlayMode.Sequential ? result : 0;
+            return PlaylistManager.Instance.PlayMode == PlayMode.Sequential ? -1 : 0;
         }
 
         return current;

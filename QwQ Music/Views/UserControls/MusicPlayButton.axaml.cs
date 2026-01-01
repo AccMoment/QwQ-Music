@@ -1,13 +1,14 @@
-using Avalonia.Controls;
-using QwQ_Music.ViewModels.UserControls;
+using Avalonia;
+using Avalonia.Controls.Primitives;
 
 namespace QwQ_Music.Views.UserControls;
 
-public partial class MusicPlayButton : Button
-{
-    public MusicPlayButton()
-    {
-        InitializeComponent();
-        DataContext = new MusicPlayButtonViewModel();
+public partial class MusicPlayButton : TemplatedControl {
+    public static readonly StyledProperty<double> AngleProperty =
+        AvaloniaProperty.Register<MusicPlayButton, double>(nameof(Angle));
+
+    public double Angle {
+        get => GetValue(AngleProperty);
+        set => SetValue(AngleProperty, value);
     }
 }

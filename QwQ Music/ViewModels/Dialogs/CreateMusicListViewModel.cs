@@ -37,26 +37,28 @@ public partial class CreateMusicListViewModel : DataVerifyModelBase, IDialogCont
     public partial string? Description { get; set; }
 
     [RelayCommand]
-    private async Task SetCover() {
+    private void SetCover() {
         if (App.TopLevel == null)
             return;
 
         var options = new OverlayDialogOptions { Title = "图片裁剪" };
 
-        var bitmap = await FileOperationService.OpenImageFile(App.TopLevel);
-
-        if (bitmap == null)
-            return;
-
-        var result = await OverlayDialog.ShowCustomModal<ImageCropping, ImageCroppingViewModel, Bitmap>(
-                                            new ImageCroppingViewModel(bitmap),
-                                            options: options)
-                                        .ConfigureAwait(false);
-
-        if (result == null)
-            return;
-
-        Cover = result;
+        FileOperationService.OpenImageFile(App.TopLevel)
+                            .ContinueWith(task => {
+                                if (task is not { IsCompletedSuccessfully: true, Result: { } bitmap })
+                                    return;
+                                OverlayDialog.ShowCustomModal<ImageCropping, ImageCroppingViewModel, Bitmap>(
+                                                 new ImageCroppingViewModel(bitmap),
+                                                 options: options)
+                                             .ContinueWith(dialog => {
+                                                 if (dialog is { IsCompletedSuccessfully: true, Result: { } result }) {
+                                                     Cover = result;
+                                                 }
+                                             })
+                                             .ConfigureAwait(false);
+                            })
+                            .ContinueWith(LoggerService.HandleException)
+                            .ConfigureAwait(false);
     }
 
     public MusicListModel CreateMusicListModel() {

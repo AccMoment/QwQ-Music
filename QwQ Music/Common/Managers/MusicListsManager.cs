@@ -48,16 +48,25 @@ public partial class MusicListsManager : ObservableObject {
     }
 
     [RelayCommand]
-    private async Task CreatePlaylistWithMusicItem(IList items) {
-        var list = await CreateMusicList().ConfigureAwait(true);
-
-        if (list is not null) {
-            await AddToMusicList(items.Cast<MusicItemModel>().ToList(), list).ConfigureAwait(false);
-        }
+    private void CreatePlaylistWithMusicItem(IList items) {
+        CreateMusicListAsync()
+            .ContinueWith(task => {
+                if (task is { IsCompletedSuccessfully: true, Result: { } list }) {
+                    AddToMusicListAsync(items.Cast<MusicItemModel>().ToList(), list)
+                        .ContinueWith(LoggerService.HandleException)
+                        .ConfigureAwait(false);
+                }
+            })
+            .ContinueWith(LoggerService.HandleException)
+            .ConfigureAwait(false);
     }
 
     [RelayCommand]
-    private async Task<MusicListModel?> CreateMusicList() {
+    public void CreateMusicList() {
+        CreateMusicListAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
+    }
+
+    private async Task<MusicListModel?> CreateMusicListAsync() {
         var options = new OverlayDialogOptions { Title = "新建歌单" };
 
         var model = await OverlayDialog.ShowCustomModal<CreateMusicList, CreateMusicListViewModel, MusicListModel>(
@@ -97,7 +106,7 @@ public partial class MusicListsManager : ObservableObject {
     /// </summary>
     /// <param name="musicItems">音乐项列表</param>
     /// <param name="musicList">歌单项</param>
-    public async Task AddToMusicList(IList<MusicItemModel> musicItems, MusicListModel musicList) {
+    public async Task AddToMusicListAsync(IList<MusicItemModel> musicItems, MusicListModel musicList) {
         if (musicItems.Count == 0)
             return;
 
@@ -193,27 +202,21 @@ public partial class MusicListsManager : ObservableObject {
     }
 
     [RelayCommand]
-    private async Task DeleteMusicList(MusicListModel musicList) {
-        var result = await MessageBox.ShowOverlayAsync(
-                                         $"你真的要删除歌单《{musicList.Name}》吗?",
-                                         "警告",
-                                         icon: MessageBoxIcon.Warning,
-                                         button: MessageBoxButton.YesNo)
-                                     .ConfigureAwait(false);
-
-        if (result != MessageBoxResult.Yes)
-            return;
-
-        try {
-            await Task.Run(() => {
+    private void DeleteMusicList(MusicListModel musicList) {
+        MessageBox.ShowOverlayAsync(
+                      $"你真的要删除歌单《{musicList.Name}》吗?",
+                      "警告",
+                      icon: MessageBoxIcon.Warning,
+                      button: MessageBoxButton.YesNo)
+                  .ContinueWith(task => {
+                      if (task is not { IsCompletedSuccessfully: true, Result: MessageBoxResult.Yes })
+                          return;
+                      try {
                           MusicListRepository.Instance.Delete(musicList.Name);
-
                           // 删除封面图片文件
                           if (!musicList.IsCoverExist)
                               return;
-
                           string coverFullPath = StaticConfig.GetMusicListCoverFullPath(musicList.Name);
-
                           if (File.Exists(coverFullPath)) {
                               File.Delete(coverFullPath);
                           }
@@ -222,24 +225,22 @@ public partial class MusicListsManager : ObservableObject {
                           if (!musicList.IsCoverExist) {
                               CacheManager.ImageCache.Remove(musicList.Name);
                           }
-                      })
-                      .ConfigureAwait(false);
 
-            MusicLists.Remove(musicList);
-
-            NotificationService.Success($"歌单《{musicList.Name}》删除成功！");
-        } catch (Exception ex) {
-            await LoggerService.ErrorAsync($"删除歌单失败:\n{ex.Message}\n{ex.StackTrace}").ConfigureAwait(false);
-
-            NotificationService.Error($"删除歌单《{musicList.Name}》失败！\n{ex.Message}");
-
-            throw;
-        }
+                          MusicLists.Remove(musicList);
+                          NotificationService.Success($"歌单《{musicList.Name}》删除成功！");
+                      } catch (Exception ex) {
+                          LoggerService.Error($"删除歌单失败:\n{ex.Message}\n{ex.StackTrace}");
+                          NotificationService.Error($"删除歌单《{musicList.Name}》失败！\n{ex.Message}");
+                          throw;
+                      }
+                  })
+                  .ContinueWith(LoggerService.HandleException)
+                  .ConfigureAwait(false);
     }
 
     [RelayCommand]
-    private async Task AddToMusicList((MusicItemModel musicItem, MusicListModel musicList) argument) {
-        await AddToMusicList([argument.musicItem], argument.musicList).ConfigureAwait(false);
+    private async Task AddToMusicListAsync((MusicItemModel musicItem, MusicListModel musicList) argument) {
+        await AddToMusicListAsync([argument.musicItem], argument.musicList).ConfigureAwait(false);
     }
 
     [RelayCommand]

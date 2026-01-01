@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using QwQ_Music.Models.Enums;
 using SoundFlow.Backends.MiniAudio.Devices;
+using SoundFlow.Structs;
 
 namespace QwQ_Music.Models.ConfigModels;
 
@@ -19,6 +20,8 @@ public partial class PlayerConfig : ObservableObject
     /// 音频设备配置
     /// </summary>
     public MiniAudioDeviceConfig DeviceConfig { get; set; } = new();
+
+    public string? DefaultDevice { get; set; }
     
     public int Volume { get; set; } = 100;
 

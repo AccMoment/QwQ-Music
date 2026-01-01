@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Threading;
+using QwQ_Music.Common.Helpers;
 using QwQ_Music.Common.Interfaces;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
@@ -44,15 +45,12 @@ public class AudioPlayer : IAudioPlayer {
     private AudioPlaybackDevice PlayerDevice {
         get {
             if (field?.IsDisposed ?? true) {
-                field = AudioEngine.InitializePlaybackDevice(
-                    AudioEngine.PlaybackDevices.FirstOrDefault(x => x.IsDefault),
-                    AudioFormat,
-                    ConfigManager.PlayerConfig.DeviceConfig);
+                field = InitializeDevice();
             }
 
-            var a = field.Engine.PlaybackDevices.First().NativeDataFormats;
             return field;
         }
+        set;
     }
 
     private StreamDataProvider? _soundDataProvider;
@@ -83,7 +81,7 @@ public class AudioPlayer : IAudioPlayer {
     /// <summary>
     ///     音频格式
     /// </summary>
-    public AudioFormat AudioFormat = AudioFormat.DvdHq;
+    public AudioFormat AudioFormat { get; set; } = AudioFormat.DvdHq;
 
     /// <inheritdoc />
     public event EventHandler<double>? PositionChanged;
@@ -159,7 +157,7 @@ public class AudioPlayer : IAudioPlayer {
     /// <summary>
     ///     暂停播放
     /// </summary>
-    public void Pause() {
+    public void Pause(bool instant = false) {
         if (Status is not MediaPlaybackStatus.Playing and not MediaPlaybackStatus.Fading) {
             // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
             if (Status is MediaPlaybackStatus.Paused)
@@ -170,7 +168,7 @@ public class AudioPlayer : IAudioPlayer {
         }
 
         // 检查淡出效果器是否启用
-        if (_soundModifier.FadeModifier.Enabled) {
+        if (!instant && _soundModifier.FadeModifier.Enabled) {
             Status = MediaPlaybackStatus.Fading;
             // 应用淡出效果
             _soundModifier.FadeModifier.BeginFadeOut();
@@ -191,14 +189,20 @@ public class AudioPlayer : IAudioPlayer {
     /// </summary>
     public void Stop() {
         Pause();
+        _soundPlayer?.PlaybackEnded -= OnPlaybackCompleted;
         UpdateTimer.Stop();
         SpecTimer.Stop();
-        PlayerDevice.Stop();
+        try {
+            TimeoutHelper.Timeout(1500, PlayerDevice.Stop, () => PlayerDevice = null!); // 此处可能导致超长时间卡顿并阻塞UI，使用超时计时器来处理
+        } catch (TimeoutException) {
+            LoggerService.Error("播放设备停止超时，已放弃。");
+        }
+
         Current?.Dispose();
         _soundDataProvider?.Dispose();
         if (_soundPlayer is null)
             return;
-        Debug.Assert(PlayerDevice.MasterMixer.Components.Count == 1);
+        Debug.Assert(PlayerDevice.MasterMixer.Components.Count <= 1);
         foreach (SoundComponent comp in PlayerDevice.MasterMixer.Components) {
             PlayerDevice.MasterMixer.RemoveComponent(comp);
         }
@@ -260,7 +264,7 @@ public class AudioPlayer : IAudioPlayer {
     public async Task InitializeAudioAsync(Stream audioStream, double replayGain) {
         Stop();
         if (AudioFormat != PlayerDevice.Format)
-            PlayerDevice.Dispose();
+            TimeoutHelper.Timeout(2000, PlayerDevice.Dispose, () => PlayerDevice = null!);
         Current = audioStream;
         try {
             await InitializeNewTrackAsync(audioStream, replayGain).ConfigureAwait(false);
@@ -347,6 +351,8 @@ public class AudioPlayer : IAudioPlayer {
     /// </summary>
     private void OnPlaybackCompleted(object? sender, EventArgs e) {
         Status = MediaPlaybackStatus.Stopped;
+        UpdateTimer.Stop();
+        SpecTimer.Stop();
         // 触发播放完成事件
         PlaybackCompleted?.Invoke(this, EventArgs.Empty);
     }
@@ -358,7 +364,48 @@ public class AudioPlayer : IAudioPlayer {
         Debug.Assert(_soundPlayer is not null);
         Debug.Assert(Status is MediaPlaybackStatus.Playing or MediaPlaybackStatus.Fading);
 
+        if (!PlayerDevice.IsRunning ||
+            (PlayerDevice.Info is { } info &&
+             info.Name != ConfigManager.PlayerConfig.DefaultDevice &&
+             !info.IsDefault)) {
+            ReloadDevice();
+        }
+
         // 触发位置变化事件
         PositionChanged?.Invoke(this, _soundPlayer.Time);
+    }
+
+    private AudioPlaybackDevice InitializeDevice() {
+        return AudioEngine.InitializePlaybackDevice(
+            AudioEngine.PlaybackDevices.FirstOrDefault(
+                x => x.Name == ConfigManager.PlayerConfig.DefaultDevice,
+                AudioEngine.PlaybackDevices.Single(x => x.IsDefault)),
+            AudioFormat,
+            ConfigManager.PlayerConfig.DeviceConfig);
+    }
+
+    public void ReloadDevice() {
+        bool isPlaying = Status is MediaPlaybackStatus.Playing;
+        if (isPlaying) {
+            Pause();
+        }
+
+        if (ConfigManager.PlayerConfig.DefaultDevice is not null) {
+            PlayerDevice = AudioEngine.SwitchDevice(
+                PlayerDevice,
+                AudioEngine.PlaybackDevices.FirstOrDefault(
+                    x => x.Name == ConfigManager.PlayerConfig.DefaultDevice,
+                    AudioEngine.PlaybackDevices.Single(x => x.IsDefault)),
+                ConfigManager.PlayerConfig.DeviceConfig);
+        } else {
+            PlayerDevice = AudioEngine.SwitchDevice(
+                PlayerDevice,
+                AudioEngine.PlaybackDevices.Single(x => x.IsDefault),
+                ConfigManager.PlayerConfig.DeviceConfig);
+        }
+
+        if (isPlaying) {
+            Play();
+        }
     }
 }

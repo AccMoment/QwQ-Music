@@ -8,29 +8,22 @@ using QwQ_Music.ViewModels.Bases;
 
 namespace QwQ_Music.ViewModels.Pages;
 
-public partial class MiaomiaoLittleToyPageViewModel : ViewModelBase
-{
+public partial class MiaomiaoLittleToyPageViewModel : ViewModelBase {
     [RelayCommand]
-    private static async Task ClickMeButton()
-    {
-        await new Love().GenerateHeart();
+    private static void ClickMeButton() {
+        new Love().GenerateHeart().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 
     [RelayCommand]
-    private static void LagButtonClick()
-    {
-        Thread.Sleep(5000);
+    private static void LagButtonClick() { Thread.Sleep(5000); }
+
+    [RelayCommand]
+    private static void IceButtonClick() {
+        MidiSpring.Spring().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 
     [RelayCommand]
-    private static async Task IceButtonClick()
-    {
-        await MidiSpring.Spring();
-    }
-
-    [RelayCommand]
-    private static void ExecuteMemoryCleaner()
-    {
+    private static void ExecuteMemoryCleaner() {
         string info = MemoryCleaner.CleanAndGetInfo();
         NotificationService.Info("提示", info);
     }

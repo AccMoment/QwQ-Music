@@ -1,0 +1,112 @@
+﻿<StackPanel xmlns="https://github.com/avaloniaui"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:managers="clr-namespace:QwQ_Music.Common.Managers"
+            xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
+            xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
+            xmlns:enums="clr-namespace:QwQ_Music.Models.Enums"
+            x:Class="QwQ_Music.Views.UserControls.MusicPlayControllers"
+            x:DataType="managers:AudioPlayManager"
+            HorizontalAlignment="Center"
+            Orientation="Horizontal"
+            Spacing="30"
+            VerticalAlignment="Center">
+
+    <StackPanel.Styles>
+        <Style Selector="StackPanel > Button">
+            <Setter Property="Padding" Value="0" />
+        </Style>
+    </StackPanel.Styles>
+
+    <!--  刷新播放  -->
+    <Button Classes="Icon"
+            Command="{Binding Instance.ReplayCommand}"
+            Foreground="{DynamicResource TextBlockDefaultForeground}"
+            Height="25"
+            IsEnabled="{Binding Instance.CurrentMusicItem.Model.FilePath, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=''}"
+            behaviors:DynamicCornerBehavior.IsEnabled="True">
+        <PathIcon Data="{StaticResource SemiIconRefresh2}" Margin="5" />
+    </Button>
+
+    <!--  上一首  -->
+    <Button Classes="Icon"
+            Command="{Binding Instance.PreviousSongCommand}"
+            Foreground="{DynamicResource TextBlockDefaultForeground}"
+            behaviors:DynamicCornerBehavior.IsEnabled="True">
+        <PathIcon
+            Data="{StaticResource PlayIconData}"
+            Height="30"
+            RenderTransform="rotate(180deg)" />
+    </Button>
+
+    <!--  播放/暂停 按钮  -->
+    <userControls:MusicPlayButton />
+
+    <!--  下一首  -->
+    <Button Classes="Icon"
+            Command="{Binding Instance.NextSongCommand}"
+            Foreground="{DynamicResource TextBlockDefaultForeground}"
+            behaviors:DynamicCornerBehavior.IsEnabled="True">
+        <PathIcon Data="{StaticResource PlayIconData}"
+                  Height="30" />
+    </Button>
+
+    <!--  播放模式  -->
+    <Button Classes="Icon"
+            Command="{Binding Instance.TogglePlayModeCommand}"
+            Foreground="{DynamicResource TextBlockDefaultForeground}"
+            Height="25"
+            ToolTip.Placement="Top"
+            ToolTip.Tip="{Binding Instance.PlayModeName}"
+            ToolTip.VerticalOffset="-10"
+            behaviors:DynamicCornerBehavior.IsEnabled="True">
+
+        <PathIcon Width="15" Height="15">
+
+            <Interaction.Behaviors>
+
+                <DataTrigger Binding="{Binding Instance.PlayerConfig.PlayMode}"
+                             Value="{x:Static enums:PlayMode.Sequential}">
+
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
+                                                  Value="3.6" />
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
+                                                  Value="{StaticResource Sequential}" />
+                </DataTrigger>
+               
+                <DataTrigger Binding="{Binding Instance.PlayerConfig.PlayMode}"
+                             Value="{x:Static enums:PlayMode.Loop}">
+
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
+                                                  Value="4" />
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
+                                                  Value="{StaticResource Loop}" />
+
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Instance.PlayerConfig.PlayMode}"
+                             Value="{x:Static enums:PlayMode.Random}">
+
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
+                                                  Value="4.8" />
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
+                                                  Value="{StaticResource Random}" />
+
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Instance.PlayerConfig.PlayMode}"
+                             Value="{x:Static enums:PlayMode.SingleLoop}">
+
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
+                                                  Value="4" />
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static PathIcon.DataProperty}"
+                                                  Value="{StaticResource SingleLoop}" />
+
+                </DataTrigger>
+
+            </Interaction.Behaviors>
+
+        </PathIcon>
+
+    </Button>
+
+</StackPanel>

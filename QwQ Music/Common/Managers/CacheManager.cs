@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media.Imaging;
-using QwQ_Music.Common.Helper;
+using QwQ_Music.Common.Helpers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Utilities;
 using QwQ_Music.Models.Enums;
@@ -119,7 +119,8 @@ public static class CacheManager {
         T? source,
         int defaultValue,
         LoadCacheFuncType<T> loader,
-        Action? callIfExist = null) {
+        Action? callIfExist = null,
+        string? alterId = null) {
         if (id is null || source is null) {
             return NotExist;
         }
@@ -144,14 +145,15 @@ public static class CacheManager {
 
                 if (bitmap != null) {
                     ImageCache[$"{idType}:{id}"] = bitmap;
-                    await LoggerService.InfoAsync($"加载了{idType}({id})的{cacheType}").ConfigureAwait(false);
+                    await LoggerService.InfoAsync($"加载了{idType}({alterId ?? id})的{cacheType}").ConfigureAwait(false);
                     callIfExist?.Invoke();
                 } else {
                     ImageCache[$"{idType}:{id}"] = NotExist;
-                    await LoggerService.InfoAsync($"尝试加载{id}的{idType}，但不存在。").ConfigureAwait(false);
+                    await LoggerService.InfoAsync($"尝试加载{alterId ?? id}的{idType}，但不存在。").ConfigureAwait(false);
                 }
             } catch (Exception e) {
-                await LoggerService.ErrorAsync($"异步加载{idType}'{id}'的{cacheType}时发生错误: {e}").ConfigureAwait(false);
+                await LoggerService.ErrorAsync($"异步加载{idType}'{alterId ?? id}'的{cacheType}时发生错误: {e}")
+                                   .ConfigureAwait(false);
             }
         });
 
@@ -164,6 +166,7 @@ public static class CacheManager {
         string cacheType,
         Uri? uri,
         Action? callIfExist,
+        string? alterId = null,
         int defaultValue = 128) {
         return TryLoadCache(
             id,
@@ -172,7 +175,8 @@ public static class CacheManager {
             uri,
             defaultValue,
             ImageHelper.LoadFromWebAndDecodeToWidthAsync,
-            callIfExist);
+            callIfExist,
+            alterId);
     }
 
     public static Bitmap TryLoadCacheFromFile(
@@ -181,8 +185,17 @@ public static class CacheManager {
         string cacheType,
         string? path,
         Action? callIfExist,
+        string? alterId = null,
         int defaultValue = -1) {
-        return TryLoadCache(id, idType, cacheType, path, defaultValue, ImageHelper.LoadFromFileAsync, callIfExist);
+        return TryLoadCache(
+            id,
+            idType,
+            cacheType,
+            path,
+            defaultValue,
+            ImageHelper.LoadFromFileAsync,
+            callIfExist,
+            alterId);
     }
 
     /// <summary>

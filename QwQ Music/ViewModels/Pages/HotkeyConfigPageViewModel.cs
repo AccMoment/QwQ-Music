@@ -40,7 +40,7 @@ public partial class HotkeyConfigPageViewModel : ViewModelBase {
     }
 
     [RelayCommand]
-    private async Task AddNewHotkey(HotkeyFunction function) {
+    private void AddNewHotkey(HotkeyFunction function) {
         var item = HotkeyItems.FirstOrDefault(item => item.Function == function);
 
         if (item == null)
@@ -48,14 +48,16 @@ public partial class HotkeyConfigPageViewModel : ViewModelBase {
 
         var options = new OverlayDialogOptions { Title = "添加按键" };
 
-        var keyGesture = await OverlayDialog.ShowCustomModal<KeyGestureInput, KeyGestureInputViewModel, KeyGesture>(
-            new KeyGestureInputViewModel(item, options.Title),
-            options: options).ConfigureAwait(false);
-
-        if (keyGesture != null) {
-            item.AddKeyGesture(keyGesture);
-            HotkeyService.RegisterHotkey(item.Function, keyGesture);
-        }
+        OverlayDialog.ShowCustomModal<KeyGestureInput, KeyGestureInputViewModel, KeyGesture>(
+                         new KeyGestureInputViewModel(item, options.Title),
+                         options: options)
+                     .ContinueWith(task => {
+                         if (task is not { IsCompletedSuccessfully: true, Result: { } keyGesture })
+                             return;
+                         item.AddKeyGesture(keyGesture);
+                         HotkeyService.RegisterHotkey(item.Function, keyGesture);
+                     })
+                     .ConfigureAwait(false);
     }
 
     [RelayCommand]
@@ -69,22 +71,22 @@ public partial class HotkeyConfigPageViewModel : ViewModelBase {
     }
 
     [RelayCommand]
-    private async Task ClearKeyGestures() {
-        var result = await MessageBox.ShowOverlayAsync(
-                                         "你真的要清除使用热键配置吗?",
-                                         "警告",
-                                         icon: MessageBoxIcon.Warning,
-                                         button: MessageBoxButton.YesNo)
-                                     .ConfigureAwait(false);
+    private void ClearKeyGestures() {
+        MessageBox.ShowOverlayAsync(
+                      "你真的要清除使用热键配置吗?",
+                      "警告",
+                      icon: MessageBoxIcon.Warning,
+                      button: MessageBoxButton.YesNo)
+                  .ContinueWith(task => {
+                      if (task is not { IsCompletedSuccessfully: true, Result: MessageBoxResult.Yes })
+                          return;
+                      foreach (HotkeyItemModel item in HotkeyItems) {
+                          item.ClearKeyGestures();
+                      }
 
-        if (result != MessageBoxResult.Yes)
-            return;
-
-        foreach (HotkeyItemModel item in HotkeyItems) {
-            item.ClearKeyGestures();
-        }
-
-        HotkeyService.ClearKeyGestures();
+                      HotkeyService.ClearKeyGestures();
+                  })
+                  .ConfigureAwait(false);
     }
 
     [RelayCommand]

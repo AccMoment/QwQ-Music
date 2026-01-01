@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -31,44 +32,46 @@ public static class LoggerService {
     private static readonly string _savePath = StaticConfig.LogSavePath;
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
 
-    private static FileStream? _fileStream;
+
+    private static StreamWriter Writer {
+        get {
+            if (field?.BaseStream is { CanWrite: true })
+                return field;
+
+            try {
+                string? dir = Path.GetDirectoryName(LogFilePath);
+
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+                field?.BaseStream?.Dispose();
+                field?.Dispose();
+                field = new StreamWriter(
+                    new FileStream(LogFilePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite),
+                    Encoding.UTF8,
+                    1024,
+                    false);
+                return field;
+            } catch (Exception ex) when (ex is UnauthorizedAccessException or IOException) {
+                if (_useFallbackPath)
+                    throw;
+
+                _useFallbackPath = true;
+                Console.WriteLine($"[Logger] 切换至备用路径: {LogFilePath}");
+
+                return Writer;
+            }
+        }
+    }
+
     private static DateTime _currentDay = DateTime.Today;
     private static bool _useFallbackPath;
-    private static bool _isDisposed;
 
     private static string LogFilePath =>
         Path.Combine(_useFallbackPath ? Path.GetTempPath() : _savePath, $"{_currentDay:yyyy-MM-dd}.QwQ.log");
 
     public static LogLevel Level => _config.Level;
 
-    public static bool IsKeepOpen => _config.IsKeepOpen;
-
     public static int RetryCount => Math.Min(_config.RetryCount, _MAX_RETRY_COUNT);
-
-    private static FileStream GetFileStream() {
-        if (_fileStream is { CanWrite: true })
-            return _fileStream;
-
-        try {
-            string? dir = Path.GetDirectoryName(LogFilePath);
-
-            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-
-            _fileStream?.Dispose();
-            _fileStream = new FileStream(LogFilePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
-
-            return _fileStream;
-        } catch (Exception ex) when (ex is UnauthorizedAccessException or IOException) {
-            if (_useFallbackPath)
-                throw;
-
-            _useFallbackPath = true;
-            Console.WriteLine($"[Logger] 切换至备用路径: {LogFilePath}");
-
-            return GetFileStream();
-        }
-    }
 
     private static string FormatMessage(string level, string msg, int line, string? func, string? file) {
         return $"{DateTime.Now:HH:mm:ss.fff} [{level}] <{func ?? "unknown"}> at {Path.GetFileName(file) ?? "unknown"
@@ -76,9 +79,6 @@ public static class LoggerService {
     }
 
     private static async Task WriteLogAsync(string formattedMessage) {
-        if (_isDisposed)
-            return;
-
 #if DEBUG
         Console.WriteLine(formattedMessage);
 #endif
@@ -89,19 +89,14 @@ public static class LoggerService {
             if (DateTime.Today != _currentDay) {
                 _currentDay = DateTime.Today;
 
-                if (_fileStream != null) {
-                    await _fileStream.DisposeAsync().ConfigureAwait(false);
-                }
-
-                _fileStream = null;
+                await Writer.DisposeAsync().ConfigureAwait(false);
             }
 
             int attempts = 0;
 
             while (attempts < RetryCount) {
                 try {
-                    await using var writer = new StreamWriter(GetFileStream(), Encoding.UTF8, 1024, IsKeepOpen);
-                    await writer.WriteLineAsync(formattedMessage).ConfigureAwait(false);
+                    await Writer.WriteLineAsync(formattedMessage).ConfigureAwait(false);
 
                     return;
                 } catch (IOException ex) when
@@ -127,28 +122,25 @@ public static class LoggerService {
         int line = 0,
         string? function = null,
         string? filename = null) {
-        if (!Level.HasFlag(level) || _isDisposed)
-            return;
-
-        string formatted = FormatMessage(status, message, line, function, filename);
-        WriteLogAsync(formatted).ConfigureAwait(false);
+        LogAsync(level, status, message, line, function, filename).ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
-    private static Task LogAsync(
+    private static async Task LogAsync(
         LogLevel level,
         string status,
         string message,
         int line = 0,
         string? function = null,
         string? filename = null) {
-        if (!Level.HasFlag(level) || _isDisposed)
-            return Task.CompletedTask;
+        if (!Level.HasFlag(level))
+            return;
 
         string formatted = FormatMessage(status, message, line, function, filename);
 
-        return WriteLogAsync(formatted);
+        await WriteLogAsync(formatted).ConfigureAwait(false);
     }
 
+    [Conditional("DEBUG")]
     public static void Debug(
         string message,
         [CallerLineNumber] int line = 0,
@@ -181,7 +173,7 @@ public static class LoggerService {
         Log(LogLevel.Error, "ERROR", message, line, function, filename);
     }
 
-    public static void Error(// TODO PARTIAL REPLACE ABOVE
+    public static void Error( // TODO PARTIAL REPLACE ABOVE
         string message,
         Exception ex,
         [CallerLineNumber] int line = 0,
@@ -214,77 +206,69 @@ public static class LoggerService {
     }
 
     // 异步版本
-    public static Task DebugAsync(
+    public static async Task DebugAsync(
         string message,
         [CallerLineNumber] int line = 0,
         [CallerMemberName] string? function = null,
         [CallerFilePath] string? filename = null) {
-        return LogAsync(LogLevel.Debug, "DEBUG", message, line, function, filename);
+        await LogAsync(LogLevel.Debug, "DEBUG", message, line, function, filename).ConfigureAwait(false);
     }
 
-    public static Task InfoAsync(
+    public static async Task InfoAsync(
         string message,
         [CallerLineNumber] int line = 0,
         [CallerMemberName] string? function = null,
         [CallerFilePath] string? filename = null) {
-        return LogAsync(LogLevel.Info, "INFO", message, line, function, filename);
+        await LogAsync(LogLevel.Info, "INFO", message, line, function, filename).ConfigureAwait(false);
     }
 
-    public static Task WarningAsync(
+    public static async Task WarningAsync(
         string message,
         [CallerLineNumber] int line = 0,
         [CallerMemberName] string? function = null,
         [CallerFilePath] string? filename = null) {
-        return LogAsync(LogLevel.Warning, "WARN", message, line, function, filename);
+        await LogAsync(LogLevel.Warning, "WARN", message, line, function, filename).ConfigureAwait(false);
     }
 
-    public static Task ErrorAsync(
+    public static async Task ErrorAsync(
         string message,
         [CallerLineNumber] int line = 0,
         [CallerMemberName] string? function = null,
         [CallerFilePath] string? filename = null) {
-        return LogAsync(LogLevel.Error, "ERROR", message, line, function, filename);
+        await LogAsync(LogLevel.Error, "ERROR", message, line, function, filename).ConfigureAwait(false);
     }
 
-    public static Task ErrorAsync(// TODO PARTIAL REPLACE ABOVE
+    public static async Task ErrorAsync( // TODO PARTIAL REPLACE ABOVE
         string message,
         Exception ex,
         [CallerLineNumber] int line = 0,
         [CallerMemberName] string? function = null,
         [CallerFilePath] string? filename = null) {
-        return LogAsync(
-            LogLevel.Error,
-            "ERROR",
-            message + $"\n{ex.GetType()}: {ex.Message}\n{ex.StackTrace}",
-            line,
-            function,
-            filename);
+        await LogAsync(
+                LogLevel.Error,
+                "ERROR",
+                message + $"\n{ex.GetType()}: {ex.Message}\n{ex.StackTrace}",
+                line,
+                function,
+                filename)
+            .ConfigureAwait(false);
     }
 
-    public static Task FatalAsync(
+    public static async Task FatalAsync(
         string message,
         [CallerLineNumber] int line = 0,
         [CallerMemberName] string? function = null,
         [CallerFilePath] string? filename = null) {
-        return LogAsync(LogLevel.Fatal, "FATAL", message, line, function, filename);
+        await LogAsync(LogLevel.Fatal, "FATAL", message, line, function, filename).ConfigureAwait(false);
     }
 
-    public static Task CustomAsync(
+    public static async Task CustomAsync(
         string message,
         string status,
         [CallerLineNumber] int line = 0,
         [CallerMemberName] string? function = null,
         [CallerFilePath] string? filename = null) {
-        return LogAsync(LogLevel.Custom, status.ToUpper(), message, line, function, filename);
-    }
-
-    public static void Shutdown() {
-        if (_isDisposed)
-            return;
-
-        _isDisposed = true;
-        _fileStream?.Dispose();
-        Info("日志服务已关闭");
+        await LogAsync(LogLevel.Custom, status.ToUpper(), message, line, function, filename).ConfigureAwait(false);
     }
 
     public static void HandleException(Task withException) {
