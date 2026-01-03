@@ -11,7 +11,7 @@ public static class EnumDescriptionStore
         // ClosingBehavior
         ["AskAbout"] = "询问",
         ["Exit"] = "直接退出",
-        ["HideToTray"] = "隐藏到系统托盘"
+        ["HideToTray"] = "隐藏到系统托盘",
     };
 }
 
@@ -33,15 +33,15 @@ public static class EnumHelper<T>
 
     public static List<T> ToList()
     {
-        return GeuEnumerable().ToList();
+        return GetEnumerable().ToList();
     }
 
     public static T[] ToArray()
     {
-        return GeuEnumerable().ToArray();
+        return GetEnumerable().ToArray();
     }
 
-    private static IEnumerable<T> GeuEnumerable()
+    private static IEnumerable<T> GetEnumerable()
     {
         return Enum.GetValuesAsUnderlyingType(typeof(T)).Cast<T>();
     }

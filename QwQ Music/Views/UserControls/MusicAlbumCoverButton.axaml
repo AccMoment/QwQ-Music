@@ -1,121 +1,122 @@
-<custom:MusicAlbumCoverButton
-    xmlns="https://github.com/avaloniaui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:custom="clr-namespace:QwQ_Music.Views.UserControls"
-    xmlns:models="clr-namespace:QwQ_Music.Models"
-    xmlns:managers="clr-namespace:QwQ_Music.Common.Managers"
-    x:Class="QwQ_Music.Views.UserControls.MusicAlbumCoverButton"
-    Classes="None"
-    Foreground="{DynamicResource SemiColorBackground4}"
-    Height="50"
-    Margin="10"
-    Width="50"
-    ClipToBounds="True">
-    <custom:MusicAlbumCoverButton.Template>
-        <ControlTemplate x:DataType="models:MusicItemModel">
-            <Panel>
-                <Image Source="{Binding CoverImage}" />
-                <Panel IsVisible="{TemplateBinding ExternalPointerOver}">
-                    <Border Background="#33000000" Name="CoverLayer" />
-                    <PathIcon Name="PART_PlayIcon" Data="{StaticResource PlayIconData}"
-                              IsVisible="{Binding !IsCurrent}" />
-                    <Panel IsVisible="{Binding !#PART_PlayIcon.IsVisible}">
-                        <PathIcon Name="PART_PauseIcon"
-                                  IsVisible="{Binding (managers:AudioPlayManager).Instance.IsPlaying}" />
-                        <StackPanel Name="PART_PlayingAnimation"
-                                    IsVisible="{Binding !#PART_PauseIcon.IsVisible}"
-                                    HorizontalAlignment="Center"
-                                    Orientation="Horizontal"
-                                    Spacing="4"
-                                    VerticalAlignment="Center">
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:custom="clr-namespace:QwQ_Music.Views.UserControls"
+        xmlns:models="clr-namespace:QwQ_Music.Models"
+        xmlns:managers="clr-namespace:QwQ_Music.Common.Managers">
+    <Style Selector="custom|MusicAlbumCoverButton">
+        <Setter Property="Template">
+            <ControlTemplate x:DataType="models:MusicItemModel">
+                <Button Classes="None"
+                        Command="{TemplateBinding Command}"
+                        CommandParameter="{TemplateBinding CommandParameter}"
+                        Foreground="{DynamicResource SemiColorBackground4}"
+                        Height="50"
+                        Margin="10"
+                        Width="50"
+                        ClipToBounds="True">
+                    <Panel>
+                        <Image Source="{Binding CoverImage}" />
+                        <Panel IsVisible="{TemplateBinding ExternalPointerOver}">
+                            <Border Background="#33000000" Name="CoverLayer" />
+                            <PathIcon Name="PART_PlayIcon" Data="{StaticResource PlayIconData}"
+                                      IsVisible="{Binding !IsCurrent}" />
+                            <Panel IsVisible="{Binding !#PART_PlayIcon.IsVisible}">
+                                <PathIcon Name="PART_PauseIcon"
+                                          IsVisible="{Binding (managers:AudioPlayManager).Instance.IsPlaying}" />
+                                <StackPanel Name="PART_PlayingAnimation"
+                                            IsVisible="{Binding !#PART_PauseIcon.IsVisible}"
+                                            HorizontalAlignment="Center"
+                                            Orientation="Horizontal"
+                                            Spacing="4"
+                                            VerticalAlignment="Center">
 
-                            <Border Classes="Short" />
-                            <Border Classes="Long" />
-                            <Border Classes="Short" />
+                                    <Border Classes="Short" />
+                                    <Border Classes="Long" />
+                                    <Border Classes="Short" />
 
-                            <StackPanel.Styles>
-                                <Style Selector="Border">
-                                    <Setter
-                                        Property="CornerRadius"
-                                        Value="3" />
-                                    <Setter
-                                        Property="Width"
-                                        Value="4" />
-                                    <Setter
-                                        Property="Background"
-                                        Value="White" />
-                                </Style>
+                                    <StackPanel.Styles>
+                                        <Style Selector="Border">
+                                            <Setter
+                                                Property="CornerRadius"
+                                                Value="3" />
+                                            <Setter
+                                                Property="Width"
+                                                Value="4" />
+                                            <Setter
+                                                Property="Background"
+                                                Value="White" />
+                                        </Style>
 
-                                <Style
-                                    Selector="Border.Long">
-                                    <Setter
-                                        Property="Height"
-                                        Value="20" />
-                                    <Style.Animations>
-                                        <Animation
-                                            Duration="0:0:1"
-                                            FillMode="Forward"
-                                            IterationCount="Infinite">
-                                            <KeyFrame
-                                                Cue="0%">
-                                                <Setter
-                                                    Property="ScaleTransform.ScaleY"
-                                                    Value="1" />
-                                            </KeyFrame>
-                                            <KeyFrame
-                                                Cue="50%">
-                                                <Setter
-                                                    Property="ScaleTransform.ScaleY"
-                                                    Value="0.5" />
-                                            </KeyFrame>
-                                            <KeyFrame
-                                                Cue="100%">
-                                                <Setter
-                                                    Property="ScaleTransform.ScaleY"
-                                                    Value="1" />
-                                            </KeyFrame>
-                                        </Animation>
-                                    </Style.Animations>
-                                </Style>
+                                        <Style
+                                            Selector="Border.Long">
+                                            <Setter
+                                                Property="Height"
+                                                Value="20" />
+                                            <Style.Animations>
+                                                <Animation
+                                                    Duration="0:0:1"
+                                                    FillMode="Forward"
+                                                    IterationCount="Infinite">
+                                                    <KeyFrame
+                                                        Cue="0%">
+                                                        <Setter
+                                                            Property="ScaleTransform.ScaleY"
+                                                            Value="1" />
+                                                    </KeyFrame>
+                                                    <KeyFrame
+                                                        Cue="50%">
+                                                        <Setter
+                                                            Property="ScaleTransform.ScaleY"
+                                                            Value="0.5" />
+                                                    </KeyFrame>
+                                                    <KeyFrame
+                                                        Cue="100%">
+                                                        <Setter
+                                                            Property="ScaleTransform.ScaleY"
+                                                            Value="1" />
+                                                    </KeyFrame>
+                                                </Animation>
+                                            </Style.Animations>
+                                        </Style>
 
-                                <Style
-                                    Selector="Border.Short">
-                                    <Setter
-                                        Property="Height"
-                                        Value="10" />
-                                    <Style.Animations>
-                                        <Animation
-                                            Duration="0:0:1"
-                                            FillMode="Forward"
-                                            IterationCount="Infinite">
-                                            <KeyFrame
-                                                Cue="0%">
-                                                <Setter
-                                                    Property="ScaleTransform.ScaleY"
-                                                    Value="1" />
-                                            </KeyFrame>
-                                            <KeyFrame
-                                                Cue="50%">
-                                                <Setter
-                                                    Property="ScaleTransform.ScaleY"
-                                                    Value="1.5" />
-                                            </KeyFrame>
-                                            <KeyFrame
-                                                Cue="100%">
-                                                <Setter
-                                                    Property="ScaleTransform.ScaleY"
-                                                    Value="1" />
-                                            </KeyFrame>
-                                        </Animation>
-                                    </Style.Animations>
-                                </Style>
-
-                            </StackPanel.Styles>
-                        </StackPanel>
+                                        <Style
+                                            Selector="Border.Short">
+                                            <Setter
+                                                Property="Height"
+                                                Value="10" />
+                                            <Style.Animations>
+                                                <Animation
+                                                    Duration="0:0:1"
+                                                    FillMode="Forward"
+                                                    IterationCount="Infinite">
+                                                    <KeyFrame
+                                                        Cue="0%">
+                                                        <Setter
+                                                            Property="ScaleTransform.ScaleY"
+                                                            Value="1" />
+                                                    </KeyFrame>
+                                                    <KeyFrame
+                                                        Cue="50%">
+                                                        <Setter
+                                                            Property="ScaleTransform.ScaleY"
+                                                            Value="1.5" />
+                                                    </KeyFrame>
+                                                    <KeyFrame
+                                                        Cue="100%">
+                                                        <Setter
+                                                            Property="ScaleTransform.ScaleY"
+                                                            Value="1" />
+                                                    </KeyFrame>
+                                                </Animation>
+                                            </Style.Animations>
+                                        </Style>
+                                    </StackPanel.Styles>
+                                </StackPanel>
+                            </Panel>
+                        </Panel>
                     </Panel>
-                </Panel>
-            </Panel>
-        </ControlTemplate>
-    </custom:MusicAlbumCoverButton.Template>
-
-</custom:MusicAlbumCoverButton>
+                </Button>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

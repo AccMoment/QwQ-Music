@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using QwQ_Music.Common.Helpers;
@@ -29,25 +31,62 @@ public enum MediaPlaybackMode {
     Repeat, List, ListRepeat, Shuffle
 }
 
+public record class AudioPlayerCommand {
+    public required Action Action { get; init; }
+    public Exception? Exception { get; set; }
+
+    public TaskCompletionSource CompletionSource { get; set; } = new();
+}
+
 /// <summary>
 ///     基于SoundFlow实现的音频播放器
 /// </summary>
 public class AudioPlayer : IAudioPlayer {
     private readonly PlayComponent _soundModifier = ConfigManager.SoundModifierConfig.PlayComponent;
-    private static readonly MiniAudioEngine AudioEngine = Task.Run(() => new MiniAudioEngine()).Result;
-    private static readonly ISystemMediaControlImpl SystemMedia = SystemMediaControl.CreateSystemMediaControl();
-    public Stream? Current { get; private set; }
+    private readonly Thread _audioThread;
+    private readonly CancellationTokenSource _token;
 
-    public bool IsDisposed;
+    private readonly BlockingCollection<AudioPlayerCommand> _commandQueue = new();
+
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+    private static MiniAudioEngine AudioEngine { get; set; }
+    private static ISystemMediaControlImpl SystemMedia { get; set; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+
+    public AudioPlayer() {
+        _token = new CancellationTokenSource();
+        _audioThread = new Thread(() => {
+            AudioEngine = new MiniAudioEngine();
+            SystemMedia = SystemMediaControl.CreateSystemMediaControl();
+            while (!_token.IsCancellationRequested) {
+                if (!_commandQueue.TryTake(out AudioPlayerCommand? command, 100))
+                    continue;
+                try {
+                    command.Action.Invoke();
+                    command.CompletionSource.SetResult();
+                } catch (Exception ex) {
+                    command.CompletionSource.SetException(ex);
+                }
+            }
+        }) { Name = nameof(AudioPlayer), IsBackground = true, Priority = ThreadPriority.Highest };
+        _audioThread.Start();
+    }
+
+    public Stream? Current { get; private set; }
 
     public MediaPlaybackStatus Status = MediaPlaybackStatus.Stopped;
 
     private AudioPlaybackDevice PlayerDevice {
         get {
-            if (field?.IsDisposed ?? true) {
-                field = InitializeDevice();
+            if (field is { IsDisposed: false }) {
+                return field;
             }
 
+            if (!CheckAccess()) {
+                Enqueue(() => _ = PlayerDevice).ConfigureAwait(false).GetAwaiter().GetResult();
+            }
+
+            field = InitializeDevice();
             return field;
         }
         set;
@@ -60,23 +99,53 @@ public class AudioPlayer : IAudioPlayer {
     private Timer FadeOutTimer {
         get {
             // ReSharper disable once InvertIf
-            if (field is null) {
-                field = new Timer { AutoReset = false };
-                field.Elapsed += FadeOutAwaiter;
+            if (field is not null)
+                return field;
+            if (!CheckAccess()) {
+                Enqueue(() => _ = FadeOutTimer).ConfigureAwait(false).GetAwaiter().GetResult();
             }
 
+            field = new Timer { AutoReset = false };
+            field.Elapsed += FadeOutAwaiter;
             return field;
         }
     }
 
-    private DispatcherTimer UpdateTimer =>
-        field ??= new DispatcherTimer(TimeSpan.FromMilliseconds(1000), DispatcherPriority.Render, OnProgressTimerTick);
+    private DispatcherTimer UpdateTimer {
+        get {
+            if (field is not null)
+                return field;
+            // ReSharper disable once InvertIf
+            if (!CheckAccess()) {
+                Enqueue(() => _ = UpdateTimer).ConfigureAwait(false).GetAwaiter().GetResult();
+                return UpdateTimer;
+            }
 
-    private DispatcherTimer SpecTimer =>
-        field ??= new DispatcherTimer(
-            TimeSpan.FromMilliseconds(ConfigManager.UiConfig.SpectrumConfig.UpdateIntervalMs),
-            DispatcherPriority.Render,
-            OnSpectrumVisualizer);
+            return field = new DispatcherTimer(
+                TimeSpan.FromMilliseconds(1000),
+                DispatcherPriority.Render,
+                OnProgressTimerTick);
+        }
+    }
+
+
+    private DispatcherTimer SpecTimer {
+        get {
+            if (field is not null)
+                return field;
+            // ReSharper disable once InvertIf
+            if (!CheckAccess()) {
+                Enqueue(() => _ = SpecTimer).ConfigureAwait(false).GetAwaiter().GetResult();
+                return SpecTimer;
+            }
+
+            return field = new DispatcherTimer(
+                TimeSpan.FromMilliseconds(ConfigManager.UiConfig.SpectrumConfig.UpdateIntervalMs),
+                DispatcherPriority.Render,
+                OnSpectrumVisualizer);
+        }
+    }
+
 
     /// <summary>
     ///     音频格式
@@ -123,10 +192,23 @@ public class AudioPlayer : IAudioPlayer {
         }
     }
 
+    private Task Enqueue(Action action) {
+        var command = new AudioPlayerCommand() { Action = action };
+        _commandQueue.Add(command);
+        return command.CompletionSource.Task;
+    }
+
+    public bool CheckAccess() { return Thread.CurrentThread == _audioThread; }
+
     /// <summary>
     ///     开始播放
     /// </summary>
     public void Play() {
+        if (!CheckAccess()) {
+            Enqueue(Play).ConfigureAwait(false).GetAwaiter().GetResult();
+            return;
+        }
+
         Debug.Assert(_soundPlayer is not null);
         if (Current is null) {
             LoggerService.Warning("当前音频流已不可用");
@@ -158,6 +240,11 @@ public class AudioPlayer : IAudioPlayer {
     ///     暂停播放
     /// </summary>
     public void Pause(bool instant = false) {
+        if (!CheckAccess()) {
+            Enqueue(() => Pause(instant)).ConfigureAwait(false).GetAwaiter().GetResult();
+            return;
+        }
+
         if (Status is not MediaPlaybackStatus.Playing and not MediaPlaybackStatus.Fading) {
             // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
             if (Status is MediaPlaybackStatus.Paused)
@@ -188,6 +275,11 @@ public class AudioPlayer : IAudioPlayer {
     ///     停止播放并释放资源
     /// </summary>
     public void Stop() {
+        if (!CheckAccess()) {
+            Enqueue(Stop).ConfigureAwait(false).GetAwaiter().GetResult();
+            return;
+        }
+
         Pause();
         _soundPlayer?.PlaybackEnded -= OnPlaybackCompleted;
         UpdateTimer.Stop();
@@ -215,6 +307,11 @@ public class AudioPlayer : IAudioPlayer {
     ///     跳转到指定位置（单位：秒）
     /// </summary>
     public void Seek(double positionInSeconds) {
+        if (!CheckAccess()) {
+            Enqueue(() => Seek(positionInSeconds)).ConfigureAwait(false).GetAwaiter().GetResult();
+            return;
+        }
+
         _soundPlayer?.Seek((float)Math.Clamp(positionInSeconds, 0, _soundPlayer.Duration));
     }
 
@@ -229,7 +326,7 @@ public class AudioPlayer : IAudioPlayer {
     /// </summary>
     public void Dispose() {
         Stop();
-        IsDisposed = true;
+        _token.Cancel();
         FadeOutTimer.Dispose();
         PlayerDevice.Dispose();
         GC.SuppressFinalize(this);
@@ -243,12 +340,13 @@ public class AudioPlayer : IAudioPlayer {
     /// <summary>
     ///     频谱数据更新事件
     /// </summary>
-    public event EventHandler<float[]>? SpectrumDataUpdated;
+    public event EventHandler<ReadOnlySpan<float>>? SpectrumDataUpdated;
 
     /// <summary>
     ///     淡出定时器事件处理
     /// </summary>
     private void FadeOutAwaiter(object? sender, EventArgs e) {
+        // 事件触发，不需要做验证
         if (Status is MediaPlaybackStatus.Playing) {
             LoggerService.Warning("警告：已忽略的暂停");
             return;
@@ -262,6 +360,15 @@ public class AudioPlayer : IAudioPlayer {
     }
 
     public async Task InitializeAudioAsync(Stream audioStream, double replayGain) {
+        if (!CheckAccess()) {
+            await Enqueue(() => InitializeAudioAsync(audioStream, replayGain)
+                                .ConfigureAwait(false)
+                                .GetAwaiter()
+                                .GetResult())
+                .ConfigureAwait(false);
+            return;
+        }
+
         Stop();
         if (AudioFormat != PlayerDevice.Format)
             TimeoutHelper.Timeout(2000, PlayerDevice.Dispose, () => PlayerDevice = null!);
@@ -273,7 +380,12 @@ public class AudioPlayer : IAudioPlayer {
         }
     }
 
-    private static void ResetTimer(Timer timer, double milliseconds = 1000) {
+    private void ResetTimer(Timer timer, double milliseconds = 1000) {
+        if (!CheckAccess()) {
+            Enqueue(() => ResetTimer(timer, milliseconds)).ConfigureAwait(false).GetAwaiter().GetResult();
+            return;
+        }
+
         timer.Stop();
         if (milliseconds > 0)
             timer.Interval = milliseconds;
@@ -283,13 +395,21 @@ public class AudioPlayer : IAudioPlayer {
     ///     初始化新音轨
     /// </summary>
     private async Task InitializeNewTrackAsync(Stream audioStream, double replayGain) {
+        if (!CheckAccess()) {
+            await Enqueue(() => InitializeNewTrackAsync(audioStream, replayGain)
+                                .ConfigureAwait(false)
+                                .GetAwaiter()
+                                .GetResult())
+                .ConfigureAwait(false);
+            return;
+        }
+
         Status = MediaPlaybackStatus.Changing;
         _soundDataProvider = new StreamDataProvider(AudioEngine, AudioFormat, audioStream);
         await LoggerService.DebugAsync($"Volume:{Volume},Speed:{Speed}").ConfigureAwait(false);
-        _soundPlayer =
-            new SoundPlayer(AudioEngine, AudioFormat, _soundDataProvider) {
-                Volume = Volume, Mute = IsMute, PlaybackSpeed = Speed
-            };
+        _soundPlayer = new SoundPlayer(AudioEngine, AudioFormat, _soundDataProvider) {
+            Volume = Volume, Mute = IsMute, PlaybackSpeed = Speed
+        };
 
         // 设置播放完成事件
         _soundPlayer.PlaybackEnded += OnPlaybackCompleted;
@@ -312,6 +432,7 @@ public class AudioPlayer : IAudioPlayer {
     }
 
     private void OnSpectrumVisualizer(object? sender, EventArgs eventArgs) {
+        // 事件触发，不需要做验证
         if (_spectrumAnalyzer == null ||
             !ConfigManager.UiConfig.SpectrumConfig.IsEnabled ||
             !DrawerManager.Instance.IsMusicPlayerPanelVisible)
@@ -323,13 +444,18 @@ public class AudioPlayer : IAudioPlayer {
             return;
 
         // 触发频谱数据更新事件
-        SpectrumDataUpdated?.Invoke(this, spectrumData.ToArray());
+        SpectrumDataUpdated?.Invoke(this, spectrumData);
     }
 
     /// <summary>
     ///     初始化效果链
     /// </summary>
     private void InitializeModifiers(SoundPlayer soundPlayer, double replayGain) {
+        if (!CheckAccess()) {
+            Enqueue(() => InitializeModifiers(soundPlayer, replayGain)).ConfigureAwait(false).GetAwaiter().GetResult();
+            return;
+        }
+
         _soundModifier.ReplayGainModifier.Gain = (float)replayGain;
         soundPlayer.AddModifier(_soundModifier.ReplayGainModifier);
 
@@ -350,6 +476,7 @@ public class AudioPlayer : IAudioPlayer {
     ///     播放完成事件处理
     /// </summary>
     private void OnPlaybackCompleted(object? sender, EventArgs e) {
+        // 事件触发，不需要做验证
         Status = MediaPlaybackStatus.Stopped;
         UpdateTimer.Stop();
         SpecTimer.Stop();
@@ -361,6 +488,8 @@ public class AudioPlayer : IAudioPlayer {
     ///     进度定时器事件处理
     /// </summary>
     private void OnProgressTimerTick(object? sender, EventArgs e) {
+        // 事件触发，不需要做验证
+
         Debug.Assert(_soundPlayer is not null);
         Debug.Assert(Status is MediaPlaybackStatus.Playing or MediaPlaybackStatus.Fading);
 
@@ -385,6 +514,11 @@ public class AudioPlayer : IAudioPlayer {
     }
 
     public void ReloadDevice() {
+        if (!CheckAccess()) {
+            Enqueue(ReloadDevice).ConfigureAwait(false).GetAwaiter().GetResult();
+            return;
+        }
+
         bool isPlaying = Status is MediaPlaybackStatus.Playing;
         if (isPlaying) {
             Pause();

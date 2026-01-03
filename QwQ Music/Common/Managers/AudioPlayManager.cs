@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Timers;
 using Avalonia.Media.Imaging;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Audio;
 using QwQ_Music.Common.Services;
@@ -157,7 +158,8 @@ public partial class AudioPlayManager : ViewModelBase {
 
     public PlayerConfig PlayerConfig { get; } = ConfigManager.PlayerConfig;
 
-    public LyricsModel LyricsModel { get; set; } = new();
+    [ObservableProperty]
+    public partial LyricsModel LyricsModel { get; set; } = new();
 
     private double _position;
 
@@ -500,7 +502,7 @@ public partial class AudioPlayManager : ViewModelBase {
         PlayerConfig.PlayMode = (PlayMode)(((int)PlayerConfig.PlayMode + 1) % Enum.GetValues<PlayMode>().Length);
 
         PlaylistManager.Instance.PlayMode = PlayerConfig.PlayMode;
-
+        LoggerService.Info($"切换到{PlayModeName}模式。");
         OnPropertyChanged(nameof(PlayModeName));
     }
 

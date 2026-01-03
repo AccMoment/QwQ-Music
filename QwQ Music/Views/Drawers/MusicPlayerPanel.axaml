@@ -71,7 +71,7 @@
                 HorizontalAlignment="Center">
             <Border ClipToBounds="True" CornerRadius="20">
                 <!--  专辑封面 Image 控件  -->
-                <!-- <Image Source="{Binding AudioPlayManager.CurrentMusicItem.Model.OriginalCover}" /> -->
+                <Image Source="{Binding AudioPlayManager.CurrentMusicItem.Model.OriginalCover}" />
             </Border>
         </Border>
 

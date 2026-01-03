@@ -80,8 +80,6 @@
                             <StackPanel Orientation="Horizontal">
 
                                 <custom:PlaylistAlbumCoverButton
-                                    Command="{Binding (managers:AudioPlayManager).Instance.PlayThisMusicCommand}"
-                                    CommandParameter="{Binding }"
                                     CornerRadius="8"
                                     ExternalPointerOver="{Binding $parent[ListBoxItem].IsPointerOver}" />
                                 <!--<Button.Effect>

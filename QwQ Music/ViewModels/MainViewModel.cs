@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Services;
 using QwQ_Music.ViewModels.Bases;
+using QwQ_Music.ViewModels.Pages;
 using QwQ_Music.Views.Pages;
 using static QwQ_Music.Models.LanguageModel;
 
@@ -38,7 +39,8 @@ public partial class MainViewModel : NavigationViewModel {
     public static string SettingsName => Lang[nameof(SettingsName)];
 
     public AvaloniaList<Control> Pages { get; } = [
-        new AllMusicPage()//, new ClassificationPage(), new OtherPage(), new ConfigMainPage()
+        new AllMusicPage(), new PLACEHOLDER(), new PLACEHOLDER(), new ConfigMainPage()
+        //, new ClassificationPage(), new OtherPage()
     ];
 
     [ObservableProperty]

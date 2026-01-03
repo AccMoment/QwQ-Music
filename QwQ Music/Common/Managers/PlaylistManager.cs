@@ -145,7 +145,7 @@ public partial class PlaylistManager : ObservableObject {
         MusicItemModel? target = null,
         bool isPlayNow = false) {
         List<MusicItemModel> items = musicItems.ToList();
-        if (CurrentListName == name && ActualPlaylist.Count == items.Count) {
+        if (name is not CUSTOM and not UNKNOWN && CurrentListName == name && ActualPlaylist.Count == items.Count) {
             return;
         }
 

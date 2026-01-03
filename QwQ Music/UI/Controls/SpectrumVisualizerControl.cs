@@ -9,40 +9,31 @@ namespace QwQ_Music.UI.Controls;
 /// <summary>
 ///     频谱可视化控件，以波浪形式展示音频频谱数据
 /// </summary>
-public class SpectrumVisualizerControl : Control
-{
-    static SpectrumVisualizerControl()
-    {
+public class SpectrumVisualizerControl : Control {
+    static SpectrumVisualizerControl() {
         AffectsRender<SpectrumVisualizerControl>(
-            SpectrumDataProperty,
             LineBrushProperty,
             LineThicknessProperty,
-            AmplitudeScaleProperty,
-            SmoothingFactorProperty
-        );
+            AmplitudeScaleProperty);
     }
 
-    public SpectrumVisualizerControl()
-    {
+    public SpectrumVisualizerControl() {
         ClipToBounds = true;
 
         // 初始化动画定时器
-        _animationTimer = new DispatcherTimer
-        {
+        _animationTimer = new DispatcherTimer {
             Interval = TimeSpan.FromMilliseconds(16) // ~60fps
         };
 
         _animationTimer.Tick += OnAnimationTick;
     }
 
-    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
-    {
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e) {
         base.OnAttachedToVisualTree(e);
         _animationTimer.Start();
     }
 
-    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
-    {
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e) {
         base.OnDetachedFromVisualTree(e);
         _animationTimer.Stop();
     }
@@ -50,30 +41,22 @@ public class SpectrumVisualizerControl : Control
     /// <summary>
     ///     动画定时器事件处理
     /// </summary>
-    private void OnAnimationTick(object? sender, EventArgs e)
-    {
-        if (_targetValues == null || _currentValues == null)
-            return;
-
+    private void OnAnimationTick(object? sender, EventArgs e) {
         bool needsUpdate = false;
 
         // 平滑插值当前值到目标值
-        for (int i = 0; i < _currentValues.Length && i < _targetValues.Length; i++)
-        {
-            double target = _targetValues[i];
-            double current = _currentValues[i];
-            double diff = target - current;
+        for (int i = 0; i < _currentValues.Length && i < _targetValues.Length; i++) {
+            float target = _targetValues[i];
+            float current = _currentValues[i];
+            float diff = target - current;
 
             // 如果差值很小，直接设置为目标值
-            if (Math.Abs(diff) < 0.01)
-            {
+            if (Math.Abs(diff) < 0.01) {
                 if (!(Math.Abs(_currentValues[i] - target) > 0.001))
                     continue;
 
                 _currentValues[i] = target;
-            }
-            else
-            {
+            } else {
                 // 使用平滑因子进行插值
                 _currentValues[i] += diff * SmoothingFactor;
             }
@@ -81,23 +64,20 @@ public class SpectrumVisualizerControl : Control
             needsUpdate = true;
         }
 
-        if (needsUpdate)
-        {
+        if (needsUpdate) {
             InvalidateVisual();
         }
     }
 
-    public override void Render(DrawingContext context)
-    {
+    public override void Render(DrawingContext context) {
         base.Render(context);
 
         var bounds = Bounds;
 
-        if (bounds.Width <= 0 || bounds.Height <= 0)
+        if (bounds is { Width: <= 0 } or { Height: <= 0 })
             return;
 
-        if (_currentValues == null || _currentValues.Length == 0)
-        {
+        if (_currentValues.Length == 0) {
             // 绘制水平基线
             DrawBaseline(context, bounds);
 
@@ -111,8 +91,7 @@ public class SpectrumVisualizerControl : Control
     /// <summary>
     ///     绘制基线（当没有数据时）- 修复边界问题
     /// </summary>
-    private void DrawBaseline(DrawingContext context, Rect bounds)
-    {
+    private void DrawBaseline(DrawingContext context, Rect bounds) {
         // 考虑线条粗细，确保基线完全在可视区域内
         double halfThickness = LineThickness / 2;
         double baselineY = bounds.Height - halfThickness;
@@ -120,10 +99,7 @@ public class SpectrumVisualizerControl : Control
         // 确保基线不会超出边界
         baselineY = Math.Clamp(baselineY, halfThickness, bounds.Height - halfThickness);
 
-        var pen = new Pen(LineBrush, LineThickness)
-        {
-            LineCap = PenLineCap.Round
-        };
+        var pen = new Pen(LineBrush, LineThickness) { LineCap = PenLineCap.Round };
 
         context.DrawLine(pen, new Point(0, baselineY), new Point(bounds.Width, baselineY));
     }
@@ -131,11 +107,7 @@ public class SpectrumVisualizerControl : Control
     /// <summary>
     ///     使用Catmull-Rom样条曲线绘制频谱波形 - 考虑线条粗细的边界处理
     /// </summary>
-    private void DrawSpectrumWaveSmooth(DrawingContext context, Rect bounds)
-    {
-        if (_currentValues == null || _currentValues.Length == 0)
-            return;
-
+    private void DrawSpectrumWaveSmooth(DrawingContext context, Rect bounds) {
         double halfThickness = LineThickness / 2;
         double bottomY = bounds.Height - halfThickness; // 考虑线条粗细的底部位置
         double width = bounds.Width;
@@ -148,10 +120,9 @@ public class SpectrumVisualizerControl : Control
         // 生成数据点
         var points = new Point[dataCount];
 
-        for (int i = 0; i < dataCount; i++)
-        {
+        for (int i = 0; i < dataCount; i++) {
             double x = i * stepX;
-            double amplitude = _currentValues[i] * AmplitudeScale;
+            double amplitude = _currentValues[i] / 20f * AmplitudeScale;
             double y = bottomY - amplitude * height;
 
             // 限制Y坐标在边界内，考虑线条粗细
@@ -162,11 +133,7 @@ public class SpectrumVisualizerControl : Control
         // 创建路径几何
         var geometry = new PathGeometry();
 
-        var figure = new PathFigure
-        {
-            StartPoint = points[0],
-            IsClosed = false
-        };
+        var figure = new PathFigure { StartPoint = points[0], IsClosed = false };
 
         if (figure.Segments == null)
             return;
@@ -174,8 +141,7 @@ public class SpectrumVisualizerControl : Control
         // 使用Catmull-Rom样条曲线插值
         const int segmentsPerPoint = 8; // 每两个点之间的细分段数
 
-        for (int i = 0; i < dataCount - 1; i++)
-        {
+        for (int i = 0; i < dataCount - 1; i++) {
             // 获取插值所需的四个控制点
             var p0 = i > 0 ? points[i - 1] : points[i];
             var p1 = points[i];
@@ -183,32 +149,23 @@ public class SpectrumVisualizerControl : Control
             var p3 = i < dataCount - 2 ? points[i + 2] : points[i + 1];
 
             // 对当前段进行细分插值
-            for (int j = 1; j <= segmentsPerPoint; j++)
-            {
+            for (int j = 1; j <= segmentsPerPoint; j++) {
                 double t = j / (double)segmentsPerPoint;
                 var interpolatedPoint = CatmullRomInterpolate(p0, p1, p2, p3, t);
 
                 // 确保插值点不会超出边界
                 interpolatedPoint = new Point(
                     interpolatedPoint.X,
-                    Math.Clamp(interpolatedPoint.Y, halfThickness, bounds.Height - halfThickness)
-                );
+                    Math.Clamp(interpolatedPoint.Y, halfThickness, bounds.Height - halfThickness));
 
-                figure.Segments.Add(new LineSegment
-                {
-                    Point = interpolatedPoint
-                });
+                figure.Segments.Add(new LineSegment { Point = interpolatedPoint });
             }
         }
 
         geometry.Figures?.Add(figure);
 
         // 绘制路径
-        var pen = new Pen(LineBrush, LineThickness)
-        {
-            LineCap = PenLineCap.Round,
-            LineJoin = PenLineJoin.Round
-        };
+        var pen = new Pen(LineBrush, LineThickness) { LineCap = PenLineCap.Round, LineJoin = PenLineJoin.Round };
 
         context.DrawGeometry(null, pen, geometry);
     }
@@ -216,21 +173,22 @@ public class SpectrumVisualizerControl : Control
     /// <summary>
     ///     Catmull-Rom样条插值
     /// </summary>
-    private static Point CatmullRomInterpolate(Point p0, Point p1, Point p2, Point p3, double t)
-    {
+    private static Point CatmullRomInterpolate(Point p0, Point p1, Point p2, Point p3, double t) {
         double t2 = t * t;
         double t3 = t2 * t;
 
         // Catmull-Rom样条公式
-        double x = 0.5 * (2 * p1.X +
-            (-p0.X + p2.X) * t +
-            (2 * p0.X - 5 * p1.X + 4 * p2.X - p3.X) * t2 +
-            (-p0.X + 3 * p1.X - 3 * p2.X + p3.X) * t3);
+        double x = 0.5 *
+                   (2 * p1.X +
+                    (-p0.X + p2.X) * t +
+                    (2 * p0.X - 5 * p1.X + 4 * p2.X - p3.X) * t2 +
+                    (-p0.X + 3 * p1.X - 3 * p2.X + p3.X) * t3);
 
-        double y = 0.5 * (2 * p1.Y +
-            (-p0.Y + p2.Y) * t +
-            (2 * p0.Y - 5 * p1.Y + 4 * p2.Y - p3.Y) * t2 +
-            (-p0.Y + 3 * p1.Y - 3 * p2.Y + p3.Y) * t3);
+        double y = 0.5 *
+                   (2 * p1.Y +
+                    (-p0.Y + p2.Y) * t +
+                    (2 * p0.Y - 5 * p1.Y + 4 * p2.Y - p3.Y) * t2 +
+                    (-p0.Y + 3 * p1.Y - 3 * p2.Y + p3.Y) * t3);
 
         return new Point(x, y);
     }
@@ -326,31 +284,14 @@ public class SpectrumVisualizerControl : Control
     /// <summary>
     ///     更新频谱数据
     /// </summary>
-    private void UpdateSpectrumData(float[]? newData)
-    {
-        if (newData == null || newData.Length == 0)
-        {
-            _targetValues = null;
-            _currentValues = null;
-            InvalidateVisual();
-
-            return;
-        }
-
+    public void UpdateSpectrumData(ReadOnlySpan<float> newData) {
         // 初始化数组
-        if (_targetValues == null || _targetValues.Length != newData.Length)
-        {
-            _targetValues = new double[newData.Length];
-            _currentValues = new double[newData.Length];
+        if (_targetValues.Length != newData.Length) {
+            _targetValues = new float[newData.Length];
+            _currentValues = new float[newData.Length];
         }
 
-        // 更新目标值
-        for (int i = 0; i < newData.Length; i++)
-        {
-            // 将频谱值归一化到0-1范围（假设最大值约为100）
-            double normalizedValue = Math.Clamp(newData[i] / 100.0, 0.0, 1.0);
-            _targetValues[i] = normalizedValue;
-        }
+        _targetValues = newData.ToArray();
 
         InvalidateVisual();
     }
@@ -358,67 +299,37 @@ public class SpectrumVisualizerControl : Control
     #region 依赖属性
 
     /// <summary>
-    ///     频谱数据
-    /// </summary>
-    public static readonly StyledProperty<float[]?> SpectrumDataProperty = AvaloniaProperty.Register<
-        SpectrumVisualizerControl,
-        float[]?
-    >(nameof(SpectrumData));
-
-    /// <summary>
     ///     线条画笔
     /// </summary>
-    public static readonly StyledProperty<IBrush> LineBrushProperty = AvaloniaProperty.Register<
-        SpectrumVisualizerControl,
-        IBrush
-    >(nameof(LineBrush), Brushes.White);
+    public static readonly StyledProperty<IBrush> LineBrushProperty =
+        AvaloniaProperty.Register<SpectrumVisualizerControl, IBrush>(nameof(LineBrush), Brushes.White);
 
     /// <summary>
     ///     线条粗细
     /// </summary>
-    public static readonly StyledProperty<double> LineThicknessProperty = AvaloniaProperty.Register<
-        SpectrumVisualizerControl,
-        double
-    >(nameof(LineThickness), 2.0);
+    public static readonly StyledProperty<double> LineThicknessProperty =
+        AvaloniaProperty.Register<SpectrumVisualizerControl, double>(nameof(LineThickness), 2.0);
 
     /// <summary>
     ///     振幅缩放因子（控制波形高度）
     /// </summary>
-    public static readonly StyledProperty<double> AmplitudeScaleProperty = AvaloniaProperty.Register<
-        SpectrumVisualizerControl,
-        double
-    >(nameof(AmplitudeScale), 0.5);
+    public static readonly StyledProperty<double> AmplitudeScaleProperty =
+        AvaloniaProperty.Register<SpectrumVisualizerControl, double>(nameof(AmplitudeScale), 0.5);
 
     /// <summary>
     ///     平滑因子（0-1，值越大变化越快）
     /// </summary>
-    public static readonly StyledProperty<double> SmoothingFactorProperty = AvaloniaProperty.Register<
-        SpectrumVisualizerControl,
-        double
-    >(nameof(SmoothingFactor), 0.15);
+    public static readonly StyledProperty<float> SmoothingFactorProperty =
+        AvaloniaProperty.Register<SpectrumVisualizerControl, float>(nameof(SmoothingFactor), 0.15f);
 
     #endregion
 
     #region 属性
 
     /// <summary>
-    ///     频谱数据
-    /// </summary>
-    public float[]? SpectrumData
-    {
-        get => GetValue(SpectrumDataProperty);
-        set
-        {
-            SetValue(SpectrumDataProperty, value);
-            UpdateSpectrumData(value);
-        }
-    }
-
-    /// <summary>
     ///     线条画笔
     /// </summary>
-    public IBrush LineBrush
-    {
+    public IBrush LineBrush {
         get => GetValue(LineBrushProperty);
         set => SetValue(LineBrushProperty, value);
     }
@@ -426,8 +337,7 @@ public class SpectrumVisualizerControl : Control
     /// <summary>
     ///     线条粗细
     /// </summary>
-    public double LineThickness
-    {
+    public double LineThickness {
         get => GetValue(LineThicknessProperty);
         set => SetValue(LineThicknessProperty, value);
     }
@@ -435,8 +345,7 @@ public class SpectrumVisualizerControl : Control
     /// <summary>
     ///     振幅缩放因子（控制波形高度）
     /// </summary>
-    public double AmplitudeScale
-    {
+    public double AmplitudeScale {
         get => GetValue(AmplitudeScaleProperty);
         set => SetValue(AmplitudeScaleProperty, value);
     }
@@ -444,8 +353,7 @@ public class SpectrumVisualizerControl : Control
     /// <summary>
     ///     平滑因子（0-1，值越大变化越快）
     /// </summary>
-    public double SmoothingFactor
-    {
+    public float SmoothingFactor {
         get => GetValue(SmoothingFactorProperty);
         set => SetValue(SmoothingFactorProperty, value);
     }
@@ -454,8 +362,8 @@ public class SpectrumVisualizerControl : Control
 
     #region 私有字段
 
-    private double[]? _targetValues; // 目标值（从频谱数据计算）
-    private double[]? _currentValues; // 当前显示值（用于动画插值）
+    private float[] _targetValues = [];               // 目标值（从频谱数据计算）
+    private float[] _currentValues = [];              // 当前显示值（用于动画插值）
     private readonly DispatcherTimer _animationTimer; // 动画定时器
 
     #endregion

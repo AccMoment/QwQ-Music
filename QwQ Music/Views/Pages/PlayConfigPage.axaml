@@ -96,6 +96,19 @@
                         <StackPanel>
                             <PathIcon Data="{StaticResource SemiIconMusicNoteStroked}" Height="14"
                                       Foreground="{x:Static utilities:ColorGenerator.RandomColor}" />
+                            <TextBlock Text="切换双击列表项行为" Classes="CardTitle" />
+                        </StackPanel>
+                        <ComboBox ItemsSource="{Binding AddMusicBehaviors}"
+                                  DisplayMemberBinding="{Binding Key}"
+                                  SelectedValueBinding="{Binding Value}"
+                                  SelectedValue="{Binding PlayerConfig.AddMusicBehavior}" />
+                    </StackPanel>
+                </Border>
+                <Border>
+                    <StackPanel>
+                        <StackPanel>
+                            <PathIcon Data="{StaticResource SemiIconMusicNoteStroked}" Height="14"
+                                      Foreground="{x:Static utilities:ColorGenerator.RandomColor}" />
                             <TextBlock Text="播放完成后 : " Classes="CardTitle" />
                         </StackPanel>
 
@@ -187,7 +200,7 @@
                             <TextBlock Text="音频信息" Classes="CardTitle" />
                         </StackPanel>
 
-                        <Button Command="{Binding OpenCurrentStreamInfo}"/>
+                        <Button Command="{Binding OpenCurrentStreamInfo}" />
                     </StackPanel>
                 </Border>
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,6 +22,13 @@ namespace QwQ_Music.ViewModels.Pages;
 
 public partial class PlayConfigPageViewModel : ViewModelBase {
     public PlayConfigPageViewModel() { NavigateService.ComeToOneselfEvents["播放"] = ComeToOneselfEvent; }
+
+    public static ReadOnlyDictionary<string, AddMusicBehavior> AddMusicBehaviors { get; } = new(
+        new Dictionary<string, AddMusicBehavior> {
+            [nameof(AddMusicBehavior.AddToNext)] = AddMusicBehavior.AddToNext,
+            [nameof(AddMusicBehavior.SetToList)] = AddMusicBehavior.SetToList,
+            [nameof(AddMusicBehavior.ReplaceList)] = AddMusicBehavior.ReplaceList
+        });
 
     public PlayerConfig PlayerConfig { get; } = ConfigManager.PlayerConfig;
 
@@ -123,38 +131,35 @@ public partial class PlayConfigPageViewModel : ViewModelBase {
 
     private async Task StartNewCalculationAsync() {
         CancellationTokenSource = new CancellationTokenSource();
-
-        try {
-            List<MusicItemModel> itemsToProcess =
-                MusicItemsManager.MusicItems.Values.Where(item => item.Gain <= 0).ToList();
-            ProcessItems(itemsToProcess, CancellationTokenSource.Token);
-            NotificationService.Info("回放增益计算结束！");
-        } catch (OperationCanceledException) {
-            NotificationService.Info("回放增益计算已取消！");
-        } catch (Exception e) {
-            NotificationService.Error($"计算任务出错退出！\n{e.Message}");
-            await LoggerService.ErrorAsync($"计算任务出错退出！\n{e.Message}\n{e.StackTrace}").ConfigureAwait(false);
-        } finally {
-            CleanupTask();
-        }
+        await Task.Run(() => {
+                      try {
+                          List<MusicItemModel> itemsToProcess =
+                              MusicItemsManager.MusicItems.Values.Where(item => item.Gain <= 0).ToList();
+                          ProcessItems(itemsToProcess, CancellationTokenSource.Token);
+                          NotificationService.Info("回放增益计算结束！");
+                      } catch (OperationCanceledException) {
+                          NotificationService.Info("回放增益计算已取消！");
+                      } catch (Exception e) {
+                          NotificationService.Error($"计算任务出错退出！\n{e.Message}");
+                          LoggerService.Error($"计算任务出错退出！\n{e.Message}\n{e.StackTrace}");
+                      } finally {
+                          CleanupTask();
+                      }
+                  })
+                  .ConfigureAwait(false);
     }
 
     private void ProcessItems(List<MusicItemModel> items, CancellationToken cancellationToken) {
         items.AsParallel()
              .WithCancellation(cancellationToken)
              .ForAll(item => {
+                 cancellationToken.ThrowIfCancellationRequested();
                  try {
                      using var audioGainCalculator = new AudioGainCalculator();
-                     ProcessSingleItemAsync(audioGainCalculator, item)
-                         // ReSharper disable once MethodSupportsCancellation
-                         .ContinueWith(LoggerService.HandleException)
-                         .ConfigureAwait(false);
+                     ProcessSingleItemAsync(audioGainCalculator, item).ConfigureAwait(false).GetAwaiter().GetResult();
                  } catch (Exception ex) {
                      NotificationService.Error($"计算{item.Title}的回放增益时出现错误：\n{ex.Message}");
-                     LoggerService.ErrorAsync($"计算{item.Title}的回放增益时出现错误：\n{ex.Message}\n{ex.StackTrace}")
-                                  // ReSharper disable once MethodSupportsCancellation
-                                  .ContinueWith(LoggerService.HandleException)
-                                  .ConfigureAwait(false);
+                     LoggerService.Error($"计算{item.Title}的回放增益时出现错误。", ex);
                  }
              });
     }

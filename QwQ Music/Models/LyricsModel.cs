@@ -47,6 +47,8 @@ public partial class LyricsModel : ObservableObject {
     }
 
     public void UpdateLyricsIndex(double currPos) {
+        if (Lyrics.Data.Count == 0)
+            return;
         int newIndex = Lyrics.Data.FindLastIndex(line => line.TimePoint <= currPos);
 
         // 确保索引有效

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -9,10 +10,8 @@ using MusicCoverPageViewModel = QwQ_Music.ViewModels.Drawers.MusicCoverPageViewM
 
 namespace QwQ_Music.Views.Drawers;
 
-public partial class MusicPlayerPanel : Grid
-{
-    public MusicPlayerPanel()
-    {
+public partial class MusicPlayerPanel : Grid {
+    public MusicPlayerPanel() {
         InitializeComponent();
         DataContext = new MusicCoverPageViewModel();
 
@@ -22,21 +21,15 @@ public partial class MusicPlayerPanel : Grid
         AudioPlayManager.Instance.AudioPlayer.SpectrumDataUpdated += OnSpectrumUpdated;
     }
 
-    private void OnSpectrumUpdated(object? sender, float[] e)
-    {
-        SpectrumVisualizer.SpectrumData = e;
-    }
+    private void OnSpectrumUpdated(object? sender, ReadOnlySpan<float> e) { SpectrumVisualizer.UpdateSpectrumData(e); }
 
-    private void OnUnloaded(object? sender, RoutedEventArgs e)
-    {
+    private void OnUnloaded(object? sender, RoutedEventArgs e) {
         PointerMoved -= OnPointerMoved;
         AudioPlayManager.Instance.AudioPlayer.SpectrumDataUpdated -= OnSpectrumUpdated;
     }
 
-    private void OnPointerMoved(object? sender, PointerEventArgs e)
-    {
-        if (!ConfigManager.UiConfig.SpectrumConfig.IsEnabled)
-        {
+    private void OnPointerMoved(object? sender, PointerEventArgs e) {
+        if (!ConfigManager.UiConfig.SpectrumConfig.IsEnabled) {
             ControlPanelGrid.Classes.Remove("Hide");
             SpectrumVisualizer.Classes.Add("Hide");
 
@@ -47,8 +40,7 @@ public partial class MusicPlayerPanel : Grid
         var mousePos = e.GetPosition(this);
 
         // 检查鼠标是否在按钮范围内
-        if (IsMouseOverControl(ControlPanelGrid, mousePos))
-        {
+        if (IsMouseOverControl(ControlPanelGrid, mousePos)) {
             ControlPanelGrid.Classes.Remove("Hide");
             SpectrumVisualizer.Classes.Add("Hide");
 
@@ -59,8 +51,7 @@ public partial class MusicPlayerPanel : Grid
         SpectrumVisualizer.Classes.Remove("Hide");
     }
 
-    private bool IsMouseOverControl(Control control, Point mousePosition)
-    {
+    private bool IsMouseOverControl(Control control, Point mousePosition) {
         // 将控件坐标转换为当前Grid的坐标系
         var transform = control.TransformToVisual(this);
 
@@ -84,16 +75,20 @@ public partial class MusicPlayerPanel : Grid
         var transformedBottomRight = bottomRight.Transform(transform.Value);
 
         // 找到转换后的边界矩形的最小和最大坐标（处理可能的旋转/缩放）
-        double minX = Math.Min(Math.Min(transformedTopLeft.X, transformedTopRight.X),
+        double minX = Math.Min(
+            Math.Min(transformedTopLeft.X, transformedTopRight.X),
             Math.Min(transformedBottomLeft.X, transformedBottomRight.X));
 
-        double minY = Math.Min(Math.Min(transformedTopLeft.Y, transformedTopRight.Y),
+        double minY = Math.Min(
+            Math.Min(transformedTopLeft.Y, transformedTopRight.Y),
             Math.Min(transformedBottomLeft.Y, transformedBottomRight.Y));
 
-        double maxX = Math.Max(Math.Max(transformedTopLeft.X, transformedTopRight.X),
+        double maxX = Math.Max(
+            Math.Max(transformedTopLeft.X, transformedTopRight.X),
             Math.Max(transformedBottomLeft.X, transformedBottomRight.X));
 
-        double maxY = Math.Max(Math.Max(transformedTopLeft.Y, transformedTopRight.Y),
+        double maxY = Math.Max(
+            Math.Max(transformedTopLeft.Y, transformedTopRight.Y),
             Math.Max(transformedBottomLeft.Y, transformedBottomRight.Y));
 
         // 构建转换后的边界矩形

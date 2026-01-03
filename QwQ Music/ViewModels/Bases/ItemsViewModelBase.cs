@@ -88,18 +88,16 @@ public partial class MusicItemsViewModelBase : ItemsViewModelBase<MusicItemModel
             items = MusicItemsManager.All.MusicItems.Values;
         }
 
+        MusicItemModel? target = SelectedItems.Count == 0 ? null : SelectedItems[0];
+
         (ConfigManager.PlayerConfig.AddMusicBehavior switch {
                 AddMusicBehavior.AddToNext => Task.FromResult(PlaylistManager.Instance.InsertToNext(SelectedItems)),
                 AddMusicBehavior.SetToList => PlaylistManager.Instance.ReplaceAsync(
                     PlaylistManager.CUSTOM,
                     SelectedItems,
-                    SelectedItems[0],
+                    target,
                     true),
-                AddMusicBehavior.ReplaceList => PlaylistManager.Instance.ReplaceAsync(
-                    name,
-                    items,
-                    items.Single(i => i == SelectedItems[0]),
-                    true),
+                AddMusicBehavior.ReplaceList => PlaylistManager.Instance.ReplaceAsync(name, items, target, true),
                 _ => throw new IndexOutOfRangeException(
                     $"{ConfigManager.PlayerConfig.AddMusicBehavior} is not a valid state of {
                         nameof(ConfigManager.PlayerConfig.AddMusicBehavior)}")
