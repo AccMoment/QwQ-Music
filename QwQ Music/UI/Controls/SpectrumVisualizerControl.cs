@@ -11,10 +11,7 @@ namespace QwQ_Music.UI.Controls;
 /// </summary>
 public class SpectrumVisualizerControl : Control {
     static SpectrumVisualizerControl() {
-        AffectsRender<SpectrumVisualizerControl>(
-            LineBrushProperty,
-            LineThicknessProperty,
-            AmplitudeScaleProperty);
+        AffectsRender<SpectrumVisualizerControl>(LineBrushProperty, LineThicknessProperty, AmplitudeScaleProperty);
     }
 
     public SpectrumVisualizerControl() {
@@ -22,7 +19,7 @@ public class SpectrumVisualizerControl : Control {
 
         // 初始化动画定时器
         _animationTimer = new DispatcherTimer {
-            Interval = TimeSpan.FromMilliseconds(16) // ~60fps
+            Interval = TimeSpan.FromMilliseconds(32) // ~30fps
         };
 
         _animationTimer.Tick += OnAnimationTick;
@@ -93,13 +90,9 @@ public class SpectrumVisualizerControl : Control {
     /// </summary>
     private void DrawBaseline(DrawingContext context, Rect bounds) {
         // 考虑线条粗细，确保基线完全在可视区域内
-        double halfThickness = LineThickness / 2;
-        double baselineY = bounds.Height - halfThickness;
+        double baselineY = bounds.Height - LineThickness;
 
-        // 确保基线不会超出边界
-        baselineY = Math.Clamp(baselineY, halfThickness, bounds.Height - halfThickness);
-
-        var pen = new Pen(LineBrush, LineThickness) { LineCap = PenLineCap.Round };
+        Pen pen = new(LineBrush, LineThickness) { LineCap = PenLineCap.Round };
 
         context.DrawLine(pen, new Point(0, baselineY), new Point(bounds.Width, baselineY));
     }
@@ -108,8 +101,6 @@ public class SpectrumVisualizerControl : Control {
     ///     使用Catmull-Rom样条曲线绘制频谱波形 - 考虑线条粗细的边界处理
     /// </summary>
     private void DrawSpectrumWaveSmooth(DrawingContext context, Rect bounds) {
-        double halfThickness = LineThickness / 2;
-        double bottomY = bounds.Height - halfThickness; // 考虑线条粗细的底部位置
         double width = bounds.Width;
         double height = bounds.Height - LineThickness; // 考虑线条粗细的有效高度
         int dataCount = _currentValues.Length;
@@ -119,14 +110,13 @@ public class SpectrumVisualizerControl : Control {
 
         // 生成数据点
         var points = new Point[dataCount];
-
         for (int i = 0; i < dataCount; i++) {
             double x = i * stepX;
-            double amplitude = _currentValues[i] / 20f * AmplitudeScale;
-            double y = bottomY - amplitude * height;
+            double amplitude = float.Log10(_currentValues[i]) * AmplitudeScale;
+            double y = height - amplitude * 40;
 
             // 限制Y坐标在边界内，考虑线条粗细
-            y = Math.Clamp(y, halfThickness, bounds.Height - halfThickness);
+            y = Math.Clamp(y, LineThickness, height);
             points[i] = new Point(x, y);
         }
 
@@ -156,7 +146,7 @@ public class SpectrumVisualizerControl : Control {
                 // 确保插值点不会超出边界
                 interpolatedPoint = new Point(
                     interpolatedPoint.X,
-                    Math.Clamp(interpolatedPoint.Y, halfThickness, bounds.Height - halfThickness));
+                    Math.Clamp(interpolatedPoint.Y, LineThickness, height));
 
                 figure.Segments.Add(new LineSegment { Point = interpolatedPoint });
             }
@@ -284,14 +274,14 @@ public class SpectrumVisualizerControl : Control {
     /// <summary>
     ///     更新频谱数据
     /// </summary>
-    public void UpdateSpectrumData(ReadOnlySpan<float> newData) {
+    public void UpdateSpectrumData(float[] newData) {
         // 初始化数组
         if (_targetValues.Length != newData.Length) {
             _targetValues = new float[newData.Length];
             _currentValues = new float[newData.Length];
         }
 
-        _targetValues = newData.ToArray();
+        _targetValues = newData;
 
         InvalidateVisual();
     }

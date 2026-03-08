@@ -24,7 +24,7 @@
     </Window.Resources>
 
     <Panel>
-        
+
         <Border Classes.RunLyricBorder="{Binding $parent[Window].IsPointerOver}"
                 CornerRadius="{Binding LyricConfig.WindowCornerRadius}"
                 BorderThickness="2">
@@ -70,27 +70,11 @@
                     VerticalAlignment="Center"
                     Margin="{Binding LyricConfig.LyricMargin}">
 
-            <Interaction.Behaviors>
-                
-                <IfElseTrigger Condition="{Binding LyricConfig.LyricIsDoubleLine}">
-                    <IfElseTrigger.IfActions>
-                        <ChangeAvaloniaPropertyAction TargetProperty="{x:Static StackPanel.OrientationProperty}"
-                                                      Value="Vertical" />
-                    </IfElseTrigger.IfActions>
-
-                    <IfElseTrigger.ElseActions>
-                        <ChangeAvaloniaPropertyAction TargetProperty="{x:Static StackPanel.OrientationProperty}"
-                                                      Value="Horizontal" />
-                    </IfElseTrigger.ElseActions>
-
-                </IfElseTrigger>
-
-            </Interaction.Behaviors>
-
             <StackPanel.Styles>
 
                 <Style Selector="StackPanel">
                     <Setter Property="VerticalAlignment" Value="Center" />
+                    <Setter Property="Orientation" Value="Vertical"/>
                 </Style>
 
                 <Style Selector="StackPanel > control|TextPath">
@@ -126,11 +110,11 @@
                     LetterSpacing="{Binding LyricConfig.LyricMainLetterSpacing}"
                     Stroke="{Binding LyricConfig.LyricMainBorderColor,Converter={StaticResource ToBrushConverter}}"
                     FontSize="{Binding LyricConfig.LyricMainFontSize}"
-                    Text="{Binding AudioPlayManager.LyricsModel.Current.Translation}">
+                    Text="{Binding AudioPlayManager.LyricsModel.Current.Secondary}">
 
                     <control:TextPath.IsVisible>
                         <MultiBinding Converter="{x:Static BoolConverters.And}">
-                            <Binding Path="AudioPlayManager.LyricsModel.Current.Translation"
+                            <Binding Path="AudioPlayManager.LyricsModel.Current.Secondary"
                                      Converter="{x:Static ObjectConverters.IsNotNull}" />
                             <Binding Path="LyricConfig.LyricIsDualLang" />
                         </MultiBinding>
@@ -147,7 +131,8 @@
 
             </StackPanel>
 
-            <StackPanel Spacing="{Binding LyricConfig.LyricAltTranslateSping}">
+            <StackPanel Spacing="{Binding LyricConfig.LyricAltTranslateSping}"
+                        IsVisible="{Binding LyricConfig.LyricIsDoubleLine}">
 
                 <!-- 副歌词 -->
                 <control:TextPath
@@ -172,15 +157,9 @@
                     LetterSpacing="{Binding LyricConfig.LyricAltLetterSpacing}"
                     Stroke="{Binding LyricConfig.LyricAltBorderColor,Converter={StaticResource ToBrushConverter}}"
                     FontSize="{Binding LyricConfig.LyricAltFontSize}"
-                    Text="{Binding AudioPlayManager.LyricsModel.Next.Translation}">
+                    Text="{Binding AudioPlayManager.LyricsModel.Next.Secondary,FallbackValue=''}"
+                    IsVisible="{Binding LyricConfig.LyricIsDualLang}">
 
-                    <control:TextPath.IsVisible>
-                        <MultiBinding Converter="{x:Static BoolConverters.And}">
-                            <Binding Path="AudioPlayManager.LyricsModel.Next.Translation"
-                                     Converter="{x:Static ObjectConverters.IsNotNull}" />
-                            <Binding Path="LyricConfig.LyricIsDualLang" />
-                        </MultiBinding>
-                    </control:TextPath.IsVisible>
 
                     <control:TextPath.Foreground>
                         <LinearGradientBrush EndPoint="100% 50%" StartPoint="0% 50%">

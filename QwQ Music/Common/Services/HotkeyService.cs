@@ -132,7 +132,7 @@ public static class HotkeyService {
     /// <param name="function">功能枚举</param>
     /// <param name="newGestures">新的按键组合列表</param>
     /// <returns>是否修改成功</returns>
-    public static bool ModifyHotkey(HotkeyFunction function, IEnumerable<KeyGesture> newGestures) {
+    public static bool ModifyHotkey(HotkeyFunction function, params IEnumerable<KeyGesture> newGestures) {
         FunctionToKeyMap[function] = new List<SerializableKeyGesture>(
             newGestures.Select(SerializableKeyGesture.FromKeyGesture));
 
@@ -173,9 +173,14 @@ public static class HotkeyService {
     /// <param name="function">功能枚举</param>
     /// <param name="gesture">要删除的按键组合</param>
     /// <returns>是否删除成功</returns>
-    public static bool RemoveHotkey(HotkeyFunction function, KeyGesture gesture) {
-        return FunctionToKeyMap.TryGetValue(function, out var gestures) &&
-               gestures.RemoveAll(g => g.ToKeyGesture().Equals(gesture)) > 0;
+    public static bool RemoveHotkey(HotkeyFunction function, KeyGesture? gesture) {
+        if (!FunctionToKeyMap.TryGetValue(function, out var gestures))
+            return false;
+        if (gesture is not null)
+            return gestures.RemoveAll(g => g.ToKeyGesture().Equals(gesture)) > 0;
+        gestures.Clear();
+        return true;
+
     }
 
     /// <summary>

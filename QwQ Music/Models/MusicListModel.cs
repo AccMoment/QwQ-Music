@@ -5,9 +5,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using QwQ_Music.Common.Helpers;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services.Databases;
-using QwQ_Music.Models.ConfigModels;
 
 namespace QwQ_Music.Models;
 
@@ -15,7 +15,12 @@ public enum SortMode {
     Custom, AddTimeAscending, AddTimeDescending, NameAscending, NameDescending
 }
 
+public enum MusicListType {
+    All, Playlist, Custom, Album
+}
+
 public partial class MusicListModel : ObservableObject {
+    
     [MemberNotNullWhen(true, nameof(Musics))]
     public bool IsLoaded { get; private set; }
 
@@ -26,62 +31,76 @@ public partial class MusicListModel : ObservableObject {
     public partial string Description { get; set; } = "暂无简介";
 
     public SortMode SortMode { get; set; } = SortMode.Custom;
-    public bool IsCoverExist => CoverImage != CacheManager.NotExist;
+    public bool IsCoverExist => Thumbnail != CacheManager.NotExist;
 
-    public Bitmap CoverImage {
+    public Bitmap Thumbnail {
         get =>
-            CacheManager.TryLoadCacheFromFile(
-                Name,
-                "音乐列表",
-                "封面",
-                StaticConfig.GetMusicListCoverFullPath(Name),
-                () => OnPropertyChanged());
+            CacheManager.TryLoadCoverThumbnailAsync(
+                            (Name, Creator),
+                            "音乐列表",
+                            "封面",
+                            MusicListThumbnailRepository.Instance,
+                            () => OnPropertyChanged())
+                        .ConfigureAwait(false)
+                        .GetAwaiter()
+                        .GetResult();
         set {
-            CacheManager.SetImage(Name, value);
+            CacheManager.SetImage(Name, "音乐列表", value);
             OnPropertyChanged();
         }
     }
 
-    public string Creator { get; init; } = "未知"; // Company for Album
+    public required string Creator { get; init; } = "未知";
 
-    public DateTime CreateTime { get; init; } // PublishTime for Album.
+    public DateTime? CreateTime { get; init; }
     public DateTime ModifyTime { get; set; }
 
-    public virtual List<MusicItemModel>? Musics { get; private set; }
+    public List<MusicItemModel>? Musics { get; private set; }
 
-    public void AddRange(IEnumerable<MusicItemModel> musics) {
+    public static MusicListModel Create(string name,Bitmap cover) {
+        // TODO USERNAME
+        return new MusicListModel() {
+            Name = name, Creator = "_QWQ_LOCAL_USER", Cover = cover, CreateTime = DateTime.Now
+        };
+        
+    }
+
+    public async Task AddAsync(params ICollection<MusicItemModel> musics) {
         if (!IsLoaded) {
-            MusicListItemsRepository.Instance.InsertRange(this, musics);
+            await MusicListItemsRepository.Instance.InsertAsync(this, musics).ConfigureAwait(false);
             return;
         }
 
         List<MusicItemModel> items = musics.ToList();
-        MusicListItemsRepository.Instance.InsertRange(this, items);
+        await MusicListItemsRepository.Instance.InsertAsync(this, items).ConfigureAwait(false);
         Musics.InsertRange(0, items);
     }
 
-    public void RemoveRange(IEnumerable<MusicItemModel> musics) {
+    public async Task RemoveAsync(params ICollection<MusicItemModel> musics) {
         if (!IsLoaded) {
-            MusicListItemsRepository.Instance.RemoveRange(this, musics);
+            await MusicListItemsRepository.Instance.RemoveAsync(this, musics).ConfigureAwait(false);
             return;
         }
 
         List<MusicItemModel> items = musics.ToList();
-        MusicListItemsRepository.Instance.RemoveRange(this, items);
+        await MusicListItemsRepository.Instance.RemoveAsync(this, items).ConfigureAwait(false);
         items.ForEach(item => Musics.Remove(item));
     }
 
-    public Task LoadCurrentAsync() {
-        return Task.Run(() => {
-            Musics = MusicListItemsRepository.Instance.GetAll(Name)
-                                             .Select(path => MusicItemsManager.All.MusicItems[path])
-                                             .ToList();
-            IsLoaded = true;
-        });
+    public async Task LoadCurrentAsync() {
+        Musics = (await MusicListItemsRepository.Instance.GetAllAsync((Name, Creator)).ConfigureAwait(false)).Paths
+            .Select(path => MusicItemsManager.All.MusicItems[path])
+            .ToList();
+        Cover = await MusicListCoverRepository.Instance.SingleAsync((Name, Creator)).ConfigureAwait(false) ??
+                CacheManager.NotExist;
+        IsLoaded = true;
     }
+
+    public Bitmap Cover { get; private set; } = CacheManager.Loading;
 
     public void DisposeCurrent() {
         IsLoaded = false;
+        Cover = CacheManager.Loading;
         Musics = null;
     }
 }

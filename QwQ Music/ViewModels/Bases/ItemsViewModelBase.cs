@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Collections;
@@ -18,7 +20,15 @@ public abstract partial class ItemsViewModelBase<T> : ViewModelBase {
     [ObservableProperty]
     public partial double DataGridHorizontalScrollValue { get; set; }
 
-    private List<T> _allItemsList = [];
+    protected string MusicListName { get; private set; } = "Unknown";
+
+    protected List<T> AllItemsList { get; private set; } = [];
+
+    protected void SetCurrentList(string name, params List<T> items) {
+        MusicListName = name;
+        AllItemsList = items;
+        OnSearchTextChanged(SearchText);
+    }
 
     [ObservableProperty]
     public partial AvaloniaList<T> FilteredList { get; set; } = [];
@@ -34,18 +44,13 @@ public abstract partial class ItemsViewModelBase<T> : ViewModelBase {
 
     public List<T> SelectedItems { get; set; } = [];
 
-    public void SetAllItems(List<T> items) {
-        _allItemsList = items;
-        OnSearchTextChanged(SearchText);
-    }
-
     public void ChangeAllItems(IEnumerable<T>? oldItems, IEnumerable<T>? newItems) {
         if (oldItems is not null) {
-            _allItemsList.RemoveAll(oldItems.Contains);
+            AllItemsList.RemoveAll(oldItems.Contains);
         }
 
         if (newItems is not null) {
-            _allItemsList.AddRange(newItems);
+            AllItemsList.AddRange(newItems);
         }
 
         OnSearchTextChanged(SearchText);
@@ -53,14 +58,14 @@ public abstract partial class ItemsViewModelBase<T> : ViewModelBase {
 
     protected void OnSearchTextChanged(string value) {
         if (string.IsNullOrEmpty(value)) {
-            if (FilteredList.Count != _allItemsList.Count) {
-                FilteredList = new AvaloniaList<T>(_allItemsList);
+            if (FilteredList.Count != AllItemsList.Count) {
+                FilteredList = new AvaloniaList<T>(AllItemsList);
             }
 
             return;
         }
 
-        FilteredList = new AvaloniaList<T>(_allItemsList.AsParallel().Where(item => CustomFilter(in value, in item)));
+        FilteredList = new AvaloniaList<T>(AllItemsList.AsParallel().Where(item => CustomFilter(in value, in item)));
     }
 
     protected abstract bool CustomFilter(ref readonly string value, ref readonly T item);
@@ -77,27 +82,35 @@ public abstract partial class ItemsViewModelBase<T> : ViewModelBase {
 
 public partial class MusicItemsViewModelBase : ItemsViewModelBase<MusicItemModel> {
     [RelayCommand]
-    private void SetMusicList(MusicListModel? model) {
+    private static void JumpToTop(DataGrid dataGrid) {
+        // 滚动到第一行（第一行数据）
+        dataGrid.ScrollIntoView(dataGrid.CollectionView.Cast<object>().First(), null);
+    }
+
+    [RelayCommand]
+    private void SetMusicList(MusicItemModel? model) {
         string name;
-        IEnumerable<MusicItemModel> items;
+        IList<MusicItemModel> items;
+        int index;
         if (model is not null) {
-            name = model.Name;
-            items = model.Musics!;
+            name = MusicListName;
+            items = AllItemsList;
+            index = AllItemsList.IndexOf(model);
         } else {
             name = MusicItemsManager.All.Name;
             items = MusicItemsManager.All.MusicItems.Values;
+            index = 0;
         }
 
-        MusicItemModel? target = SelectedItems.Count == 0 ? null : SelectedItems[0];
 
         (ConfigManager.PlayerConfig.AddMusicBehavior switch {
                 AddMusicBehavior.AddToNext => Task.FromResult(PlaylistManager.Instance.InsertToNext(SelectedItems)),
                 AddMusicBehavior.SetToList => PlaylistManager.Instance.ReplaceAsync(
-                    PlaylistManager.CUSTOM,
+                    PlaylistManager.Custom,
                     SelectedItems,
-                    target,
+                    0,
                     true),
-                AddMusicBehavior.ReplaceList => PlaylistManager.Instance.ReplaceAsync(name, items, target, true),
+                AddMusicBehavior.ReplaceList => PlaylistManager.Instance.ReplaceAsync(name, items, index, true),
                 _ => throw new IndexOutOfRangeException(
                     $"{ConfigManager.PlayerConfig.AddMusicBehavior} is not a valid state of {
                         nameof(ConfigManager.PlayerConfig.AddMusicBehavior)}")
@@ -110,12 +123,7 @@ public partial class MusicItemsViewModelBase : ItemsViewModelBase<MusicItemModel
 
     [RelayCommand]
     private static void AddToPlaylistNext(IList items) {
-        if (items.Count <= 0)
-            return;
-
-        List<MusicItemModel> musicItems = items.Cast<MusicItemModel>().ToList();
-
-        PlaylistManager.Instance.InsertRange(PlaylistManager.Instance.CurrentItem, musicItems);
+        PlaylistManager.Instance.Insert(PlaylistManager.Instance.CurrentItem, items.Cast<MusicItemModel>());
     }
 
     [RelayCommand]
@@ -130,7 +138,7 @@ public partial class MusicItemsViewModelBase : ItemsViewModelBase<MusicItemModel
     [RelayCommand]
     private void RemoveSelectedFrom(MusicListModel? musicListModel) {
         if (SelectedItems is { Count: > 0 } && musicListModel?.Name != null) {
-            MusicListsManager.Instance.RemoveToMusicList(SelectedItems, musicListModel)
+            MusicListsManager.Instance.RemoveFromMusicList(SelectedItems, musicListModel)
                              .ContinueWith(LoggerService.HandleException)
                              .ConfigureAwait(false);
         }
@@ -141,7 +149,7 @@ public partial class MusicItemsViewModelBase : ItemsViewModelBase<MusicItemModel
         if (FilteredList.Count == 0)
             return;
 
-        PlaylistManager.Instance.ReplaceAsync(PlaylistManager.CUSTOM, FilteredList, isPlayNow: true)
+        PlaylistManager.Instance.ReplaceAsync(PlaylistManager.Custom, FilteredList, 0, true)
                        .ContinueWith(LoggerService.HandleException)
                        .ConfigureAwait(false);
     }
@@ -151,5 +159,109 @@ public partial class MusicItemsViewModelBase : ItemsViewModelBase<MusicItemModel
         return item.Title.Contains(value, StringComparison.OrdinalIgnoreCase) ||
                item.Artists.Contains(value, StringComparison.OrdinalIgnoreCase) ||
                item.Album.Contains(value, StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    [RelayCommand]
+    private void ForceRefreshMusicInfo() {
+        RefreshMusicItemsAsync(true).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
+        CacheManager.ImageCache.Clear();
+    }
+
+    [RelayCommand]
+    private void RefreshMusicInfo() {
+        RefreshMusicItemsAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
+    }
+
+    private async Task RefreshMusicItemsAsync(bool forceRefresh = false) {
+        NotificationService.Info("正在刷新音乐信息...");
+
+        var itemsToRemove = new ConcurrentBag<MusicItemModel>();
+        var itemsToUpdate = new ConcurrentBag<MusicItemModel>();
+
+
+        foreach (MusicItemModel item in MusicItemsManager.All.MusicItems.Values) {
+            if (!File.Exists(item.FilePath)) {
+                itemsToRemove.Add(item);
+
+                return;
+            }
+
+            await item.UpdateMetaDataAsync(forceRefresh)
+                      .ContinueWith(task => {
+                          if (!task.IsCompletedSuccessfully)
+                              return;
+                          if (task.Result) {
+                              itemsToUpdate.Add(item);
+                          } else {
+                              LoggerService.Error($"刷新《{item.Title}》的信息失败。");
+                              itemsToRemove.Add(item);
+                          }
+                      })
+                      .ConfigureAwait(false);
+        }
+
+        await HandleBatchOperationsAsync(itemsToRemove, itemsToUpdate).ConfigureAwait(false);
+
+        ShowRefreshSummary(itemsToRemove.Count, itemsToUpdate.Count);
+    }
+
+    private async Task HandleBatchOperationsAsync(
+        ConcurrentBag<MusicItemModel> itemsToRemove,
+        ConcurrentBag<MusicItemModel> itemsToUpdate) {
+        try {
+            if (!itemsToRemove.IsEmpty) {
+                await DeleteMusicItemsAsync(itemsToRemove).ConfigureAwait(false);
+            }
+
+            if (!itemsToUpdate.IsEmpty) {
+                await MusicItemsManager.UpdateAsync(itemsToUpdate).ConfigureAwait(false);
+            }
+        } catch (Exception ex) {
+            await LoggerService.ErrorAsync($"更新音乐信息到数据库时发生错误: {ex.Message}\n{ex.StackTrace}").ConfigureAwait(false);
+            NotificationService.Error($"更新音乐信息到数据库失败: {ex.Message}");
+        }
+    }
+
+    private static void ShowRefreshSummary(int removedCount, int updatedCount) {
+        if (removedCount == 0 && updatedCount == 0) {
+            NotificationService.Success("所有音乐文件信息都是最新的！");
+
+            return;
+        }
+
+        string message = "刷新完成！";
+        if (removedCount > 0)
+            message += $"\n删除了 {removedCount} 个不存在的音乐文件";
+
+        if (updatedCount > 0)
+            message += $"\n更新了 {updatedCount} 个音乐文件的信息";
+
+        NotificationService.Success(message);
+    }
+
+    private async Task DeleteMusicItemsAsync(IEnumerable items) {
+        MusicItemModel[] musicItems = (items switch {
+            IEnumerable<MusicItemModel> itemModels            => itemModels,
+            IEnumerable<PlaylistItemModel> playlistItemModels => playlistItemModels.Select(item => item.Model),
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(items),
+                $"{nameof(items)} must be IEnumerable of types of MusicItemModel or PlaylistItemModel.")
+        }).ToArray();
+        if (musicItems.Length == 0) {
+            NotificationService.Info("提示", "请先选择音乐项哦~");
+
+            return;
+        }
+
+        var successEnumerable = await MusicItemsManager.All.RemoveAsync(musicItems).ConfigureAwait(false);
+
+        if (successEnumerable?.ToArray() is not { Length: > 0 } successItems)
+            return;
+
+        AudioPlayManager.Instance.CheckForRemovedItems(successItems);
+        successItems.AsParallel().ForAll(item => MusicItemsManager.All.MusicItems.Remove(item.FilePath));
+        PlaylistManager.Instance.RemoveAllOf(successItems);
+        FilteredList.RemoveAll(successItems);
     }
 }

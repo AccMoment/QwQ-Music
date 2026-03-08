@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Numerics;
 using Avalonia;
 using Avalonia.Media;
@@ -10,8 +9,7 @@ namespace QwQ_Music.Common.Services.Shader;
 /// <summary>
 ///     着色器服务，负责编译和管理着色器
 /// </summary>
-public class ShaderService
-{
+public class ShaderService {
     private readonly SKShader[]? _children;
     private readonly string _fragmentShader;
     private SKRuntimeEffect? _effect;
@@ -22,8 +20,7 @@ public class ShaderService
     /// </summary>
     /// <param name="fragmentShader">GLSL片段着色器代码</param>
     /// <param name="children">子着色器（如纹理）</param>
-    public ShaderService(string fragmentShader, SKShader[]? children = null)
-    {
+    public ShaderService(string fragmentShader, SKShader[]? children = null) {
         _fragmentShader = fragmentShader;
         _children = children;
         _startTime = DateTime.Now;
@@ -33,13 +30,12 @@ public class ShaderService
     /// <summary>
     ///     着色器颜色列表
     /// </summary>
-    public List<Color>? Colors { get; set; }
+    public Color[]? Colors { get; set; }
 
     /// <summary>
     ///     初始化着色器
     /// </summary>
-    private void InitializeShader()
-    {
+    private void InitializeShader() {
         var result = SKRuntimeEffect.CreateShader(_fragmentShader, out string? errorText);
         _effect = result;
 
@@ -53,8 +49,7 @@ public class ShaderService
 
              着色器代码: {_fragmentShader} 
 
-             """
-        );
+             """);
     }
 
     /// <summary>
@@ -63,8 +58,7 @@ public class ShaderService
     /// <param name="size">渲染尺寸</param>
     /// <param name="mousePosition">鼠标位置</param>
     /// <returns>SkiaSharp着色器对象</returns>
-    public SKShader CreateShader(Size size, Vector2? mousePosition = null)
-    {
+    public SKShader CreateShader(Size size, Vector2? mousePosition = null) {
         if (_effect == null)
             return SKShader.CreateColor(SKColors.Magenta); // 错误状态显示
 
@@ -85,25 +79,20 @@ public class ShaderService
         // 修复Vector4转换问题，使用float数组
         float[] mousePos;
 
-        if (mousePosition.HasValue)
-        {
+        if (mousePosition.HasValue) {
             mousePos = [mousePosition.Value.X, mousePosition.Value.Y, 0, 0];
-        }
-        else
-        {
+        } else {
             mousePos = [0, 0, 0, 0];
         }
 
         uniforms["iMouse"] = mousePos;
 
         // 添加颜色参数
-        if (Colors is { Count: > 0 })
-        {
+        if (Colors is { Length: > 0 }) {
             // 最多支持4个颜色
-            int colorCount = Math.Min(Colors.Count, 4);
+            int colorCount = Math.Min(Colors.Length, 4);
 
-            for (int i = 0; i < colorCount; i++)
-            {
+            for (int i = 0; i < colorCount; i++) {
                 var color = Colors[i];
                 float[] colorArray = [color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f];
                 uniforms[$"iColor{i}"] = colorArray;
@@ -111,9 +100,7 @@ public class ShaderService
 
             // 传递颜色数量
             uniforms["iColorCount"] = colorCount;
-        }
-        else
-        {
+        } else {
             // 默认颜色
             uniforms["iColorCount"] = 0;
         }
@@ -125,8 +112,7 @@ public class ShaderService
             return _effect.ToShader(uniforms);
 
         // 修复索引器参数类型，使用字符串索引而不是整数
-        for (int i = 0; i < _children.Length && i < _effect.Children.Count; i++)
-        {
+        for (int i = 0; i < _children.Length && i < _effect.Children.Count; i++) {
             string childName = _effect.Children[i];
             children[childName] = _children[i];
         }
@@ -137,8 +123,5 @@ public class ShaderService
     /// <summary>
     ///     重置着色器计时器
     /// </summary>
-    public void ResetTimer()
-    {
-        _startTime = DateTime.Now;
-    }
+    public void ResetTimer() { _startTime = DateTime.Now; }
 }

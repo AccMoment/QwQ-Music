@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.InteropServices;
-using Avalonia;
+using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Impressionist.Implementations;
@@ -14,8 +13,7 @@ namespace QwQ_Music.Common.Services;
 /// <summary>
 ///     颜色提取算法枚举
 /// </summary>
-public enum ColorExtractionAlgorithm
-{
+public enum ColorExtractionAlgorithm {
     /// <summary>
     ///     K-means 聚类算法 —— 精确取色
     /// </summary>
@@ -30,8 +28,7 @@ public enum ColorExtractionAlgorithm
 /// <summary>
 ///     颜色提取服务类
 /// </summary>
-public static class ColorExtraction
-{
+public static class ColorExtraction {
     /// <summary>
     ///     从位图对象获取调色板
     /// </summary>
@@ -45,37 +42,41 @@ public static class ColorExtraction
     /// <remarks>
     ///     注意：<c>toLab</c> 与 <c>useKMeansPp</c> 仅在 <c>KMeans</c> 下有效
     /// </remarks>
-    public static List<Color> GetColorPaletteFromBitmap(
+    public static async Task<Color[]> GetColorPaletteFromBitmapAsync(
         Bitmap bitmap,
         int colorCount = 5,
         ColorExtractionAlgorithm algorithm = ColorExtractionAlgorithm.KMeans,
         bool ignoreWhite = true,
         bool toLab = true,
-        bool useKMeansPp = true
-        )
-    {
+        bool useKMeansPp = true) {
         // 从位图采样颜色
         var sampledColors = SampleColorsFromBitmap(bitmap);
-        var vectorColors = ConvertToVectorColors(sampledColors);
 
         // 根据选择的算法生成调色板
-        var paletteResult = algorithm switch
-        {
-            ColorExtractionAlgorithm.KMeans => PaletteGenerators.KMeansPaletteGenerator
-                .CreatePalette(vectorColors, colorCount, ignoreWhite, toLab, useKMeansPp)
-                .GetAwaiter()
-                .GetResult(),
+        var paletteResult = algorithm switch {
+            ColorExtractionAlgorithm.KMeans => await PaletteGenerators.KMeansPaletteGenerator
+                                                                      .CreatePalette(
+                                                                          sampledColors,
+                                                                          colorCount,
+                                                                          ignoreWhite,
+                                                                          toLab,
+                                                                          useKMeansPp)
+                                                                      .ConfigureAwait(false),
 
-            ColorExtractionAlgorithm.OctTree => PaletteGenerators.OctTreePaletteGenerator
-                .CreatePalette(vectorColors, colorCount, ignoreWhite)
-                .GetAwaiter()
-                .GetResult(),
+
+            ColorExtractionAlgorithm.OctTree => await PaletteGenerators.OctTreePaletteGenerator
+                                                                       .CreatePalette(
+                                                                           sampledColors,
+                                                                           colorCount,
+                                                                           ignoreWhite)
+                                                                       .ConfigureAwait(false),
+
 
             _ => throw new ArgumentException("不支持的颜色提取算法", nameof(algorithm))
         };
 
         // 将结果转换回Avalonia颜色格式
-        return paletteResult.Palette.Select(v => Color.FromRgb((byte)v.X, (byte)v.Y, (byte)v.Z)).ToList();
+        return paletteResult.Palette.Select(v => Color.FromRgb((byte)v.X, (byte)v.Y, (byte)v.Z)).ToArray();
     }
 
     /// <summary>
@@ -83,113 +84,52 @@ public static class ColorExtraction
     /// </summary>
     /// <param name="bitmap">位图对象</param>
     /// <returns>颜色频率字典</returns>
-    private static Dictionary<Color, int> SampleColorsFromBitmap(Bitmap bitmap)
-    {
-        var colorFrequencies = new Dictionary<Color, int>();
+    private static Dictionary<Vector3, int> SampleColorsFromBitmap(Bitmap bitmap) {
+        if (bitmap.Format != PixelFormat.Bgra8888) {
+            throw new FormatException("requiring a Bgra8888 format writeable bitmap.");
+        }
+
+        Dictionary<Vector3, int> colorFrequencies = new();
         int width = bitmap.PixelSize.Width;
         int height = bitmap.PixelSize.Height;
 
         // 计算采样步长
-        int sampleStep = CalculateSampleStep(width, height);
+        int stride = (width * height) switch {
+            // 根据图像大小动态调整采样率
+            >= 1024 * 1024 => 64, // 大图像使用较大步长
+            >= 512 * 512   => 16, // 中等图像使用中等步长
+            _              => 4   // 小图像使用较小步长
+        };
 
         // 使用WriteableBitmap来访问像素数据
         using var writeableBitmap = new WriteableBitmap(
             bitmap.PixelSize,
             bitmap.Dpi,
             PixelFormat.Bgra8888,
-            AlphaFormat.Premul
-        );
+            AlphaFormat.Opaque);
 
-        using var fb = writeableBitmap.Lock();
-        byte[] pixelData = new byte[fb.RowBytes * height];
-
-        // 将原始位图数据复制到可写位图
-        var handle = GCHandle.Alloc(pixelData, GCHandleType.Pinned);
-
-        try
-        {
-            bitmap.CopyPixels(
-                new PixelRect(0, 0, width, height),
-                handle.AddrOfPinnedObject(),
-                fb.RowBytes * height,
-                fb.RowBytes
-            );
-        }
-        finally
-        {
-            handle.Free();
-        }
+        using var buffer = writeableBitmap.Lock();
+        bitmap.CopyPixels(buffer, AlphaFormat.Opaque);
 
         // 遍历像素采样颜色
-        for (int y = 0; y < height; y += sampleStep)
-        {
-            for (int x = 0; x < width; x += sampleStep)
-            {
-                int pixelOffset = y * fb.RowBytes + x * 4; // BGRA格式
-
-                byte b = pixelData[pixelOffset];
-                byte g = pixelData[pixelOffset + 1];
-                byte r = pixelData[pixelOffset + 2];
-                byte a = pixelData[pixelOffset + 3];
-
-                // 忽略透明像素
-                if (a < 200)
-                    continue;
-
-                // 量化颜色以减少噪点
-                var quantized = Color.FromArgb(255, (byte)(r / 16 * 16), (byte)(g / 16 * 16), (byte)(b / 16 * 16));
-
+        for (int y = 0; y < height; y += stride) {
+            for (int x = 0; x < width; x += stride) {
+                uint pixel = buffer.GetPixel(x, y);
+                var vector = new Vector3(
+                    (byte)((pixel >> 16 & 255) / 16 * 16),
+                    (byte)((pixel >> 8 & 255) / 16 * 16),
+                    (byte)((pixel & 255) / 16 * 16));
                 // 更新颜色频率
-                colorFrequencies[quantized] = colorFrequencies.TryGetValue(quantized, out int v) ? v + 1 : 1;
+                colorFrequencies[vector] = colorFrequencies.TryGetValue(vector, out int v) ? v + 1 : 1;
             }
         }
 
         return colorFrequencies;
     }
 
-    /// <summary>
-    ///     计算最佳采样步长
-    /// </summary>
-    /// <param name="width">图像宽度</param>
-    /// <param name="height">图像高度</param>
-    /// <returns>采样步长</returns>
-    private static int CalculateSampleStep(int width, int height)
-    {
-        int pixelCount = width * height;
-
-        return pixelCount switch
-        {
-            // 根据图像大小动态调整采样率
-            > 1000000 => 8, // 大图像使用较大步长
-            > 250000  => 4, // 中等图像使用中等步长
-            _         => 2  // 小图像使用较小步长
-        };
-    }
-
-    /// <summary>
-    ///     将Avalonia颜色字典转换为Vector3颜色字典
-    /// </summary>
-    /// <param name="colors">Avalonia颜色字典</param>
-    /// <returns>Vector3颜色字典</returns>
-    private static Dictionary<Vector3, int> ConvertToVectorColors(Dictionary<Color, int> colors)
-    {
-        var result = new Dictionary<Vector3, int>();
-
-        foreach (var pair in colors)
-        {
-            var color = pair.Key;
-            var vector = new Vector3(color.R, color.G, color.B);
-
-            if (result.TryGetValue(vector, out int frequency))
-            {
-                result[vector] = frequency + pair.Value;
-            }
-            else
-            {
-                result[vector] = pair.Value;
-            }
-        }
-
-        return result;
+    private static unsafe uint GetPixel(this ILockedFramebuffer framebuffer, int x, int y) {
+        byte* zero = (byte*)framebuffer.Address;
+        int offset = y * framebuffer.RowBytes + x * 4;
+        return *(uint*)(zero + offset);
     }
 }

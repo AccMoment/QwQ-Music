@@ -10,8 +10,8 @@
       xmlns:pages="clr-namespace:QwQ_Music.ViewModels.Pages"
       xmlns:u="https://irihi.tech/ursa"
       xmlns:anchorControl="clr-namespace:QwQ_Music.UI.Controls.AnchorControl"
-      xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
-      xmlns:services="clr-namespace:QwQ_Music.Common.Services">
+      xmlns:services="clr-namespace:QwQ_Music.Common.Services"
+      xmlns:customs="clr-namespace:QwQ_Music.Views.Customs">
 
     <u:SelectionList Grid.Column="0" Name="NavigationList">
 
@@ -116,7 +116,7 @@
                         <Button.Flyout>
                             <Flyout>
 
-                                <userControls:FontSelector
+                                <customs:FontSelector
                                     SelectedFont="{Binding AppResources.CurrentFont}" />
 
                             </Flyout>

@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -136,12 +135,15 @@ public class ContributorItem(string name, string? comment = null) : ObservableOb
     public string Name { get; set; } = name;
 
     public Bitmap Hp =>
-        CacheManager.TryLoadCacheFromWeb(
-            Name,
-            "贡献者",
-            "头像",
-            new Uri($"https://github.com/{Name}.png"),
-            () => OnPropertyChanged());
+        CacheManager.TryLoadFromWebAsync(
+                        Name,
+                        "贡献者",
+                        "头像",
+                        new Uri($"https://github.com/{Name}.png"),
+                        () => OnPropertyChanged())
+                    .ConfigureAwait(false)
+                    .GetAwaiter()
+                    .GetResult();
 
     public string Comment { get; set; } = comment ?? "Ta没有什么想说的~";
 }
@@ -152,7 +154,10 @@ public class SpecialThank(string name, string logoUri, string uri, string descri
     public string Description { get; set; } = description;
 
     public Bitmap Logo =>
-        CacheManager.TryLoadCacheFromWeb(Name, "鸣谢", "Logo", new Uri(logoUri), () => OnPropertyChanged());
+        CacheManager.TryLoadFromWebAsync(Name, "鸣谢", "Logo", new Uri(logoUri), () => OnPropertyChanged())
+                    .ConfigureAwait(false)
+                    .GetAwaiter()
+                    .GetResult();
 
     public string Uri { get; set; } = uri;
 }

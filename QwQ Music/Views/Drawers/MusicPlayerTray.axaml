@@ -4,16 +4,16 @@
       xmlns="https://github.com/avaloniaui"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:drawers="clr-namespace:QwQ_Music.ViewModels.Drawers"
       xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
       xmlns:managers="clr-namespace:QwQ_Music.Common.Managers"
+      xmlns:customs="clr-namespace:QwQ_Music.Views.Customs"
       ColumnDefinitions="Auto,Auto,6*">
 
     <Grid.Styles>
 
-        <Style Selector="userControls|MusicAlbumCover.AlbumCoverRotate">
+        <Style Selector="customs|MusicAlbumCover.AlbumCoverRotate">
             <Style.Animations>
                 <Animation
                     Duration="0:0:15"
@@ -36,16 +36,16 @@
     <Button Classes="None"
             Command="{Binding DrawerManager.ToggleMusicPlayerPageCommand}">
 
-        <userControls:MusicAlbumCover
+        <customs:MusicAlbumCover
             Classes="RoundAlbum"
             Classes.AlbumCoverRotate="{Binding AudioPlayManager.IsPlaying}"
-            CoverImage="{Binding AudioPlayManager.CurrentMusicItem.Model.CoverImage}">
+            Thumbnail="{Binding AudioPlayManager.CurrentMusicItem.Model.Thumbnail}">
 
-            <userControls:MusicAlbumCover.RenderTransform>
+            <customs:MusicAlbumCover.RenderTransform>
                 <RotateTransform Angle="{Binding AlbumCoverCurrentAngle, Mode=OneWayToSource}" />
-            </userControls:MusicAlbumCover.RenderTransform>
+            </customs:MusicAlbumCover.RenderTransform>
 
-        </userControls:MusicAlbumCover>
+        </customs:MusicAlbumCover>
     </Button>
 
     <!--  音乐信息  -->
@@ -82,7 +82,7 @@
                                                 <MultiBinding Converter="{x:Static BoolConverters.And}">
                                                     <Binding Path="RolledLyric.ShowTranslation" />
                                                     <Binding
-                                                        Path="AudioPlayManager.LyricsModel.Current.Translation"
+                                                        Path="AudioPlayManager.LyricsModel.Current.Secondary"
                                                         Converter="{x:Static StringConverters.IsNotNullOrEmpty}" />
                                                 </MultiBinding>
 
@@ -97,7 +97,7 @@
 
                                                         <TextBlock FontSize="12"
                                                                    MaxLines="2"
-                                                                   Text="{Binding AudioPlayManager.LyricsModel.Current.Translation}"
+                                                                   Text="{Binding AudioPlayManager.LyricsModel.Current.Secondary}"
                                                                    TextTrimming="CharacterEllipsis"
                                                                    TextWrapping="Wrap"
                                                                    ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
@@ -174,7 +174,7 @@
         Margin="0,0,0,10"
         RowDefinitions="*,Auto">
 
-        <userControls:MusicPlayControllers Spacing="10"/>
+        <customs:MusicPlayControllers Spacing="10"/>
         <!--  进度条  -->
         <Slider
             Grid.Column="0"
@@ -498,7 +498,7 @@
 
             <Button Classes="Icon"
                     ToolTip.Tip="切换播放列表"
-                    Command="{Binding DrawerManager.ShowMusicPlaylistCommand}">
+                    Command="{Binding DrawerManager.ToggleMusicPlaylistCommand}">
                 <PathIcon
                     Data="{StaticResource SemiIconDescend2}"
                     Height="12"

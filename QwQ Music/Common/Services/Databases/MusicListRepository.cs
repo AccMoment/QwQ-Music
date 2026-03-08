@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using QwQ_Music.Common.Helpers;
 using QwQ_Music.Common.Interfaces;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Models;
@@ -8,115 +10,130 @@ using QwQ_Music.Models.ConfigModels;
 
 namespace QwQ_Music.Common.Services.Databases;
 
-public class MusicListRepository : IDatabaseRepository<MusicListModel> {
+public class
+    MusicListRepository : IAsyncDatabaseRepository<(string Name, string Creator), MusicListModel, MusicListModel> {
     public static readonly MusicListRepository Instance = new(StaticConfig.DatabasePath);
 
-    public const string TABLE_NAME = "playlists";
-    private readonly DatabaseService _db;
+    public const string TABLE_NAME = "music_lists";
+    private readonly AsyncDatabaseService _db;
 
-    private MusicListRepository(string path) {
-        _db = new DatabaseService(path);
-        Initialize();
+    protected MusicListRepository(string path) {
+        _db = new AsyncDatabaseService(path);
+        InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
-    private void Initialize() {
-        _db.CreateTable(
-            TABLE_NAME,
-            $"""
-             {nameof(MusicListModel.Name)} TEXT NOT NULL PRIMARY KEY,
-             {nameof(MusicListModel.Description)} TEXT,
-             {nameof(MusicListModel.IsCoverExist)} INTEGER,
-             {nameof(MusicListModel.CreateTime)} INTEGER,
-             {nameof(MusicListModel.ModifyTime)} INTEGER,
-             {nameof(MusicListModel.SortMode)} INTEGER
-             """);
+    private async Task InitializeAsync() {
+        await LoggerService.DebugAsync("正在初始化歌单数据库").ConfigureAwait(false);
+        await _db.CreateTableAsync(
+                     TABLE_NAME,
+                     $"""
+                      {nameof(MusicListModel.Name)} TEXT NOT NULL,
+                      {nameof(MusicListModel.Creator)} TEXT NOT NULL,
+                      {nameof(MusicListModel.Description)} TEXT,
+                      {nameof(MusicListModel.IsCoverExist)} INTEGER,
+                      {nameof(MusicListModel.CreateTime)} INTEGER,
+                      {nameof(MusicListModel.ModifyTime)} INTEGER,
+                      PRIMARY KEY({nameof(MusicListModel.Name)},{nameof(MusicListModel.Creator)})
+                      """)
+                 .ConfigureAwait(false);
     }
 
-    public void Dispose() {
-        _db.Dispose();
+    public async ValueTask DisposeAsync() {
+        await _db.DisposeAsync().ConfigureAwait(false);
         GC.SuppressFinalize(this);
     }
 
-    public MusicListModel? Get(string primaryKey) {
-        var result = _db.Query(
-            $"SELECT * FROM {TABLE_NAME} WHERE {nameof(MusicListModel.Name)} = @primaryKey",
-            new Dictionary<string, object> { ["primaryKey"] = primaryKey });
+    public async Task<MusicListModel?> SingleAsync((string Name, string Creator) key) {
+        await LoggerService.DebugAsync($"正在获取歌单'{key.Name} - {key.Creator}'").ConfigureAwait(false);
+        var result = await _db.SingleAsync(
+                                  $"SELECT * FROM {TABLE_NAME} WHERE {nameof(MusicListModel.Name)} = @{
+                                      nameof(MusicListModel.Name)} AND {
+                                          nameof(MusicListModel.Creator)} = @{nameof(MusicListModel.Creator)}",
+                                  new Dictionary<string, object> {
+                                      [nameof(MusicListModel.Name)] = key.Name,
+                                      [nameof(MusicListModel.Creator)] = key.Creator
+                                  })
+                              .ConfigureAwait(false);
 
-        return result.Count > 0 ? MapToModel(result[0]) : null;
+        return result is null ? null : MapToModel(result);
     }
 
-    public IEnumerable<MusicListModel> GetAll() {
-        var rows = _db.Query($"SELECT * FROM {TABLE_NAME}");
+    public async Task<IEnumerable<MusicListModel>> GetAsync() {
+        await LoggerService.DebugAsync("正在获取所有歌单。警告：可能发生长时磁盘IO，应尽可能避免该操作").ConfigureAwait(false);
 
+        var rows = await _db.QueryAsync($"SELECT * FROM {TABLE_NAME}").ConfigureAwait(false);
         return rows.Select(MapToModel).Where(x => x is not null).Cast<MusicListModel>();
     }
 
-    public int Count() {
-        var result = _db.Query($"SELECT COUNT(*) AS cnt FROM {TABLE_NAME}");
+    public async Task<int> CountAsync() {
+        await LoggerService.DebugAsync("正在获取歌单数量").ConfigureAwait(false);
+        var result = await _db.QueryAsync($"SELECT COUNT(*) AS cnt FROM {TABLE_NAME}").ConfigureAwait(false);
 
         return Convert.ToInt32(result[0]["cnt"]);
     }
 
-    public void Insert(MusicListModel item) {
+    public async Task InsertAsync(MusicListModel item, InsertExist onInsertExist = InsertExist.FAIL) {
+        await LoggerService.DebugAsync($"正在创建歌单'{item.Name} - {item.Creator}'，模式{onInsertExist}").ConfigureAwait(false);
         var data = ModelToDictionary(item);
-        _db.Insert(TABLE_NAME, data);
+        await _db.InsertAsync(TABLE_NAME, data, onInsertExist).ConfigureAwait(false);
+        await MusicListItemsRepository.Instance.InitializeMusicListAsync((item.Name, item.Creator))
+                                      .ConfigureAwait(false);
     }
 
-    public void Update(MusicListModel item) {
+    public async Task UpdateAsync(MusicListModel item) {
         var data = ModelToDictionary(item);
 
         // 移除主键字段，因为主键不应该被更新
         data.Remove(nameof(MusicListModel.Name));
-
-        const string whereClause = $"{nameof(MusicListModel.Name)} = @{nameof(MusicListModel.Name)}";
-
-        _db.Update(
-            TABLE_NAME,
-            data,
-            whereClause,
-            new Dictionary<string, object?> { [nameof(MusicListModel.Name)] = item.Name });
+        await UpdateAsync((item.Name, item.Creator), data).ConfigureAwait(false);
     }
 
-    public void Update(string primaryKey, string[] fields, string?[] values) {
-        if (fields.Length != values.Length)
-            throw new ArgumentException("字段和值的长度必须相同。");
 
-        var data = new Dictionary<string, object?>();
-
-        for (int i = 0; i < fields.Length; i++) {
-            data[fields[i]] = values[i];
-        }
-
-        const string whereClause = $"{nameof(MusicListModel.Name)} = @primaryKey";
-
-        _db.Update(TABLE_NAME, data, whereClause, new Dictionary<string, object?> { ["primaryKey"] = primaryKey });
-    }
-
-    public void Update(string primaryKey, Dictionary<string, object?> fieldValues) {
+    public async Task UpdateAsync((string Name, string Creator) key, Dictionary<string, object?> fieldValues) {
         if (fieldValues.Count == 0)
             return;
+        await LoggerService.DebugAsync($"正在更新歌单'{key.Name} - {key.Creator}'的如下字段：{string.Join(',',fieldValues.Keys)}").ConfigureAwait(false);
 
-        const string whereClause = $"{nameof(MusicListModel.Name)} = @primaryKey";
+        const string whereClause = $"{nameof(MusicListModel.Name)} = @{nameof(MusicListModel.Name)} AND {
+            nameof(MusicListModel.Creator)} = @{nameof(MusicListModel.Creator)}";
 
-        _db.Update(
-            TABLE_NAME,
-            fieldValues,
-            whereClause,
-            new Dictionary<string, object?> { ["primaryKey"] = primaryKey });
+        await _db.UpdateAsync(
+                     TABLE_NAME,
+                     fieldValues,
+                     whereClause,
+                     new Dictionary<string, object?> {
+                         [nameof(MusicListModel.Name)] = key.Name, [nameof(MusicListModel.Creator)] = key.Creator
+                     })
+                 .ConfigureAwait(false);
     }
 
-    public void Delete(string primaryKey) {
-        const string whereClause = $"{nameof(MusicListModel.Name)} = @primaryKey";
+    public async Task DeleteAsync((string Name, string Creator) key) {
+        await LoggerService.DebugAsync($"正在删除歌单'{key.Name} - {key.Creator}'").ConfigureAwait(false);
+        const string whereClause = $"{nameof(MusicListModel.Name)} = @{nameof(MusicListModel.Name)} AND {
+            nameof(MusicListModel.Creator)} = @{nameof(MusicListModel.Creator)}";
 
-        _db.Delete(TABLE_NAME, whereClause, new Dictionary<string, object> { ["primaryKey"] = primaryKey });
+        await _db.DeleteAsync(
+                     TABLE_NAME,
+                     whereClause,
+                     new Dictionary<string, object> {
+                         [nameof(MusicListModel.Name)] = key.Name, [nameof(MusicListModel.Creator)] = key.Creator
+                     })
+                 .ConfigureAwait(false);
     }
 
-    public bool Exists(string primaryKey) {
-        var result = _db.Query(
-            $"SELECT 1 FROM {TABLE_NAME} WHERE {nameof(MusicListModel.Name)} = @primaryKey LIMIT 1",
-            new Dictionary<string, object> { ["primaryKey"] = primaryKey });
+    public async Task<bool> ExistsAsync((string Name, string Creator) key) {
+        await LoggerService.DebugAsync($"正在检测歌单'{key.Name} - {key.Creator}'是否存在").ConfigureAwait(false);
+        var result = await _db.SingleAsync(
+                                  $"SELECT 1 FROM {TABLE_NAME} WHERE {nameof(MusicListModel.Name)} = @{
+                                      nameof(MusicListModel.Name)} AND {
+                                          nameof(MusicListModel.Creator)} = @{nameof(MusicListModel.Creator)}",
+                                  new Dictionary<string, object> {
+                                      [nameof(MusicListModel.Name)] = key.Name,
+                                      [nameof(MusicListModel.Creator)] = key.Creator
+                                  })
+                              .ConfigureAwait(false);
 
-        return result.Count > 0;
+        return result is not null;
     }
 
     #region Helper Methods
@@ -125,16 +142,16 @@ public class MusicListRepository : IDatabaseRepository<MusicListModel> {
         try {
             var model = new MusicListModel {
                 Name = (string)dict[nameof(MusicListModel.Name)]!,
+                Creator = (string)dict[nameof(MusicListModel.Creator)]!,
                 Description = (string)dict[nameof(MusicListModel.Description)]!,
-                
                 CreateTime =
                     new DateTime(
-                        ParseHelpers.TryParse<long>(dict, nameof(MusicListModel.CreateTime)) ?? DateTime.Now.Ticks),
+                        ParseHelper.TryParse<long>(dict, nameof(MusicListModel.CreateTime)) ?? DateTime.Now.Ticks),
                 ModifyTime = new DateTime(
-                    ParseHelpers.TryParse<long>(dict, nameof(MusicListModel.ModifyTime)) ?? DateTime.Now.Ticks),
+                    ParseHelper.TryParse<long>(dict, nameof(MusicListModel.ModifyTime)) ?? DateTime.Now.Ticks),
             };
-            if (ParseHelpers.TryParse<bool>(dict, nameof(MusicListModel.IsCoverExist)) is not true) {
-                CacheManager.SetImage(model.Name, CacheManager.NotExist);
+            if (ParseHelper.TryParse<bool>(dict, nameof(MusicListModel.IsCoverExist)) is not true) {
+                CacheManager.SetImage(model.Name, "歌单", CacheManager.NotExist);
                 LoggerService.Warning($"歌单'{model.Name}'的封面不存在。");
             }
 
@@ -152,6 +169,7 @@ public class MusicListRepository : IDatabaseRepository<MusicListModel> {
     private static Dictionary<string, object?> ModelToDictionary(MusicListModel model) {
         return new Dictionary<string, object?> {
             [nameof(MusicListModel.Name)] = model.Name,
+            [nameof(MusicListModel.Creator)] = model.Creator,
             [nameof(MusicListModel.Description)] = model.Description,
             [nameof(MusicListModel.IsCoverExist)] = model.IsCoverExist,
             [nameof(MusicListModel.CreateTime)] = model.CreateTime,

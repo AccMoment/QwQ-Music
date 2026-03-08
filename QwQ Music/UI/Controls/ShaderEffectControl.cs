@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Numerics;
 using Avalonia;
 using Avalonia.Controls;
@@ -18,31 +17,25 @@ namespace QwQ_Music.UI.Controls;
 /// <summary>
 ///     着色器效果控件，用于渲染GLSL着色器
 /// </summary>
-public class ShaderEffectControl : Control
-{
+public class ShaderEffectControl : Control {
     // 添加可绑定的着色器代码属性
-    public static readonly StyledProperty<string> ShaderCodeProperty = AvaloniaProperty.Register<
-        ShaderEffectControl,
-        string
-    >(nameof(ShaderCode));
+    public static readonly StyledProperty<string> ShaderCodeProperty =
+        AvaloniaProperty.Register<ShaderEffectControl, string>(nameof(ShaderCode));
 
     // 添加可绑定的动画状态属性
-    public static readonly StyledProperty<bool> IsEnableAnimationProperty = AvaloniaProperty.Register<
-        ShaderEffectControl,
-        bool
-    >(nameof(IsEnableAnimation), true);
+    public static readonly StyledProperty<bool> IsEnableAnimationProperty =
+        AvaloniaProperty.Register<ShaderEffectControl, bool>(nameof(IsEnableAnimation), true);
 
     // 添加性能模式属性
-    public static readonly StyledProperty<ShaderPerformanceMode> PerformanceModeProperty = AvaloniaProperty.Register<
-        ShaderEffectControl,
-        ShaderPerformanceMode
-    >(nameof(PerformanceMode), ShaderPerformanceMode.Balanced);
+    public static readonly StyledProperty<ShaderPerformanceMode> PerformanceModeProperty =
+        AvaloniaProperty.Register<ShaderEffectControl, ShaderPerformanceMode>(
+            nameof(PerformanceMode),
+            ShaderPerformanceMode.Balanced);
 
     // 添加颜色列表属性
-    public static readonly StyledProperty<List<Color>> ColorsProperty = AvaloniaProperty.Register<
-        ShaderEffectControl,
-        List<Color>
-    >(nameof(Colors), [Avalonia.Media.Colors.Blue, Avalonia.Media.Colors.Purple]);
+    public static readonly StyledProperty<Color[]> ColorsProperty =
+        AvaloniaProperty.Register<ShaderEffectControl, Color[]>(nameof(Colors));
+
     private DispatcherTimer? _animationTimer;
     private bool _isAnimationRunning;
     private DateTime _lastRenderTime = DateTime.Now;
@@ -53,8 +46,7 @@ public class ShaderEffectControl : Control
     /// <summary>
     ///     初始化着色器效果控件
     /// </summary>
-    public ShaderEffectControl()
-    {
+    public ShaderEffectControl() {
         ClipToBounds = true;
 
         // 启用鼠标输入
@@ -73,8 +65,7 @@ public class ShaderEffectControl : Control
     /// <summary>
     ///     着色器代码
     /// </summary>
-    public string ShaderCode
-    {
+    public string ShaderCode {
         get => GetValue(ShaderCodeProperty);
         set => SetValue(ShaderCodeProperty, value);
     }
@@ -82,8 +73,7 @@ public class ShaderEffectControl : Control
     /// <summary>
     ///     是否启用动画
     /// </summary>
-    public bool IsEnableAnimation
-    {
+    public bool IsEnableAnimation {
         get => GetValue(IsEnableAnimationProperty);
         set => SetValue(IsEnableAnimationProperty, value);
     }
@@ -91,8 +81,7 @@ public class ShaderEffectControl : Control
     /// <summary>
     ///     着色器性能模式
     /// </summary>
-    public ShaderPerformanceMode PerformanceMode
-    {
+    public ShaderPerformanceMode PerformanceMode {
         get => GetValue(PerformanceModeProperty);
         set => SetValue(PerformanceModeProperty, value);
     }
@@ -100,27 +89,21 @@ public class ShaderEffectControl : Control
     /// <summary>
     ///     着色器使用的颜色列表
     /// </summary>
-    public List<Color> Colors
-    {
+    public Color[] Colors {
         get => GetValue(ColorsProperty);
         set => SetValue(ColorsProperty, value);
     }
 
-    private void OnShaderCodeChanged(string shaderCode)
-    {
+    private void OnShaderCodeChanged(string shaderCode) {
         if (string.IsNullOrEmpty(shaderCode))
             return;
 
-        _shaderService = new ShaderService(shaderCode)
-        {
-            Colors = Colors
-        };
+        _shaderService = new ShaderService(shaderCode) { Colors = Colors };
 
         InvalidateVisual();
     }
 
-    private void OnColorsChanged(List<Color> colors)
-    {
+    private void OnColorsChanged(Color[] colors) {
         if (_shaderService == null)
             return;
 
@@ -128,41 +111,30 @@ public class ShaderEffectControl : Control
         InvalidateVisual();
     }
 
-    private void OnIsAnimatingChanged(bool isAnimating)
-    {
-        switch (isAnimating)
-        {
-            case true when !_isAnimationRunning:
-                StartAnimation();
+    private void OnIsAnimatingChanged(bool isAnimating) {
+        if (isAnimating == _isAnimationRunning)
+            return;
 
-                break;
-            case false when _isAnimationRunning:
-                StopAnimation();
-
-                break;
-        }
+        if (isAnimating)
+            StartAnimation();
+        else
+            StopAnimation();
     }
 
-    private void OnPointerMoved(object? sender, PointerEventArgs e)
-    {
+    private void OnPointerMoved(object? sender, PointerEventArgs e) {
         _mousePosition = e.GetPosition(this).ToVector2();
         InvalidateVisual();
     }
 
-    private void StartAnimation()
-    {
+    private void StartAnimation() {
         if (!IsEnableAnimation || _isAnimationRunning)
             return;
 
         _isAnimationRunning = true;
 
         // 使用DispatcherTimer代替直接递归调用
-        if (_animationTimer == null)
-        {
-            _animationTimer = new DispatcherTimer
-            {
-                Interval = GetTimerInterval()
-            };
+        if (_animationTimer == null) {
+            _animationTimer = new DispatcherTimer { Interval = GetTimerInterval() };
 
             _animationTimer.Tick += AnimationTimer_Tick;
         }
@@ -170,16 +142,13 @@ public class ShaderEffectControl : Control
         _animationTimer.Start();
     }
 
-    private void StopAnimation()
-    {
+    private void StopAnimation() {
         _isAnimationRunning = false;
         _animationTimer?.Stop();
     }
 
-    private void AnimationTimer_Tick(object? sender, EventArgs e)
-    {
-        if (!_isAnimationRunning)
-        {
+    private void AnimationTimer_Tick(object? sender, EventArgs e) {
+        if (!_isAnimationRunning) {
             _animationTimer?.Stop();
 
             return;
@@ -188,22 +157,18 @@ public class ShaderEffectControl : Control
         UpdateFrame();
     }
 
-    private TimeSpan GetTimerInterval()
-    {
+    private TimeSpan GetTimerInterval() {
         // 根据性能模式设置不同的刷新率
-        return PerformanceMode switch
-        {
+        return PerformanceMode switch {
             ShaderPerformanceMode.HighQuality => TimeSpan.FromMilliseconds(16), // ~60fps
-            ShaderPerformanceMode.Balanced => TimeSpan.FromMilliseconds(33), // ~30fps
-            ShaderPerformanceMode.PowerSaver => TimeSpan.FromMilliseconds(66), // ~15fps
-            _ => TimeSpan.FromMilliseconds(33)
+            ShaderPerformanceMode.Balanced    => TimeSpan.FromMilliseconds(33), // ~30fps
+            ShaderPerformanceMode.PowerSaver  => TimeSpan.FromMilliseconds(66), // ~15fps
+            _                                 => TimeSpan.FromMilliseconds(33)
         };
     }
 
-    private void UpdateFrame()
-    {
-        if (!IsEnableAnimation)
-        {
+    private void UpdateFrame() {
+        if (!IsEnableAnimation) {
             _isAnimationRunning = false;
 
             return;
@@ -213,12 +178,11 @@ public class ShaderEffectControl : Control
         double elapsed = (now - _lastRenderTime).TotalMilliseconds;
 
         // 根据性能模式限制帧率
-        double frameInterval = PerformanceMode switch
-        {
+        double frameInterval = PerformanceMode switch {
             ShaderPerformanceMode.HighQuality => 16, // ~60fps
-            ShaderPerformanceMode.Balanced => 33, // ~30fps
-            ShaderPerformanceMode.PowerSaver => 66, // ~15fps
-            _ => 33
+            ShaderPerformanceMode.Balanced    => 33, // ~30fps
+            ShaderPerformanceMode.PowerSaver  => 66, // ~15fps
+            _                                 => 33
         };
 
         // 限制帧率，避免过度渲染
@@ -229,14 +193,12 @@ public class ShaderEffectControl : Control
         InvalidateVisual();
     }
 
-    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
-    {
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e) {
         base.OnDetachedFromVisualTree(e);
         StopAnimation();
 
         // 清理资源
-        if (_animationTimer != null)
-        {
+        if (_animationTimer != null) {
             _animationTimer.Tick -= AnimationTimer_Tick;
             _animationTimer = null;
         }
@@ -244,8 +206,7 @@ public class ShaderEffectControl : Control
         PointerMoved -= OnPointerMoved;
     }
 
-    public override void Render(DrawingContext context)
-    {
+    public override void Render(DrawingContext context) {
         base.Render(context);
 
         // 如果没有着色器服务，不进行渲染
@@ -262,18 +223,15 @@ public class ShaderEffectControl : Control
             new Rect(0, 0, size.Width, size.Height),
             _shaderService,
             size,
-            _mousePosition
-        );
+            _mousePosition);
 
         context.Custom(customDrawOp);
     }
 
-    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
-    {
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e) {
         base.OnAttachedToVisualTree(e);
 
-        if (IsEnableAnimation)
-        {
+        if (IsEnableAnimation) {
             StartAnimation();
         }
     }
@@ -282,24 +240,16 @@ public class ShaderEffectControl : Control
     ///     自定义绘制操作，用于渲染着色器
     /// </summary>
     private class ShaderDrawOperation(Rect bounds, ShaderService shaderService, Size size, Vector2? mousePosition)
-        : ICustomDrawOperation
-    {
+        : ICustomDrawOperation {
         public void Dispose() { }
 
         public Rect Bounds => bounds;
 
-        public bool HitTest(Point p)
-        {
-            return bounds.Contains(p);
-        }
+        public bool HitTest(Point p) { return bounds.Contains(p); }
 
-        public bool Equals(ICustomDrawOperation? other)
-        {
-            return false;
-        }
+        public bool Equals(ICustomDrawOperation? other) { return false; }
 
-        public void Render(ImmediateDrawingContext context)
-        {
+        public void Render(ImmediateDrawingContext context) {
             // 获取SkiaSharp画布
             var leaseFeature = context.PlatformImpl.GetFeature<ISkiaSharpApiLeaseFeature>();
 
@@ -322,19 +272,14 @@ public class ShaderEffectControl : Control
 /// <summary>
 ///     点转换扩展方法
 /// </summary>
-public static class PointExtensions
-{
-    public static Vector2 ToVector2(this Point point)
-    {
-        return new Vector2((float)point.X, (float)point.Y);
-    }
+public static class PointExtensions {
+    public static Vector2 ToVector2(this Point point) { return new Vector2((float)point.X, (float)point.Y); }
 }
 
 /// <summary>
 ///     着色器性能模式
 /// </summary>
-public enum ShaderPerformanceMode
-{
+public enum ShaderPerformanceMode {
     /// <summary>
     ///     高质量模式 (~60fps)
     /// </summary>

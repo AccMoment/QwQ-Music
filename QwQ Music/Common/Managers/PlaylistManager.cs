@@ -15,50 +15,54 @@ public partial class PlaylistManager : ObservableObject {
     public static PlaylistManager Instance { get; } = new();
 
     private PlaylistManager() {
-        _ = ReplaceAsync(
-                MusicItemsManager.All.Name,
-                PlaylistRepository.ReadAsync()
-                                  .ConfigureAwait(false)
-                                  .GetAwaiter()
-                                  .GetResult()
-                                  .Select(path => MusicItemsManager.All.MusicItems[path]),
-                isPlayNow: false)
-            .ContinueWith(LoggerService.HandleException)
-            .ContinueWith(async Task (_) => {
-                await AudioPlayManager.Instance.SetThisMusicAsync(
-                                          ActualPlaylist.FirstOrDefault(
-                                              item => item.Model.FilePath ==
-                                                      AudioPlayManager.Instance.PlayerConfig.LastPlayedFilePath,
-                                              PlaylistItemModel.RefDefault),
-                                          false)
-                                      .ConfigureAwait(false);
+        Task.Run(() => {
+                var (indexes, paths, count, latest) = PlaylistRepository
+                                                      .ParseAsync(AudioPlayManager.PlayerConfig.LastPlayedFilePath)
+                                                      .ConfigureAwait(false)
+                                                      .GetAwaiter()
+                                                      .GetResult();
+                ReplaceAsync(
+                        MusicItemsManager.All.Name,
+                        paths.Select((item, index) => {
+                            if (!MusicItemsManager.All.MusicItems.TryGetValue(item, out MusicItemModel? model)) {
+                                count--;
+                                if (index < latest)
+                                    latest--;
+                                else if (index == latest)
+                                    latest = 0;
+                            }
+
+                            return model ?? MusicItemModel.Default;
+                        }),
+                        count,
+                        latest,
+                        false,
+                        indexes)
+                    .ConfigureAwait(false)
+                    .GetAwaiter()
+                    .GetResult();
             })
+            .ContinueWith(LoggerService.HandleException)
             .ConfigureAwait(false);
     }
 
     public PlaylistItemModel CurrentItem { get; set; } = PlaylistItemModel.RefDefault;
 
-    // ReSharper disable once InconsistentNaming
-    public const string CUSTOM = nameof(CUSTOM);
+    public const string Custom = nameof(Custom);
 
-    // ReSharper disable once InconsistentNaming
-    private const string UNKNOWN = nameof(UNKNOWN);
+    private const string Unknown = nameof(Unknown);
 
-    public string CurrentListName { get; private set; } = UNKNOWN;
+    public string CurrentListName { get; private set; } = Unknown;
 
     public PlayMode PlayMode {
-        get;
+        get => ConfigManager.PlayerConfig.PlayMode;
         set {
-            if (field == value)
+            if (value != PlayMode.Random)
                 return;
-            field = value;
-            // ReSharper disable once InvertIf
-            if (value == PlayMode.Random) {
-                ActualPlaylist.Clear();
-                ActualPlaylist.AddRange(SequentialPlaylist.Shuffle());
-            }
+            ActualPlaylist.Clear();
+            ActualPlaylist.AddRange(SequentialPlaylist.Shuffle());
         }
-    } = PlayMode.Sequential;
+    }
 
     public int CurrentIndex => ActualPlaylist.IndexOf(CurrentItem);
 
@@ -72,68 +76,56 @@ public partial class PlaylistManager : ObservableObject {
     public PlaylistItemModel First() {
         if (ActualPlaylist.Count == 0) {
             var items = MusicItemsManager.All.MusicItems.Values;
-            ReplaceAsync(MusicItemsManager.All.Name, items, items.First(), true)
-                .ConfigureAwait(false)
-                .GetAwaiter()
-                .GetResult();
+            if (items.Count == 0)
+                return PlaylistItemModel.RefDefault;
+            ReplaceAsync(MusicItemsManager.All.Name, items, 0, true).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
-        return ActualPlaylist.First();
+        return ActualPlaylist.FirstOrDefault(PlaylistItemModel.RefDefault);
     }
 
-    public PlaylistItemModel Insert(PlaylistItemModel anchor, MusicItemModel musicItem) {
-        return InsertRange(anchor, [musicItem]).First();
-    }
 
-    public IEnumerable<PlaylistItemModel> InsertRange(
+    public IEnumerable<PlaylistItemModel> Insert(
         PlaylistItemModel anchor,
-        IEnumerable<MusicItemModel> musicItems) {
-        CurrentListName = CUSTOM;
+        params IEnumerable<MusicItemModel> musicItems) {
+        CurrentListName = Custom;
         var items = musicItems.Select(item => new PlaylistItemModel(item)).ToArray();
         SequentialPlaylist.InsertRange(SequentialPlaylist.IndexOf(anchor), items);
         ActualPlaylist.InsertRange(ActualPlaylist.IndexOf(anchor), items);
         return items;
     }
 
-    public PlaylistItemModel Add(MusicItemModel musicItem) { return AddRange([musicItem]).First(); }
-
-    public IEnumerable<PlaylistItemModel> AddRange(IEnumerable<MusicItemModel> musicItems) {
-        return InsertRange(ActualPlaylist.Last(), musicItems);
+    public IEnumerable<PlaylistItemModel> Add(params IEnumerable<MusicItemModel> musicItems) {
+        return Insert(ActualPlaylist.Last(), musicItems);
     }
 
-    public PlaylistItemModel InsertToNext(MusicItemModel musicItem) {
-        return InsertRange(CurrentItem, [musicItem]).First();
-    }
-
-    public IEnumerable<PlaylistItemModel> InsertToNext(IEnumerable<MusicItemModel> musicItems) {
-        return InsertRange(CurrentItem, musicItems);
+    public IEnumerable<PlaylistItemModel> InsertToNext(params IEnumerable<MusicItemModel> musicItems) {
+        return Insert(CurrentItem, musicItems);
     }
 
     [RelayCommand]
-    public void AddSelectedToNext(IEnumerable<MusicItemModel> musicItems) { InsertRange(CurrentItem, musicItems); }
-
-    public void Remove(PlaylistItemModel musicItem) { RemoveRange([musicItem]); }
+    public void AddSelectedToNext(params IEnumerable<MusicItemModel> musicItems) { Insert(CurrentItem, musicItems); }
 
     [RelayCommand]
-    public void RemoveRange(IEnumerable<PlaylistItemModel> musicItems) {
-        CurrentListName = CUSTOM;
+    public void Remove(params IEnumerable<PlaylistItemModel> musicItems) {
+        CurrentListName = Custom;
         PlaylistItemModel[] items = musicItems.ToArray();
-        items.AsParallel().ForAll(item => SequentialPlaylist.Remove(item));
+        SequentialPlaylist.RemoveAll(item => items.Contains(item));
         ActualPlaylist.RemoveAll(items);
     }
 
-    public void RemoveAllOf(IEnumerable<MusicItemModel> musicItems) {
-        CurrentListName = CUSTOM;
+    public void RemoveAllOf(params IEnumerable<MusicItemModel> musicItems) {
+        CurrentListName = Custom;
         MusicItemModel[] items = musicItems.ToArray();
         PlaylistItemModel[] playlistItems = SequentialPlaylist.AsParallel()
-                                                              .Where(item => Enumerable.Contains(items, item.Model))
+                                                              .Where(item => items.Contains(item.Model))
                                                               .ToArray();
-        playlistItems.AsParallel().ForAll(item => SequentialPlaylist.Remove(item));
+        SequentialPlaylist.RemoveAll(item => playlistItems.Contains(item));
         ActualPlaylist.RemoveAll(playlistItems);
     }
 
     public void Clear() {
-        CurrentListName = CUSTOM;
+        CurrentListName = Custom;
         SequentialPlaylist.Clear();
         ActualPlaylist.Clear();
         PlaylistItemModel.Reset();
@@ -142,22 +134,76 @@ public partial class PlaylistManager : ObservableObject {
     public async Task ReplaceAsync(
         string name,
         IEnumerable<MusicItemModel> musicItems,
-        MusicItemModel? target = null,
-        bool isPlayNow = false) {
-        List<MusicItemModel> items = musicItems.ToList();
-        if (name is not CUSTOM and not UNKNOWN && CurrentListName == name && ActualPlaylist.Count == items.Count) {
+        int capacity,
+        int target,
+        bool isPlayNow = false,
+        IEnumerable<int>? memorizedRandomOrder = null) {
+        if (name is not Custom and not Unknown && CurrentListName == name && ActualPlaylist.Count == capacity) {
+            await AudioPlayManager.Instance.SetThisMusicAsync(SequentialPlaylist[target], isPlayNow)
+                                  .ConfigureAwait(false);
             return;
         }
 
-        CurrentListName = name;
+
         AudioPlayManager.Instance.Pause();
         Clear();
-        SequentialPlaylist.AddRange(items.Select(item => new PlaylistItemModel(item)).ToList());
-        ActualPlaylist.AddRange(PlayMode is PlayMode.Random ? SequentialPlaylist.Shuffle() : SequentialPlaylist);
-        if (items.Count == 0)
+        SequentialPlaylist.EnsureCapacity(capacity);
+        ActualPlaylist.EnsureCapacity(capacity);
+        CurrentListName = name;
+        if (PlayMode is PlayMode.SingleLoop) {
+            var item = new PlaylistItemModel(musicItems.ElementAt(target));
+            SequentialPlaylist.Add(item);
+            ActualPlaylist.Add(item);
+            NotificationService.Info($"已切换到{item.Model.Title} - {item.Model.Artists}");
+            await AudioPlayManager.Instance.SetThisMusicAsync(item, isPlayNow).ConfigureAwait(false);
             return;
-        PlaylistItemModel item =
-            target is null ? ActualPlaylist[0] : ActualPlaylist.Single(item => item.Model == target);
-        await AudioPlayManager.Instance.SetThisMusicAsync(item, isPlayNow).ConfigureAwait(false);
+        }
+
+        if (memorizedRandomOrder is not null && PlayMode is PlayMode.Random) {
+            //预填充List以扩充List<>._size
+            SequentialPlaylist.AddRange(Enumerable.Repeat(PlaylistItemModel.RefDefault, capacity));
+            List<PlaylistItemModel> actualPlaylist = Enumerable.Repeat(PlaylistItemModel.RefDefault, capacity).ToList();
+
+            musicItems.Zip(memorizedRandomOrder)
+                      .AsParallel()
+                      .AsOrdered()
+                      .Select((item, index) => (Index: index,
+                                                Item: (item.First == MusicItemModel.Default ?
+                                                    PlaylistItemModel.RefDefault :
+                                                    new PlaylistItemModel(item.First)), RandomOrder: item.Second))
+                      .ForAll(data => {
+                          SequentialPlaylist[data.Index] = data.Item;
+                          actualPlaylist[data.RandomOrder] = data.Item;
+                      });
+            SequentialPlaylist.RemoveAll(item => item == PlaylistItemModel.RefDefault);
+            ActualPlaylist.AddRange(actualPlaylist.Where(item => item != PlaylistItemModel.RefDefault));
+            await AudioPlayManager.Instance.SetThisMusicAsync(SequentialPlaylist[target], isPlayNow)
+                                  .ConfigureAwait(false);
+            return;
+        } else {
+            SequentialPlaylist.AddRange(musicItems.Select(item => new PlaylistItemModel(item)));
+            if (PlayMode is PlayMode.Random) {
+                ActualPlaylist.Add(SequentialPlaylist[target]);
+                ActualPlaylist.AddRange(SequentialPlaylist.Where((_, index) => index != target).Shuffle());
+            } else
+                ActualPlaylist.AddRange(SequentialPlaylist.Shuffle());
+        }
+
+        if (ActualPlaylist.Count == 0)
+            return;
+        NotificationService.Info(
+            $"已切换到歌单{(name == MusicItemsManager.All.Name ? I18NService.Lang["All Musics"] : name)}");
+        await AudioPlayManager.Instance.SetThisMusicAsync(SequentialPlaylist[target], isPlayNow).ConfigureAwait(false);
+    }
+
+
+    public async Task ReplaceAsync(
+        string name,
+        ICollection<MusicItemModel> musicItems,
+        int target,
+        bool isPlayNow = false,
+        IEnumerable<int>? memorizedRandomOrder = null) {
+        await ReplaceAsync(name, musicItems, musicItems.Count, target, isPlayNow, memorizedRandomOrder)
+            .ConfigureAwait(false);
     }
 }

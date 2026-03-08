@@ -1,9 +1,11 @@
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Text.Json.Serialization;
 using Avalonia.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using QwQ_Music.Common.Interfaces;
 using SoundFlow.Abstracts;
+using SoundFlow.Enums;
 using SoundFlow.Modifiers;
 using SoundFlow.Structs;
 
@@ -74,7 +76,7 @@ public class ParametricEqualizerModel : ObservableObject, ISoundModifierModel<Pa
     /// <summary>
     /// 当频段集合发生变化时调用。
     /// </summary>
-    private void OnBandsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    private void OnBandsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         UpdateModifierBands();
     }
@@ -176,10 +178,6 @@ public class ParametricEqualizerModel : ObservableObject, ISoundModifierModel<Pa
                 AddBand(new EqualizerBand(FilterType.Peaking, 800f, 2f, 1.5f));
                 AddBand(new EqualizerBand(FilterType.Peaking, 2500f, 3f, 1.5f));
                 AddBand(new EqualizerBand(FilterType.HighShelf, 8000f, 2f, 0.7f));
-                break;
-
-            default:
-                // 自定义预设可以在这里添加
                 break;
         }
     }

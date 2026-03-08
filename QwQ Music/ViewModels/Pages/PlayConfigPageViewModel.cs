@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Audio.SoundModifier;
@@ -84,9 +83,7 @@ public partial class PlayConfigPageViewModel : ViewModelBase {
     [RelayCommand]
     public void ForceRefreshMusicItemsTags() {
         Task.Run(() => MusicItemsManager.MusicItems.Values.AsParallel()
-                                        .ForAll(item => item.UpdateMetaDataAsync(true)
-                                                            .ContinueWith(LoggerService.HandleException)
-                                                            .ConfigureAwait(false)))
+                                        .ForAll(item => item.UpdateMetaDataAsync(true).ConfigureAwait(false)))
             .ContinueWith(LoggerService.HandleException)
             .ConfigureAwait(false);
     }
@@ -104,9 +101,13 @@ public partial class PlayConfigPageViewModel : ViewModelBase {
                       foreach (MusicItemModel musicItem in MusicItemsManager.MusicItems.Values.Where(item =>
                                    item.Gain > 0)) {
                           musicItem.Gain = 0;
-                          MusicItemsManager.Update(
-                              musicItem,
-                              new Dictionary<string, object?> { [nameof(MusicItemModel.Gain)] = musicItem.Gain });
+                          MusicItemsManager.UpdateAsync(
+                                               musicItem,
+                                               new Dictionary<string, object?> {
+                                                   [nameof(MusicItemModel.Gain)] = musicItem.Gain
+                                               })
+                                           .ContinueWith(LoggerService.HandleException)
+                                           .ConfigureAwait(false);
                       }
                   })
                   .ContinueWith(LoggerService.HandleException)
@@ -153,7 +154,6 @@ public partial class PlayConfigPageViewModel : ViewModelBase {
         items.AsParallel()
              .WithCancellation(cancellationToken)
              .ForAll(item => {
-                 cancellationToken.ThrowIfCancellationRequested();
                  try {
                      using var audioGainCalculator = new AudioGainCalculator();
                      ProcessSingleItemAsync(audioGainCalculator, item).ConfigureAwait(false).GetAwaiter().GetResult();
@@ -171,7 +171,10 @@ public partial class PlayConfigPageViewModel : ViewModelBase {
                                                    PlayerConfig.CustomMusicReplayGainStandard)
                                                .ConfigureAwait(false);
 
-        MusicItemsManager.Update(item, new Dictionary<string, object?> { [nameof(MusicItemModel.Gain)] = gain });
+        await MusicItemsManager.UpdateAsync(
+                                   item,
+                                   new Dictionary<string, object?> { [nameof(MusicItemModel.Gain)] = gain })
+                               .ConfigureAwait(false);
 
         item.Gain = gain;
         NumberOfCompletedCalc++;

@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -45,7 +44,7 @@ public partial class ImageCroppingViewModel(Bitmap sourceImage) : ObservableObje
                        if (read is { IsCompletedSuccessfully: true, Result: { } stream }) {
                            CroppedImage?.Save(stream);
                        } else
-                           NotificationService.Error("坏欸", $"保存文件失败了！");
+                           NotificationService.Error("坏欸", "保存文件失败了！");
                    });
            })
            .ContinueWith(LoggerService.HandleException)
