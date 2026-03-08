@@ -283,9 +283,13 @@ public static class LoggerService {
                 foreach (Exception inner in aggregate.InnerExceptions) {
                     TryHandleAggregateException(inner);
                 }
+
+                return;
             }
 
             Error($"在Task执行期间发生{exception.GetType()}：{exception.Message}\n{exception.StackTrace}");
         }
     }
+
+    public static void Dispose() { _semaphore.Dispose(); }
 }

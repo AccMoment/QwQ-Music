@@ -1,14 +1,12 @@
 using System;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace QwQ_Music.Common.Interfaces;
 
 /// <summary>
 ///     音频播放接口，定义音频播放器的基本行为
 /// </summary>
-public interface IAudioPlayer : IDisposable
-{
+public interface IAudioPlayer : IDisposable {
     /// <summary>
     ///     是否静音
     /// </summary>
@@ -63,17 +61,9 @@ public interface IAudioPlayer : IDisposable
     ///     设置音频文件并初始化
     /// </summary>
     void InitializeAudio(string filePath, double replayGain);
+
     /// <summary>
     ///     设置音频文件并初始化
     /// </summary>
     void InitializeAudio(Stream stream, double replayGain);
-    
-    /// <summary>
-    ///     设置音频文件并初始化
-    /// </summary>
-    Task InitializeAudioAsync(string filePath, double replayGain);
-    /// <summary>
-    ///     设置音频文件并初始化
-    /// </summary>
-    Task InitializeAudioAsync(Stream stream, double replayGain);
 }

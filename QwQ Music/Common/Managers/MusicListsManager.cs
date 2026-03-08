@@ -1,16 +1,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Collections;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Data.Sqlite;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Services.Databases;
 using QwQ_Music.Models;
-using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels.Dialogs;
 using QwQ_Music.Views.Dialogs;
 using Ursa.Controls;
@@ -22,13 +23,16 @@ public partial class MusicListsManager : ObservableObject {
     private MusicListsManager() { InitializeAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false); }
 
     public List<MusicListModel> MusicLists { get; set; } = [];
+    public event EventHandler? CollectionChanged;
 
     public MusicListModel? Selected { get; private set; }
 
+    private void InvokeIfChanged() { CollectionChanged?.Invoke(this, EventArgs.Empty); }
 
     private async Task InitializeAsync() {
         try {
-            MusicLists.AddRange(await Task.Run(() => MusicListRepository.Instance.GetAll()).ConfigureAwait(true));
+            MusicLists.AddRange(await MusicListRepository.Instance.GetAsync().ConfigureAwait(true));
+            InvokeIfChanged();
         } catch (Exception e) {
             NotificationService.Error("歌单信息加载失败！\n" + $"{e.Message}");
 
@@ -40,21 +44,20 @@ public partial class MusicListsManager : ObservableObject {
     ///     添加歌单信息
     /// </summary>
     /// <param name="model">歌单模型</param>
-    private void AddMusicList(MusicListModel model) {
-        MusicListRepository.Instance.Insert(model);
+    private async Task AddMusicListAsync(MusicListModel model) {
+        await MusicListRepository.Instance.InsertAsync(model).ConfigureAwait(false);
 
         MusicLists.Add(model);
+        InvokeIfChanged();
         NotificationService.Success("成功", $"歌单《{model.Name}》创建成功！");
     }
 
     [RelayCommand]
-    private void CreatePlaylistWithMusicItem(IList items) {
+    private void CreatePlaylistWithMusicItem(params MusicItemModel[] items) {
         CreateMusicListAsync()
             .ContinueWith(task => {
                 if (task is { IsCompletedSuccessfully: true, Result: { } list }) {
-                    AddToMusicListAsync(items.Cast<MusicItemModel>().ToList(), list)
-                        .ContinueWith(LoggerService.HandleException)
-                        .ConfigureAwait(false);
+                    AddToMusicListAsync(items, list).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
                 }
             })
             .ContinueWith(LoggerService.HandleException)
@@ -68,32 +71,33 @@ public partial class MusicListsManager : ObservableObject {
 
     private async Task<MusicListModel?> CreateMusicListAsync() {
         var options = new OverlayDialogOptions { Title = "新建歌单" };
-
-        var model = await OverlayDialog.ShowCustomModal<CreateMusicList, CreateMusicListViewModel, MusicListModel>(
-                                           new CreateMusicListViewModel(options.Title),
-                                           options: options)
-                                       .ConfigureAwait(true);
+        MusicListModel? model = await Dispatcher.UIThread
+                                                .InvokeAsync(async Task<MusicListModel?> () =>
+                                                                 await OverlayDialog
+                                                                       .ShowCustomModal<CreateMusicList,
+                                                                           CreateMusicListViewModel, MusicListModel>(
+                                                                           new CreateMusicListViewModel(""),
+                                                                           options: options)
+                                                                       .ConfigureAwait(true))
+                                                .ConfigureAwait(false);
 
         if (model == null)
             return null;
 
         try {
-            AddMusicList(model);
+            await AddMusicListAsync(model).ConfigureAwait(false);
 
-            string coverFullPath = StaticConfig.GetMusicListCoverFullPath(model.Name);
-
-            if (model.CoverImage == CacheManager.NotExist)
+            if (model.Thumbnail == CacheManager.NotExist)
                 return model;
 
-            if (!await FileOperationService.SaveImageAsync(model.CoverImage, coverFullPath, true)
-                                           .ConfigureAwait(false)) {
-                NotificationService.Error($"保存歌词 {model.Name} 的图标失败啦~");
-            }
-
+            await MusicListCoverRepository.Instance.InsertAsync(model).ConfigureAwait(false);
             return model;
+        } catch (SqliteException sqlEx) when (sqlEx.SqliteErrorCode == 19) {
+            await LoggerService.InfoAsync($"尝试创建歌单{model.Name}失败，因为该歌单已存在。").ConfigureAwait(false);
+            NotificationService.Error($"创建歌单\"{model.Name}\"失败！该歌单已存在");
+            return await CreateMusicListAsync().ConfigureAwait(false);
         } catch (Exception ex) {
-            await LoggerService.ErrorAsync($"创建《{model.Name}》歌单失败！\n" + $"{ex.Message}\n{ex.StackTrace}")
-                               .ConfigureAwait(false);
+            await LoggerService.ErrorAsync($"创建歌单{model.Name}失败", ex).ConfigureAwait(false);
 
             NotificationService.Error($"创建歌单《{model.Name}》失败！\n" + $"{ex.Message}");
 
@@ -106,46 +110,49 @@ public partial class MusicListsManager : ObservableObject {
     /// </summary>
     /// <param name="musicItems">音乐项列表</param>
     /// <param name="musicList">歌单项</param>
-    public async Task AddToMusicListAsync(IList<MusicItemModel> musicItems, MusicListModel musicList) {
+    public async Task AddToMusicListAsync(ICollection<MusicItemModel> musicItems, MusicListModel musicList) {
         if (musicItems.Count == 0)
             return;
 
         var repo = MusicListItemsRepository.Instance;
 
         // 过滤掉已存在的音乐项
-        var newItems = musicItems.Where(item => repo.Contains(musicList.Name, item.FilePath)).ToList();
+        var newItems = musicItems.Where(item => repo.ContainsAsync((musicList.Name, musicList.Creator), item.FilePath)
+                                                    .ConfigureAwait(false)
+                                                    .GetAwaiter()
+                                                    .GetResult())
+                                 .ToArray();
 
         // 如果有已存在的音乐项，显示提示
-        if (newItems.Count != musicItems.Count) {
-            List<MusicItemModel> existingItems = musicItems.Except(newItems).ToList();
+        if (newItems.Length != musicItems.Count) {
+            var existingItems = musicItems.Except(newItems).ToArray();
             string existingTitles = string.Join("、", existingItems.Select(item => $"《{item.Title}》"));
             NotificationService.Info("提示", $"歌曲{existingTitles}已存在于歌单 {musicList.Name} 中！");
         }
 
         var failedItems = new List<MusicItemModel>();
 
-        await Task.Run(() => {
-                      foreach (MusicItemModel item in newItems) {
-                          try {
-                              repo.Insert(musicList, item);
-                          } catch (Exception) {
-                              failedItems.Add(item);
-                          }
-                      }
-                  })
-                  .ConfigureAwait(false);
 
-        List<MusicItemModel> successItems;
+        foreach (MusicItemModel item in newItems) {
+            try {
+                await repo.InsertAsync(musicList, item).ConfigureAwait(false);
+            } catch (Exception) {
+                failedItems.Add(item);
+            }
+        }
+
+
+        MusicItemModel[] successItems;
         if (failedItems.Count == 0) {
             successItems = newItems;
         } else {
-            successItems = newItems.Except(failedItems).ToList();
+            successItems = newItems.Except(failedItems).ToArray();
             string failedTitles = string.Join("、", failedItems.Select(item => $"《{item.Title}》"));
             NotificationService.Error($"添加歌曲{failedTitles}到歌单失败！");
         }
 
         // 显示添加结果通知
-        if (successItems.Count > 0) {
+        if (successItems.Length > 0) {
             string successTitles = string.Join("、", successItems.Select(item => $"《{item.Title}》"));
             NotificationService.Success($"已将歌曲{successTitles}添加到歌单：{musicList.Name}！");
 
@@ -160,29 +167,27 @@ public partial class MusicListsManager : ObservableObject {
     /// </summary>
     /// <param name="musicItems">音乐项列表</param>
     /// <param name="musicList">歌单项</param>
-    public async Task RemoveToMusicList(IList<MusicItemModel> musicItems, MusicListModel musicList) {
+    public async Task RemoveFromMusicList(ICollection<MusicItemModel> musicItems, MusicListModel musicList) {
         if (musicItems.Count == 0)
             return;
 
         var failedItems = new List<MusicItemModel>();
 
-        await Task.Run(() => {
-                      var repo = MusicListItemsRepository.Instance;
+        var repo = MusicListItemsRepository.Instance;
 
-                      foreach (var item in musicItems) {
-                          try {
-                              repo.Remove(musicList, item);
-                          } catch (Exception) {
-                              failedItems.Add(item);
-                          }
-                      }
-                  })
-                  .ConfigureAwait(false);
-        IList<MusicItemModel> successItems;
+        foreach (var item in musicItems) {
+            try {
+                await repo.RemoveAsync(musicList, item).ConfigureAwait(false);
+            } catch (Exception) {
+                failedItems.Add(item);
+            }
+        }
+
+        ICollection<MusicItemModel> successItems;
         if (failedItems.Count == 0) {
             successItems = musicItems;
         } else {
-            successItems = musicItems.Except(failedItems).ToList();
+            successItems = musicItems.Except(failedItems).ToArray();
             string failedTitles = string.Join("、", failedItems.Select(item => $"《{item.Title}》"));
             NotificationService.Error($"从歌单移除歌曲{failedTitles}失败！");
         }
@@ -212,14 +217,9 @@ public partial class MusicListsManager : ObservableObject {
                       if (task is not { IsCompletedSuccessfully: true, Result: MessageBoxResult.Yes })
                           return;
                       try {
-                          MusicListRepository.Instance.Delete(musicList.Name);
-                          // 删除封面图片文件
-                          if (!musicList.IsCoverExist)
-                              return;
-                          string coverFullPath = StaticConfig.GetMusicListCoverFullPath(musicList.Name);
-                          if (File.Exists(coverFullPath)) {
-                              File.Delete(coverFullPath);
-                          }
+                          MusicListRepository.Instance.DeleteAsync((musicList.Name, musicList.Creator))
+                                             .ContinueWith(LoggerService.HandleException)
+                                             .ConfigureAwait(false);
 
                           // 从图片缓存中移除
                           if (!musicList.IsCoverExist) {
@@ -227,6 +227,7 @@ public partial class MusicListsManager : ObservableObject {
                           }
 
                           MusicLists.Remove(musicList);
+                          InvokeIfChanged();
                           NotificationService.Success($"歌单《{musicList.Name}》删除成功！");
                       } catch (Exception ex) {
                           LoggerService.Error($"删除歌单失败:\n{ex.Message}\n{ex.StackTrace}");
@@ -256,7 +257,10 @@ public partial class MusicListsManager : ObservableObject {
             return;
 
         try {
-            MusicListRepository.Instance.Update(musicList.Name, [nameof(musicList.Name)], [musicList.Name]);
+            await MusicListRepository.Instance.UpdateAsync(
+                                         (musicList.Name, musicList.Creator),
+                                         new Dictionary<string, object?> { [nameof(musicList.Name)] = musicList.Name })
+                                     .ConfigureAwait(false);
             musicList.Name = result;
 
             NotificationService.Success($"修改歌单 {musicList.Name}的名称成功了");
@@ -281,10 +285,12 @@ public partial class MusicListsManager : ObservableObject {
             return;
 
         try {
-            MusicListRepository.Instance.Update(
-                musicList.Name,
-                [nameof(musicList.Description)],
-                [musicList.Description]);
+            await MusicListRepository.Instance.UpdateAsync(
+                                         (musicList.Name, musicList.Creator),
+                                         new Dictionary<string, object?> {
+                                             [nameof(musicList.Description)] = musicList.Description
+                                         })
+                                     .ConfigureAwait(false);
 
             musicList.Name = result;
 
@@ -304,27 +310,15 @@ public partial class MusicListsManager : ObservableObject {
 
         var options = new OverlayDialogOptions { Title = "图片裁剪" };
 
-        var bitmap = await FileOperationService.OpenImageFile(App.TopLevel).ConfigureAwait(false);
-
-        if (bitmap == null)
+        if (await FileOperationService.OpenImageFile(App.TopLevel).ConfigureAwait(false) is not { } bitmap ||
+            await OverlayDialog.ShowCustomModal<ImageCropping, ImageCroppingViewModel, Bitmap>(
+                                   new ImageCroppingViewModel(bitmap),
+                                   options: options)
+                               .ConfigureAwait(false) is not { } newCover)
             return;
 
-        var newCover = await OverlayDialog.ShowCustomModal<ImageCropping, ImageCroppingViewModel, Bitmap>(
-                                              new ImageCroppingViewModel(bitmap),
-                                              options: options)
-                                          .ConfigureAwait(false);
+        musicList.Thumbnail = newCover;
 
-        if (newCover == null)
-            return;
-
-        musicList.CoverImage = newCover;
-
-        string coverFullPath = StaticConfig.GetMusicListCoverFullPath(musicList.Name);
-
-        if (await FileOperationService.SaveImageAsync(newCover, coverFullPath, true).ConfigureAwait(false)) {
-            NotificationService.Success($"修改歌单 {musicList.Name} 的图标成功啦~");
-        } else {
-            NotificationService.Error($"修改歌单 {musicList.Name} 的图标失败啦~");
-        }
+        await MusicListCoverRepository.Instance.InsertAsync(musicList).ConfigureAwait(false);
     }
 }

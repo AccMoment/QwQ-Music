@@ -14,9 +14,9 @@
         xmlns:u="https://irihi.tech/ursa"
         xmlns:viewModels="clr-namespace:QwQ_Music.ViewModels"
         xmlns:drawers="clr-namespace:QwQ_Music.Views.Drawers"
-        xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
-        xmlns:vm="clr-namespace:QwQ_Music.ViewModels.Drawers">
-    
+        xmlns:vm="clr-namespace:QwQ_Music.ViewModels.Drawers"
+        xmlns:customs="clr-namespace:QwQ_Music.Views.Customs">
+
     <!--
         亚克力效果
         Background="Transparent"
@@ -51,7 +51,7 @@
             </Style>
         </Style>
 
-        <Style Selector="userControls|MusicAlbumCover.AlbumCoverRotate">
+        <Style Selector="customs|MusicAlbumCover.AlbumCoverRotate">
             <Style.Animations>
                 <Animation Duration="0:0:15"
                            FillMode="Forward"
@@ -301,7 +301,7 @@
             <Panel.RenderTransform>
                 <TranslateTransform Y="{Binding MusicCoverPageYAxisOffset, Mode=OneWayToSource}" />
             </Panel.RenderTransform>
-        
+
             <Panel.Styles>
                 <Style Selector="Panel#MusicCoverPagePanel.Hide">
                     <Style.Animations>
@@ -316,7 +316,7 @@
                         </Animation>
                     </Style.Animations>
                 </Style>
-        
+
                 <Style Selector="Panel#MusicCoverPagePanel.Visible">
                     <Style.Animations>
                         <Animation Duration="0:0:0.25" FillMode="Forward">
@@ -330,68 +330,68 @@
                     </Style.Animations>
                 </Style>
             </Panel.Styles>
-        
+
             <ThemeVariantScope RequestedThemeVariant="{Binding MusicPlayerPanelThemeVariant}">
-        
+
                 <drawers:MusicPlayerPanel Name="MusicPlayerPanel" />
-        
+
             </ThemeVariantScope>
-        
+
         </Panel>
-        
+
         <Panel Grid.Row="1"
                DataContext="{Binding DrawerManager}"
-               Classes.Hide="{Binding !IsMusicPlayListVisible}"
+               Classes.Hide="{Binding !IsMusicPlaylistVisible}"
                Classes.Normal="{Binding !IsMusicPlayerPanelVisible}"
                Classes.Retract="{Binding IsMusicPlayerPanelVisible}"
-               Classes.Visible="{Binding IsMusicPlayListVisible}"
+               Classes.Visible="{Binding IsMusicPlaylistVisible}"
                HorizontalAlignment="Right"
                MaxWidth="400"
                MinWidth="250"
-               Name="MusicPlayListPanel"
-               Width="{Binding MusicPlayListWidth}">
-        
+               Name="MusicPlaylistPanel"
+               Width="{Binding MusicPlaylistWidth}">
+
             <Panel.RenderTransform>
-                <TranslateTransform X="{Binding MusicPlayListXAxisOffset, Mode=OneWayToSource}" />
+                <TranslateTransform X="{Binding MusicPlaylistXAxisOffset, Mode=OneWayToSource}" />
             </Panel.RenderTransform>
-        
+
             <Panel.Styles>
-        
-                <Style Selector="Panel#MusicPlayListPanel.Normal">
+
+                <Style Selector="Panel#MusicPlaylistPanel.Normal">
                     <Setter Property="Height" Value="{Binding MusicPlayerPanelHeight, Mode=OneWayToSource}" />
                 </Style>
-        
-                <Style Selector="Panel#MusicPlayListPanel.Retract">
+
+                <Style Selector="Panel#MusicPlaylistPanel.Retract">
                     <Setter Property="Height"
                             Value="{Binding MusicPlayerPanelHeight, Converter={StaticResource CalcConverter}, ConverterParameter='@VALUE - 150'}" />
                     <Setter Property="VerticalAlignment" Value="Top" />
                 </Style>
-        
-                <Style Selector="Panel#MusicPlayListPanel.Hide">
+
+                <Style Selector="Panel#MusicPlaylistPanel.Hide">
                     <Style.Animations>
                         <Animation
                             Duration="0:0:0.5"
                             Easing="QuadraticEaseOut"
                             FillMode="Forward">
                             <KeyFrame Cue="0%" KeySpline="0.62,0.63,0,1.13">
-                                <Setter Property="TranslateTransform.X" Value="{Binding MusicPlayListXAxisOffset}" />
+                                <Setter Property="TranslateTransform.X" Value="{Binding MusicPlaylistXAxisOffset}" />
                             </KeyFrame>
                             <KeyFrame Cue="100%" KeySpline="0.62,0.63,0,1.13">
                                 <Setter Property="TranslateTransform.X"
-                                        Value="{Binding #MusicPlayListPanel.Bounds.Width}" />
+                                        Value="{Binding #MusicPlaylistPanel.Bounds.Width}" />
                             </KeyFrame>
                         </Animation>
                     </Style.Animations>
                 </Style>
-        
-                <Style Selector="Panel#MusicPlayListPanel.Visible">
+
+                <Style Selector="Panel#MusicPlaylistPanel.Visible">
                     <Style.Animations>
                         <Animation
                             Duration="0:0:0.5"
                             Easing="QuadraticEaseIn"
                             FillMode="Forward">
                             <KeyFrame Cue="0%" KeySpline="0.62,0.63,0,1.13">
-                                <Setter Property="TranslateTransform.X" Value="{Binding MusicPlayListXAxisOffset}" />
+                                <Setter Property="TranslateTransform.X" Value="{Binding MusicPlaylistXAxisOffset}" />
                             </KeyFrame>
                             <KeyFrame Cue="100%" KeySpline="0.62,0.63,0,1.13">
                                 <Setter Property="TranslateTransform.X" Value="0" />
@@ -400,7 +400,7 @@
                     </Style.Animations>
                 </Style>
             </Panel.Styles>
-        
+
             <Panel.Transitions>
                 <Transitions>
                     <DoubleTransition Duration="0:0:0.5"
@@ -408,28 +408,28 @@
                                       Property="Width" />
                 </Transitions>
             </Panel.Transitions>
-        
+
             <Border CornerRadius="10"
                     Classes.NotTransparent="{Binding !IsMusicPlayerPanelVisible}"
                     Margin="5,5,10,20">
-        
+
                 <Border.Styles>
-        
+
                     <Style Selector="Border.NotTransparent">
                         <Setter Property="Effect" Value="{DynamicResource LightColor0DropShadowEffect}" />
                         <Setter Property="Background" Value="{DynamicResource BorderCardBackground}" />
                     </Style>
-        
+
                 </Border.Styles>
-        
-                <ThemeVariantScope RequestedThemeVariant="{Binding MusicPlayListThemeVariant}">
-        
-                    <drawers:MusicPlayList />
-        
+
+                <ThemeVariantScope RequestedThemeVariant="{Binding MusicPlaylistThemeVariant}">
+
+                    <drawers:MusicPlaylist />
+
                 </ThemeVariantScope>
-        
+
             </Border>
-        
+
         </Panel>
 
         <u:OverlayDialogHost Grid.Row="0" Grid.RowSpan="2" />

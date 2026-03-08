@@ -10,14 +10,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
         xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
         xmlns:vWindows="clr-namespace:QwQ_Music.Views.Windows"
         xmlns:vmWindows="clr-namespace:QwQ_Music.ViewModels.Windows"
+        xmlns:customs="clr-namespace:QwQ_Music.Views.Customs"
         mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="200"
         x:Class="QwQ_Music.Views.Windows.DesktopPlayControlWindow"
         x:DataType="vmWindows:DesktopPlayControlWindowViewModel"
-        Icon="res:QwQ_Music.Assets.EmbeddedRes.app-icon.ico"
+        Icon="resm:QwQ_Music.Assets.EmbeddedRes.AppIcon.ico"
         Title="QwQ Music • 播放控制">
 
     <Window.Styles>
@@ -113,7 +113,7 @@
                     </Button>
 
                     <!--  播放/暂停 按钮  -->
-                    <userControls:MusicPlayButton />
+                    <customs:MusicPlayButton />
 
                     <!--  下一首  -->
                     <Button
@@ -160,10 +160,10 @@
             <Button Classes="None"
                     Command="{Binding ShowMusicPlayerPageCommand}">
 
-                <userControls:MusicAlbumCover
+                <customs:MusicAlbumCover
                     IsAutoRoundedCorners="False"
                     CornerRadius="10"
-                    CoverImage="{Binding AudioPlayManager.CurrentMusicItem.Model.OriginalCover}" />
+                    Thumbnail="{Binding AudioPlayManager.CurrentMusicItem.Model.Cover}" />
             </Button>
 
         </StackPanel>

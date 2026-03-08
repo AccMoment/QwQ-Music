@@ -1,30 +1,81 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using QwQ_Music.Common.Managers;
-using QwQ_Music.Models.ConfigModels;
+using QwQ_Music.Common.Services;
+using QwQ_Music.Common.Services.Databases;
+using QwQ_Music.Common.Utilities.StringUtilities;
+using QwQ_Music.ViewModels.Bases;
 
 namespace QwQ_Music.Models;
 
-public partial class AlbumModel(string name, string artist, string? coverFileName = null) : ObservableObject {
-    public string Name { get; } = name;
+public partial class AlbumModel : MusicItemsViewModelBase {
+    private bool _isUpdating;
+    public bool IsLoaded { get; private set; }
+    public required string Name { get; init; }
 
-    public string Artist { get; } = artist;
+    public required string Artists { get; init; }
 
     [ObservableProperty]
     public partial string? Description { get; set; }
 
     [ObservableProperty]
-    public partial string? PublishTime { get; set; }
+    public partial DateTime? PublishTime { get; set; }
 
     [ObservableProperty]
     public partial string? Company { get; set; }
 
-    public Bitmap CoverImage =>
-        CacheManager.TryLoadCacheFromFile(
-            coverFileName,
-            "专辑",
-            "封面",
-            StaticConfig.GetMusicCoverFullPath(coverFileName),
-            () => OnPropertyChanged(),
-            Name);
+    public Bitmap Thumbnail =>
+        CacheManager.TryLoadCoverThumbnailAsync(
+                        $"{Name} - {Artists}",
+                        "专辑",
+                        "封面",
+                        AlbumThumbnailRepository.Instance,
+                        () => OnPropertyChanged())
+                    .ConfigureAwait(false)
+                    .GetAwaiter()
+                    .GetResult();
+
+    public async Task LoadCurrentAsync() {
+        Musics = (await MusicListItemsRepository.Instance.GetAllAsync((Name, Artists)).ConfigureAwait(false)).Paths
+            .Select(path => MusicItemsManager.All.MusicItems[path])
+            .ToList();
+        Cover = await MusicListCoverRepository.Instance.SingleAsync((Name, Artists)).ConfigureAwait(false) ??
+                CacheManager.NotExist;
+        IsLoaded = true;
+    }
+
+    public List<MusicItemModel>? Musics { get; private set; }
+    public Bitmap Cover { get; private set; } = CacheManager.Loading;
+
+    public void DisposeCurrent() {
+        IsLoaded = false;
+        Cover = CacheManager.Loading;
+        Musics = null;
+    }
+
+    public async Task UpdateAsync() {
+        if (!Interlocked.CompareExchange(ref _isUpdating, true, false)) {
+            await LoggerService.DebugAsync($"{Name} - {Artists}的更新正在进行。忽略额外的请求。 ").ConfigureAwait(false);
+            return;
+        }
+
+        try {
+            using var crawler = new NetEaseAlbumCrawler();
+            AlbumDetail detail = await crawler.GetAlbumDetailByNameAsync(Name, Artists).ConfigureAwait(false);
+            Description = StringCleaner.ToPlainText(detail.Description);
+            PublishTime = detail.PublishTime;
+            Company = detail.Company;
+        } catch (NetEaseAlbumCrawlerException ex) {
+            await LoggerService.ErrorAsync("爬虫异常", ex).ConfigureAwait(false);
+        } catch (Exception ex) {
+            await LoggerService.ErrorAsync("其他异常", ex).ConfigureAwait(false);
+        } finally {
+            _isUpdating = false;
+        }
+    }
 }

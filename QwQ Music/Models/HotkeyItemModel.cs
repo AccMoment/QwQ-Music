@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Avalonia.Collections;
 using Avalonia.Input;
 using CommunityToolkit.Mvvm.ComponentModel;

@@ -5,6 +5,7 @@
              xmlns:pageVms="clr-namespace:QwQ_Music.ViewModels.Pages"
              xmlns:u="https://irihi.tech/ursa"
              xmlns:pages="clr-namespace:QwQ_Music.Views.Pages"
+             xmlns:models="clr-namespace:QwQ_Music.Models"
              d:DesignHeight="450"
              d:DesignWidth="800"
              mc:Ignorable="d"
@@ -71,8 +72,8 @@
                 </CompositePageTransition>
             </Carousel.PageTransition>
 
-            <pages:MusicListClassPage PanelName="歌单" />
-            <pages:MusicListClassPage PanelName="专辑"/><!-- TODO i18n -->
+            <pages:MusicListDetailsPage />
+            <pages:AlbumClassPage/>
 
         </Carousel>
 

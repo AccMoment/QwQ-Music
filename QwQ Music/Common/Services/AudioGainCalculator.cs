@@ -13,18 +13,18 @@ using AudioFormat = SoundFlow.Structs.AudioFormat;
 
 namespace QwQ_Music.Common.Services;
 
-public class AudioGainCalculator : IDisposable
-{
+public class AudioGainCalculator : IDisposable {
     private const double DEFAULT_GAIN = 1.0;
 
-    private readonly MiniAudioEngine _engine = new();
+    private readonly MiniAudioEngine _engine =
+        Task.Run(() => new MiniAudioEngine()).ConfigureAwait(false).GetAwaiter().GetResult();
 
-    public async Task<double> CalculateGainAsync(MusicItemModel item, MusicReplayGainStandard standard, double customTargetLufs)
-    {
-        try
-        {
-            if (!File.Exists(item.FilePath))
-            {
+    public async Task<double> CalculateGainAsync(
+        MusicItemModel item,
+        MusicReplayGainStandard standard,
+        double customTargetLufs) {
+        try {
+            if (!File.Exists(item.FilePath)) {
                 NotificationService.Error($"文件未找到: {item.FilePath}");
 
                 return DEFAULT_GAIN;
@@ -32,8 +32,7 @@ public class AudioGainCalculator : IDisposable
 
             await using var audioStream = await GetAudioStreamAsync(item);
 
-            if (audioStream == null)
-            {
+            if (audioStream == null) {
                 NotificationService.Error($"从文件中解析音频流失败！《{item.Title}》使用默认增益值: {DEFAULT_GAIN}");
 
                 return DEFAULT_GAIN;
@@ -43,8 +42,7 @@ public class AudioGainCalculator : IDisposable
             int sampleRate = (int)track.SampleRate;
             int channels = track.ChannelsArrangement.NbChannels;
 
-            if (sampleRate <= 0 || channels <= 0)
-            {
+            if (sampleRate <= 0 || channels <= 0) {
                 NotificationService.Error($"音频元数据无效！《{item.Title}》使用默认增益值: {DEFAULT_GAIN}");
 
                 return DEFAULT_GAIN;
@@ -52,51 +50,37 @@ public class AudioGainCalculator : IDisposable
 
             var audioBlocks = ReadAudioBlocks(audioStream, sampleRate, channels);
 
-            return ReplayGainCalculator.CalculateGain(
-                audioBlocks,
-                sampleRate,
-                channels,
-                standard,
-                customTargetLufs
-            );
-        }
-        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException or InvalidOperationException)
-        {
+            return ReplayGainCalculator.CalculateGain(audioBlocks, sampleRate, channels, standard, customTargetLufs);
+        } catch (Exception ex) when (ex is UnauthorizedAccessException or IOException or InvalidOperationException) {
             NotificationService.Error($"处理音频文件时出错: {ex.Message}");
 
             return DEFAULT_GAIN;
         }
     }
 
-    private static async Task<Stream?> GetAudioStreamAsync(MusicItemModel item)
-    {
+    private static async Task<Stream?> GetAudioStreamAsync(MusicItemModel item) {
         string extension = Path.GetExtension(item.FilePath).ToUpperInvariant();
 
-        if (extension == AudioFileValidator.AudioFormatsExtendToNameMap[AudioFileValidator.ExtendAudioFormats.Ncm])
-        {
+        if (extension == AudioFileValidator.AudioFormatsExtendToNameMap[AudioFileValidator.ExtendAudioFormats.Ncm]) {
             var crypt = new NeteaseCrypt(item.FilePath);
 
-            return await crypt.DumpToStreamAsync(); // caller disposes
+            return await crypt.DumpToStreamAsync().ConfigureAwait(false); // caller disposes
         }
 
         return File.OpenRead(item.FilePath); // caller disposes
     }
 
-    private IEnumerable<float[]> ReadAudioBlocks(Stream stream, int sampleRate, int channels)
-    {
-        using var reader = new StreamDataProvider(_engine, new AudioFormat
-        {
-            Format = SampleFormat.F32,
-            SampleRate = sampleRate,
-            Channels = channels
-        }, stream);
+    private IEnumerable<float[]> ReadAudioBlocks(Stream stream, int sampleRate, int channels) {
+        using var reader = new StreamDataProvider(
+            _engine,
+            new AudioFormat { Format = SampleFormat.F32, SampleRate = sampleRate, Channels = channels },
+            stream);
 
         float[] buffer = new float[sampleRate * channels]; // 1秒缓冲
 
         int samplesRead;
 
-        while ((samplesRead = reader.ReadBytes(buffer)) > 0)
-        {
+        while ((samplesRead = reader.ReadBytes(buffer)) > 0) {
             float[] actualBuffer = new float[samplesRead];
             Array.Copy(buffer, actualBuffer, samplesRead);
 
@@ -104,8 +88,7 @@ public class AudioGainCalculator : IDisposable
         }
     }
 
-    public void Dispose()
-    {
+    public void Dispose() {
         _engine.Dispose();
         GC.SuppressFinalize(this);
     }

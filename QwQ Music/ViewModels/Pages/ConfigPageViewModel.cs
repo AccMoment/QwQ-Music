@@ -3,12 +3,11 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
-using QwQ_Music.Models;
 using QwQ_Music.ViewModels.Bases;
 
 namespace QwQ_Music.ViewModels.Pages;
 
-using static LanguageModel;
+using static I18NService;
 
 public partial class ConfigPageViewModel() : NavigationViewModel("设置")
 {

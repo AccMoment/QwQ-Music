@@ -25,7 +25,7 @@ public class App : Application
         AvaloniaXamlLoader.Load(this);
         
 #if DEBUG
-        // this.AttachDeveloperTools(); //TODO
+        this.AttachDeveloperTools();
 #endif
         
         AppResources.Default.Initialize();
@@ -102,7 +102,7 @@ public class App : Application
             Dispatcher.UIThread.Post(() => ShowExceptionOverlay(fullMessage));
         }
 
-        LoggerService.Fatal(fullMessage);
+        LoggerService.Error(fullMessage);
     }
     
     /*

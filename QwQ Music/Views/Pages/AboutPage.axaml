@@ -96,8 +96,7 @@
                         <Border CornerRadius="40"
                                 ClipToBounds="True">
 
-                            <Image
-                                Source="resm:QwQ_Music.Assets.EmbeddedRes.app-icon.ico" />
+                            <Image Source="resm:QwQ_Music.Assets.EmbeddedRes.AppIcon.ico" />
                         </Border>
                     </Button>
 

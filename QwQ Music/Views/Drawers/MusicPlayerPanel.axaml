@@ -3,10 +3,10 @@
       x:DataType="drawers:MusicCoverPageViewModel"
       xmlns="https://github.com/avaloniaui"
       xmlns:u="https://irihi.tech/ursa"
-      xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:controls="clr-namespace:QwQ_Music.UI.Controls"
       xmlns:drawers="clr-namespace:QwQ_Music.ViewModels.Drawers"
+      xmlns:customs="clr-namespace:QwQ_Music.Views.Customs"
       Background="Transparent">
 
     <!--  内容层  -->
@@ -45,9 +45,9 @@
     </Grid.Styles>
 
     <controls:ShaderEffectControl Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" Grid.ColumnSpan="2"
-                                  Colors="{Binding ColorsList}"
+                                  Colors="{Binding Colors}"
                                   IsEnableAnimation="{Binding DrawerManager.IsMusicPlayerPanelVisible}"
-                                  PerformanceMode="HighQuality"
+                                  PerformanceMode="Balanced"
                                   ShaderCode="{Binding ShaderCode}" />
 
     <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Name="TopPanel" Background="Transparent">
@@ -71,7 +71,7 @@
                 HorizontalAlignment="Center">
             <Border ClipToBounds="True" CornerRadius="20">
                 <!--  专辑封面 Image 控件  -->
-                <Image Source="{Binding AudioPlayManager.CurrentMusicItem.Model.OriginalCover}" />
+                <Image Source="{Binding AudioPlayManager.CurrentMusicItem.Model.Cover}" />
             </Border>
         </Border>
 
@@ -128,7 +128,7 @@
     <controls:SpectrumVisualizerControl x:Name="SpectrumVisualizer"
                                         Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
                                         LineBrush="{Binding SpectrumVisualizerBrush}"
-                                        Margin="20"
+                                        Margin="20 -20 20 20"
                                         Classes="Hide"
                                         LineThickness="{Binding SpectrumConfig.LineThickness}"
                                         AmplitudeScale="{Binding SpectrumConfig.AmplitudeScale}"
@@ -178,7 +178,7 @@
         </Grid.Styles>
 
         <!--  播放控制  -->
-        <userControls:MusicPlayControllers Grid.Column="1" Spacing="30" />
+        <customs:MusicPlayControllers Grid.Column="1" Spacing="30" />
 
         <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3">
 

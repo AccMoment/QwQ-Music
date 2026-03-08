@@ -15,7 +15,7 @@ public partial class DrawerManager : ObservableObject {
     public partial double MusicPlayerTrayYAxisOffset { get; set; }
 
     [ObservableProperty]
-    public partial double MusicPlayListXAxisOffset { get; set; }
+    public partial double MusicPlaylistXAxisOffset { get; set; }
 
     [ObservableProperty]
     public partial double MusicAlbumCoverPanelXAxisOffset { get; set; }
@@ -24,7 +24,7 @@ public partial class DrawerManager : ObservableObject {
     public partial double MusicCoverPageYAxisOffset { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(MusicPlayerTrayWidth), nameof(MusicPlayListWidth))]
+    [NotifyPropertyChangedFor(nameof(MusicPlayerTrayWidth), nameof(MusicPlaylistWidth))]
     public partial int WindowWidth { get; set; }
 
     [ObservableProperty]
@@ -33,7 +33,7 @@ public partial class DrawerManager : ObservableObject {
 
     public int MusicPlayerTrayWidth => WindowWidth / 2;
 
-    public int MusicPlayListWidth => IsMusicPlayListVisible ? WindowWidth / 4 : 0;
+    public int MusicPlaylistWidth => IsMusicPlaylistVisible ? WindowWidth / 4 : 0;
 
     public int MusicPlayerPanelHeight => IsMusicPlayerPanelVisible ? WindowHeight : 0;
 
@@ -41,8 +41,8 @@ public partial class DrawerManager : ObservableObject {
     public partial bool IsMusicPlayerTrayVisible { get; set; } = true;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(MusicPlayListWidth))]
-    public partial bool IsMusicPlayListVisible { get; set; }
+    [NotifyPropertyChangedFor(nameof(MusicPlaylistWidth))]
+    public partial bool IsMusicPlaylistVisible { get; set; }
 
     public bool IsMusicPlayerPanelVisible {
         get;
@@ -56,7 +56,7 @@ public partial class DrawerManager : ObservableObject {
 
             if (field) {
                 brush = MusicPlayerPanelThemeVariant == "Light" ? Brushes.DimGray : Brushes.GhostWhite;
-                MusicPlayListThemeVariant = MusicPlayerPanelThemeVariant;
+                MusicPlaylistThemeVariant = MusicPlayerPanelThemeVariant;
             } else {
                 if (ConfigManager.UiConfig.ThemeConfig.Theme == "Default") {
                     var color = ResourceAccessor.Get<Color>("SemiGrey0Color");
@@ -66,7 +66,7 @@ public partial class DrawerManager : ObservableObject {
                     brush = ConfigManager.UiConfig.ThemeConfig.Theme == "Light" ? Brushes.DimGray : Brushes.GhostWhite;
                 }
 
-                MusicPlayListThemeVariant = ConfigManager.UiConfig.ThemeConfig.Theme;
+                MusicPlaylistThemeVariant = ConfigManager.UiConfig.ThemeConfig.Theme;
             }
 
             ResourceAccessor.Set("CaptionButtonForeground", brush);
@@ -82,7 +82,7 @@ public partial class DrawerManager : ObservableObject {
             if (!IsMusicPlayerPanelVisible)
                 return;
 
-            MusicPlayListThemeVariant = field;
+            MusicPlaylistThemeVariant = field;
 
             Dispatcher.UIThread.Post(() => {
                 ResourceAccessor.Set(
@@ -95,7 +95,7 @@ public partial class DrawerManager : ObservableObject {
     } = "Default";
 
     [ObservableProperty]
-    public partial string MusicPlayListThemeVariant { set; get; } = "Default";
+    public partial string MusicPlaylistThemeVariant { set; get; } = "Default";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NavigationWidth), nameof(IsMusicAlbumCoverTrayVisible))]
@@ -110,7 +110,7 @@ public partial class DrawerManager : ObservableObject {
     public double NavigationWidth => IsNavigationExpand ? 130 : 55;
 
     [RelayCommand]
-    private void ShowMusicPlaylist() { IsMusicPlayListVisible = !IsMusicPlayListVisible; }
+    private void ToggleMusicPlaylist() { IsMusicPlaylistVisible = !IsMusicPlaylistVisible; }
 
     [RelayCommand]
     private void ToggleMusicPlayerPage() { IsMusicPlayerPanelVisible = !IsMusicPlayerPanelVisible; }

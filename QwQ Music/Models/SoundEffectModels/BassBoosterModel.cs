@@ -19,8 +19,8 @@ public class BassBoosterModel : ObservableObject, ISoundModifierModel<BassBooste
 
     public void Initialize(AudioFormat audioFormat) {
         var modifier = new BassBoosterModifier(audioFormat) { Cutoff = Cutoff, 
-            // BoostGainDb = BoostGainDb
-            BoostGain = BoostGainDb
+            BoostGainDb = BoostGainDb
+            // BoostGain = BoostGainDb
         };
 
         Modifier = modifier;
@@ -56,8 +56,8 @@ public class BassBoosterModel : ObservableObject, ISoundModifierModel<BassBooste
         get;
         set {
             if (SetProperty(ref field, value)) {
-                Modifier?.BoostGain = value;
-                // Modifier?.BoostGainDb = value;
+                // Modifier?.BoostGain = value;
+                Modifier?.BoostGainDb = value;
             }
         }
     }

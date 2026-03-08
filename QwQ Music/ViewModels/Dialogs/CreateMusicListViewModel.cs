@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Irihi.Avalonia.Shared.Contracts;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
+using QwQ_Music.Common.Services.Databases;
 using QwQ_Music.Models;
 using QwQ_Music.ViewModels.Bases;
 using QwQ_Music.Views.Dialogs;
@@ -62,7 +62,7 @@ public partial class CreateMusicListViewModel : DataVerifyModelBase, IDialogCont
     }
 
     public MusicListModel CreateMusicListModel() {
-        var model = new MusicListModel { CoverImage = Cover, Name = Name };
+        var model = MusicListModel.Create(Name, Cover);
 
         if (Description != null) {
             model.Description = Description;
@@ -74,13 +74,18 @@ public partial class CreateMusicListViewModel : DataVerifyModelBase, IDialogCont
     #region 数据校验
 
     private bool ValidateName(string? value) {
-        var errors = new List<string>();
+        if (string.IsNullOrWhiteSpace(value)) {
+            SetErrors(nameof(Name), "名称不可以为空");
+            return false;
+        }
 
-        if (string.IsNullOrWhiteSpace(value))
-            errors.Add("名称不可以为空");
+        if (MusicListRepository.Instance.ExistsAsync((value, "_QWQ_LOCAL_USER")).ConfigureAwait(false).GetAwaiter().GetResult()) {
+            SetErrors(nameof(Name), "该名称已存在");
+            return false;
+        }
 
-        SetErrors(nameof(Name), errors);
-        return errors.Count == 0;
+        ClearErrors(nameof(Name));
+        return true;
     }
 
     private void InitialValidate() { ValidateName(Name); }

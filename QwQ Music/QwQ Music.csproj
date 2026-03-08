@@ -3,22 +3,29 @@
         <OutputType>WinExe</OutputType>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+        <!--        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>-->
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <TargetFrameworks>net10.0-windows10.0.19041.0;net10.0</TargetFrameworks>
         <LangVersion>preview</LangVersion>
         <ImplicitUsings>disable</ImplicitUsings>
         <ApplicationIcon>Assets\EmbeddedRes\AppIcon.ico</ApplicationIcon>
+        <PublishTrimmed>true</PublishTrimmed>
+        <TrimmerSingleWarn>false</TrimmerSingleWarn>
+        <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
         <Version>2.0.0-alpha</Version>
+        <PublishAot>true</PublishAot>
+        <TrimMode>link</TrimMode>
+        <EnableSourceLink>false</EnableSourceLink>
         <!--        
-                <PublishAot>true</PublishAot>
-                <TrimMode>link</TrimMode>
-                <EnableSourceLink>false</EnableSourceLink>
                 -->
     </PropertyGroup>
     <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">
         <DefineConstants>_WIN_NT</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <DebugSymbols>false</DebugSymbols>
+        <DebugType>none</DebugType>
     </PropertyGroup>
     <ItemGroup>
         <AvaloniaResource Include="Assets\AvaloniaRes\**"/>
@@ -26,31 +33,31 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.3.10" />
-        <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.10" />
-        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.10" />
-        <PackageReference Include="Avalonia.Desktop" Version="11.3.10" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.10" />
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.10"/>
+        <PackageReference Include="Avalonia" Version="11.3.12" />
+        <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.12" />
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.12" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.12" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.12" />
+        <!--        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.11" />-->
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-<!--        <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.1.1">-->
-<!--            <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>-->
-<!--            <PrivateAssets Condition="'$(Configuration)' == 'Debug'">All</PrivateAssets>-->
-<!--        </PackageReference>-->
+        <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.1.1">
+            <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+            <PrivateAssets Condition="'$(Configuration)' == 'Debug'">All</PrivateAssets>
+        </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0"/>
-        <PackageReference Include="Irihi.Ursa" Version="1.14.0" />
-        <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.14.0" />
+        <PackageReference Include="Irihi.Ursa" Version="1.15.0" />
+        <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.15.0" />
         <PackageReference Include="managed-midi" Version="1.10.1"/>
         <PackageReference Include="QwQ.Avalonia.Control" Version="0.1.7.3"/>
-        <PackageReference Include="Semi.Avalonia" Version="11.3.7.1" />
-        <PackageReference Include="Semi.Avalonia.ColorPicker" Version="11.3.7.1" />
-        <PackageReference Include="Semi.Avalonia.DataGrid" Version="11.3.7.1" />
-        <PackageReference Include="SkiaSharp" Version="3.119.2-preview.1"/>
-        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
-        <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.2-preview.1"/>
-        <PackageReference Include="SoundFlow" Version="1.2.1" />
-        <PackageReference Include="Xaml.Behaviors.Avalonia" Version="11.3.9" />
-        <PackageReference Include="z440.atl.core" Version="7.9.0" />
+        <PackageReference Include="Semi.Avalonia" Version="11.3.7.3" />
+        <PackageReference Include="Semi.Avalonia.ColorPicker" Version="11.3.7.3" />
+        <PackageReference Include="Semi.Avalonia.DataGrid" Version="11.3.7.3" />
+        <PackageReference Include="SkiaSharp" Version="3.119.2" />
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.3" />
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.2" />
+        <PackageReference Include="SoundFlow" Version="1.4.0"/>
+        <PackageReference Include="Xaml.Behaviors.Avalonia" Version="11.3.9.5" />
+        <PackageReference Include="z440.atl.core" Version="7.11.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -68,9 +75,6 @@
             <DependentUpon>DesktopLyricsWindow.axaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
-        <Compile Update="Views\Panels\MusicListPanel.cs">
-            <DependentUpon>MusicListPanel.axaml</DependentUpon>
-        </Compile>
         <Compile Update="Views\UserControls\PlaylistAlbumCoverButton.axaml.cs">
             <DependentUpon>PlaylistAlbumCoverButton.axaml</DependentUpon>
             <SubType>Code</SubType>
@@ -81,6 +85,17 @@
         <Compile Update="Views\UserControls\MusicInfoHeader.axaml.cs">
             <DependentUpon>MusicInfoHeader.axaml</DependentUpon>
             <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\UserControls\MusicListDataGrid.axaml.cs">
+            <DependentUpon>MusicListDataGrid.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Pages\MusicListPage.cs">
+            <DependentUpon>MusicListPage.axaml</DependentUpon>
+        </Compile>
+        <Compile Update="Views\Customs\PlaylistAlbumCoverButton.axaml.cs">
+          <DependentUpon>PlaylistAlbumCoverButton.axaml</DependentUpon>
+          <SubType>Code</SubType>
         </Compile>
     </ItemGroup>
 

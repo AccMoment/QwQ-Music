@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using ATL;
 using Avalonia.Collections;
 using CommunityToolkit.Mvvm.Input;
@@ -16,7 +15,7 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
 
     public AudioDetailedInfoViewModel(MusicItemModel musicItem, Track? track) {
         _musicItem = musicItem;
-        _track = track;
+        _track = track ?? musicItem.GetTrackAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         MusicInfoGroups = [];
 
         InitializeMusicInfo();
@@ -65,10 +64,10 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
 
     private static string GetCodecFamilyDescription(int codecFamily) {
         return codecFamily switch {
-            0 => "流式传输，有损数据",
-            1 => "流式传输，无损数据",
-            2 => "带嵌入式音源库的序列化",
-            3 => "带编解码器或硬件相关音源库的序列化",
+            0 => "流式 有损",
+            1 => "流式 无损",
+            2 => "序列化 嵌入式音源库",
+            3 => "序列化 编解码器/硬件相关音源库",
             _ => "未知"
         };
     }
@@ -94,7 +93,7 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
         AddInfo(items, "标题", _track?.Title);
         AddInfo(items, "艺术家", _track?.Artist ?? _musicItem.Artists);
         AddInfo(items, "专辑", _track?.Album ?? _musicItem.Album);
-        AddInfo(items, "专辑艺术家", _track?.AlbumArtist ?? _musicItem.AlbumArtist);
+        AddInfo(items, "专辑艺术家", _track?.AlbumArtist ?? _musicItem.AlbumArtists);
         AddInfo(items, "作曲", _track?.Composer ?? _musicItem.Composer ?? "未知");
         AddInfo(items, "指挥", _track?.Conductor);
         AddInfo(items, "词作者", _track?.Lyricist);
@@ -137,14 +136,15 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
     private void AddDatesGroup() {
         var items = new AvaloniaList<MusicInfoKeyValuePair>();
 
-        if (_track?.Date != null && _track.Date > DateTime.MinValue)
-            AddInfo(items, "录制日期", _track.Date.Value.ToString("yyyy-MM-dd HH:mm:ss"));
-
         if (_track?.Year is > 0)
             AddInfo(items, "录制年份", _track.Year.ToString());
 
-        if (_track?.OriginalReleaseDate != null && _track.OriginalReleaseDate > DateTime.MinValue)
-            AddInfo(items, "原始发行日期", _track.OriginalReleaseDate.Value.ToString("yyyy-MM-dd HH:mm:ss"));
+        if (_track?.Date?.ToString("MM/dd HH:mm:ss") is { } date and not "01/01 00:00:00" &&
+            _track.Date > DateTime.MinValue)
+            AddInfo(items, "录制日期", date);
+
+        if (_track?.OriginalReleaseDate is not null && _track.OriginalReleaseDate > DateTime.MinValue)
+            AddInfo(items, "原始发行日期", _track.OriginalReleaseDate?.ToString("yyyy-MM-dd HH:mm:ss"));
 
         if (_track?.OriginalReleaseYear is > 0)
             AddInfo(items, "原始发行年份", _track.OriginalReleaseYear.ToString());
@@ -237,13 +237,19 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
         var items = new AvaloniaList<MusicInfoKeyValuePair>();
 
         AddInfo(items, "音频格式", _track?.AudioFormat?.Name ?? "未知");
-        AddInfo(items, "时长", _musicItem.Duration.ToString(@"hh\:mm\:ss"));
-        AddInfo(items, "持续时间 (毫秒)", FormatValue(_track?.DurationMs, "ms"));
+        AddInfo(items, "时长", $@"{_musicItem.Duration:hh\:mm\:ss} ({FormatValue(_track?.DurationMs, "ms")})");
         AddInfo(items, "比特率", FormatValue(_track?.Bitrate, "kbps"));
         AddInfo(items, "可变比特率", _track?.IsVBR == true ? "是" : "否");
         AddInfo(items, "采样率", FormatValue(_track?.SampleRate, "Hz"));
-        AddInfo(items, "位深度", FormatValue(_track?.BitDepth, "bit"));
-        AddInfo(items, "声道数", _track?.ChannelsArrangement?.NbChannels.ToString());
+        AddInfo(
+            items,
+            "位深度",
+            _track?.BitDepth == -1 ? I18NService.Lang["Not Applicable"] : FormatValue(_track?.BitDepth, "bit"));
+
+        AddInfo(
+            items,
+            "声道数",
+            $"{_track?.ChannelsArrangement?.NbChannels} ({_track?.ChannelsArrangement?.Description})");
         AddInfo(items, "编解码器族", GetCodecFamilyDescription(_track?.CodecFamily ?? -1));
 
         if (items.Count > 0) {

@@ -11,6 +11,10 @@ using QwQ_Music.ViewModels.Bases;
 namespace QwQ_Music.ViewModels.Drawers;
 
 public partial class MusicPlaylistViewModel : ViewModelBase {
+    public static DrawerManager DrawerManager => DrawerManager.Instance;
+    public static PlaylistManager PlaylistManager => PlaylistManager.Instance;
+    public static AudioPlayManager AudioPlayManager => AudioPlayManager.Instance;
+    public static MusicItemsManager MusicItemsManager => MusicItemsManager.All;
     public AvaloniaList<PlaylistItemModel> MusicList => PlaylistManager.Instance.ActualPlaylist;
 
     public List<PlaylistItemModel> SelectedItems { get; set; } = [];
@@ -18,7 +22,7 @@ public partial class MusicPlaylistViewModel : ViewModelBase {
     [RelayCommand]
     private void Remove(IList items) {
         var musicItems = items.Cast<PlaylistItemModel>().ToList();
-        PlaylistManager.Instance.RemoveRange(musicItems);
+        PlaylistManager.Instance.Remove(musicItems);
     }
 
     [RelayCommand]
@@ -33,7 +37,8 @@ public partial class MusicPlaylistViewModel : ViewModelBase {
     }
 
     [RelayCommand]
-    private void ScrollToCurrent() { 
-        
+    public static void ScrollToCurrent(ListBox listbox) {
+        listbox.SelectedItem = AudioPlayManager.Instance.CurrentMusicItem;
+        listbox.ScrollIntoView(AudioPlayManager.Instance.CurrentMusicItem);
     }
 }

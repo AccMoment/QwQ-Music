@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,10 +24,7 @@ public static class AudioFileService {
         NotificationService.Info("提示", "开始导入中，请稍等....！");
 
         var allFilePaths = FileOperationService.GetAllFilePaths(paths);
-        var musicItems = await ImportMusicFilesAsync(allFilePaths).ConfigureAwait(false);
-
-        if (musicItems == null || musicItems.Count == 0)
-            return;
+        var musicItems = ImportMusicFilesAsync(allFilePaths);
 
         await MusicItemsManager.All.AddAsync(musicItems).ConfigureAwait(false);
     }
@@ -38,24 +34,20 @@ public static class AudioFileService {
     /// </summary>
     /// <param name="filePaths">要导入的文件路径列表</param>
     /// <returns>导入的音乐文件信息</returns>
-    private static async Task<List<MusicItemModel>?> ImportMusicFilesAsync(IReadOnlyList<string> filePaths) {
+    private static async IAsyncEnumerable<MusicItemModel> ImportMusicFilesAsync(IReadOnlyList<string> filePaths) {
         // 过滤出音频文件
-        var audioFilePaths = await Task.Run(() => AudioFileValidator.FilterAudioFiles(filePaths)).ConfigureAwait(false);
+        string[] audioFilePaths = AudioFileValidator.FilterAudioFiles(filePaths).ToArray();
 
-        if (audioFilePaths == null || audioFilePaths.Count == 0) {
+        if (audioFilePaths.Length == 0) {
             NotificationService.Info("提示", "没有找到可导入的音频文件！");
 
-            return null;
+            yield break;
         }
 
-        // 预加载现有路径集合
-        var existingPaths = new HashSet<string?>(
-            MusicItemsManager.All.MusicItems.Keys,
-            StringComparer.OrdinalIgnoreCase);
-
         // 过滤掉已存在的路径
-        var newFilePaths = audioFilePaths.Where(path => !existingPaths.Contains(path)).ToList();
-        var existingFilePaths = audioFilePaths.Except(newFilePaths).ToList();
+        var existingFilePaths =
+            audioFilePaths.Where(path => MusicItemsManager.All.MusicItems.ContainsKey(path)).ToList();
+        var newFilePaths = audioFilePaths.Except(existingFilePaths);
 
         // 如果有已存在的文件，显示提示
         if (existingFilePaths.Count > 0) {
@@ -66,15 +58,9 @@ public static class AudioFileService {
             NotificationService.Info($"歌曲{existingTitles}已存在于音乐库中！");
         }
 
-        if (newFilePaths.Count == 0)
-            return null;
-
-        // 并行提取音乐信息
-        return newFilePaths.Select(path => {
-                               var model = new MusicItemModel { FilePath = path };
-                               model.UpdateMetaDataAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-                               return model;
-                           })
-                           .ToList();
+        foreach (MusicItemModel model in newFilePaths.Select(path => new MusicItemModel { FilePath = path })) {
+            await model.UpdateMetaDataAsync().ConfigureAwait(false);
+            yield return model;
+        }
     }
 }

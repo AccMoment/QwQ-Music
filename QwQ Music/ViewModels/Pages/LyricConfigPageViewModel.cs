@@ -9,32 +9,28 @@ using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels.Bases;
 using QwQ_Music.ViewModels.Windows;
 using QwQ_Music.Views.Windows;
-using static QwQ_Music.Models.LanguageModel;
+using static QwQ_Music.Common.Services.I18NService;
 
 namespace QwQ_Music.ViewModels.Pages;
 
-public partial class LyricConfigPageViewModel : ViewModelBase
-{
+public partial class LyricConfigPageViewModel : ViewModelBase {
     private DesktopLyricsWindow? _desktopLyricsWindow;
 
-    public LyricConfigPageViewModel()
-    {
+    public LyricConfigPageViewModel() {
         ToggleWindowDisplayStatus(LyricIsEnabled);
         ToggleDesktopPlayControlService(DesktopPlayControlIsEnabled);
         OnPropertyChanged(nameof(LyricWidth));
         SetLyricsWindowWidth(LyricConfig.DesktopLyric.LyricIsDoubleLine);
-        
+
         AppDomain.CurrentDomain.ProcessExit += CurrentDomainOnProcessExit;
     }
 
-    private void CurrentDomainOnProcessExit(object? sender, EventArgs e)
-    {
+    private void CurrentDomainOnProcessExit(object? sender, EventArgs e) {
         AppDomain.CurrentDomain.ProcessExit -= CurrentDomainOnProcessExit;
-        Dispatcher.UIThread.Post(() =>
-        {
+        Dispatcher.UIThread.Post(() => {
             CloseLyricWindow();
             DesktopPlayControlService.Stop();
-        }); 
+        });
     }
 
     #region 多语言
@@ -64,14 +60,12 @@ public partial class LyricConfigPageViewModel : ViewModelBase
     public static string LyricAltBottomColorName => Lang[nameof(LyricAltBottomColorName)];
 
     public static string LyricAltBorderColorName => Lang[nameof(LyricAltBorderColorName)];
-    
+
     #endregion
-    
-    public bool LyricIsEnabled
-    {
+
+    public bool LyricIsEnabled {
         get => LyricConfig.DesktopLyric.LyricIsEnabled;
-        set
-        {
+        set {
             if (LyricIsEnabled == value)
                 return;
 
@@ -82,12 +76,22 @@ public partial class LyricConfigPageViewModel : ViewModelBase
         }
     }
 
-    public bool DesktopPlayControlIsEnabled
-    {
+    public bool LyricIsDualLang {
+        get => LyricConfig.DesktopLyric.LyricIsDualLang;
+        set {
+            if (LyricIsDualLang == value)
+                return;
+
+            LyricConfig.DesktopLyric.LyricIsDualLang = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool DesktopPlayControlIsEnabled {
         get => LyricConfig.DesktopLyric.DesktopPlayControlIsEnabled;
-        set
-        {
-            if (DesktopPlayControlIsEnabled == value) return;
+        set {
+            if (DesktopPlayControlIsEnabled == value)
+                return;
 
             LyricConfig.DesktopLyric.DesktopPlayControlIsEnabled = value;
             OnPropertyChanged();
@@ -96,24 +100,18 @@ public partial class LyricConfigPageViewModel : ViewModelBase
         }
     }
 
-    private static void ToggleDesktopPlayControlService(bool value)
-    {
-        if (value)
-        {
+    private static void ToggleDesktopPlayControlService(bool value) {
+        if (value) {
             // 启动桌面播放控制服务
             DesktopPlayControlService.Start();
-        }
-        else
-        {
+        } else {
             DesktopPlayControlService.Stop();
         }
     }
 
-    public bool LockLyricWindow
-    {
+    public bool LockLyricWindow {
         get => LyricConfig.DesktopLyric.LockLyricWindow;
-        set
-        {
+        set {
             if (LockLyricWindow == value)
                 return;
 
@@ -122,11 +120,9 @@ public partial class LyricConfigPageViewModel : ViewModelBase
         }
     }
 
-    public double LyricWidth
-    {
+    public double LyricWidth {
         get => LyricConfig.DesktopLyric.LyricWidth;
-        set
-        {
+        set {
             LyricConfig.DesktopLyric.LyricWidth = value;
 
             SetLyricsWindowWidth(LyricConfig.DesktopLyric.LyricIsDoubleLine);
@@ -136,11 +132,9 @@ public partial class LyricConfigPageViewModel : ViewModelBase
     private static double LyricWidowWidth =>
         LyricConfig.DesktopLyric.LyricWidth + LyricConfig.DesktopLyric.LyricSpacing * 2;
 
-    public bool LyricIsDoubleLine
-    {
+    public bool LyricIsDoubleLine {
         get => LyricConfig.DesktopLyric.LyricIsDoubleLine;
-        set
-        {
+        set {
             if (LyricIsDoubleLine == value)
                 return;
 
@@ -152,20 +146,15 @@ public partial class LyricConfigPageViewModel : ViewModelBase
 
     public static LyricConfig LyricConfig { get; } = ConfigManager.LyricConfig;
 
-    private void ToggleWindowDisplayStatus(bool value)
-    {
-        if (value)
-        {
+    private void ToggleWindowDisplayStatus(bool value) {
+        if (value) {
             ShowLyricWindow();
-        }
-        else
-        {
+        } else {
             CloseLyricWindow();
         }
     }
 
-    private void SetLyricsWindowWidth(bool value)
-    {
+    private void SetLyricsWindowWidth(bool value) {
         if (_desktopLyricsWindow == null)
             return;
 
@@ -175,8 +164,7 @@ public partial class LyricConfigPageViewModel : ViewModelBase
         // 计算当前窗口中心位置（使用浮点数避免精度丢失）
         var currentCenter = new Point(
             _desktopLyricsWindow.Position.X + _desktopLyricsWindow.Width * scaling / 2,
-            _desktopLyricsWindow.Position.Y + _desktopLyricsWindow.Height * scaling / 2
-        );
+            _desktopLyricsWindow.Position.Y + _desktopLyricsWindow.Height * scaling / 2);
 
         // 调整窗口宽度
         double newWidth = value ? LyricWidowWidth : LyricWidowWidth * 2;
@@ -185,42 +173,33 @@ public partial class LyricConfigPageViewModel : ViewModelBase
         // 重新计算位置，保持中心点不变（考虑缩放）
         var newPosition = new PixelPoint(
             (int)(currentCenter.X - newWidth * scaling / 2),
-            (int)(currentCenter.Y - _desktopLyricsWindow.Height * scaling / 2)
-        );
+            (int)(currentCenter.Y - _desktopLyricsWindow.Height * scaling / 2));
 
         _desktopLyricsWindow.Position = newPosition;
     }
 
-    private void ShowLyricWindow()
-    {
-        _desktopLyricsWindow = new DesktopLyricsWindow
-        {
-            DataContext = new DesktopLyricsWindowViewModel(),
-            Width = LyricWidowWidth
-        };
+    private void ShowLyricWindow() {
+        _desktopLyricsWindow =
+            new DesktopLyricsWindow { DataContext = new DesktopLyricsWindowViewModel(), Width = LyricWidowWidth };
 
         _desktopLyricsWindow.Show();
         _desktopLyricsWindow.SetPenetrate(LyricConfig.DesktopLyric.LockLyricWindow);
     }
 
-    private void CloseLyricWindow()
-    {
+    private void CloseLyricWindow() {
         _desktopLyricsWindow?.Close();
         _desktopLyricsWindow = null;
     }
 
     [RelayCommand]
-    private void SetWindowPosition(string position)
-    {
-        if (_desktopLyricsWindow == null)
-        {
+    private void SetWindowPosition(string position) {
+        if (_desktopLyricsWindow == null) {
             NotificationService.Error("请先启动歌词窗口~");
 
             return;
         }
 
-        if (_desktopLyricsWindow.Screens.Primary == null)
-        {
+        if (_desktopLyricsWindow.Screens.Primary == null) {
             NotificationService.Error("无法获取屏幕宽高~");
 
             return;
@@ -232,8 +211,7 @@ public partial class LyricConfigPageViewModel : ViewModelBase
         double windowWidth = _desktopLyricsWindow.Width * scaling;
         double windowHeight = _desktopLyricsWindow.Height * scaling;
 
-        var positions = new Dictionary<string, Func<PixelPoint>>
-        {
+        var positions = new Dictionary<string, Func<PixelPoint>> {
             ["↖"] = () => new PixelPoint(0, 0),
 
             // ReSharper disable once PossibleLossOfFraction
@@ -246,8 +224,7 @@ public partial class LyricConfigPageViewModel : ViewModelBase
             ["↘"] = () => new PixelPoint((int)(screenWidth - windowWidth), (int)(screenHeight - windowHeight))
         };
 
-        if (positions.TryGetValue(position, out var getPosition))
-        {
+        if (positions.TryGetValue(position, out var getPosition)) {
             _desktopLyricsWindow.Position = getPosition();
         }
 

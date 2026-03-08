@@ -38,7 +38,7 @@ public partial class MainWindow : Window {
         WindowState = WindowState.Normal;
     }
 
-    public void BackMainContent() {
+    public void BackToMainContent() {
         if (_lastContent == null)
             return;
 
@@ -52,6 +52,10 @@ public partial class MainWindow : Window {
 
             if (_isClosing)
                 return;
+
+            if (e.CloseReason is WindowCloseReason.OSShutdown or WindowCloseReason.ApplicationShutdown) {
+                ApplicationViewModel.Shutdown();
+            }
 
             e.Cancel = true;
 

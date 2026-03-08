@@ -1,8 +1,6 @@
-using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using QwQ_Music.Models.Enums;
 using SoundFlow.Backends.MiniAudio.Devices;
-using SoundFlow.Structs;
 
 namespace QwQ_Music.Models.ConfigModels;
 

@@ -1,11 +1,9 @@
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using QwQ_Music.Common.Utilities;
 
 namespace QwQ_Music.Models.ConfigModels;
 
-public static class StaticConfig
-{
+public static class StaticConfig {
     public static string ConfigSavePath =>
         PathEnsurer.EnsureDirectoryExists(Path.Combine(Directory.GetCurrentDirectory(), "config"));
 
@@ -15,28 +13,14 @@ public static class StaticConfig
     public static string DatabasePath =>
         PathEnsurer.EnsureFileAndDirectoryExist(Path.Combine(Directory.GetCurrentDirectory(), "data", "music.QwQ.db"));
 
+    public static string CachePath =>
+        PathEnsurer.EnsureFileAndDirectoryExist(
+            Path.Combine(Directory.GetCurrentDirectory(), "cache", "cache.QwQ.db"));
+
     public static string PlaylistPath =>
-        PathEnsurer.EnsureFileAndDirectoryExist(Path.Combine(Directory.GetCurrentDirectory(), "data", "playlist.QwQ.playlist"));
-
-    public static string MusicCoverSavePath =>
-        PathEnsurer.EnsureDirectoryExists(Path.Combine(Directory.GetCurrentDirectory(), "cache", "music-cover"));
-
-    public static string MusicListCoverSavePath =>
-        PathEnsurer.EnsureDirectoryExists(Path.Combine(Directory.GetCurrentDirectory(), "cache", "music-list-cover"));
+        PathEnsurer.EnsureFileAndDirectoryExist(
+            Path.Combine(Directory.GetCurrentDirectory(), "data", "playlist.QwQ.playlist"));
 
     public static string LyricsSavePath =>
         PathEnsurer.EnsureDirectoryExists(Path.Combine(Directory.GetCurrentDirectory(), "cache", "lyrics"));
-    
-    [return: NotNullIfNotNull(nameof(filePath))]
-    public static string? GetMusicCoverFullPath(string? filePath)
-    {
-        return filePath is null?null:Path.Combine(MusicCoverSavePath, $"{filePath}.png");
-    }
-
-    [return: NotNullIfNotNull(nameof(filePath))]
-    public static string? GetMusicListCoverFullPath(string? filePath)
-    {
-        return filePath is null?null:Path.Combine(MusicListCoverSavePath, $"{filePath}.png");
-    }
-
 }

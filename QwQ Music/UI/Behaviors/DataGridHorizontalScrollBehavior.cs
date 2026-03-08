@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Data;
 using Avalonia.Xaml.Interactivity;
 using Irihi.Avalonia.Shared.Helpers;
 
@@ -10,7 +11,7 @@ public class DataGridHorizontalScrollBehavior : Behavior<DataGrid>
 {
     // 附加属性：用于外部绑定
     public static readonly StyledProperty<double> HorizontalScrollValueProperty =
-        AvaloniaProperty.Register<DataGridHorizontalScrollBehavior, double>(nameof(HorizontalScrollValue), defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
+        AvaloniaProperty.Register<DataGridHorizontalScrollBehavior, double>(nameof(HorizontalScrollValue), defaultBindingMode: BindingMode.TwoWay);
 
     public double HorizontalScrollValue
     {

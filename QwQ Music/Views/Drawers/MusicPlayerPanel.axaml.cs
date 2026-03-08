@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -21,7 +20,7 @@ public partial class MusicPlayerPanel : Grid {
         AudioPlayManager.Instance.AudioPlayer.SpectrumDataUpdated += OnSpectrumUpdated;
     }
 
-    private void OnSpectrumUpdated(object? sender, ReadOnlySpan<float> e) { SpectrumVisualizer.UpdateSpectrumData(e); }
+    private void OnSpectrumUpdated(object? sender, float[] e) { SpectrumVisualizer.UpdateSpectrumData(e); }
 
     private void OnUnloaded(object? sender, RoutedEventArgs e) {
         PointerMoved -= OnPointerMoved;

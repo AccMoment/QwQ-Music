@@ -29,17 +29,16 @@ public partial class MusicItemsManager : ObservableObject {
 
     public event EventHandler<MusicItemsChangedEventArgs>? MusicItemsChanged;
 
-    public Dictionary<string, MusicItemModel> MusicItems { get; private set; } = new(); //Initialized in .ctor
+    public OrderedDictionary<string, MusicItemModel> MusicItems { get; private set; } = new(); //Initialized in .ctor
     public MusicItemModel this[string key] => MusicItems[key];
     public int Count => MusicItems.Count;
 
     private async Task InitializeAsync() {
         try {
-            MusicItems = new Dictionary<string, MusicItemModel>(
-                await Task.Run(() => MusicItemRepository.Instance.GetAll()
-                                                        .ToDictionary(item => item.FilePath, item => item))
-                          .ConfigureAwait(false));
-
+            MusicItems = new OrderedDictionary<string, MusicItemModel>(
+                (await MusicItemRepository.Instance.GetAsync().ConfigureAwait(false))
+                .Select(item => KeyValuePair.Create(item.FilePath, item))
+                .OrderBy(item => item.Key));
             if (MusicItems.Count != 0)
                 return;
 
@@ -50,104 +49,105 @@ public partial class MusicItemsManager : ObservableObject {
         }
     }
 
-    public async Task<IEnumerable<MusicItemModel>> AddAsync(IList<MusicItemModel> musicItems) {
+    public async Task AddAsync(IAsyncEnumerable<MusicItemModel> musicItems) {
         var successItems = new List<MusicItemModel>();
+        var failedItems = new List<MusicItemModel>();
+        var repo = MusicItemRepository.Instance;
 
-        await Task.Run(() => {
-                      var repo = MusicItemRepository.Instance;
+        await foreach (var musicItem in musicItems.ConfigureAwait(false)) {
+            try {
+                musicItem.InsertTime = DateTime.UtcNow;
+                await repo.InsertAsync(musicItem).ConfigureAwait(false);
 
-                      foreach (var musicItem in musicItems) {
-                          try {
-                              musicItem.InsertTime = DateTime.UtcNow;
-                              repo.Insert(musicItem);
-
-                              successItems.Add(musicItem);
-                          } catch (Exception e) {
-                              LoggerService.Error($"歌曲《{musicItem.Title}》保存到数据库失败！\n{e.Message}\n{e.StackTrace}");
-                          }
-                      }
-                  })
-                  .ConfigureAwait(false);
+                successItems.Add(musicItem);
+            } catch (Exception e) {
+                await LoggerService.ErrorAsync($"歌曲《{musicItem.Title}》保存到数据库失败！\n{e.Message}\n{e.StackTrace}")
+                                   .ConfigureAwait(false);
+                failedItems.Add(musicItem);
+            }
+        }
 
         // 批量添加到UI集合
-        Dispatcher.UIThread.Post(() => successItems.ForEach(item => MusicItems.Add(item.FilePath, item)));
+        Dispatcher.UIThread.Post(() => {
+            lock (MusicItems) {
+                successItems.ForEach(item => MusicItems.Add(item.FilePath, item));
+            }
+        });
 
-        var failedItems = musicItems.Except(successItems).ToList();
-
-        if (successItems.Count > 0) {
-            string existingTitles = string.Join("、", musicItems.Select(items => $"《{items.Title}》"));
-
-            NotificationService.Success($"歌曲 {existingTitles} 添加成功啦~");
-        }
 
         if (failedItems.Count > 0) {
             string failedTitles = string.Join("、", failedItems.Select(item => $"《{item.Title}》"));
             NotificationService.Error($"歌曲 {failedTitles} 添加失败了！");
         }
 
-        MusicItemsChanged?.Invoke(this, new MusicItemsChangedEventArgs() { OldItems = null, NewItems = successItems });
-        return successItems;
+        if (successItems.Count > 0) {
+            string titles = string.Join("、", successItems.Select(items => $"《{items.Title}》"));
+            NotificationService.Success($"歌曲 {titles} 添加成功啦~");
+        }
+
+        MusicItemsChanged?.Invoke(this, new MusicItemsChangedEventArgs { OldItems = null, NewItems = successItems });
     }
 
-    public static void Update(MusicItemModel musicItem) {
+    public static async Task UpdateAsync(MusicItemModel musicItem) {
         try {
-            MusicItemRepository.Instance.Update(musicItem);
+            await MusicItemRepository.Instance.UpdateAsync(musicItem).ConfigureAwait(false);
         } catch (Exception e) {
-            LoggerService.Error($"更新歌曲{musicItem.Title}到数据库失败！\n{e.Message}\n{e.StackTrace}");
+            await LoggerService.ErrorAsync($"更新歌曲{musicItem.Title}到数据库失败！\n{e.Message}\n{e.StackTrace}")
+                               .ConfigureAwait(false);
             NotificationService.Error($"更新歌曲{musicItem.Title}到数据库失败！\n{e.Message}");
         }
     }
 
-    public static async Task Update(IList<MusicItemModel> musicItems) {
-        var successItems = new List<MusicItemModel>();
+    public static async Task UpdateAsync(IEnumerable<MusicItemModel> musicItems) {
+        var successItems = new StringWriter();
+        var failedItems = new StringWriter();
 
-        await Task.Run(() => {
-                      var repo = MusicItemRepository.Instance;
-                      foreach (MusicItemModel musicItem in musicItems) {
-                          try {
-                              repo.Update(musicItem);
-                              successItems.Add(musicItem);
-                          } catch (Exception e) {
-                              LoggerService.Error($"更新歌曲{musicItem.Title}到数据库失败！\n{e.Message}\n{e.StackTrace}");
-                          }
-                      }
-                  })
-                  .ConfigureAwait(false);
-
-        List<MusicItemModel> failedItems = musicItems.Except(successItems).ToList();
+        var repo = MusicItemRepository.Instance;
+        foreach (MusicItemModel musicItem in musicItems) {
+            try {
+                await repo.UpdateAsync(musicItem).ConfigureAwait(false);
+                await successItems.WriteAsync($"《{musicItem.Title}》").ConfigureAwait(false);
+            } catch (Exception e) {
+                await failedItems.WriteAsync($"《{musicItem.Title}》").ConfigureAwait(false);
+                await LoggerService.ErrorAsync($"更新歌曲{musicItem.Title}到数据库失败！\n{e.Message}\n{e.StackTrace}")
+                                   .ConfigureAwait(false);
+            }
+        }
 
         // 显示删除结果通知
-        if (successItems.Count > 0) {
-            string successTitles = string.Join("、", successItems.Select(item => $"《{item.Title}》"));
+        if (successItems.ToString() is { Length: > 0 } successTitles) {
             NotificationService.Success($"{successTitles}更新成功了！");
         }
 
-        if (failedItems.Count > 0) {
-            string failedTitles = string.Join("、", failedItems.Select(item => $"《{item.Title}》"));
+        if (failedItems.ToString() is { Length: > 0 } failedTitles) {
             NotificationService.Error($"更新{failedTitles}失败了！");
         }
+
+        successItems.Close();
+        failedItems.Close();
+        await successItems.DisposeAsync().ConfigureAwait(false);
+        await failedItems.DisposeAsync().ConfigureAwait(false);
     }
 
-    public static void Update(MusicItemModel musicItem, Dictionary<string, object?> fields) {
+    public static async Task UpdateAsync(MusicItemModel musicItem, Dictionary<string, object?> fields) {
         try {
-            MusicItemRepository.Instance.Update(musicItem.FilePath, fields);
+            await MusicItemRepository.Instance.UpdateAsync(musicItem.FilePath, fields).ConfigureAwait(false);
         } catch (Exception e) {
-            LoggerService.Error($"更新歌曲《{musicItem.Title}》信息到数据库时发生错误 : \n{e}");
+            await LoggerService.ErrorAsync($"更新歌曲《{musicItem.Title}》信息到数据库时发生错误 : \n{e}").ConfigureAwait(false);
             NotificationService.Error($"更新歌曲《{musicItem.Title}》信息到数据库时发生错误 : \n{e.Message}");
         }
     }
 
-    public static void UpdatePlayProgress(MusicItemModel musicItem, TimeSpan current) {
+    public static async Task UpdatePlayProgressAsync(MusicItemModel musicItem, TimeSpan current) {
         try {
-            Task.Run(() => {
-                    MusicItemRepository.Instance.Update(
-                        musicItem.FilePath,
-                        new Dictionary<string, object?> { [nameof(MusicItemModel.Record)] = current.ToString() });
-                })
-                .ContinueWith(LoggerService.HandleException)
-                .ConfigureAwait(false);
+            await MusicItemRepository.Instance.UpdateAsync(
+                                         musicItem.FilePath,
+                                         new Dictionary<string, object?> {
+                                             [nameof(MusicItemModel.Record)] = current.ToString()
+                                         })
+                                     .ConfigureAwait(false);
         } catch (Exception e) {
-            LoggerService.Error($"保存歌曲《{musicItem.Title}》的播放进度到数据库时发生错误 : \n{e}");
+            await LoggerService.ErrorAsync($"保存歌曲《{musicItem.Title}》的播放进度到数据库时发生错误 : \n{e}").ConfigureAwait(false);
             NotificationService.Error($"保存歌曲《{musicItem.Title}》的播放进度到数据库时发生错误 : \n{e.Message}");
         }
     }
@@ -171,27 +171,24 @@ public partial class MusicItemsManager : ObservableObject {
 
         var successItems = new List<MusicItemModel>();
 
-        await Task.Run(() => {
-                      var repo = MusicItemRepository.Instance;
 
-                      foreach (var musicItem in items) {
-                          try {
-                              repo.Delete(musicItem.FilePath);
-                              successItems.Add(musicItem);
+        var repo = MusicItemRepository.Instance;
 
-                              musicItem.RemoveCover();
-                          } catch (Exception e) {
-                              LoggerService.Error($"从数据库中删除歌曲{musicItem.Title}失败！\n{e.Message}\n{e.StackTrace}");
+        foreach (var musicItem in items) {
+            try {
+                await repo.DeleteAsync(musicItem.FilePath).ConfigureAwait(false);
+                successItems.Add(musicItem);
 
-                              NotificationService.Error($"歌曲{musicItem.Title}删除失败！\n{e.Message}");
-                          }
-                      }
-                  })
-                  .ConfigureAwait(true);
+                musicItem.RemoveCover();
+            } catch (Exception e) {
+                await LoggerService.ErrorAsync($"从数据库中删除歌曲{musicItem.Title}失败！\n{e.Message}\n{e.StackTrace}")
+                                   .ConfigureAwait(false);
+
+                NotificationService.Error($"歌曲{musicItem.Title}删除失败！\n{e.Message}");
+            }
+        }
 
         successItems.ForEach(item => MusicItems.Remove(item.FilePath));
-
-        var failedItems = items.Except(successItems).ToArray();
 
         // 显示删除结果通知
         if (successItems.Count > 0) {
@@ -199,21 +196,23 @@ public partial class MusicItemsManager : ObservableObject {
             NotificationService.Success($"{successTitles}已经从音乐库中移除了！");
         }
 
-        if (failedItems.Length > 0) {
-            string failedTitles = string.Join("、", failedItems.Select(item => $"《{item.Title}》"));
+        string failedTitles = string.Join("、", items.Except(successItems).Select(item => $"《{item.Title}》"));
+        if (!string.IsNullOrEmpty(failedTitles)) {
             NotificationService.Error($"删除{failedTitles}失败了！");
         }
 
-        MusicItemsChanged?.Invoke(this, new MusicItemsChangedEventArgs() { OldItems = successItems, NewItems = null });
+        MusicItemsChanged?.Invoke(this, new MusicItemsChangedEventArgs { OldItems = successItems, NewItems = null });
         return successItems;
     }
 
     [RelayCommand]
-    public void ClearRecords(IEnumerable items) {
-        IEnumerable<MusicItemModel> models = items switch {
-            IEnumerable<MusicItemModel> musicItems => musicItems,
-            IEnumerable<PlaylistItemModel> playlistItems => playlistItems.Select(item => item.Model),
-            _ => throw new ArgumentException($"未知的音频模型类型集合{items.GetType()}", nameof(items))
+    public static void ClearRecords(IList items) {
+        if (items.Count == 0)
+            return;
+        IEnumerable<MusicItemModel> models = items[0] switch {
+            MusicItemModel    => items.Cast<MusicItemModel>(),
+            PlaylistItemModel => items.Cast<PlaylistItemModel>().Select(item => item.Model),
+            _                 => throw new ArgumentException($"未知的音频项类型集合{items.GetType()}", nameof(items))
         };
         foreach (MusicItemModel model in models) {
             model.ClearRecord();
@@ -221,33 +220,37 @@ public partial class MusicItemsManager : ObservableObject {
     }
 
     [RelayCommand]
-    public static void ShowDetailedInfo(MusicItemModel musicItem) {
-        var options = new OverlayDialogOptions { Title = "详细信息", CanLightDismiss = true, Mode = DialogMode.Info };
+    public static void ShowDetailedInfo(IList musicItems) {
+        foreach (MusicItemModel item in musicItems) {
+            var options = new OverlayDialogOptions { Title = "详细信息", CanLightDismiss = true, Mode = DialogMode.Info };
 
-        OverlayDialog.ShowCustomModal<AudioDetailedInfo, AudioDetailedInfoViewModel, DialogResult>(
-                         new AudioDetailedInfoViewModel(musicItem, musicItem.Track),
-                         options: options)
-                     .ContinueWith(LoggerService.HandleException)
-                     .ConfigureAwait(false);
-    }
-
-    [RelayCommand]
-    public static void OpenInExplorer(MusicItemModel musicItem) {
-        if (string.IsNullOrEmpty(musicItem.FilePath) || !File.Exists(musicItem.FilePath)) {
-            NotificationService.Error($"无法打开《{musicItem.Title}》文件位置：{musicItem.FilePath}文件不存在");
-            return;
-        }
-
-        try {
-            FileOperationService.OpenInFileManager(musicItem.FilePath);
-        } catch (Exception e) {
-            LoggerService.Error($"打开文件位置失败: {e.Message}");
-            NotificationService.Error($"打开《{musicItem.Title}》文件位置时报错：{e.Message}");
+            OverlayDialog.ShowCustomModal<AudioDetailedInfo, AudioDetailedInfoViewModel, DialogResult>(
+                             new AudioDetailedInfoViewModel(item, item.Track),
+                             options: options)
+                         .ContinueWith(LoggerService.HandleException)
+                         .ConfigureAwait(false);
         }
     }
 
     [RelayCommand]
-    public static void RemoveItems(IList<MusicItemModel> items) {
-        All.RemoveAsync(items).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
+    public static void OpenInExplorer(IList musicItems) {
+        foreach (MusicItemModel item in musicItems) {
+            if (string.IsNullOrEmpty(item.FilePath) || !File.Exists(item.FilePath)) {
+                NotificationService.Error($"无法打开《{item.Title}》文件位置：{item.FilePath}文件不存在");
+                return;
+            }
+
+            try {
+                FileOperationService.OpenInFileManager(item.FilePath);
+            } catch (Exception e) {
+                LoggerService.Error($"打开文件位置失败: {e.Message}");
+                NotificationService.Error($"打开《{item.Title}》文件位置时报错：{e.Message}");
+            }
+        }
+    }
+
+    [RelayCommand]
+    public static void RemoveItems(IList items) {
+        All.RemoveAsync(items.Cast<MusicItemModel>()).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 }

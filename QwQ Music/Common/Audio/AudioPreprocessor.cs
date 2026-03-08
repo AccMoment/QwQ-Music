@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using NcmdumpCSharp.Core;
 using QwQ_Music.Common.Managers;
@@ -14,8 +15,12 @@ public class AudioPreprocessor(AudioPlayer audioPlayer) {
     public TimeSpan InitialTime { get; set; } = TimeSpan.Zero;
 
     public async Task InitializeAudioTrackAsync(MusicItemModel musicItem) {
+        if (audioPlayer.Status is MediaPlaybackStatus.Changing) {
+            await LoggerService.InfoAsync("上一个音频切换行为还未完成。自旋等待...").ConfigureAwait(false);
+            SpinWait.SpinUntil(() => audioPlayer.Status is not MediaPlaybackStatus.Changing);
+        }
+
         await LoggerService.InfoAsync($"正在初始化《{musicItem.Title}》的音频流...").ConfigureAwait(false);
-        // 根据文件类型初始化音频
 
         UpdateAudioFormat(musicItem);
 
@@ -23,7 +28,7 @@ public class AudioPreprocessor(AudioPlayer audioPlayer) {
             AudioFileValidator.AudioFormatsExtendToNameMap[AudioFileValidator.ExtendAudioFormats.Ncm]) {
             await InitializeNcmAudioTrackAsync(musicItem).ConfigureAwait(false);
         } else {
-            await audioPlayer.InitializeAudioAsync(musicItem.Data, musicItem.Gain).ConfigureAwait(false);
+            audioPlayer.InitializeAudio(musicItem.Data, musicItem.Gain);
         }
 
         await LoggerService.InfoAsync($"《{musicItem.Title}》音频流初始化完毕。").ConfigureAwait(false);
@@ -36,7 +41,7 @@ public class AudioPreprocessor(AudioPlayer audioPlayer) {
                     ConfigManager.PlayerConfig.SampleRate :
                     (int)model.SampleRate,
             Channels = model.Channels,
-            // Layout = ChannelLayout.Stereo,//TODO
+            Layout = ChannelLayout.Stereo, //TODO
             Format = SampleFormat.F32
         };
         LoggerService.Info($"已更新音频格式。旧格式：{audioPlayer.AudioFormat}，新格式：{format}。");
@@ -48,17 +53,17 @@ public class AudioPreprocessor(AudioPlayer audioPlayer) {
 
         if (await crypt.DumpToStreamAsync().ConfigureAwait(false) is { } audioStream) {
             // 对于NCM，我们暂时不处理ReplayGain
-            await audioPlayer.InitializeAudioAsync(audioStream, 0).ConfigureAwait(false);
+            audioPlayer.InitializeAudio(audioStream, 0);
         }
     }
 
-    public void UpdateMusicPlayProgress(MusicItemModel musicItem, bool restart = false) {
+    public async Task UpdateMusicPlayProgressAsync(MusicItemModel musicItem, bool restart = false) {
         if (restart || IsEnded(musicItem)) {
             musicItem.Record = TimeSpan.Zero;
         }
 
         if (musicItem.Record != InitialTime) {
-            MusicItemsManager.UpdatePlayProgress(musicItem, musicItem.Record);
+            await MusicItemsManager.UpdatePlayProgressAsync(musicItem, musicItem.Record).ConfigureAwait(false);
         }
     }
 

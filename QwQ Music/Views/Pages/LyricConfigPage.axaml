@@ -1,9 +1,6 @@
 ﻿<Grid ColumnDefinitions="Auto,*" ColumnSpacing="20" Margin="0,10"
       x:Class="QwQ_Music.Views.Pages.LyricConfigPage"
       x:DataType="pages:LyricConfigPageViewModel"
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
       xmlns="https://github.com/avaloniaui"
       xmlns:u="https://irihi.tech/ursa"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -13,7 +10,7 @@
       xmlns:configModels="clr-namespace:QwQ_Music.Models.ConfigModels"
       xmlns:anchorControl="clr-namespace:QwQ_Music.UI.Controls.AnchorControl"
       xmlns:models="clr-namespace:QwQ_Music.Models"
-      xmlns:userControls="clr-namespace:QwQ_Music.Views.UserControls">
+      xmlns:customs="clr-namespace:QwQ_Music.Views.Customs">
 
     <Grid.Resources>
         <converters:ToBrushConverter x:Key="ToBrushConverter" />
@@ -89,7 +86,7 @@
 
                         <Button.Flyout>
                             <Flyout>
-                                <userControls:FontSelector
+                                <customs:FontSelector
                                     SelectedFont="{Binding LyricConfig.RolledLyric.RolledLyricsFont}" />
                             </Flyout>
                         </Button.Flyout>
@@ -136,6 +133,10 @@
                     IsChecked="{Binding LyricIsDoubleLine}" />
 
                 <CheckBox
+                    Content="{Binding IsDualLangName}"
+                    IsChecked="{Binding LyricIsDualLang}" />
+
+                <CheckBox
                     IsChecked="{Binding DesktopPlayControlIsEnabled}">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <TextBlock Text="桌面播放控制" />
@@ -164,7 +165,7 @@
 
                         <Button.Flyout>
                             <Flyout>
-                                <userControls:FontSelector
+                                <customs:FontSelector
                                     SelectedFont="{Binding LyricConfig.DesktopLyric.DesktopLyricsFont}" />
                             </Flyout>
                         </Button.Flyout>

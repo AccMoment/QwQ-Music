@@ -32,7 +32,7 @@ public static class SystemMediaControl {
     }
 }
 
-public interface ISystemMediaControlImpl {
+public interface ISystemMediaControlImpl : IDisposable {
     double Rate { get; set; }
     double Volume { get; set; }
     TimeSpan Position { get; set; }
@@ -50,12 +50,12 @@ public interface ISystemMediaControlImpl {
 }
 #if _WIN_NT
 public class WindowsMediaControlImpl : ISystemMediaControlImpl {
-    private static readonly MediaPlayer Player;
-    private static SystemMediaTransportControls Control => Player.SystemMediaTransportControls;
+    private static readonly MediaPlayer _player;
+    private static SystemMediaTransportControls Control => _player.SystemMediaTransportControls;
 
     static WindowsMediaControlImpl() {
-        Player = new MediaPlayer();
-        Player.CommandManager.IsEnabled = false;
+        _player = new MediaPlayer();
+        _player.CommandManager.IsEnabled = false;
     }
 
     public double Rate {
@@ -111,6 +111,10 @@ public class WindowsMediaControlImpl : ISystemMediaControlImpl {
     public bool IsPreviousEnabled { get; set; }
     public bool IsNextEnabled { get; set; }
     public bool IsStopEnabled { get; set; }
+
+    public void Dispose() {
+        _player.Dispose();
+    }
 }
 
 public static class StatusConverter {
@@ -149,5 +153,10 @@ public class LinuxMediaControlImpl : ISystemMediaControlImpl {
     public bool IsPreviousEnabled { get; set; }
     public bool IsNextEnabled { get; set; }
     public bool IsStopEnabled { get; set; }
+
+    public void Dispose() {
+        //TODO
+        GC.SuppressFinalize(this);
+    }
 }
 #endif

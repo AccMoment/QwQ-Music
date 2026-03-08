@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using QwQ_Music.Common.Helpers;
 using QwQ_Music.Common.Interfaces;
 using QwQ_Music.Models;
 using QwQ_Music.Models.ConfigModels;
@@ -9,132 +11,122 @@ using QwQ_Music.Models.Enums;
 
 namespace QwQ_Music.Common.Services.Databases;
 
-public class MusicItemRepository : IDatabaseRepository<MusicItemModel> {
+public class MusicItemRepository : IAsyncDatabaseRepository<MusicItemModel> {
     public static readonly MusicItemRepository Instance = new(StaticConfig.DatabasePath);
     public const string TABLE_NAME = "music";
-    private readonly DatabaseService _db;
+    private readonly AsyncDatabaseService _db;
 
     private MusicItemRepository(string dbPath) {
-        _db = new DatabaseService(dbPath);
-        Initialize();
+        _db = new AsyncDatabaseService(dbPath);
+        InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
-    private void Initialize() {
-        _db.CreateTable(
-            TABLE_NAME,
-            $"""
-             {nameof(MusicItemModel.Title)} TEXT NOT NULL,
-             {nameof(MusicItemModel.Artists)} TEXT,
-             {nameof(MusicItemModel.Composer)} TEXT,
-             {nameof(MusicItemModel.Album)} TEXT,
-             {nameof(MusicItemModel.AlbumArtist)} TEXT,
-             {nameof(MusicItemModel.CoverId)} TEXT,
-             {nameof(MusicItemModel.FilePath)} TEXT NOT NULL PRIMARY KEY,
-             {nameof(MusicItemModel.FileSize)} TEXT NOT NULL,
-             {nameof(MusicItemModel.Record)} INTEGER NOT NULL,
-             {nameof(MusicItemModel.Duration)} INTEGER NOT NULL,
-             {nameof(MusicItemModel.CoverColors)} TEXT,
-             {nameof(MusicItemModel.Gain)} TEXT NOT NULL,
-             {nameof(MusicItemModel.SampleRate)} TEXT NOT NULL,
-             {nameof(MusicItemModel.Channels)} INTEGER NOT NULL,
-             {nameof(MusicItemModel.EncodingFormat)} TEXT NOT NULL,
-             {nameof(MusicItemModel.Comment)} TEXT,
-             {nameof(MusicItemModel.AudioQualityLevel)} INTEGER,
-             {nameof(MusicItemModel.Remarks)} TEXT,
-             {nameof(MusicItemModel.LyricOffset)} TEXT,
-             {nameof(MusicItemModel.InsertTime)} INTEGER,
-             {nameof(MusicItemModel.ModificationTime)} INTEGER
-             """);
+    private async Task InitializeAsync() {
+        await _db.CreateTableAsync(
+                     TABLE_NAME,
+                     $"""
+                      {nameof(MusicItemModel.Title)} TEXT NOT NULL,
+                      {nameof(MusicItemModel.Artists)} TEXT NOT NULL,
+                      {nameof(MusicItemModel.Composer)} TEXT,
+                      {nameof(MusicItemModel.Album)} TEXT,
+                      {nameof(MusicItemModel.AlbumArtists)} TEXT,
+                      {nameof(MusicItemModel.AlbumId)} TEXT,
+                      {nameof(MusicItemModel.FilePath)} TEXT NOT NULL PRIMARY KEY,
+                      {nameof(MusicItemModel.FileSize)} TEXT NOT NULL,
+                      {nameof(MusicItemModel.Record)} INTEGER NOT NULL,
+                      {nameof(MusicItemModel.Duration)} INTEGER NOT NULL,
+                      {nameof(MusicItemModel.CoverColors)} TEXT,
+                      {nameof(MusicItemModel.Gain)} TEXT NOT NULL,
+                      {nameof(MusicItemModel.SampleRate)} TEXT NOT NULL,
+                      {nameof(MusicItemModel.Channels)} INTEGER NOT NULL,
+                      {nameof(MusicItemModel.EncodingFormat)} TEXT NOT NULL,
+                      {nameof(MusicItemModel.Comment)} TEXT,
+                      {nameof(MusicItemModel.AudioQualityLevel)} INTEGER,
+                      {nameof(MusicItemModel.Remarks)} TEXT,
+                      {nameof(MusicItemModel.LyricOffset)} TEXT,
+                      {nameof(MusicItemModel.InsertTime)} INTEGER,
+                      {nameof(MusicItemModel.ModificationTime)} INTEGER
+                      """)
+                 .ConfigureAwait(false);
+    }
+    
+
+    public async Task RebuildAsync() {
+        await LoggerService.DebugAsync($"正在重建音频数据库。").ConfigureAwait(false);
+        await _db.DropTableAsync(TABLE_NAME).ConfigureAwait(false);
+        await InitializeAsync().ConfigureAwait(false);
     }
 
-    public void Rebuild() {
-        _db.DropTable(TABLE_NAME);
-        Initialize();
-    }
-
-    public void Dispose() {
-        _db.Dispose();
+    public async ValueTask DisposeAsync() {
+        await _db.DisposeAsync().ConfigureAwait(false);
         GC.SuppressFinalize(this);
     }
 
-    public MusicItemModel? Get(string primaryKey) {
-        var result = _db.Query(
-            $"SELECT * FROM {TABLE_NAME} WHERE {nameof(MusicItemModel.FilePath)} = @primaryKey",
-            new Dictionary<string, object> { ["primaryKey"] = primaryKey });
+    public async Task<MusicItemModel?> SingleAsync(string id) {
+        await LoggerService.DebugAsync($"正在获取音频《{id}》的标签").ConfigureAwait(false);
 
-        return result.Count > 0 ? Parse(result[0]) : null;
+        var result = await _db.SingleAsync(
+                                  $"SELECT * FROM {TABLE_NAME} WHERE {nameof(MusicItemModel.FilePath)} = @primaryKey",
+                                  new Dictionary<string, object> { ["primaryKey"] = id })
+                              .ConfigureAwait(false);
+
+        return result is null ? null : Parse(result);
     }
 
-    public IEnumerable<MusicItemModel> GetAll() {
-        List<Dictionary<string, object?>> rows = _db.Query($"SELECT * FROM {TABLE_NAME}");
+    public async Task<IEnumerable<MusicItemModel>> GetAsync() {
+        await LoggerService.DebugAsync("正在获取所有音频标签。警告：可能发生长时磁盘IO，应尽可能避免该操作").ConfigureAwait(false);
 
-        return rows.AsParallel().Select(Parse).Where(item => item is not null).Cast<MusicItemModel>();
+        return (await _db.QueryAsync($"SELECT * FROM {TABLE_NAME}").ConfigureAwait(false)).AsParallel()
+            .Select(Parse)
+            .Where(item => item is not null) as IEnumerable<MusicItemModel>;
     }
 
-    public int Count() {
-        var result = _db.Query($"SELECT COUNT(*) AS cnt FROM {TABLE_NAME}");
+    public async Task<int> CountAsync() {
+        await LoggerService.DebugAsync("正在获取音频数量").ConfigureAwait(false);
+        return await _db.CountAsync(TABLE_NAME).ConfigureAwait(false); }
 
-        return Convert.ToInt32(result[0]["cnt"]);
-    }
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Insert(MusicItemModel item) {
-        _db.Insert(TABLE_NAME, ToDictionary(item));
+    public async Task InsertAsync(MusicItemModel item,InsertExist onInsertExist = InsertExist.FAIL) {
+        await _db.InsertAsync(TABLE_NAME, ToDictionary(item),onInsertExist).ConfigureAwait(false);
     }
 
-    public void Update(MusicItemModel item) {
+    public async Task UpdateAsync(MusicItemModel item) {
         var data = ToDictionary(item);
         data.Remove(nameof(MusicItemModel.FilePath));
-
-        const string whereClause = $"{nameof(MusicItemModel.FilePath)} = @{nameof(MusicItemModel.FilePath)}";
-
-        _db.Update(
-            TABLE_NAME,
-            data,
-            whereClause,
-            new Dictionary<string, object?> { [nameof(MusicItemModel.FilePath)] = item.FilePath });
+        await UpdateAsync(item.FilePath, data).ConfigureAwait(false);
     }
 
-    public void Update(string primaryKey, string[] fields, string?[] values) {
-        if (fields.Length != values.Length)
-            throw new ArgumentException("字段和值的长度必须相同。");
-
-        var data = new Dictionary<string, object?>();
-
-        for (int i = 0; i < fields.Length; i++) {
-            data[fields[i]] = values[i];
-        }
-
-        const string whereClause = $"{nameof(MusicItemModel.FilePath)} = @primaryKey";
-
-        _db.Update(TABLE_NAME, data, whereClause, new Dictionary<string, object?> { ["primaryKey"] = primaryKey });
-    }
-
-    public void Update(string primaryKey, Dictionary<string, object?> fieldValues) {
+    public async Task UpdateAsync(string name, Dictionary<string, object?> fieldValues) {
         if (fieldValues.Count == 0)
             return;
+        await LoggerService.DebugAsync($"正在更新音频《{name}》的如下字段：{string.Join(',',fieldValues.Keys)}").ConfigureAwait(false);
 
         const string whereClause = $"{nameof(MusicItemModel.FilePath)} = @primaryKey";
 
-        _db.Update(
-            TABLE_NAME,
-            fieldValues,
-            whereClause,
-            new Dictionary<string, object?> { ["primaryKey"] = primaryKey });
+        await _db.UpdateAsync(
+                     TABLE_NAME,
+                     fieldValues,
+                     whereClause,
+                     new Dictionary<string, object?> { ["primaryKey"] = name })
+                 .ConfigureAwait(false);
     }
 
-    public void Delete(string primaryKey) {
+    public async Task DeleteAsync(string id) {
         const string whereClause = $"{nameof(MusicItemModel.FilePath)} = @primaryKey";
 
-        _db.Delete(TABLE_NAME, whereClause, new Dictionary<string, object> { ["primaryKey"] = primaryKey });
+        await _db.DeleteAsync(TABLE_NAME, whereClause, new Dictionary<string, object> { ["primaryKey"] = id })
+                 .ConfigureAwait(false);
     }
 
-    public bool Exists(string primaryKey) {
-        var result = _db.Query(
-            $"SELECT 1 FROM {TABLE_NAME} WHERE {nameof(MusicItemModel.FilePath)} = @primaryKey LIMIT 1",
-            new Dictionary<string, object> { ["primaryKey"] = primaryKey });
+    public async Task<bool> ExistsAsync(string id) {
+        await LoggerService.DebugAsync($"正在检测音频《{id}》是否存在").ConfigureAwait(false);
 
-        return result.Count > 0;
+        var result = await _db.SingleAsync(
+                                  $"SELECT 1 FROM {TABLE_NAME} WHERE {nameof(MusicItemModel.FilePath)} = @primaryKey",
+                                  new Dictionary<string, object> { ["primaryKey"] = id })
+                              .ConfigureAwait(false);
+
+        return result is not null;
     }
 
     #region Helper Methods
@@ -144,33 +136,33 @@ public class MusicItemRepository : IDatabaseRepository<MusicItemModel> {
         bool critical = false;
         try {
             var model = new MusicItemModel {
-                FilePath = ParseHelpers.TryParse(dict, nameof(MusicItemModel.FilePath)) ?? CriticalError(""),
-                Title = ParseHelpers.TryParse(dict, nameof(MusicItemModel.Title)) ?? Error(""),
-                Artists = ParseHelpers.TryParse(dict, nameof(MusicItemModel.Artists)) ?? Error(""),
-                Album = ParseHelpers.TryParse(dict, nameof(MusicItemModel.Album)) ?? Error(""),
-                AlbumArtist = ParseHelpers.TryParse(dict, nameof(MusicItemModel.AlbumArtist)) ?? Error(""),
-                Composer = ParseHelpers.TryParse(dict, nameof(MusicItemModel.Composer)),
-                CoverId = ParseHelpers.TryParse(dict, nameof(MusicItemModel.CoverId)),
-                FileSize = ParseHelpers.TryParse(dict, nameof(MusicItemModel.FileSize)) ?? Error("未知"),
+                FilePath = ParseHelper.TryParse(dict, nameof(MusicItemModel.FilePath)) ?? CriticalError(""),
+                Title = ParseHelper.TryParse(dict, nameof(MusicItemModel.Title)) ?? Error(""),
+                Artists = ParseHelper.TryParse(dict, nameof(MusicItemModel.Artists)) ?? Error(""),
+                Album = ParseHelper.TryParse(dict, nameof(MusicItemModel.Album)) ?? Error(""),
+                AlbumArtists = ParseHelper.TryParse(dict, nameof(MusicItemModel.AlbumArtists)) ?? Error(""),
+                Composer = ParseHelper.TryParse(dict, nameof(MusicItemModel.Composer)),
+                AlbumId = ParseHelper.TryParse(dict, nameof(MusicItemModel.AlbumId)),
+                FileSize = ParseHelper.TryParse(dict, nameof(MusicItemModel.FileSize)) ?? Error("未知"),
                 Record =
-                    TimeSpan.FromTicks(ParseHelpers.TryParse<long>(dict, nameof(MusicItemModel.Record)) ?? Error(0)),
+                    TimeSpan.FromTicks(ParseHelper.TryParse<long>(dict, nameof(MusicItemModel.Record)) ?? Error(0)),
                 Duration =
-                    TimeSpan.FromTicks(ParseHelpers.TryParse<long>(dict, nameof(MusicItemModel.Duration)) ?? Error(0)),
-                SampleRate = ParseHelpers.TryParse<int>(dict, nameof(MusicItemModel.SampleRate)) ?? Error(44100),
-                Channels = ParseHelpers.TryParse<int>(dict, nameof(MusicItemModel.Channels)) ?? Error(2),
-                CoverColors = (ParseHelpers.TryParse(dict, nameof(MusicItemModel.CoverColors)))?.Split("、"),
-                Gain = ParseHelpers.TryParse<double>(dict, nameof(MusicItemModel.Gain)) ?? Error(0),
-                EncodingFormat = ParseHelpers.TryParse(dict, nameof(MusicItemModel.EncodingFormat)) ?? Error("Unknown"),
-                Comment = ParseHelpers.TryParse(dict, nameof(MusicItemModel.Comment)) ?? Error(""),
+                    TimeSpan.FromTicks(ParseHelper.TryParse<long>(dict, nameof(MusicItemModel.Duration)) ?? Error(0)),
+                SampleRate = ParseHelper.TryParse<int>(dict, nameof(MusicItemModel.SampleRate)) ?? Error(44100),
+                Channels = ParseHelper.TryParse<int>(dict, nameof(MusicItemModel.Channels)) ?? Error(2),
+                CoverColors = (ParseHelper.TryParse(dict, nameof(MusicItemModel.CoverColors)))?.Split("、"),
+                Gain = ParseHelper.TryParse<double>(dict, nameof(MusicItemModel.Gain)) ?? Error(0),
+                EncodingFormat = ParseHelper.TryParse(dict, nameof(MusicItemModel.EncodingFormat)) ?? Error("Unknown"),
+                Comment = ParseHelper.TryParse(dict, nameof(MusicItemModel.Comment)) ?? Error(""),
                 AudioQualityLevel =
-                    (AudioQualityLevel?)ParseHelpers.TryParse<int>(dict, nameof(MusicItemModel.AudioQualityLevel)) ??
+                    (AudioQualityLevel?)ParseHelper.TryParse<int>(dict, nameof(MusicItemModel.AudioQualityLevel)) ??
                     Error(AudioQualityLevel.Unknown),
-                Remarks = ParseHelpers.TryParse(dict, nameof(MusicItemModel.Remarks)) ?? Error(""),
-                LyricOffset = ParseHelpers.TryParse<double>(dict, nameof(MusicItemModel.LyricOffset)) ?? Error(0),
+                Remarks = ParseHelper.TryParse(dict, nameof(MusicItemModel.Remarks)) ?? Error(""),
+                LyricOffset = ParseHelper.TryParse<double>(dict, nameof(MusicItemModel.LyricOffset)) ?? Error(0),
                 InsertTime =
-                    new DateTime(ParseHelpers.TryParse<long>(dict, nameof(MusicItemModel.InsertTime)) ?? Error(0)),
+                    new DateTime(ParseHelper.TryParse<long>(dict, nameof(MusicItemModel.InsertTime)) ?? Error(0)),
                 ModificationTime = new DateTime(
-                    ParseHelpers.TryParse<long>(dict, nameof(MusicItemModel.ModificationTime)) ??
+                    ParseHelper.TryParse<long>(dict, nameof(MusicItemModel.ModificationTime)) ??
                     Error(DateTime.Now.Ticks))
             };
 
@@ -189,11 +181,13 @@ public class MusicItemRepository : IDatabaseRepository<MusicItemModel> {
             NotificationService.Warning("检测到严重的音频存储错误。可能是由于大版本更新导致的数据缺失。请在设置>播放中点击[强制刷新标签]按钮以尝试修复。");
             return null;
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         T Error<T>(T value) {
             errors++;
             return value;
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         T CriticalError<T>(T value) {
             critical = true;
@@ -207,8 +201,8 @@ public class MusicItemRepository : IDatabaseRepository<MusicItemModel> {
             [nameof(MusicItemModel.Artists)] = model.Artists,
             [nameof(MusicItemModel.Composer)] = model.Composer,
             [nameof(MusicItemModel.Album)] = model.Album,
-            [nameof(MusicItemModel.AlbumArtist)] = model.AlbumArtist,
-            [nameof(MusicItemModel.CoverId)] = model.CoverId,
+            [nameof(MusicItemModel.AlbumArtists)] = model.AlbumArtists,
+            [nameof(MusicItemModel.AlbumId)] = model.AlbumId,
             [nameof(MusicItemModel.FilePath)] = model.FilePath,
             [nameof(MusicItemModel.FileSize)] = model.FileSize,
             [nameof(MusicItemModel.Record)] = model.Record.Ticks,
