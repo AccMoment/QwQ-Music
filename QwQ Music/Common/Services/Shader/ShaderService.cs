@@ -79,11 +79,10 @@ public class ShaderService {
         // 修复Vector4转换问题，使用float数组
         float[] mousePos;
 
-        if (mousePosition.HasValue) {
+        if (mousePosition.HasValue)
             mousePos = [mousePosition.Value.X, mousePosition.Value.Y, 0, 0];
-        } else {
+        else
             mousePos = [0, 0, 0, 0];
-        }
 
         uniforms["iMouse"] = mousePos;
 
@@ -93,7 +92,7 @@ public class ShaderService {
             int colorCount = Math.Min(Colors.Length, 4);
 
             for (int i = 0; i < colorCount; i++) {
-                var color = Colors[i];
+                Color color = Colors[i];
                 float[] colorArray = [color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f];
                 uniforms[$"iColor{i}"] = colorArray;
             }
@@ -106,7 +105,7 @@ public class ShaderService {
         }
 
         // 创建着色器，修复children参数类型
-        var children = _children != null ? new SKRuntimeEffectChildren(_effect) : null;
+        SKRuntimeEffectChildren? children = _children != null ? new SKRuntimeEffectChildren(_effect) : null;
 
         if (children == null || _children == null)
             return _effect.ToShader(uniforms);

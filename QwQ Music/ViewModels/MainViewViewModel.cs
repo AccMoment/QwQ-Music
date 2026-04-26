@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.ViewModels.Bases;
 using QwQ_Music.Views.Pages;
@@ -9,8 +10,8 @@ using static QwQ_Music.Common.Services.I18NService;
 
 namespace QwQ_Music.ViewModels;
 
-public partial class MainViewModel : NavigationViewModel {
-    public MainViewModel() : base(Lang["Window"]) {
+public partial class MainViewViewModel : NavigableViewModel {
+    public MainViewViewModel() : base(nameof(MainViewViewModel)) {
         // 注册热键功能
         HotkeyService.RegisterFunctionAction(
             HotkeyFunction.NextPage,
@@ -27,7 +28,7 @@ public partial class MainViewModel : NavigationViewModel {
             });
     }
 
-    public static Common.Managers.DrawerManager DrawerManager => Common.Managers.DrawerManager.Instance;
+    public static DrawerManager DrawerManager => DrawerManager.Instance;
 
     public static string MusicName => Lang[nameof(MusicName)];
 
@@ -39,7 +40,6 @@ public partial class MainViewModel : NavigationViewModel {
 
     public AvaloniaList<Control> Pages { get; } = [
         new AllMusicsPage(), new ClassificationPage(), new OtherPage(), new ConfigMainPage()
-        
     ];
 
     [ObservableProperty]
@@ -58,6 +58,10 @@ public partial class MainViewModel : NavigationViewModel {
 
         CanGoBack = NavigateService.CanGoBack;
         CanGoForward = NavigateService.CanGoForward;
+
+        // TODO TIER 2
+        // Refactor Navigate Service.
+        // Further Consideration Needed.
     }
 
     [RelayCommand(CanExecute = nameof(CanGoForward))]

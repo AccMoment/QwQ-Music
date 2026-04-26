@@ -3,8 +3,7 @@ using System.Linq;
 
 namespace QwQ_Music.Common.Utilities;
 
-public static class TimeConverter
-{
+public static class TimeConverter {
     /// <summary>
     ///     将秒数格式化为 hh:mm:ss 或 mm:ss 格式。
     /// </summary>
@@ -15,9 +14,7 @@ public static class TimeConverter
     public static string FormatSeconds(
         this double totalSeconds,
         int decimalPlaces = 3,
-        bool forceDecimalPadding = false
-        )
-    {
+        bool forceDecimalPadding = false) {
         if (decimalPlaces < 0)
             throw new ArgumentOutOfRangeException(nameof(decimalPlaces), "Decimal places must be non-negative.");
 
@@ -44,16 +41,14 @@ public static class TimeConverter
     /// </summary>
     /// <param name="timeString">时间字符串。</param>
     /// <returns>解析后的秒数。</returns>
-    public static double ParseSeconds(this string? timeString)
-    {
+    public static double ParseSeconds(this string? timeString) {
         if (string.IsNullOrWhiteSpace(timeString))
             return 0;
 
         timeString = timeString.Trim();
         int colonCount = timeString.Count(c => c == ':');
 
-        return colonCount switch
-        {
+        return colonCount switch {
             0 => ParseSecondsFromSingleValue(timeString),
             1 => ParseSecondsFromMinutesAndSeconds(timeString),
             2 => ParseSecondsFromTimeSpan(timeString),
@@ -61,25 +56,21 @@ public static class TimeConverter
         };
     }
 
-    private static double ParseSecondsFromSingleValue(string timeString)
-    {
+    private static double ParseSecondsFromSingleValue(string timeString) {
         return double.TryParse(timeString, out double seconds) ? seconds : 0;
     }
 
-    private static double ParseSecondsFromMinutesAndSeconds(string timeString)
-    {
+    private static double ParseSecondsFromMinutesAndSeconds(string timeString) {
         string[] parts = timeString.Split(':');
 
-        return
-            parts.Length == 2
-         && double.TryParse(parts[0], out double minutes)
-         && double.TryParse(parts[1], out double seconds)
-                ? minutes * 60 + seconds
-                : 0;
+        return parts.Length == 2 &&
+               double.TryParse(parts[0], out double minutes) &&
+               double.TryParse(parts[1], out double seconds) ?
+            minutes * 60 + seconds :
+            0;
     }
 
-    private static double ParseSecondsFromTimeSpan(string timeString)
-    {
-        return TimeSpan.TryParse(timeString, out var timeSpan) ? timeSpan.TotalSeconds : 0;
+    private static double ParseSecondsFromTimeSpan(string timeString) {
+        return TimeSpan.TryParse(timeString, out TimeSpan timeSpan) ? timeSpan.TotalSeconds : 0;
     }
 }

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Timers;
-using Avalonia.Media.Imaging;
+using Avalonia.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Audio;
@@ -18,8 +18,8 @@ using QwQ_Music.ViewModels.Bases;
 namespace QwQ_Music.Common.Managers;
 
 public class MusicItemChangedEventArgs(PlaylistItemModel oldItem, PlaylistItemModel newItem) : EventArgs {
-    public readonly PlaylistItemModel OldItem = oldItem;
     public readonly PlaylistItemModel NewItem = newItem;
+    public readonly PlaylistItemModel OldItem = oldItem;
 }
 
 public partial class AudioPlayManager : ViewModelBase, IAsyncDisposable {
@@ -33,9 +33,8 @@ public partial class AudioPlayManager : ViewModelBase, IAsyncDisposable {
 
         await LoggerService.DebugAsync($"正在切换音频：由《{CurrentMusicItem.Model.Title}》切换到《{musicItem.Model.Title}》。")
                            .ConfigureAwait(false);
-        if (VerifyMusicItem(musicItem)) {
+        if (VerifyMusicItem(musicItem))
             OnPlayingChanged(false);
-        }
 
 
         try {
@@ -44,8 +43,6 @@ public partial class AudioPlayManager : ViewModelBase, IAsyncDisposable {
             if (musicItem != PlaylistItemModel.RefDefault) {
                 await musicItem.Model.LoadCurrentAsync().ConfigureAwait(false);
                 LyricsModel = new LyricsModel { Offset = musicItem.Model.LyricOffset, Lyrics = musicItem.Model.Lyrics };
-                CoverImage = musicItem.Model.Thumbnail;
-
                 await _audioPreprocessor.UpdateMusicPlayProgressAsync(musicItem.Model, restart).ConfigureAwait(false);
                 await _audioPreprocessor.InitializeAudioTrackAsync(musicItem.Model).ConfigureAwait(false);
                 Position = musicItem.Model.Record.TotalSeconds;
@@ -149,16 +146,6 @@ public partial class AudioPlayManager : ViewModelBase, IAsyncDisposable {
         }
     }
 
-    public Bitmap CoverImage {
-        get;
-        set {
-            if (field == value)
-                return;
-            field = value;
-            OnPropertyChanged();
-        }
-    } = CacheManager.NotExist;
-
     public bool IsPlaying {
         get;
         set {
@@ -180,9 +167,8 @@ public partial class AudioPlayManager : ViewModelBase, IAsyncDisposable {
     public void UpdateCurrentLyric() {
         LyricsModel.UpdateLyricsIndex(_position);
         // 当播放位置改变时，重新设置歌词定时器
-        if (IsPlaying) {
+        if (IsPlaying)
             UpdateLyricsTimer();
-        }
     }
 
     public double Position {
@@ -292,8 +278,9 @@ public partial class AudioPlayManager : ViewModelBase, IAsyncDisposable {
         await _audioPreprocessor.UpdateMusicPlayProgressAsync(CurrentMusicItem.Model).ConfigureAwait(false);
         IEnumerable<string> paths = PlaylistManager.Instance.SequentialPlaylist.Select(item => item.Model.FilePath);
         if (PlayerConfig.PlayMode == PlayMode.Random) {
-            var shuffled = PlaylistManager.Instance.ActualPlaylist;
-            var orders = PlaylistManager.Instance.SequentialPlaylist.Select(item => shuffled.IndexOf(item));
+            AvaloniaList<PlaylistItemModel> shuffled = PlaylistManager.Instance.ActualPlaylist;
+            IEnumerable<int> orders =
+                PlaylistManager.Instance.SequentialPlaylist.Select(item => shuffled.IndexOf(item));
 
             await PlaylistRepository.WriteAsync(paths, orders).ConfigureAwait(false);
         } else {
@@ -387,13 +374,11 @@ public partial class AudioPlayManager : ViewModelBase, IAsyncDisposable {
             return;
         }
 
-        if (CurrentMusicItem == PlaylistItemModel.RefDefault) {
+        if (CurrentMusicItem == PlaylistItemModel.RefDefault)
             await SetCurrentMusicItemAsync(PlaylistManager.Instance.First(), true).ConfigureAwait(false);
-        }
 
-        if (VerifyMusicItem(CurrentMusicItem)) {
+        if (VerifyMusicItem(CurrentMusicItem))
             OnPlayingChanged(!IsPlaying);
-        }
     }
 
     [RelayCommand]
@@ -402,9 +387,8 @@ public partial class AudioPlayManager : ViewModelBase, IAsyncDisposable {
     }
 
     public async Task SetThisMusicAsync(PlaylistItemModel? musicItem, bool isPlaynow) {
-        if (musicItem is not { } item || !VerifyMusicItem(musicItem)) {
+        if (musicItem is not { } item || !VerifyMusicItem(musicItem))
             return;
-        }
 
         if (CurrentMusicItem.Equals(item)) {
             OnPlayingChanged(!IsPlaying);
@@ -431,15 +415,9 @@ public partial class AudioPlayManager : ViewModelBase, IAsyncDisposable {
     [RelayCommand]
     public void NextSong() { NextSongAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false); }
 
-    public void Pause() {
-        if (!IsPlaying)
-            OnPlayingChanged(false);
-    }
+    public void Pause() { OnPlayingChanged(false); }
 
-    public void Stop() {
-        if (!IsPlaying)
-            OnPlayingChanged(false);
-    }
+    public void Stop() { OnPlayingChanged(false); }
 
     [RelayCommand]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -516,7 +494,7 @@ public partial class AudioPlayManager : ViewModelBase, IAsyncDisposable {
         if (index < 0 || index >= PlaylistManager.Instance.Count)
             return;
 
-        var musicItem = PlaylistManager.Instance.ActualPlaylist[index];
+        PlaylistItemModel musicItem = PlaylistManager.Instance.ActualPlaylist[index];
 
         if (VerifyMusicItem(musicItem)) {
             await SetCurrentMusicItemAsync(musicItem, PlayerConfig.IsRestartPlay).ConfigureAwait(false);
@@ -540,15 +518,13 @@ public partial class AudioPlayManager : ViewModelBase, IAsyncDisposable {
         current += offset;
         // current的边界判断
         // current越上界时，返回最后一项。
-        if (result <= 0 || current < 0) {
+        if (result <= 0 || current < 0)
             return result;
-        }
 
         // 此处复用 result 作为下界。       
         // current越下界时意味着歌单播放完毕。模式为顺序播放时返回-1，其它时返回首项。
-        if (current > result) {
+        if (current > result)
             return PlaylistManager.Instance.PlayMode == PlayMode.Sequential ? -1 : 0;
-        }
 
         return current;
     }

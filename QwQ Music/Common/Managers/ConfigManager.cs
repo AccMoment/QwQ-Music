@@ -15,11 +15,24 @@ public static class ConfigManager {
     private static JsonConfigService JsonConfigService =>
         new(UserConfigJsonSerializerContext.Default, StaticConfig.ConfigSavePath);
 
-    static ConfigManager() {
-        ServiceConfig = GetServiceConfig();
+    public static UserConfig UserConfig { get; } =
+        JsonConfigService.Load<UserConfig>(nameof(UserConfig).ToLower()) ?? new UserConfig();
 
-        UserConfig = JsonConfigService.Load<UserConfig>(nameof(UserConfig).ToLower()) ?? new UserConfig();
-    }
+    public static SystemConfig SystemConfig => UserConfig.SystemConfig;
+
+    public static PlayerConfig PlayerConfig => UserConfig.PlayerConfig;
+
+    public static LyricConfig LyricConfig => UserConfig.LyricConfig;
+
+    public static SoundModifierConfig SoundModifierConfig => UserConfig.SoundModifierConfig;
+
+    public static UiConfig UiConfig => UserConfig.UiConfig;
+
+    public static HotkeyConfig HotkeyConfig => UserConfig.HotkeyConfig;
+
+    public static ServiceConfig ServiceConfig { get; } = GetServiceConfig();
+
+    public static LoggerServiceConfig LoggerServiceConfig => ServiceConfig.LoggerServiceConfig;
 
     private static ServiceConfig GetServiceConfig() {
         var config = new ServiceConfig();
@@ -35,24 +48,6 @@ public static class ConfigManager {
 
         return config;
     }
-
-    public static UserConfig UserConfig { get; }
-
-    public static SystemConfig SystemConfig => UserConfig.SystemConfig;
-
-    public static PlayerConfig PlayerConfig => UserConfig.PlayerConfig;
-
-    public static LyricConfig LyricConfig => UserConfig.LyricConfig;
-
-    public static SoundModifierConfig SoundModifierConfig => UserConfig.SoundModifierConfig;
-
-    public static UiConfig UiConfig => UserConfig.UiConfig;
-
-    public static HotkeyConfig HotkeyConfig => UserConfig.HotkeyConfig;
-
-    public static ServiceConfig ServiceConfig { get; }
-
-    public static LoggerServiceConfig LoggerServiceConfig => ServiceConfig.LoggerServiceConfig;
 
     public static void SaveConfig() {
         try {

@@ -11,6 +11,7 @@ public class MusicAlbumCover : TemplatedControl {
     public static readonly StyledProperty<bool> IsAutoRoundedCornersProperty =
         AvaloniaProperty.Register<MusicAlbumCover, bool>(nameof(IsAutoRoundedCorners), true);
 
+
     public Bitmap Thumbnail {
         get => GetValue(ThumbnailProperty);
         set => SetValue(ThumbnailProperty, value);

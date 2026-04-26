@@ -7,97 +7,76 @@ using Irihi.Avalonia.Shared.Helpers;
 
 namespace QwQ_Music.UI.Behaviors;
 
-public class DynamicCornerBehavior
-{
-    static DynamicCornerBehavior()
-    {
+public class DynamicCornerBehavior {
+    static DynamicCornerBehavior() {
         IsEnabledProperty.Changed.Subscribe(OnIsEnabledChanged);
         ModeProperty.Changed.Subscribe(OnPropertyChanged);
         AspectRatioProperty.Changed.Subscribe(OnPropertyChanged);
     }
 
-    private static void OnIsEnabledChanged(AvaloniaPropertyChangedEventArgs args)
-    {
+    private static void OnIsEnabledChanged(AvaloniaPropertyChangedEventArgs args) {
         if (args.Sender is not Control control)
             return;
 
         if (args.NewValue is not bool isEnabled)
             return;
 
-        if (isEnabled)
-        {
+        if (isEnabled) {
             control.SizeChanged += OnSizeChanged;
             ApplyCornerRadius(control);
-        }
-        else
-        {
+        } else {
             control.SizeChanged -= OnSizeChanged;
             ResetCornerRadius(control);
         }
     }
 
-    private static void OnPropertyChanged(AvaloniaPropertyChangedEventArgs args)
-    {
+    private static void OnPropertyChanged(AvaloniaPropertyChangedEventArgs args) {
         if (args.Sender is Control control && GetIsEnabled(control))
-        {
             ApplyCornerRadius(control);
-        }
     }
 
-    private static void OnSizeChanged(object? sender, SizeChangedEventArgs e)
-    {
+    private static void OnSizeChanged(object? sender, SizeChangedEventArgs e) {
         if (sender is Control control && GetIsEnabled(control))
-        {
             ApplyCornerRadius(control);
-        }
     }
 
-    private static void ApplyCornerRadius(Control control)
-    {
+    private static void ApplyCornerRadius(Control control) {
         if (!control.IsMeasureValid)
             return;
 
         (double width, double height) = GetEffectiveSize(control);
-        var cornerRadius = CalculateCornerRadius(control, width, height);
-
-        if (!TryGetCornerRadiusProperty(control, out var property))
+        CornerRadius cornerRadius = CalculateCornerRadius(control, width, height);
+        if (!TryGetCornerRadiusProperty(control, out AvaloniaProperty<CornerRadius>? property))
             return;
 
         if (property != null)
             control.SetValue(property, cornerRadius);
     }
 
-    private static (double width, double height) GetEffectiveSize(Control control)
-    {
-        return control switch
-        {
+    private static (double width, double height) GetEffectiveSize(Control control) {
+        return control switch {
             Layoutable layoutable => (layoutable.Bounds.Width, layoutable.Bounds.Height),
-            _ => (control.Width, control.Height)
+            _                     => (control.Width, control.Height)
         };
     }
 
-    private static CornerRadius CalculateCornerRadius(Control control, double width, double height)
-    {
-        var mode = GetMode(control);
+    private static CornerRadius CalculateCornerRadius(Control control, double width, double height) {
+        ShapeMode mode = GetMode(control);
         double aspect = GetAspectRatio(control);
 
-        return mode switch
-        {
-            ShapeMode.Circle => new CornerRadius(Math.Min(width, height) / 2.0),
+        return mode switch {
+            ShapeMode.Circle  => new CornerRadius(Math.Min(width, height) / 2.0),
             ShapeMode.Capsule => new CornerRadius(Math.Min(width, height) / 2.0),
             ShapeMode.Ellipse => new CornerRadius(width * aspect / 2.0, height * aspect / 2.0),
             ShapeMode.Hybrid => new CornerRadius(
                 Math.Min(width, height * aspect) / 2.0,
-                Math.Min(width * aspect, height) / 2.0
-            ),
-            _ => throw new ArgumentOutOfRangeException()
+                Math.Min(width * aspect, height) / 2.0),
+            _ => throw new InvalidOperationException()
         };
     }
 
-    private static bool TryGetCornerRadiusProperty(Control control, out AvaloniaProperty<CornerRadius>? property)
-    {
-        switch (control)
-        {
+    private static bool TryGetCornerRadiusProperty(Control control, out AvaloniaProperty<CornerRadius>? property) {
+        switch (control) {
             // 使用静态映射和类型检查代替反射
             case Border:
                 property = Border.CornerRadiusProperty;
@@ -117,9 +96,8 @@ public class DynamicCornerBehavior
         }
     }
 
-    private static void ResetCornerRadius(Control control)
-    {
-        if (!TryGetCornerRadiusProperty(control, out var property))
+    private static void ResetCornerRadius(Control control) {
+        if (!TryGetCornerRadiusProperty(control, out AvaloniaProperty<CornerRadius>? property))
             return;
 
         if (property != null)
@@ -129,65 +107,37 @@ public class DynamicCornerBehavior
     #region 附加属性
 
     // 启用行为
-    public static readonly AttachedProperty<bool> IsEnabledProperty = AvaloniaProperty.RegisterAttached<
-        DynamicCornerBehavior,
-        Control,
-        bool
-    >("IsEnabled");
+    public static readonly AttachedProperty<bool> IsEnabledProperty =
+        AvaloniaProperty.RegisterAttached<DynamicCornerBehavior, Control, bool>("IsEnabled");
 
     // 形状模式
-    public static readonly AttachedProperty<ShapeMode> ModeProperty = AvaloniaProperty.RegisterAttached<
-        DynamicCornerBehavior,
-        Control,
-        ShapeMode
-    >("Mode");
+    public static readonly AttachedProperty<ShapeMode> ModeProperty =
+        AvaloniaProperty.RegisterAttached<DynamicCornerBehavior, Control, ShapeMode>("Mode");
 
     // 自定义比例（用于混合模式）
-    public static readonly AttachedProperty<double> AspectRatioProperty = AvaloniaProperty.RegisterAttached<
-        DynamicCornerBehavior,
-        Control,
-        double
-    >("AspectRatio", 1.0);
+    public static readonly AttachedProperty<double> AspectRatioProperty =
+        AvaloniaProperty.RegisterAttached<DynamicCornerBehavior, Control, double>("AspectRatio", 1.0);
 
     #endregion
 
     #region 属性访问器
 
-    public static bool GetIsEnabled(Control control)
-    {
-        return control.GetValue(IsEnabledProperty);
-    }
+    public static bool GetIsEnabled(Control control) { return control.GetValue(IsEnabledProperty); }
 
-    public static void SetIsEnabled(Control control, bool value)
-    {
-        control.SetValue(IsEnabledProperty, value);
-    }
+    public static void SetIsEnabled(Control control, bool value) { control.SetValue(IsEnabledProperty, value); }
 
-    public static ShapeMode GetMode(Control control)
-    {
-        return control.GetValue(ModeProperty);
-    }
+    public static ShapeMode GetMode(Control control) { return control.GetValue(ModeProperty); }
 
-    public static void SetMode(Control control, ShapeMode value)
-    {
-        control.SetValue(ModeProperty, value);
-    }
+    public static void SetMode(Control control, ShapeMode value) { control.SetValue(ModeProperty, value); }
 
-    public static double GetAspectRatio(Control control)
-    {
-        return control.GetValue(AspectRatioProperty);
-    }
+    public static double GetAspectRatio(Control control) { return control.GetValue(AspectRatioProperty); }
 
-    public static void SetAspectRatio(Control control, double value)
-    {
-        control.SetValue(AspectRatioProperty, value);
-    }
+    public static void SetAspectRatio(Control control, double value) { control.SetValue(AspectRatioProperty, value); }
 
     #endregion
 }
 
-public enum ShapeMode
-{
+public enum ShapeMode {
     /// <summary> 正圆形（短边直径） </summary>
     Circle,
 

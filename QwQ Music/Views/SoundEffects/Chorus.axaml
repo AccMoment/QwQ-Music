@@ -31,9 +31,9 @@
 
     <StackPanel Orientation="Horizontal" Spacing="10">
         <TextBlock Text="{Binding Feedback, StringFormat='反馈量 : {0:F3}'}" />
-        <TextBlock Text="* 重新加载时生效" Foreground="{DynamicResource  TextBlockTertiaryForeground}"/>
+        <TextBlock Text="* 重新加载时生效" Foreground="{DynamicResource  TextBlockTertiaryForeground}" />
     </StackPanel>
-    
+
     <Slider
         Minimum="0"
         Maximum="1"
@@ -44,5 +44,5 @@
         Minimum="0"
         Maximum="1"
         Value="{Binding WetDryMix}" />
-    
+
 </StackPanel>

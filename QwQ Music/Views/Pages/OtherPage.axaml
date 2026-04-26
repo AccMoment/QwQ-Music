@@ -71,7 +71,7 @@
         </Carousel.PageTransition>
 
         <pages1:StatisticsPage />
-        <pages1:MiaomiaoLittleToyPage />
+        <pages1:JoyPage />
         <pages1:AboutPage />
     </Carousel>
 

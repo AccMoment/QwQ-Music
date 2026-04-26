@@ -1,4 +1,6 @@
 using System;
+using System.Runtime.CompilerServices;
+using Avalonia.Input.Platform;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -112,7 +114,7 @@ public partial class AboutPageViewModel : ViewModelBase {
     [RelayCommand]
     private static void CopyText() {
         // 使用topLevel进行操作
-        var clipboard = App.TopLevel?.Clipboard;
+        IClipboard? clipboard = App.TopLevel?.Clipboard;
 
         if (clipboard == null) {
             LoggerService.Warning($"版本号复制失败：剪贴板不存在。TopLevel:{App.TopLevel}");
@@ -134,16 +136,23 @@ public partial class AboutPageViewModel : ViewModelBase {
 public class ContributorItem(string name, string? comment = null) : ObservableObject {
     public string Name { get; set; } = name;
 
-    public Bitmap Hp =>
-        CacheManager.TryLoadFromWebAsync(
-                        Name,
-                        "贡献者",
-                        "头像",
-                        new Uri($"https://github.com/{Name}.png"),
-                        () => OnPropertyChanged())
-                    .ConfigureAwait(false)
-                    .GetAwaiter()
-                    .GetResult();
+    public Bitmap Hp {
+        get {
+            ConfiguredValueTaskAwaitable<Bitmap>.ConfiguredValueTaskAwaiter result = CacheManager.TryLoadFromWebAsync(
+                    Name,
+                    "贡献者",
+                    "头像",
+                    new Uri($"https://github.com/{Name}.png"),
+                    () => OnPropertyChanged())
+                .ConfigureAwait(false)
+                .GetAwaiter();
+            if (result.IsCompleted)
+                return result.GetResult();
+
+            return CacheManager.Loading;
+        }
+    }
+
 
     public string Comment { get; set; } = comment ?? "Ta没有什么想说的~";
 }
@@ -153,11 +162,18 @@ public class SpecialThank(string name, string logoUri, string uri, string descri
 
     public string Description { get; set; } = description;
 
-    public Bitmap Logo =>
-        CacheManager.TryLoadFromWebAsync(Name, "鸣谢", "Logo", new Uri(logoUri), () => OnPropertyChanged())
-                    .ConfigureAwait(false)
-                    .GetAwaiter()
-                    .GetResult();
+    public Bitmap Logo {
+        get {
+            ConfiguredValueTaskAwaitable<Bitmap>.ConfiguredValueTaskAwaiter result = CacheManager
+                .TryLoadFromWebAsync(Name, "鸣谢", "Logo", new Uri(logoUri), () => OnPropertyChanged())
+                .ConfigureAwait(false)
+                .GetAwaiter();
+            if (result.IsCompleted)
+                return result.GetResult();
+
+            return CacheManager.Loading;
+        }
+    }
 
     public string Uri { get; set; } = uri;
 }

@@ -8,6 +8,29 @@ using SoundFlow.Structs;
 namespace QwQ_Music.Models.SoundEffectModels;
 
 public class BassBoosterModel : ObservableObject, ISoundModifierModel<BassBoosterModifier> {
+    /// <summary>
+    ///     获取或设置截止频率（Hz）。
+    /// </summary>
+    public float Cutoff {
+        get;
+        set {
+            if (SetProperty(ref field, value))
+                Modifier?.Cutoff = value;
+        }
+    }
+
+    /// <summary>
+    ///     获取或设置以增益（dB）。
+    /// </summary>
+    public float BoostGainDb {
+        get;
+        set {
+            if (SetProperty(ref field, value))
+                // Modifier?.BoostGain = value;
+                Modifier?.BoostGainDb = value;
+        }
+    }
+
     [JsonIgnore]
     public BassBoosterModifier? Modifier { get; private set; }
 
@@ -18,8 +41,8 @@ public class BassBoosterModel : ObservableObject, ISoundModifierModel<BassBooste
     public string Name { get; } = "低音增强";
 
     public void Initialize(AudioFormat audioFormat) {
-        var modifier = new BassBoosterModifier(audioFormat) { Cutoff = Cutoff, 
-            BoostGainDb = BoostGainDb
+        var modifier = new BassBoosterModifier(audioFormat) {
+            Cutoff = Cutoff, BoostGainDb = BoostGainDb
             // BoostGain = BoostGainDb
         };
 
@@ -31,34 +54,8 @@ public class BassBoosterModel : ObservableObject, ISoundModifierModel<BassBooste
     public bool Enabled {
         get;
         set {
-            if (SetProperty(ref field, value)) {
+            if (SetProperty(ref field, value))
                 Modifier?.Enabled = value;
-            }
-        }
-    }
-
-    /// <summary>
-    /// 获取或设置截止频率（Hz）。
-    /// </summary>
-    public float Cutoff {
-        get;
-        set {
-            if (SetProperty(ref field, value)) {
-                Modifier?.Cutoff = value;
-            }
-        }
-    }
-
-    /// <summary>
-    /// 获取或设置以增益（dB）。
-    /// </summary>
-    public float BoostGainDb {
-        get;
-        set {
-            if (SetProperty(ref field, value)) {
-                // Modifier?.BoostGain = value;
-                Modifier?.BoostGainDb = value;
-            }
         }
     }
 }

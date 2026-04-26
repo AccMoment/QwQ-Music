@@ -14,7 +14,7 @@ using ThreadState = System.Diagnostics.ThreadState;
 namespace QwQ_Music;
 
 public static class Program {
-    public static string VersionText => "0.9.1+build.251114.2";
+    public static string VersionText => "2.0.5";
 
     [STAThread]
     public static async Task Main(string[] args) {
@@ -48,13 +48,13 @@ public static class Program {
         }
 
         LogActiveThreads();
-        ThreadPool.GetMinThreads(out var a, out var b);
-        ThreadPool.GetMaxThreads(out var c, out var d);
+        ThreadPool.GetMinThreads(out int a, out int b);
+        ThreadPool.GetMaxThreads(out int c, out int d);
         Console.WriteLine($"[{a},{c}] | [{b},{d}]");
         Environment.Exit(0); // TODO FIXME TIER 1 
         // NOTE: Here must be some leaks.
         // The program did not exit so that I have to exit it manually and explicitly here.
-        // We must repair this bug in the future.
+        // We must fix this bug in the future.
     }
 
     private static void LogActiveThreads() {
@@ -63,17 +63,16 @@ public static class Program {
         foreach (ProcessThread thread in threads) {
             if (thread.ThreadState == ThreadState.Wait)
                 reasons[thread.WaitReason.ToString()] = reasons.GetValueOrDefault(thread.WaitReason.ToString(), 0) + 1;
-            else 
-                reasons[thread.ThreadState.ToString()] =  reasons.GetValueOrDefault(thread.ThreadState.ToString(), 0) + 1;
-            if (thread.ThreadState == ThreadState.Wait) {
+            else
+                reasons[thread.ThreadState.ToString()] =
+                    reasons.GetValueOrDefault(thread.ThreadState.ToString(), 0) + 1;
+            if (thread.ThreadState == ThreadState.Wait)
                 Console.WriteLine($"Thread {thread.Id} is waiting. Wait Reason: {thread.WaitReason}");
-            }
         }
 
         Console.WriteLine(threads.Count);
-        foreach (var reason in reasons) {
+        foreach (KeyValuePair<string, int> reason in reasons)
             Console.WriteLine($"{reason.Key}: {reason.Value}");
-        }
     }
 
 
@@ -81,7 +80,7 @@ public static class Program {
         await LoggerService.InfoAsync("正在关闭...").ConfigureAwait(false);
         try {
             await AudioPlayManager.Instance.DisposeAsync().ConfigureAwait(false);
-            ConfigManager.SaveConfig();// 需要用到 AudioPlayManager释放时修改的数据，不要修改前后顺序
+            ConfigManager.SaveConfig(); // 需要用到 AudioPlayManager释放时修改的数据，不要修改前后顺序
             await LoggerService.InfoAsync("设置已保存").ConfigureAwait(false);
             MousePenetrate.ClearCache();
             HotkeyService.ClearCache();
@@ -91,11 +90,10 @@ public static class Program {
             await MusicListRepository.Instance.DisposeAsync().ConfigureAwait(false);
             await MusicListItemsRepository.Instance.DisposeAsync().ConfigureAwait(false);
             await LoggerService.InfoAsync("资源已释放。").ConfigureAwait(false);
-
         } catch (Exception ex) {
             await LoggerService.ErrorAsync($"关闭App时发生错误: {ex.Message}").ConfigureAwait(false);
         } finally {
-            LoggerService.Dispose();
+            await LoggerService.DisposeAsync().ConfigureAwait(false);
         }
     }
 

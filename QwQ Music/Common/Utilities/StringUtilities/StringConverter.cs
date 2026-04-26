@@ -7,15 +7,13 @@ namespace QwQ_Music.Common.Utilities.StringUtilities;
 /// <summary>
 ///     字符串转换工具类
 /// </summary>
-public static partial class StringConverter
-{
+public static partial class StringConverter {
     /// <summary>
     ///     将字符串转换为驼峰命名
     /// </summary>
     /// <param name="input">输入字符串</param>
     /// <returns>驼峰命名字符串</returns>
-    public static string ToCamelCase(string input)
-    {
+    public static string ToCamelCase(string input) {
         if (string.IsNullOrEmpty(input))
             return input;
 
@@ -28,8 +26,7 @@ public static partial class StringConverter
         result.Append(char.ToLowerInvariant(words[0][0]));
         result.Append(words[0][1..].ToLowerInvariant());
 
-        for (int i = 1; i < words.Length; i++)
-        {
+        for (int i = 1; i < words.Length; i++) {
             if (words[i].Length <= 0)
                 continue;
 
@@ -45,8 +42,7 @@ public static partial class StringConverter
     /// </summary>
     /// <param name="input">输入字符串</param>
     /// <returns>帕斯卡命名字符串</returns>
-    public static string ToPascalCase(string input)
-    {
+    public static string ToPascalCase(string input) {
         if (string.IsNullOrEmpty(input))
             return input;
 
@@ -57,8 +53,7 @@ public static partial class StringConverter
 
         var result = new StringBuilder();
 
-        foreach (string word in words)
-        {
+        foreach (string word in words) {
             if (word.Length <= 0)
                 continue;
 
@@ -74,8 +69,7 @@ public static partial class StringConverter
     /// </summary>
     /// <param name="input">输入字符串</param>
     /// <returns>蛇形命名字符串</returns>
-    public static string ToSnakeCase(string input)
-    {
+    public static string ToSnakeCase(string input) {
         return string.IsNullOrEmpty(input) ? input : PascalCaseRegex().Replace(input, "$1_$2").ToLowerInvariant();
     }
 
@@ -84,8 +78,7 @@ public static partial class StringConverter
     /// </summary>
     /// <param name="input">输入字符串</param>
     /// <returns>短横线命名字符串</returns>
-    public static string ToKebabCase(string input)
-    {
+    public static string ToKebabCase(string input) {
         return string.IsNullOrEmpty(input) ? input : PascalCaseRegex().Replace(input, "$1-$2").ToLowerInvariant();
     }
 

@@ -5,8 +5,7 @@ using QwQ_Music.Common;
 
 namespace QwQ_Music.Views.Customs;
 
-public partial class FontSelector : Grid
-{
+public partial class FontSelector : Grid {
     public static readonly DirectProperty<FontSelector, string?> SelectedFontProperty =
         AvaloniaProperty.RegisterDirect<FontSelector, string?>(
             nameof(SelectedFont),
@@ -14,19 +13,16 @@ public partial class FontSelector : Grid
             (o, v) => o.SelectedFont = v,
             defaultBindingMode: BindingMode.TwoWay);
 
-    public FontSelector()
-    {
+    public FontSelector() {
         InitializeComponent();
         DataContext = this;
     }
 
     public static AppResources AppResources => AppResources.Default;
 
-    public string? SelectedFont
-    {
+    public string? SelectedFont {
         get;
-        set
-        {
+        set {
             if (value != null && value != field)
                 SetAndRaise(SelectedFontProperty, ref field, value);
         }

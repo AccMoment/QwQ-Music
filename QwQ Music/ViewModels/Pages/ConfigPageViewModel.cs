@@ -9,17 +9,16 @@ namespace QwQ_Music.ViewModels.Pages;
 
 using static I18NService;
 
-public partial class ConfigPageViewModel() : NavigationViewModel("设置")
-{
+public partial class ConfigPageViewModel() : NavigableViewModel(nameof(ConfigPageViewModel)) {
     public static string LyricConfigName => Lang[nameof(LyricConfigName)];
 
-    [ObservableProperty] public partial DateTime? LastSavedTime { get; set; } = null;
-    
+    [ObservableProperty]
+    public partial DateTime? LastSavedTime { get; set; } = null;
+
     [RelayCommand]
-    private void SaveConfigImmediately()
-    {
+    private void SaveConfigImmediately() {
         ConfigManager.SaveConfig();
-        var now = DateTime.Now;
+        DateTime now = DateTime.Now;
         ToastService.Success($"保存成功！在{now:HH:mm:ss}");
         LastSavedTime = now;
     }

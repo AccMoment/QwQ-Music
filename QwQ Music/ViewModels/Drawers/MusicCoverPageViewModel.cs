@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Timers;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -19,29 +20,66 @@ using MusicItemsManager = QwQ_Music.Common.Managers.MusicItemsManager;
 
 namespace QwQ_Music.ViewModels.Drawers;
 
-public partial class MusicCoverPageViewModel : NavigationViewModel {
+public partial class MusicCoverPageViewModel : NavigableViewModel {
     private const int _COLOR_COUNT = 4;
 
-    private static readonly CoverConfig _coverConfig = ConfigManager.UiConfig.CoverConfig;
+    private static readonly VisualConfig _visualConfig = ConfigManager.UiConfig.VisualConfig;
 
     private static readonly Color[] _defaultColors = [
         Color.Parse("#FFE2D9"), Color.Parse("#F3ECFE"), Color.Parse("#DFE7FF"), Color.Parse("#E4F2FF")
     ];
 
-    private readonly IBrush _darkThemeBrush = Brush.Parse("#22FFFFFF");
+    private static readonly IBrush _darkThemeBrush = Brush.Parse("#22FFFFFF");
 
-    private readonly IBrush _lightThemeBrush = Brush.Parse("#88FFFFFF");
+    private static readonly IBrush _lightThemeBrush = Brush.Parse("#88FFFFFF");
+    private Timer? _coverDebounce;
 
     public MusicCoverPageViewModel() : base("播放") {
-        if (AudioPlayManager.CurrentMusicItem != PlaylistItemModel.RefDefault) {
+        _coverDebounce = new Timer(1000) { AutoReset = false };
+
+        if (AudioPlayManager.CurrentMusicItem != PlaylistItemModel.RefDefault)
             OnMusicItemChanged(
                 this,
                 new MusicItemChangedEventArgs(PlaylistItemModel.RefDefault, AudioPlayManager.CurrentMusicItem));
-        }
 
         AudioPlayManager.MusicItemChanged += OnMusicItemChanged;
         AppDomain.CurrentDomain.ProcessExit += CurrentDomain_OnProcessExit;
     }
+
+    public Bitmap Cover {
+        get {
+            Bitmap image = AudioPlayManager.CurrentMusicItem.Model.Cover;
+            if (image == CacheManager.Loading) {
+                if (_coverDebounce is null) {
+                    _coverDebounce = new Timer(200) { AutoReset = false };
+                    _coverDebounce.Elapsed += Update;
+                    _coverDebounce.Start();
+                }
+
+                field = image;
+            } else {
+                _coverDebounce?.Stop();
+                _coverDebounce?.Dispose();
+                _coverDebounce = null;
+                SetProperty(ref field, image);
+            }
+
+
+            return field;
+
+            void Update(object? sender, ElapsedEventArgs args) {
+                OnPropertyChanged();
+                _coverDebounce.Elapsed -= Update;
+                _coverDebounce.Close();
+                _coverDebounce = null;
+            }
+        }
+    } = CacheManager.NotExist;
+
+    public static bool IsStaticBackground => _visualConfig.IsStaticBackground;
+
+    [ObservableProperty]
+    public partial Color DropShadowColor { get; private set; } = Avalonia.Media.Colors.Black;
 
     public static DrawerManager DrawerManager => DrawerManager.Instance;
 
@@ -58,9 +96,8 @@ public partial class MusicCoverPageViewModel : NavigationViewModel {
     public double SelectLyricsTimePoint {
         get;
         set {
-            if (SetProperty(ref field, value)) {
+            if (SetProperty(ref field, value))
                 AudioPlayManager.Position = field;
-            }
         }
     }
 
@@ -78,12 +115,13 @@ public partial class MusicCoverPageViewModel : NavigationViewModel {
     private void OnMusicItemChanged(object? sender, MusicItemChangedEventArgs args) {
         UpdateColorsListAsync(args.NewItem.Model).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
         OnPropertyChanged(nameof(Colors));
+        _ = Cover;
         Dispatcher.UIThread.Post(UpdateThemeVariantFromColors);
     }
 
     private async Task UpdateColorsListAsync(MusicItemModel musicItem) {
         // 如果没有封面Id，直接使用默认颜色
-        if (string.IsNullOrWhiteSpace(musicItem.AlbumId)) {
+        if (!musicItem.HasCover) {
             Colors = _defaultColors;
 
             return;
@@ -97,7 +135,7 @@ public partial class MusicCoverPageViewModel : NavigationViewModel {
         }
 
         // 提取新的颜色
-        var colorsList = await GetColorPaletteAsync(musicItem.Thumbnail, _COLOR_COUNT).ConfigureAwait(false);
+        Color[]? colorsList = await GetColorPaletteAsync(musicItem.Thumbnail, _COLOR_COUNT).ConfigureAwait(false);
 
         // 使用提取的颜色，为null则使用默认颜色
         Colors = colorsList ?? _defaultColors;
@@ -131,10 +169,11 @@ public partial class MusicCoverPageViewModel : NavigationViewModel {
         double avgLuminance = totalLuminance / Colors.Length;
 
         // 根据平均亮度设置主题（反色）
-        bool isHighLuminance = avgLuminance > 0.5;
+        bool isDarkTheme = avgLuminance > 0.5;
 
-        SpectrumVisualizerBrush = isHighLuminance ? _lightThemeBrush : _darkThemeBrush;
-        DrawerManager.Instance.MusicPlayerPanelThemeVariant = isHighLuminance ? "Light" : "Dark";
+        SpectrumVisualizerBrush = isDarkTheme ? _lightThemeBrush : _darkThemeBrush;
+        DrawerManager.Instance.MusicPlayerPanelThemeVariant = isDarkTheme ? "Light" : "Dark";
+        DropShadowColor = isDarkTheme ? Avalonia.Media.Colors.White : Avalonia.Media.Colors.Black;
     }
 
     private static async Task<Color[]?> GetColorPaletteAsync(Bitmap cover, int colorCount = 5) {
@@ -143,10 +182,10 @@ public partial class MusicCoverPageViewModel : NavigationViewModel {
             await ColorExtraction.GetColorPaletteFromBitmapAsync(
                                      cover,
                                      colorCount,
-                                     _coverConfig.SelectedColorExtractionAlgorithm,
-                                     _coverConfig.IgnoreWhite,
-                                     _coverConfig.ToLab,
-                                     _coverConfig.UseKMeansPp)
+                                     _visualConfig.SelectedColorExtractionAlgorithm,
+                                     _visualConfig.IgnoreWhite,
+                                     _visualConfig.ToLab,
+                                     _visualConfig.UseKMeansPp)
                                  .ConfigureAwait(false);
     }
 

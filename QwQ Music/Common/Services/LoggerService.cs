@@ -32,6 +32,9 @@ public static class LoggerService {
     private static readonly string _savePath = StaticConfig.LogSavePath;
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
 
+    private static DateTime _currentDay = DateTime.Today;
+    private static bool _useFallbackPath;
+
 
     private static StreamWriter Writer {
         get {
@@ -63,9 +66,6 @@ public static class LoggerService {
         }
     }
 
-    private static DateTime _currentDay = DateTime.Today;
-    private static bool _useFallbackPath;
-
     private static string LogFilePath =>
         Path.Combine(_useFallbackPath ? Path.GetTempPath() : _savePath, $"{_currentDay:yyyy-MM-dd}.QwQ.log");
 
@@ -94,7 +94,7 @@ public static class LoggerService {
 
             int attempts = 0;
 
-            while (attempts < RetryCount) {
+            while (attempts < RetryCount)
                 try {
                     await Writer.WriteLineAsync(formattedMessage).ConfigureAwait(false);
 
@@ -109,7 +109,6 @@ public static class LoggerService {
 
                     await Task.Delay(_BASE_RETRY_DELAY_MS * attempts).ConfigureAwait(false);
                 }
-            }
         } finally {
             _semaphore.Release();
         }
@@ -280,9 +279,8 @@ public static class LoggerService {
 
         void TryHandleAggregateException(Exception exception) {
             if (exception is AggregateException aggregate) {
-                foreach (Exception inner in aggregate.InnerExceptions) {
+                foreach (Exception inner in aggregate.InnerExceptions)
                     TryHandleAggregateException(inner);
-                }
 
                 return;
             }
@@ -291,5 +289,8 @@ public static class LoggerService {
         }
     }
 
-    public static void Dispose() { _semaphore.Dispose(); }
+    public static async Task DisposeAsync() {
+        _semaphore.Dispose();
+        await Writer.DisposeAsync().ConfigureAwait(false);
+    }
 }

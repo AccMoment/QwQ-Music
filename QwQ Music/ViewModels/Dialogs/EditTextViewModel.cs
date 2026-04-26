@@ -6,12 +6,10 @@ using QwQ_Music.ViewModels.Bases;
 
 namespace QwQ_Music.ViewModels.Dialogs;
 
-public partial class EditTextViewModel : DataVerifyModelBase, IDialogContext
-{
+public partial class EditTextViewModel : DataVerifyModelBase, IDialogContext {
     private readonly int _maxLength;
 
-    public EditTextViewModel(string oldText, string title = "标题未设置", int maxLength = -1)
-    {
+    public EditTextViewModel(string oldText, string title = "标题未设置", int maxLength = -1) {
         OldText = oldText;
         Title = title;
         _maxLength = maxLength;
@@ -23,11 +21,9 @@ public partial class EditTextViewModel : DataVerifyModelBase, IDialogContext
 
     public string OldText { get; }
 
-    public string? NewText
-    {
+    public string? NewText {
         get;
-        set
-        {
+        set {
             field = value;
             ValidateName(value);
         }
@@ -35,56 +31,34 @@ public partial class EditTextViewModel : DataVerifyModelBase, IDialogContext
 
     #region 数据校验
 
-    private void ValidateName(string? value)
-    {
+    private void ValidateName(string? value) {
         var errors = new List<string>();
 
         if (string.IsNullOrWhiteSpace(value))
-        {
             errors.Add("新文本不可以为空");
-        }
         else if (NewText == OldText)
-        {
             errors.Add("新文本不能与原内容相同！");
-        }
         else if (_maxLength > 0 && NewText is { } s && s.Length > _maxLength)
-        {
             errors.Add("文本长度不能大于64！");
-        }
 
         SetErrors(nameof(NewText), errors);
     }
 
-    private void InitialValidate()
-    {
-        ValidateName(NewText);
-    }
+    private void InitialValidate() { ValidateName(NewText); }
 
     #endregion
 
     #region 接口实现
 
     [RelayCommand]
-    private void Ok()
-    {
-        Close(NewText);
-    }
+    private void Ok() { Close(NewText); }
 
     [RelayCommand]
-    private void Cancel()
-    {
-        Close();
-    }
+    private void Cancel() { Close(); }
 
-    public void Close(object? result)
-    {
-        RequestClose?.Invoke(this, result);
-    }
+    public void Close(object? result) { RequestClose?.Invoke(this, result); }
 
-    public void Close()
-    {
-        RequestClose?.Invoke(this, null);
-    }
+    public void Close() { RequestClose?.Invoke(this, null); }
 
     public event EventHandler<object?>? RequestClose;
 

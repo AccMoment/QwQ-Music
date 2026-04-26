@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Timers;
 using ATL;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -20,6 +22,10 @@ namespace QwQ_Music.Models;
 
 public partial class MusicItemModel : ObservableObject {
     public static readonly MusicItemModel Default = new() { Title = "听你想听", Artists = "YOU", FilePath = string.Empty };
+
+#pragma warning disable CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑添加 'required' 修饰符或声明为可以为 null。
+    public string Extension;   // Initializes when setting FilePath.
+#pragma warning restore CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑添加 'required' 修饰符或声明为可以为 null。
 
     public bool IsCurrent {
         get;
@@ -66,7 +72,9 @@ public partial class MusicItemModel : ObservableObject {
 
     public string EncodingFormat { get; set; } = "未知";
 
-    public string? AlbumId { get; set; }
+    public (string Name, string Artists) AlbumId { get; set; } = (string.Empty, string.Empty);
+
+    public bool HasCover => !AlbumId.Name.StartsWith('\u0002');
 
     public string[]? CoverColors { get; set; }
 
@@ -98,22 +106,17 @@ public partial class MusicItemModel : ObservableObject {
     public int Channels { get; set; }
     public double SampleRate { get; set; }
 
-#pragma warning disable CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑添加 'required' 修饰符或声明为可以为 null。
-    public string Extension;   // Initializes when setting FilePath.
-#pragma warning restore CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑添加 'required' 修饰符或声明为可以为 null。
     public void RemoveCover() {
-        if (AlbumId is not null)
+        if (AlbumId.Name.StartsWith('\u0002'))
             CacheManager.DeleteImage(AlbumId);
-        AlbumId = null;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearRecord() { Record = TimeSpan.Zero; }
 
     public async Task<Track?> GetTrackAsync() {
-        if (Extension == AudioFileValidator.AudioFormatsExtendToNameMap[AudioFileValidator.ExtendAudioFormats.Ncm]) {
+        if (Extension == AudioFileValidator.AudioFormatsExtendToNameMap[AudioFileValidator.ExtendAudioFormats.Ncm])
             return await new NcmMusicTagExtractor(FilePath).GetTrackAsync().ConfigureAwait(false);
-        }
 
         return new Track(FilePath);
     }
@@ -127,9 +130,8 @@ public partial class MusicItemModel : ObservableObject {
         var fileInfo = new FileInfo(FilePath);
 
         // 如果修改时间没有变动，不需要更新
-        if (fileInfo.LastWriteTimeUtc == ModificationTime && !forceRefresh) {
+        if (fileInfo.LastWriteTimeUtc == ModificationTime && !forceRefresh)
             return false;
-        }
 
 
         if (await GetTrackAsync().ConfigureAwait(false) is not { } track) {
@@ -142,15 +144,17 @@ public partial class MusicItemModel : ObservableObject {
     }
 
     private async Task SetMusicMetadata(Track track, FileInfo fileInfo, bool forceRefresh) {
-        Title = string.IsNullOrEmpty(track.Title) ? Path.GetFileNameWithoutExtension(FilePath) : track.Title;
+        Title = string.IsNullOrEmpty(track.Title) ?
+            Path.GetFileNameWithoutExtension(FilePath).Trim() :
+            track.Title.Trim();
 
         if (!string.IsNullOrEmpty(track.Artist))
-            Artists = track.Artist;
+            Artists = track.Artist.Trim();
 
         if (!string.IsNullOrEmpty(track.Album))
-            Album = track.Album;
+            Album = track.Album.Trim();
 
-        AlbumArtists = string.IsNullOrEmpty(track.AlbumArtist) ? Artists : track.AlbumArtist;
+        AlbumArtists = string.IsNullOrEmpty(track.AlbumArtist) ? Artists : track.AlbumArtist.Trim();
 
         Composer = track.Composer;
         Duration = TimeSpan.FromMilliseconds(track.DurationMs);
@@ -165,12 +169,14 @@ public partial class MusicItemModel : ObservableObject {
             if (track.EmbeddedPictures.Count == 0) {
                 await LoggerService.InfoAsync($"{Title}的封面不存在。").ConfigureAwait(false);
             } else {
-                var coverData = track.EmbeddedPictures[0].PictureData;
-                AlbumId = string.IsNullOrWhiteSpace(Album) ? Guid.NewGuid().ToString() : $"{Album} - {AlbumArtists}";
+                byte[]? coverData = track.EmbeddedPictures[0].PictureData;
 
-                var thumbnail = await ImageHelper
-                                      .LoadFromMemoryAsync(new MemoryStream(coverData), $"{Album}_{AlbumArtists}", 128)
-                                      .ConfigureAwait(false);
+                AlbumId = (string.IsNullOrWhiteSpace(Album) ? $"\u0002{Guid.NewGuid()}" : Album, AlbumArtists);
+
+                await AlbumRepository.Instance.AddOrUpdateAlbumItemAsync(this).ConfigureAwait(false);
+                Bitmap? thumbnail = await ImageHelper
+                                          .LoadFromMemoryAsync(new MemoryStream(coverData), AlbumId.ToString(), 128)
+                                          .ConfigureAwait(false);
                 if (thumbnail is null) {
                     await LoggerService.ErrorAsync("制作缩略图失败").ConfigureAwait(false);
                     return;
@@ -196,19 +202,20 @@ public partial class MusicItemModel : ObservableObject {
 
     private async Task<LyricsData> LoadLyricsAsync(Track track) {
         var result = LyricsData.Create(Title, Artists, Album, AlbumArtists);
-        var lyricsList = track.Lyrics;
+        IList<LyricsInfo>? lyricsList = track.Lyrics;
 
         // 查找同步歌词
-        var syncLyricsInfo = lyricsList.FirstOrDefault(l => l.SynchronizedLyrics.Count > 0);
+        LyricsInfo? syncLyricsInfo = lyricsList.FirstOrDefault(l => l.SynchronizedLyrics.Count > 0);
 
         if (syncLyricsInfo != null) {
-            var syncLyrics = syncLyricsInfo.SynchronizedLyrics;
+            IList<LyricsInfo.LyricsPhrase>? syncLyrics = syncLyricsInfo.SynchronizedLyrics;
 
             // 按时间点分组
-            var grouped = syncLyrics.GroupBy(p => p.TimestampStart).OrderBy(g => g.Key);
+            IOrderedEnumerable<IGrouping<int, LyricsInfo.LyricsPhrase>> grouped =
+                syncLyrics.GroupBy(p => p.TimestampStart).OrderBy(g => g.Key);
 
-            foreach (var group in grouped) {
-                var phrases = group.ToList();
+            foreach (IGrouping<int, LyricsInfo.LyricsPhrase> group in grouped) {
+                List<LyricsInfo.LyricsPhrase> phrases = group.ToList();
 
                 string? primary, translation = null;
 
@@ -233,13 +240,14 @@ public partial class MusicItemModel : ObservableObject {
         }
 
         // 查找非同步歌词
-        var unsyncedLyricsInfo = lyricsList.FirstOrDefault(l => !string.IsNullOrEmpty(l.UnsynchronizedLyrics));
+        LyricsInfo? unsyncedLyricsInfo = lyricsList.FirstOrDefault(l => !string.IsNullOrEmpty(l.UnsynchronizedLyrics));
 
         if (unsyncedLyricsInfo != null) {
             string? lyric = unsyncedLyricsInfo.UnsynchronizedLyrics;
 
             if (!string.IsNullOrEmpty(lyric)) {
-                var embedded = await Task.Run(() => LyricsService.ParseLrcFile(lyric)).ConfigureAwait(false);
+                (double Offset, IEnumerable<LyricLine> Lyrics) embedded =
+                    await Task.Run(() => LyricsService.ParseLrcFile(lyric)).ConfigureAwait(false);
                 result.Offset += embedded.Offset;
                 result.Data.AddRange(embedded.Lyrics);
                 return result;
@@ -264,7 +272,8 @@ public partial class MusicItemModel : ObservableObject {
 
         string lyricText = await File.ReadAllTextAsync(lyricPath).ConfigureAwait(false);
 
-        var outer = await Task.Run(() => LyricsService.ParseLrcFile(lyricText)).ConfigureAwait(false);
+        (double Offset, IEnumerable<LyricLine> Lyrics) outer =
+            await Task.Run(() => LyricsService.ParseLrcFile(lyricText)).ConfigureAwait(false);
         result.Offset += outer.Offset;
         result.Data.AddRange(outer.Lyrics);
         return result;
@@ -290,9 +299,10 @@ public partial class MusicItemModel : ObservableObject {
         }
 
         Track = track;
-        Dispatcher.UIThread.Post(() => Cover = track.EmbeddedPictures.Count > 0 ?
-                                     new Bitmap(new MemoryStream(track.EmbeddedPictures[0].PictureData)) :
-                                     CacheManager.NotExist);
+        Bitmap cover = track.EmbeddedPictures.Count > 0 ?
+            new Bitmap(new MemoryStream(track.EmbeddedPictures[0].PictureData)) :
+            CacheManager.NotExist;
+        Dispatcher.UIThread.Post(() => Cover = cover);
 
         Lyrics = await LoadLyricsAsync(track).ConfigureAwait(false);
         await LoggerService.DebugAsync($"音频《{Title}》的原始封面与歌词加载完毕。").ConfigureAwait(false);
@@ -306,11 +316,21 @@ public partial class MusicItemModel : ObservableObject {
 
         IsCurrent = false;
         Track = null;
-        // Bitmap originalCover = Cover;
+        var timer = new Timer(5000) { AutoReset = false };
+        Bitmap? cover = Cover;
+
+        void Updater(object? sender, ElapsedEventArgs args) {
+            cover?.Dispose();
+            cover = null;
+            timer?.Dispose();
+            timer = null;
+        }
+
+        timer.Elapsed += Updater;
+        timer.Start();
         Cover = CacheManager.Loading;
-        // originalCover.Dispose();
         Lyrics = LyricsData.Loading;
-        LoggerService.Debug($"已释放音频《{Title}》的原始封面与歌词。");
+        LoggerService.Debug($"已释放音频《{Title}》的歌词。");
     }
 
     #region 播放歌曲前加载的属性
@@ -336,16 +356,14 @@ public partial class MusicItemModel : ObservableObject {
                 return;
             }
 
-            if (value.Size is { AspectRatio: 1 } || ConfigManager.UiConfig.CoverConfig.AllowNonSquareCover)
-                field = value;
-            else
-                field = BitmapCropper.Crop(value, 1.0);
+            if (!ConfigManager.UiConfig.VisualConfig.AllowNonSquareCover && Math.Abs(value.Size.AspectRatio - 1) > 1e-5)
+                BitmapCropper.Crop(ref value, 1.0);
+            field = value;
             OnPropertyChanged();
         }
     } = CacheManager.NotExist;
 
     public LyricsData Lyrics { get; private set; } = LyricsData.Loading;
-
 
     public Track? Track { get; private set; }
 
@@ -354,6 +372,7 @@ public partial class MusicItemModel : ObservableObject {
 
 public readonly record struct PlaylistItemModel {
     public static readonly PlaylistItemModel RefDefault = new(MusicItemModel.Default, 0);
+    public readonly ulong Id = 0L;
 
     private PlaylistItemModel(MusicItemModel model, ulong id) {
         Model = model;
@@ -371,7 +390,6 @@ public readonly record struct PlaylistItemModel {
     } = 1;
 
     public MusicItemModel Model { get; } = MusicItemModel.Default;
-    public readonly ulong Id = 0L;
 
     public static void Reset() { IdAllocator = 1; }
 }

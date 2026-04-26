@@ -8,44 +8,32 @@ using QwQ_Music.Models.ConfigModels;
 
 namespace QwQ_Music.ViewModels;
 
-public partial class ApplicationViewModel : ObservableObject
-{
+public partial class ApplicationViewModel : ObservableObject {
     public ThemeConfig ThemeConfig { get; } = ConfigManager.UiConfig.ThemeConfig;
-    
-    public static void ShowMainWindow(bool onlyActivate)
-    {
+
+    public static void ShowMainWindow(bool onlyActivate) {
         if (App.TopLevel is not { } mainWindow)
             return;
 
-        if (mainWindow.IsVisible)
-        {
-            if (onlyActivate)
-            {
+        if (mainWindow.IsVisible) {
+            if (onlyActivate) {
                 mainWindow.Activate();
-            }
-            else
-            {
+            } else {
                 mainWindow.Topmost = true;
                 mainWindow.Topmost = false;
 
                 NotificationService.Info("看我", "窗口已经在显示了~");
             }
-        }
-        else
-        {
+        } else {
             mainWindow.ShowMainWindow();
         }
     }
 
     [RelayCommand]
-    private static void ShowMainWindow()
-    {
-        ShowMainWindow(false);
-    }
+    private static void ShowMainWindow() { ShowMainWindow(false); }
 
     [RelayCommand]
-    public static void Shutdown()
-    {
+    public static void Shutdown() {
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
             return;
 

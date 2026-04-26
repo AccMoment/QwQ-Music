@@ -13,7 +13,7 @@ public static class AudioFileService {
     ///     处理存储项目并导入音乐文件
     /// </summary>
     public static async Task ProcessStorageItemsAsync(IReadOnlyList<IStorageItem> items) {
-        var paths = FileOperationService.ConvertStorageItemsToPathStrings(items);
+        List<string> paths = FileOperationService.ConvertStorageItemsToPathStrings(items);
 
         if (paths.Count == 0) {
             NotificationService.Info("提示", "获取的文件数量为 0 ！");
@@ -23,8 +23,8 @@ public static class AudioFileService {
 
         NotificationService.Info("提示", "开始导入中，请稍等....！");
 
-        var allFilePaths = FileOperationService.GetAllFilePaths(paths);
-        var musicItems = ImportMusicFilesAsync(allFilePaths);
+        List<string> allFilePaths = FileOperationService.GetAllFilePaths(paths);
+        IAsyncEnumerable<MusicItemModel> musicItems = ImportMusicFilesAsync(allFilePaths);
 
         await MusicItemsManager.All.AddAsync(musicItems).ConfigureAwait(false);
     }
@@ -45,9 +45,9 @@ public static class AudioFileService {
         }
 
         // 过滤掉已存在的路径
-        var existingFilePaths =
+        List<string> existingFilePaths =
             audioFilePaths.Where(path => MusicItemsManager.All.MusicItems.ContainsKey(path)).ToList();
-        var newFilePaths = audioFilePaths.Except(existingFilePaths);
+        IEnumerable<string> newFilePaths = audioFilePaths.Except(existingFilePaths);
 
         // 如果有已存在的文件，显示提示
         if (existingFilePaths.Count > 0) {

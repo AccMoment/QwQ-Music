@@ -23,10 +23,8 @@ namespace QwQ_Music.UI.Controls;
 /// <summary>
 ///     歌词显示控件
 /// </summary>
-public class LyricsControl : TemplatedControl
-{
-    static LyricsControl()
-    {
+public class LyricsControl : TemplatedControl {
+    static LyricsControl() {
         AffectsRender<LyricsControl>(
             LyricsDataProperty,
             CurrentLyricIndexProperty,
@@ -34,30 +32,26 @@ public class LyricsControl : TemplatedControl
             LineHeightProperty,
             LineSpacingProperty,
             LyricTextAlignmentProperty,
-            TextMarginProperty
-        );
+            TextMarginProperty);
 
         // 监听属性变化
         CurrentLyricIndexProperty.Changed.AddClassHandler<LyricsControl>((x, _) => x.UpdateCurrentLyric());
         LyricsDataProperty.Changed.AddClassHandler<LyricsControl>((x, _) => x.InitializeLyrics());
 
         // 合并渲染相关属性的处理
-        var renderProperties = new AvaloniaProperty[]
-        {
-            ShowTranslationProperty, LyricTextAlignmentProperty, LineHeightProperty, LineSpacingProperty, TextMarginProperty
+        var renderProperties = new AvaloniaProperty[] {
+            ShowTranslationProperty, LyricTextAlignmentProperty, LineHeightProperty, LineSpacingProperty,
+            TextMarginProperty
         };
 
-        foreach (var property in renderProperties)
-        {
+        foreach (AvaloniaProperty property in renderProperties)
             property.Changed.AddClassHandler<LyricsControl>((x, _) => x.RenderLyrics());
-        }
 
         // 监听 Bounds 变化以触发防抖渲染
         BoundsProperty.Changed.AddClassHandler<LyricsControl>((x, e) => x.OnBoundsChanged(e));
     }
 
-    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
-    {
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e) {
         base.OnApplyTemplate(e);
 
         // 解除之前的事件绑定
@@ -77,55 +71,39 @@ public class LyricsControl : TemplatedControl
         InitializeLyrics();
     }
 
-    private void InitializeDebounceTimer()
-    {
-        _renderDebounceTimer = new DispatcherTimer
-        {
-            Interval = _renderDebounceInterval
-        };
+    private void InitializeDebounceTimer() {
+        _renderDebounceTimer = new DispatcherTimer { Interval = _renderDebounceInterval };
 
-        _renderDebounceTimer.Tick += (_, _) =>
-        {
+        _renderDebounceTimer.Tick += (_, _) => {
             _renderDebounceTimer?.Stop();
             RenderLyrics();
         };
     }
 
-    private void UnsubscribeEvents()
-    {
+    private void UnsubscribeEvents() {
         if (_scrollViewer != null)
-        {
             _scrollViewer.ScrollChanged -= ScrollViewer_ScrollChanged;
-        }
 
         if (_lyricsCanvas != null)
-        {
             _lyricsCanvas.PointerPressed -= LyricsCanvas_PointerPressed;
-        }
 
         // 停止并清理计时器
         _renderDebounceTimer?.Stop();
         _renderDebounceTimer = null;
     }
 
-    private void SubscribeEvents()
-    {
+    private void SubscribeEvents() {
         if (_scrollViewer != null)
-        {
             _scrollViewer.ScrollChanged += ScrollViewer_ScrollChanged;
-        }
 
         if (_lyricsCanvas != null)
-        {
             _lyricsCanvas.PointerPressed += LyricsCanvas_PointerPressed;
-        }
     }
 
     /// <summary>
     ///     处理滚动事件
     /// </summary>
-    private void ScrollViewer_ScrollChanged(object? sender, ScrollChangedEventArgs e)
-    {
+    private void ScrollViewer_ScrollChanged(object? sender, ScrollChangedEventArgs e) {
         // 忽略由于内容或视口大小变化引起的滚动事件
         if (e.ExtentDelta != Vector.Zero || e.ViewportDelta != Vector.Zero || _isProgrammaticScrolling)
             return;
@@ -141,16 +119,14 @@ public class LyricsControl : TemplatedControl
     /// <summary>
     ///     处理歌词点击事件
     /// </summary>
-    private void LyricsCanvas_PointerPressed(object? sender, PointerPressedEventArgs e)
-    {
+    private void LyricsCanvas_PointerPressed(object? sender, PointerPressedEventArgs e) {
         if (_lyricsCanvas == null || _lyricLines.Count == 0)
             return;
 
-        var position = e.GetPosition(_lyricsCanvas);
+        Point position = e.GetPosition(_lyricsCanvas);
 
         // 查找点击的歌词行
-        foreach (var line in _lyricLines.Where(line => line.Bounds.Contains(position)))
-        {
+        foreach (LyricLineControl line in _lyricLines.Where(line => line.Bounds.Contains(position))) {
             ClickedLyricTime = line.TimePoint;
             ClickedLyricText = line.Text;
 
@@ -164,13 +140,10 @@ public class LyricsControl : TemplatedControl
     /// <summary>
     ///     处理控件边界变化事件，用于防抖渲染
     /// </summary>
-    private void OnBoundsChanged(AvaloniaPropertyChangedEventArgs e)
-    {
-        if (
-            e is not { OldValue: Rect oldBounds, NewValue: Rect newBounds }
-         || Math.Abs(oldBounds.Height - newBounds.Height) <= 0.1
-         && Math.Abs(oldBounds.Width - newBounds.Width) <= 0.1
-        )
+    private void OnBoundsChanged(AvaloniaPropertyChangedEventArgs e) {
+        if (e is not { OldValue: Rect oldBounds, NewValue: Rect newBounds } ||
+            (Math.Abs(oldBounds.Height - newBounds.Height) <= 0.1 &&
+             Math.Abs(oldBounds.Width - newBounds.Width) <= 0.1))
             return;
 
         // 重置并启动防抖计时器
@@ -181,8 +154,7 @@ public class LyricsControl : TemplatedControl
     /// <summary>
     ///     初始化歌词数据
     /// </summary>
-    private void InitializeLyrics()
-    {
+    private void InitializeLyrics() {
         if (_lyricsCanvas == null)
             return;
 
@@ -206,12 +178,14 @@ public class LyricsControl : TemplatedControl
     /// <summary>
     ///     渲染歌词
     /// </summary>
-    private void RenderLyrics()
-    {
+    private void RenderLyrics() {
         // 停止可能正在运行的防抖计时器，防止重复渲染
         _renderDebounceTimer?.Stop();
 
-        if (_lyricsCanvas == null || _lyrics == null || _lyrics.Count == 0 || _lyricsCanvas.Bounds.Width <= 0) // 检查宽度是否大于0
+        if (_lyricsCanvas == null ||
+            _lyrics == null ||
+            _lyrics.Count == 0 ||
+            _lyricsCanvas.Bounds.Width <= 0) // 检查宽度是否大于0
             return;
 
         _lyricsCanvas.Children.Clear();
@@ -222,13 +196,11 @@ public class LyricsControl : TemplatedControl
         bool autoHeight = LineHeight <= 0;
 
         // 渲染每一行歌词
-        foreach ((double timePoint, string primaryText, string? translation) in _lyrics)
-        {
+        foreach ((double timePoint, string primaryText, string? translation) in _lyrics) {
             string? translationText = ShowTranslation ? translation : null;
 
             // 创建歌词行控件
-            var lyricLineControl = new LyricLineControl
-            {
+            var lyricLineControl = new LyricLineControl {
                 Text = primaryText,
                 Translation = translationText,
                 TimePoint = timePoint,
@@ -240,9 +212,7 @@ public class LyricsControl : TemplatedControl
             };
 
             if (string.IsNullOrWhiteSpace(primaryText))
-            {
                 lyricLineControl.Classes.Add("empty");
-            }
 
             _lyricsCanvas.Children.Add(lyricLineControl);
 
@@ -266,9 +236,7 @@ public class LyricsControl : TemplatedControl
 
         // 更新当前歌词样式
         if (CurrentLyricIndex >= 0 && CurrentLyricIndex < _lyricLines.Count)
-        {
             UpdateHighlight(CurrentLyricIndex);
-        }
 
         // 滚动到当前歌词
         ScrollToCurrentLyric(); // 初始渲染时不使用动画
@@ -277,14 +245,11 @@ public class LyricsControl : TemplatedControl
     /// <summary>
     ///     更新当前歌词高亮和滚动
     /// </summary>
-    private void UpdateCurrentLyric()
-    {
-        if (
-            _lyricsCanvas == null
-         || _lyricLines.Count == 0
-         || CurrentLyricIndex < 0
-         || CurrentLyricIndex >= _lyricLines.Count
-        )
+    private void UpdateCurrentLyric() {
+        if (_lyricsCanvas == null ||
+            _lyricLines.Count == 0 ||
+            CurrentLyricIndex < 0 ||
+            CurrentLyricIndex >= _lyricLines.Count)
             return;
 
         // 更新高亮
@@ -298,22 +263,16 @@ public class LyricsControl : TemplatedControl
     ///     更新歌词高亮样式
     /// </summary>
     /// <param name="newIndex">新的高亮索引</param>
-    private void UpdateHighlight(int newIndex)
-    {
+    private void UpdateHighlight(int newIndex) {
         // 移除旧的高亮
         if (_lastHighlightedIndex >= 0 && _lastHighlightedIndex < _lyricLines.Count)
-        {
             _lyricLines[_lastHighlightedIndex].Classes.Remove("current");
-        }
 
         // 添加新的高亮
-        if (newIndex >= 0 && newIndex < _lyricLines.Count)
-        {
+        if (newIndex >= 0 && newIndex < _lyricLines.Count) {
             _lyricLines[newIndex].Classes.Add("current");
             _lastHighlightedIndex = newIndex;
-        }
-        else
-        {
+        } else {
             _lastHighlightedIndex = -1;
         }
     }
@@ -321,14 +280,11 @@ public class LyricsControl : TemplatedControl
     /// <summary>
     ///     滚动到当前歌词行
     /// </summary>
-    private void ScrollToCurrentLyric()
-    {
-        if (
-            _scrollViewer == null
-         || _lyricsCanvas == null
-         || CurrentLyricIndex < 0
-         || CurrentLyricIndex >= _lyricLines.Count
-        )
+    private void ScrollToCurrentLyric() {
+        if (_scrollViewer == null ||
+            _lyricsCanvas == null ||
+            CurrentLyricIndex < 0 ||
+            CurrentLyricIndex >= _lyricLines.Count)
             return;
 
         // 如果用户正在滚动，则不进行程序滚动
@@ -337,42 +293,29 @@ public class LyricsControl : TemplatedControl
 
         _isUserScrolling = false; // 重置用户滚动标志
 
-        var currentLine = _lyricLines[CurrentLyricIndex];
+        LyricLineControl currentLine = _lyricLines[CurrentLyricIndex];
         double targetOffset = CalculateScrollOffset(currentLine);
 
         // 取消之前的动画
         _scrollAnimationCts?.Cancel();
         _scrollAnimationCts = new CancellationTokenSource();
-        var cancellationToken = _scrollAnimationCts.Token;
+        CancellationToken cancellationToken = _scrollAnimationCts.Token;
 
         _isProgrammaticScrolling = true; // 标记为程序滚动
 
-        var animation = new Animation
-        {
+        var animation = new Animation {
             Duration = ScrollAnimationDuration,
             Easing = ScrollEasing,
             FillMode = FillMode.Forward,
-            Children =
-            {
-                new KeyFrame
-                {
+            Children = {
+                new KeyFrame {
                     Cue = new Cue(0d),
-                    Setters =
-                    {
-                        new Setter
-                        {
-                            Property = ScrollViewer.OffsetProperty,
-                            Value = _scrollViewer.Offset
-                        }
-                    }
+                    Setters = { new Setter { Property = ScrollViewer.OffsetProperty, Value = _scrollViewer.Offset } }
                 },
-                new KeyFrame
-                {
+                new KeyFrame {
                     Cue = new Cue(1d),
-                    Setters =
-                    {
-                        new Setter
-                        {
+                    Setters = {
+                        new Setter {
                             Property = ScrollViewer.OffsetProperty,
                             Value = new Vector(_scrollViewer.Offset.X, targetOffset)
                         }
@@ -382,33 +325,26 @@ public class LyricsControl : TemplatedControl
         };
 
         // 使用 RunAsync 并捕获 TaskCanceledException
-        animation
-            .RunAsync(_scrollViewer, cancellationToken)
-            .ContinueWith(
-                task =>
-                {
-                    // 动画完成或取消后，重置程序滚动标志
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        // 只有当这是最后一个动画时才重置标志
-                        if (cancellationToken.IsCancellationRequested)
-                            return;
+        animation.RunAsync(_scrollViewer, cancellationToken)
+                 .ContinueWith(
+                     task => {
+                         // 动画完成或取消后，重置程序滚动标志
+                         Dispatcher.UIThread.Post(() => {
+                             // 只有当这是最后一个动画时才重置标志
+                             if (cancellationToken.IsCancellationRequested)
+                                 return;
 
-                        _isProgrammaticScrolling = false;
-                        _scrollAnimationCts = null;
-                    });
+                             _isProgrammaticScrolling = false;
+                             _scrollAnimationCts = null;
+                         });
 
-                    if (task.IsCanceled)
-                    {
-                        // LoggerService.Debug("滚动动画被取消");
-                    }
-                    else if (task.IsFaulted)
-                    {
-                        Debug.WriteLine($"滚动动画出错: {task.Exception}");
-                    }
-                },
-                TaskScheduler.FromCurrentSynchronizationContext()
-            );
+                         if (task.IsCanceled) {
+                             // LoggerService.Debug("滚动动画被取消");
+                         } else if (task.IsFaulted) {
+                             Debug.WriteLine($"滚动动画出错: {task.Exception}");
+                         }
+                     },
+                     TaskScheduler.FromCurrentSynchronizationContext());
     }
 
     /// <summary>
@@ -416,8 +352,7 @@ public class LyricsControl : TemplatedControl
     /// </summary>
     /// <param name="currentLine">当前歌词行控件</param>
     /// <returns>目标滚动偏移量</returns>
-    private double CalculateScrollOffset(LyricLineControl currentLine)
-    {
+    private double CalculateScrollOffset(LyricLineControl currentLine) {
         if (_scrollViewer == null)
             return 0;
 
@@ -429,15 +364,11 @@ public class LyricsControl : TemplatedControl
         double targetOffset;
 
         if (lyricCenterY <= centerY)
-        {
             // 如果歌词位置未超过控件中心线，但总高度超过视口，则保持在顶部
             targetOffset = 0;
-        }
         else
-        {
             // 歌词位置超过中心线，需要将歌词滚动到中心
             targetOffset = lyricY - (viewportHeight - lyricHeight) / 2;
-        }
 
         return targetOffset;
     }
@@ -445,23 +376,21 @@ public class LyricsControl : TemplatedControl
     /// <summary>
     ///     清理歌词相关资源
     /// </summary>
-    private void ClearLyricResources()
-    {
+    private void ClearLyricResources() {
         _lyricsCanvas?.Children.Clear();
         _lyricLines.Clear();
         _lyrics = null;
         _lastHighlightedIndex = -1;
         _scrollAnimationCts?.Cancel(); // 取消可能正在进行的动画
         _scrollAnimationCts = null;
-        _isUserScrolling = false; // 重置用户滚动状态
+        _isUserScrolling = false;         // 重置用户滚动状态
         _isProgrammaticScrolling = false; // 重置程序滚动状态
 
         // 重置滚动条位置
         _scrollViewer?.Offset = Vector.Zero;
     }
 
-    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
-    {
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e) {
         base.OnDetachedFromVisualTree(e);
 
         // 清理资源
@@ -472,22 +401,19 @@ public class LyricsControl : TemplatedControl
     #region 依赖属性
 
     // 歌词数据
-    public static readonly StyledProperty<LyricsData> LyricsDataProperty = AvaloniaProperty.Register<
-        LyricsControl,
-        LyricsData
-    >(nameof(LyricsData));
+    public static readonly StyledProperty<LyricsData> LyricsDataProperty =
+        AvaloniaProperty.Register<LyricsControl, LyricsData>(nameof(LyricsData));
 
     // 当前歌词索引
-    public static readonly StyledProperty<int> CurrentLyricIndexProperty = AvaloniaProperty.Register<
-        LyricsControl,
-        int
-    >(nameof(CurrentLyricIndex), -1, defaultBindingMode: BindingMode.OneWay);
+    public static readonly StyledProperty<int> CurrentLyricIndexProperty =
+        AvaloniaProperty.Register<LyricsControl, int>(
+            nameof(CurrentLyricIndex),
+            -1,
+            defaultBindingMode: BindingMode.OneWay);
 
     // 是否显示翻译
-    public static readonly StyledProperty<bool> ShowTranslationProperty = AvaloniaProperty.Register<
-        LyricsControl,
-        bool
-    >(nameof(ShowTranslation), true);
+    public static readonly StyledProperty<bool> ShowTranslationProperty =
+        AvaloniaProperty.Register<LyricsControl, bool>(nameof(ShowTranslation), true);
 
     // 歌词行高
     public static readonly StyledProperty<double> LineHeightProperty = AvaloniaProperty.Register<LyricsControl, double>(
@@ -495,52 +421,45 @@ public class LyricsControl : TemplatedControl
     );
 
     // 歌词行间距
-    public static readonly StyledProperty<double> LineSpacingProperty = AvaloniaProperty.Register<
-        LyricsControl,
-        double
-    >(nameof(LineSpacing));
+    public static readonly StyledProperty<double> LineSpacingProperty =
+        AvaloniaProperty.Register<LyricsControl, double>(nameof(LineSpacing));
 
     // 滚动动画持续时间
-    public static readonly StyledProperty<TimeSpan> ScrollAnimationDurationProperty = AvaloniaProperty.Register<
-        LyricsControl,
-        TimeSpan
-    >(nameof(ScrollAnimationDuration), TimeSpan.FromMilliseconds(500));
+    public static readonly StyledProperty<TimeSpan> ScrollAnimationDurationProperty =
+        AvaloniaProperty.Register<LyricsControl, TimeSpan>(
+            nameof(ScrollAnimationDuration),
+            TimeSpan.FromMilliseconds(500));
 
     // 滚动缓动函数
-    public static readonly StyledProperty<Easing> ScrollEasingProperty = AvaloniaProperty.Register<
-        LyricsControl,
-        Easing
-    >(nameof(ScrollEasing), new CubicEaseOut());
+    public static readonly StyledProperty<Easing> ScrollEasingProperty =
+        AvaloniaProperty.Register<LyricsControl, Easing>(nameof(ScrollEasing), new CubicEaseOut());
 
     // 歌词文本对齐方式
-    public static readonly StyledProperty<HorizontalAlignment> LyricTextAlignmentProperty = AvaloniaProperty.Register<
-        LyricsControl,
-        HorizontalAlignment
-    >(nameof(LyricTextAlignment), HorizontalAlignment.Center);
+    public static readonly StyledProperty<HorizontalAlignment> LyricTextAlignmentProperty =
+        AvaloniaProperty.Register<LyricsControl, HorizontalAlignment>(
+            nameof(LyricTextAlignment),
+            HorizontalAlignment.Center);
 
     // 歌词文本边距
-    public static readonly StyledProperty<Thickness> TextMarginProperty = AvaloniaProperty.Register<
-        LyricsControl,
-        Thickness
-    >(nameof(TextMargin), new Thickness(20, 10));
+    public static readonly StyledProperty<Thickness> TextMarginProperty =
+        AvaloniaProperty.Register<LyricsControl, Thickness>(nameof(TextMargin), new Thickness(20, 10));
 
     // 翻译文本间距
-    public static readonly StyledProperty<double> TranslationSpacingProperty = AvaloniaProperty.Register<
-        LyricsControl,
-        double
-    >(nameof(TranslationSpacing));
+    public static readonly StyledProperty<double> TranslationSpacingProperty =
+        AvaloniaProperty.Register<LyricsControl, double>(nameof(TranslationSpacing));
 
     // 点击的歌词时间点
-    public static readonly StyledProperty<double> ClickedLyricTimeProperty = AvaloniaProperty.Register<
-        LyricsControl,
-        double
-    >(nameof(ClickedLyricTime), defaultBindingMode: BindingMode.OneWayToSource);
+    public static readonly StyledProperty<double> ClickedLyricTimeProperty =
+        AvaloniaProperty.Register<LyricsControl, double>(
+            nameof(ClickedLyricTime),
+            defaultBindingMode: BindingMode.OneWayToSource);
 
     // 点击的歌词文本
-    public static readonly StyledProperty<string> ClickedLyricTextProperty = AvaloniaProperty.Register<
-        LyricsControl,
-        string
-    >(nameof(ClickedLyricText), string.Empty, defaultBindingMode: BindingMode.OneWayToSource);
+    public static readonly StyledProperty<string> ClickedLyricTextProperty =
+        AvaloniaProperty.Register<LyricsControl, string>(
+            nameof(ClickedLyricText),
+            string.Empty,
+            defaultBindingMode: BindingMode.OneWayToSource);
 
     #endregion
 
@@ -563,74 +482,62 @@ public class LyricsControl : TemplatedControl
 
     #region 属性
 
-    public LyricsData LyricsData
-    {
+    public LyricsData LyricsData {
         get => GetValue(LyricsDataProperty);
         set => SetValue(LyricsDataProperty, value);
     }
 
-    public int CurrentLyricIndex
-    {
+    public int CurrentLyricIndex {
         get => GetValue(CurrentLyricIndexProperty);
         set => SetValue(CurrentLyricIndexProperty, value);
     }
 
-    public bool ShowTranslation
-    {
+    public bool ShowTranslation {
         get => GetValue(ShowTranslationProperty);
         set => SetValue(ShowTranslationProperty, value);
     }
 
-    public double LineHeight
-    {
+    public double LineHeight {
         get => GetValue(LineHeightProperty);
         set => SetValue(LineHeightProperty, value);
     }
 
-    public double LineSpacing
-    {
+    public double LineSpacing {
         get => GetValue(LineSpacingProperty);
         set => SetValue(LineSpacingProperty, value);
     }
 
-    public TimeSpan ScrollAnimationDuration
-    {
+    public TimeSpan ScrollAnimationDuration {
         get => GetValue(ScrollAnimationDurationProperty);
         set => SetValue(ScrollAnimationDurationProperty, value);
     }
 
-    public Easing ScrollEasing
-    {
+    public Easing ScrollEasing {
         get => GetValue(ScrollEasingProperty);
         set => SetValue(ScrollEasingProperty, value);
     }
 
-    public HorizontalAlignment LyricTextAlignment
-    {
+    public HorizontalAlignment LyricTextAlignment {
         get => GetValue(LyricTextAlignmentProperty);
         set => SetValue(LyricTextAlignmentProperty, value);
     }
 
-    public Thickness TextMargin
-    {
+    public Thickness TextMargin {
         get => GetValue(TextMarginProperty);
         set => SetValue(TextMarginProperty, value);
     }
 
-    public double TranslationSpacing
-    {
+    public double TranslationSpacing {
         get => GetValue(TranslationSpacingProperty);
         set => SetValue(TranslationSpacingProperty, value);
     }
 
-    public double ClickedLyricTime
-    {
+    public double ClickedLyricTime {
         get => GetValue(ClickedLyricTimeProperty);
         private set => SetValue(ClickedLyricTimeProperty, value);
     }
 
-    public string ClickedLyricText
-    {
+    public string ClickedLyricText {
         get => GetValue(ClickedLyricTextProperty);
         private set => SetValue(ClickedLyricTextProperty, value);
     }

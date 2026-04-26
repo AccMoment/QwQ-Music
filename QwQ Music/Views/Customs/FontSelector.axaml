@@ -71,7 +71,7 @@
             </IfElseTrigger>
 
             <IfElseTrigger Condition="{Binding #SystemFontConfig.IsChecked}">
-                
+
                 <IfElseTrigger.IfActions>
                     <ChangeAvaloniaPropertyAction
                         TargetProperty="{x:Static ContentPresenter.ContentProperty}">

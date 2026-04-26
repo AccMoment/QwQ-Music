@@ -9,7 +9,7 @@
     Margin="10,0"
     x:Class="QwQ_Music.Views.MainView">
     <Grid RowDefinitions="40,*" ColumnDefinitions="Auto,*" ColumnSpacing="10"
-          x:DataType="viewModels:MainViewModel">
+          x:DataType="viewModels:MainViewViewModel">
 
         <StackPanel Grid.Row="0" Grid.Column="0"
                     Grid.ColumnSpan="2" Orientation="Horizontal"

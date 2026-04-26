@@ -5,13 +5,14 @@ using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
+using QwQ_Music.Models;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels.Bases;
 using MusicItemsManager = QwQ_Music.Common.Managers.MusicItemsManager;
 
 namespace QwQ_Music.ViewModels.Pages;
 
-public partial class UiConfigPageViewModel() : NavigationViewModel("界面") {
+public partial class UiConfigPageViewModel() : NavigableViewModel("界面") {
     public UiConfig UiConfig { get; } = ConfigManager.UiConfig;
 
     public static AppResources AppResources => AppResources.Default;
@@ -48,7 +49,7 @@ public partial class UiConfigPageViewModel() : NavigationViewModel("界面") {
     [RelayCommand]
     private static void ClearCoverColor() {
         Task.Run(() => {
-                foreach (var item in MusicItemsManager.All.MusicItems.Values) {
+                foreach (MusicItemModel item in MusicItemsManager.All.MusicItems.Values) {
                     if (item.CoverColors == null)
                         continue;
 

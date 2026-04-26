@@ -9,6 +9,28 @@ using SoundFlow.Structs;
 namespace QwQ_Music.Models.SoundEffectModels;
 
 public class TrebleBoosterModel : ObservableObject, ISoundModifierModel<TrebleBoosterModifier> {
+    /// <summary>
+    ///     获取或设置截止频率（Hz）。
+    /// </summary>
+    public float Cutoff {
+        get;
+        set {
+            if (SetProperty(ref field, Math.Min(20000, value)))
+                Modifier?.Cutoff = Math.Min(20000, value);
+        }
+    } = 4000f;
+
+    /// <summary>
+    ///     获取或设置增益（dB）。
+    /// </summary>
+    public float BoostGainDb {
+        get;
+        set {
+            if (SetProperty(ref field, value))
+                Modifier?.BoostGainDb = value;
+        }
+    } = 6f;
+
     [JsonIgnore]
     public TrebleBoosterModifier? Modifier { get; private set; }
 
@@ -32,38 +54,13 @@ public class TrebleBoosterModel : ObservableObject, ISoundModifierModel<TrebleBo
     public void Revoke() { Modifier = null; }
 
     /// <summary>
-    /// 获取或设置是否启用效果器。
+    ///     获取或设置是否启用效果器。
     /// </summary>
     public bool Enabled {
         get;
         set {
-            if (SetProperty(ref field, value)) {
+            if (SetProperty(ref field, value))
                 Modifier?.Enabled = value;
-            }
         }
     } = true;
-
-    /// <summary>
-    /// 获取或设置截止频率（Hz）。
-    /// </summary>
-    public float Cutoff {
-        get;
-        set {
-            if (SetProperty(ref field, Math.Min(20000, value))) {
-                Modifier?.Cutoff = Math.Min(20000, value);
-            }
-        }
-    } = 4000f;
-
-    /// <summary>
-    /// 获取或设置增益（dB）。
-    /// </summary>
-    public float BoostGainDb {
-        get;
-        set {
-            if (SetProperty(ref field, value)) {
-                Modifier?.BoostGainDb = value;
-            }
-        }
-    } = 6f;
 }

@@ -7,8 +7,7 @@ namespace QwQ_Music.Common.Utilities.StringUtilities;
 /// <summary>
 ///     字符串清理工具类，提供各种字符串清理和纯文本化功能
 /// </summary>
-public static partial class StringCleaner
-{
+public static partial class StringCleaner {
     /// <summary>
     ///     将字符串转换为纯文本（类似Word的粘贴为纯文本功能）
     ///     去除格式控制字符、不可见字符、特殊字符，仅保留可读文本
@@ -17,8 +16,7 @@ public static partial class StringCleaner
     /// <param name="preserveLineBreaks">是否保留换行符</param>
     /// <param name="preserveSpaces">是否保留空格</param>
     /// <returns>纯文本字符串</returns>
-    public static string ToPlainText(string input, bool preserveLineBreaks = true, bool preserveSpaces = true)
-    {
+    public static string ToPlainText(string input, bool preserveLineBreaks = true, bool preserveSpaces = true) {
         if (string.IsNullOrEmpty(input))
             return input;
 
@@ -26,13 +24,10 @@ public static partial class StringCleaner
         bool lastWasWhitespace = false;
         bool lastWasLineBreak = false;
 
-        foreach (char c in input.Where(c => !char.IsControl(c) || c == '\n' || c == '\r' || c == '\t'))
-        {
+        foreach (char c in input.Where(c => !char.IsControl(c) || c == '\n' || c == '\r' || c == '\t')) {
             // 处理换行符
-            if (c is '\n' or '\r')
-            {
-                if (preserveLineBreaks && !lastWasLineBreak)
-                {
+            if (c is '\n' or '\r') {
+                if (preserveLineBreaks && !lastWasLineBreak) {
                     result.Append('\n');
                     lastWasLineBreak = true;
                     lastWasWhitespace = false;
@@ -42,10 +37,8 @@ public static partial class StringCleaner
             }
 
             // 处理空格和制表符
-            if (char.IsWhiteSpace(c))
-            {
-                if (preserveSpaces && !lastWasWhitespace)
-                {
+            if (char.IsWhiteSpace(c)) {
+                if (preserveSpaces && !lastWasWhitespace) {
                     result.Append(' ');
                     lastWasWhitespace = true;
                 }
@@ -72,11 +65,10 @@ public static partial class StringCleaner
     /// </summary>
     /// <param name="input">输入字符串</param>
     /// <returns>清理后的字符串</returns>
-    public static string RemoveControlCharacters(string input)
-    {
-        return string.IsNullOrEmpty(input)
-            ? input
-            : new string(input.Where(c => !char.IsControl(c) || c == '\n' || c == '\r' || c == '\t').ToArray());
+    public static string RemoveControlCharacters(string input) {
+        return string.IsNullOrEmpty(input) ?
+            input :
+            new string(input.Where(c => !char.IsControl(c) || c == '\n' || c == '\r' || c == '\t').ToArray());
     }
 
     /// <summary>
@@ -84,41 +76,26 @@ public static partial class StringCleaner
     /// </summary>
     /// <param name="input">输入字符串</param>
     /// <returns>清理后的字符串</returns>
-    public static string RemoveZeroWidthCharacters(string input)
-    {
+    public static string RemoveZeroWidthCharacters(string input) {
         if (string.IsNullOrEmpty(input))
             return input;
 
         // 零宽字符的Unicode范围
         return new string(
-            input
-                .Where(c =>
-                        c != '\u200B'
-                     && // 零宽空格
-                        c != '\u200C'
-                     && // 零宽非连接符
-                        c != '\u200D'
-                     && // 零宽连接符
-                        c != '\u2060'
-                     && // 词连接符
-                        c != '\uFEFF'
-                     && // 字节顺序标记
-                        c != '\u200E'
-                     && // 从左到右标记
-                        c != '\u200F'
-                     && // 从右到左标记
-                        c != '\u202A'
-                     && // 从左到右嵌入
-                        c != '\u202B'
-                     && // 从右到左嵌入
-                        c != '\u202C'
-                     && // 弹出方向格式
-                        c != '\u202D'
-                     && // 从左到右覆盖
-                        c != '\u202E' // 从右到左覆盖
-                )
-                .ToArray()
-        );
+            input.Where(c => c != '\u200B' && // 零宽空格
+                             c != '\u200C' && // 零宽非连接符
+                             c != '\u200D' && // 零宽连接符
+                             c != '\u2060' && // 词连接符
+                             c != '\uFEFF' && // 字节顺序标记
+                             c != '\u200E' && // 从左到右标记
+                             c != '\u200F' && // 从右到左标记
+                             c != '\u202A' && // 从左到右嵌入
+                             c != '\u202B' && // 从右到左嵌入
+                             c != '\u202C' && // 弹出方向格式
+                             c != '\u202D' && // 从左到右覆盖
+                             c != '\u202E'    // 从右到左覆盖
+                 )
+                 .ToArray());
     }
 
     /// <summary>
@@ -127,8 +104,7 @@ public static partial class StringCleaner
     /// <param name="input">输入字符串</param>
     /// <param name="normalizeLineBreaks">是否统一换行符为\n</param>
     /// <returns>清理后的字符串</returns>
-    public static string NormalizeWhitespace(string input, bool normalizeLineBreaks = true)
-    {
+    public static string NormalizeWhitespace(string input, bool normalizeLineBreaks = true) {
         if (string.IsNullOrEmpty(input))
             return input;
 
@@ -136,9 +112,7 @@ public static partial class StringCleaner
 
         // 统一换行符
         if (normalizeLineBreaks)
-        {
             result = result.Replace("\r\n", "\n").Replace("\r", "\n");
-        }
 
         // 合并连续的空白字符
         result = WhitespaceRegex().Replace(result, " ");
@@ -154,8 +128,7 @@ public static partial class StringCleaner
     /// </summary>
     /// <param name="input">输入字符串</param>
     /// <returns>去除HTML标签后的字符串</returns>
-    public static string RemoveHtmlTags(string input)
-    {
+    public static string RemoveHtmlTags(string input) {
         return string.IsNullOrEmpty(input) ? input : HtmlTagRegex().Replace(input, "");
     }
 
@@ -164,8 +137,7 @@ public static partial class StringCleaner
     /// </summary>
     /// <param name="input">输入字符串</param>
     /// <returns>去除Markdown标记后的字符串</returns>
-    public static string RemoveMarkdown(string input)
-    {
+    public static string RemoveMarkdown(string input) {
         if (string.IsNullOrEmpty(input))
             return input;
 
@@ -192,8 +164,7 @@ public static partial class StringCleaner
     /// </summary>
     /// <param name="input">输入字符串</param>
     /// <returns>仅包含ASCII字符的字符串</returns>
-    public static string ToAsciiOnly(string input)
-    {
+    public static string ToAsciiOnly(string input) {
         return string.IsNullOrEmpty(input) ? input : new string(input.Where(c => c <= 127).ToArray());
     }
 
@@ -204,14 +175,13 @@ public static partial class StringCleaner
     /// <param name="input">输入字符串</param>
     /// <param name="preserveSpaces">是否保留空格</param>
     /// <returns>仅包含字母数字的字符串</returns>
-    public static string ToAlphanumericOnly(string input, bool preserveSpaces = false)
-    {
+    public static string ToAlphanumericOnly(string input, bool preserveSpaces = false) {
         if (string.IsNullOrEmpty(input))
             return input;
 
-        return preserveSpaces
-            ? new string(input.Where(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)).ToArray())
-            : new string(input.Where(char.IsLetterOrDigit).ToArray());
+        return preserveSpaces ?
+            new string(input.Where(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)).ToArray()) :
+            new string(input.Where(char.IsLetterOrDigit).ToArray());
     }
 
     /// <summary>
@@ -219,8 +189,7 @@ public static partial class StringCleaner
     /// </summary>
     /// <param name="input">输入字符串</param>
     /// <returns>清理后的字符串</returns>
-    public static string RemoveExtraWhitespace(string input)
-    {
+    public static string RemoveExtraWhitespace(string input) {
         return string.IsNullOrEmpty(input) ? input : WhitespaceRegex().Replace(input, " ").Trim();
     }
 
@@ -238,9 +207,7 @@ public static partial class StringCleaner
         bool removeHtml = true,
         bool removeMarkdown = true,
         bool removeZeroWidth = true,
-        bool normalizeWhitespace = true
-        )
-    {
+        bool normalizeWhitespace = true) {
         if (string.IsNullOrEmpty(input))
             return input;
 

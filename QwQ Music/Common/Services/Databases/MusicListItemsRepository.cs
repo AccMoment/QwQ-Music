@@ -4,23 +4,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
+using QwQ_Music.Common.Helpers;
 using QwQ_Music.Models;
 using QwQ_Music.Models.ConfigModels;
 
 namespace QwQ_Music.Common.Services.Databases;
 
 public class MusicListItemsRepository : IAsyncDisposable {
-    public static readonly MusicListItemsRepository Instance = new(StaticConfig.DatabasePath);
-
     public const string NextPath = nameof(NextPath);
     public const string AddTime = nameof(AddTime);
 
     public const string TABLE_NAME = "music_list_items";
+    public static readonly MusicListItemsRepository Instance = new(StaticConfig.DatabasePath);
     private readonly AsyncDatabaseService _db;
 
     public MusicListItemsRepository(string dbPath) {
         _db = new AsyncDatabaseService(dbPath);
         InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+    }
+
+    public async ValueTask DisposeAsync() {
+        await _db.DisposeAsync().ConfigureAwait(false);
+        GC.SuppressFinalize(this);
     }
 
     private async Task InitializeAsync() {
@@ -41,35 +46,38 @@ public class MusicListItemsRepository : IAsyncDisposable {
                           }) ON UPDATE CASCADE ON DELETE CASCADE
                       """)
                  .ConfigureAwait(false);
-        await _db.CreateTriggerAsync("save_removed_audio_info",$"""
-                                                         AFTER DELETE ON {MusicItemRepository.TABLE_NAME} FOR EACH ROW
-                                                         BEGIN
-                                                             UPDATE {TABLE_NAME} SET {nameof(MusicItemModel.FilePath)} = OLD.{nameof(MusicItemModel.Title)} || '-' ||  OLD.{nameof(MusicItemModel.Artists)}
-                                                             WHERE {nameof(MusicItemModel.FilePath)} = OLD.{nameof(MusicItemModel.FilePath)};
-                                                         END;
-                                                         """).ConfigureAwait(false);
-        await _db.CreateTriggerAsync("update_audio_path",$"""
-                                                         AFTER UPDATE ON {MusicItemRepository.TABLE_NAME} FOR EACH ROW
-                                                         BEGIN
-                                                             UPDATE {TABLE_NAME} SET {nameof(MusicItemModel.FilePath)} = NEW.{nameof(MusicItemModel.FilePath)}
-                                                             WHERE {nameof(MusicItemModel.FilePath)} = OLD.{nameof(MusicItemModel.FilePath)};
-                                                         END;
-                                                         """).ConfigureAwait(false);
-    }
-
-    public async ValueTask DisposeAsync() {
-        await _db.DisposeAsync().ConfigureAwait(false);
-        GC.SuppressFinalize(this);
+        await _db.CreateTriggerAsync(
+                     "save_removed_audio_info",
+                     $"""
+                      AFTER DELETE ON {MusicItemRepository.TABLE_NAME} FOR EACH ROW
+                      BEGIN
+                          UPDATE {TABLE_NAME} SET {nameof(MusicItemModel.FilePath)} = OLD.{nameof(MusicItemModel.Title)
+                          } || '-' ||  OLD.{nameof(MusicItemModel.Artists)}
+                          WHERE {nameof(MusicItemModel.FilePath)} = OLD.{nameof(MusicItemModel.FilePath)};
+                      END;
+                      """)
+                 .ConfigureAwait(false);
+        await _db.CreateTriggerAsync(
+                     "update_audio_path",
+                     $"""
+                      AFTER UPDATE ON {MusicItemRepository.TABLE_NAME} FOR EACH ROW
+                      BEGIN
+                          UPDATE {TABLE_NAME} SET {nameof(MusicItemModel.FilePath)} = NEW.{
+                              nameof(MusicItemModel.FilePath)}
+                          WHERE {nameof(MusicItemModel.FilePath)} = OLD.{nameof(MusicItemModel.FilePath)};
+                      END;
+                      """)
+                 .ConfigureAwait(false);
     }
 
     private async Task<string?> GetFirstAsync(string musicListName) {
-        return ((await _db.SingleAsync(
-                              $"SELECT {NextPath} from {TABLE_NAME} " +
-                              $"WHERE {nameof(MusicItemModel.FilePath)} = @{nameof(MusicListModel.Name)}",
-                              new Dictionary<string, object> {
-                                  [nameof(MusicListModel.Name)] = $"QWQ_PLAYLIST_{musicListName}_HEAD"
-                              })
-                          .ConfigureAwait(false))?["NextPath"] as string);
+        return (await _db.SingleAsync(
+                             $"SELECT {NextPath} from {TABLE_NAME} " +
+                             $"WHERE {nameof(MusicItemModel.FilePath)} = @{nameof(MusicListModel.Name)}",
+                             new Dictionary<string, object> {
+                                 [nameof(MusicListModel.Name)] = $"QWQ_PLAYLIST_{musicListName}_HEAD"
+                             })
+                         .ConfigureAwait(false))?["NextPath"] as string;
     }
 
     /// <summary>
@@ -88,27 +96,39 @@ public class MusicListItemsRepository : IAsyncDisposable {
                                    .ToArray();
         long time = DateTime.Now.Ticks;
         //  更新 HEAD，将首项更换为 items的首项。
+        await EnsureChainHeader(musicList.Name, musicList.Creator).ConfigureAwait(false);
+        // SqliteTransaction transaction = _db.BeginTransaction();
         List<SqliteCommand> cmd = [
             _db.UpdateNonExecute(
+                null,
                 TABLE_NAME,
                 new Dictionary<string, object?> { [NextPath] = itemsArray.First() },
                 $"{nameof(MusicListModel.Name)} = @{nameof(MusicListModel.Name)}",
                 new Dictionary<string, object?> { [nameof(MusicListModel.Name)] = musicList.Name })
         ];
-        var data = itemsArray.Take(..^1)
-                             .Select((item, index) => new Dictionary<string, object?> {
-                                 [nameof(MusicListModel.Name)] = musicListName,
-                                 [nameof(MusicItemModel.FilePath)] = item,
-                                 [AddTime] = time,
-                                 [NextPath] = itemsArray[index + 1]
-                             });
+        IEnumerable<Dictionary<string, object?>> data = itemsArray.Take(..^1)
+                                                                  .Select((item, index) =>
+                                                                              new Dictionary<string, object?> {
+                                                                                  [nameof(MusicListModel.Name)] =
+                                                                                      musicListName,
+                                                                                  [nameof(MusicItemModel.FilePath)] =
+                                                                                      item,
+                                                                                  [AddTime] = time,
+                                                                                  [NextPath] = itemsArray[index + 1]
+                                                                              });
 
-        _db.InsertMultipleNonExecute(cmd, TABLE_NAME, data, onInsertExist: InsertExist.REPLACE);
+        _db.InsertManyNonExecute(null, cmd, TABLE_NAME, data, InsertExist.REPLACE);
         await AsyncDatabaseService.ExecuteAsync(cmd).ConfigureAwait(false);
     }
 
+    public async Task EnsureChainHeader(string name, string creator) {
+        if (await ContainsAsync((name, creator), $"QWQ_PLAYLIST_{name}_{creator}_HEAD").ConfigureAwait(false))
+            return;
+        await InitializeMusicListAsync((name, creator)).ConfigureAwait(false);
+    }
+
     /// <summary>
-    ///     添加歌曲到歌单
+    ///     初始化歌单
     /// </summary>
     public async Task InitializeMusicListAsync((string Name, string Creator) key) {
         await LoggerService.DebugAsync($"正在初始化歌单'{key.Name} - {key.Creator}'").ConfigureAwait(false);
@@ -119,7 +139,7 @@ public class MusicListItemsRepository : IAsyncDisposable {
                          [nameof(MusicListModel.Creator)] = key.Creator,
                          [nameof(MusicItemModel.FilePath)] = $"QWQ_PLAYLIST_{key.Name}_{key.Creator}_HEAD"
                      },
-                     onInsertExist: InsertExist.IGNORE)
+                     InsertExist.IGNORE)
                  .ConfigureAwait(false);
     }
 
@@ -133,27 +153,31 @@ public class MusicListItemsRepository : IAsyncDisposable {
                                    ',',
                                    items.Select(item => $"《{item.Title} - {item.Artists}》"))}")
                            .ConfigureAwait(false);
-        SqliteCommand cmd = _db.NewCommand();
+        // SqliteTransaction transaction = _db.BeginTransaction();
+        List<SqliteCommand> commands = [];
         foreach (MusicItemModel item in items) {
-            _db.UpdateNonExecute(
-                ref cmd,
-                TABLE_NAME,
-                new Dictionary<string, object?> { [NextPath] = null },
-                $"{nameof(MusicListModel.Name)} = @{nameof(MusicListModel.Name)} AND {NextPath} = @{NextPath}",
-                new Dictionary<string, object?> {
-                    [nameof(MusicListModel.Name)] = musicList.Name, [NextPath] = item.FilePath
-                });
-            _db.DeleteNonExecute(
-                ref cmd,
-                TABLE_NAME,
-                $"{nameof(MusicListModel.Name)} = @{nameof(MusicListModel.Name)} AND {nameof(MusicItemModel.FilePath)
-                } = @{nameof(MusicItemModel.FilePath)}",
-                new Dictionary<string, object> {
-                    [nameof(MusicListModel.Name)] = musicList.Name, [nameof(MusicItemModel.FilePath)] = item.FilePath
-                });
+            commands.Add(
+                _db.UpdateNonExecute(
+                    null,
+                    TABLE_NAME,
+                    new Dictionary<string, object?> { [NextPath] = null },
+                    $"{nameof(MusicListModel.Name)} = @{nameof(MusicListModel.Name)} AND {NextPath} = @{NextPath}",
+                    new Dictionary<string, object?> {
+                        [nameof(MusicListModel.Name)] = musicList.Name, [NextPath] = item.FilePath
+                    }));
+            commands.Add(
+                _db.DeleteNonExecute(
+                    null,
+                    TABLE_NAME,
+                    $"{nameof(MusicListModel.Name)} = @{nameof(MusicListModel.Name)} AND {
+                        nameof(MusicItemModel.FilePath)} = @{nameof(MusicItemModel.FilePath)}",
+                    new Dictionary<string, object> {
+                        [nameof(MusicListModel.Name)] = musicList.Name,
+                        [nameof(MusicItemModel.FilePath)] = item.FilePath
+                    }));
         }
 
-        await AsyncDatabaseService.ExecuteAsync(cmd).ConfigureAwait(false);
+        await AsyncDatabaseService.ExecuteAsync(commands).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -166,6 +190,7 @@ public class MusicListItemsRepository : IAsyncDisposable {
         };
 
         await _db.DeleteAsync(
+                     null,
                      TABLE_NAME,
                      $"{nameof(MusicListModel.Name)} = @{nameof(MusicListModel.Name)}",
                      whereParams)
@@ -179,7 +204,7 @@ public class MusicListItemsRepository : IAsyncDisposable {
     /// <returns>文件路径列表</returns>
     public async Task<(int Count, IEnumerable<string> Paths)> GetAllAsync((string Name, string Creator) key) {
         await LoggerService.DebugAsync($"正在获取歌单'{key.Name} - {key.Creator}'的所有项目。警告：可能发生长时磁盘IO").ConfigureAwait(false);
-
+        await EnsureChainHeader(key.Name, key.Creator).ConfigureAwait(false);
         const string sql = $"SELECT {nameof(MusicItemModel.FilePath)} FROM {TABLE_NAME} WHERE {
             nameof(MusicListModel.Name)} = @{nameof(MusicListModel.Name)} AND {nameof(MusicListModel.Creator)} = @{
                 nameof(MusicListModel.Creator)}";
@@ -191,13 +216,17 @@ public class MusicListItemsRepository : IAsyncDisposable {
                               [nameof(MusicListModel.Name)] = key.Name, [nameof(MusicListModel.Creator)] = key.Creator
                           })
                       .ConfigureAwait(false)).ToFrozenDictionary(
-                item => (string)item[nameof(MusicItemModel.FilePath)]!,
-                item => (string?)item[nameof(NextPath)]);
+                item => ParseHelper.TryParse(item, nameof(MusicItemModel.FilePath))!,
+                item => ParseHelper.TryParse(item, nameof(NextPath)));
 
         return (result.Count, Paths: Order(result));
 
         IEnumerable<string> Order(IDictionary<string, string?> raw) {
-            string? current = raw[$"QWQ_PLAYLIST_{key.Name}_{key.Creator}_HEAD"];
+            if (!raw.TryGetValue($"QWQ_PLAYLIST_{key.Name}_{key.Creator}_HEAD", out string? current)) {
+                LoggerService.Error("不存在头节点，无法生成音频项目链。请检查歌单是否存在。数据库可能损坏");
+                yield break;
+            }
+
             while (current != null) {
                 yield return current;
                 if (raw.TryGetValue(current, out current))
@@ -211,7 +240,7 @@ public class MusicListItemsRepository : IAsyncDisposable {
     /// <summary>
     ///     检查某首歌是否在歌单中
     /// </summary>
-    public async Task<bool> ContainsAsync((string Name, string Creator) key, string filePath) {
+    public async ValueTask<bool> ContainsAsync((string Name, string Creator) key, string filePath) {
         await LoggerService.DebugAsync($"正在获取歌单'{key.Name} - {key.Creator}'的封面").ConfigureAwait(false);
         await LoggerService.DebugAsync($"正在检测歌单'{key.Name} - {key.Creator}'是否包含歌曲{filePath}").ConfigureAwait(false);
 
@@ -226,6 +255,6 @@ public class MusicListItemsRepository : IAsyncDisposable {
             [nameof(MusicListModel.Creator)] = key.Creator
         };
 
-        return (await _db.SingleAsync(sql, parameters).ConfigureAwait(false)) is not null;
+        return await _db.SingleAsync(sql, parameters).ConfigureAwait(false) is not null;
     }
 }

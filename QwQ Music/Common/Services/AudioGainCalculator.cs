@@ -14,10 +14,15 @@ using AudioFormat = SoundFlow.Structs.AudioFormat;
 namespace QwQ_Music.Common.Services;
 
 public class AudioGainCalculator : IDisposable {
-    private const double DEFAULT_GAIN = 1.0;
+    private const double _DEFAULT_GAIN = 1.0;
 
     private readonly MiniAudioEngine _engine =
         Task.Run(() => new MiniAudioEngine()).ConfigureAwait(false).GetAwaiter().GetResult();
+
+    public void Dispose() {
+        _engine.Dispose();
+        GC.SuppressFinalize(this);
+    }
 
     public async Task<double> CalculateGainAsync(
         MusicItemModel item,
@@ -27,15 +32,15 @@ public class AudioGainCalculator : IDisposable {
             if (!File.Exists(item.FilePath)) {
                 NotificationService.Error($"文件未找到: {item.FilePath}");
 
-                return DEFAULT_GAIN;
+                return _DEFAULT_GAIN;
             }
 
-            await using var audioStream = await GetAudioStreamAsync(item);
+            await using Stream? audioStream = await GetAudioStreamAsync(item).ConfigureAwait(false);
 
             if (audioStream == null) {
-                NotificationService.Error($"从文件中解析音频流失败！《{item.Title}》使用默认增益值: {DEFAULT_GAIN}");
+                NotificationService.Error($"从文件中解析音频流失败！《{item.Title}》使用默认增益值: {_DEFAULT_GAIN}");
 
-                return DEFAULT_GAIN;
+                return _DEFAULT_GAIN;
             }
 
             var track = new Track(audioStream);
@@ -43,18 +48,18 @@ public class AudioGainCalculator : IDisposable {
             int channels = track.ChannelsArrangement.NbChannels;
 
             if (sampleRate <= 0 || channels <= 0) {
-                NotificationService.Error($"音频元数据无效！《{item.Title}》使用默认增益值: {DEFAULT_GAIN}");
+                NotificationService.Error($"音频元数据无效！《{item.Title}》使用默认增益值: {_DEFAULT_GAIN}");
 
-                return DEFAULT_GAIN;
+                return _DEFAULT_GAIN;
             }
 
-            var audioBlocks = ReadAudioBlocks(audioStream, sampleRate, channels);
+            IEnumerable<float[]> audioBlocks = ReadAudioBlocks(audioStream, sampleRate, channels);
 
             return ReplayGainCalculator.CalculateGain(audioBlocks, sampleRate, channels, standard, customTargetLufs);
         } catch (Exception ex) when (ex is UnauthorizedAccessException or IOException or InvalidOperationException) {
             NotificationService.Error($"处理音频文件时出错: {ex.Message}");
 
-            return DEFAULT_GAIN;
+            return _DEFAULT_GAIN;
         }
     }
 
@@ -86,10 +91,5 @@ public class AudioGainCalculator : IDisposable {
 
             yield return actualBuffer;
         }
-    }
-
-    public void Dispose() {
-        _engine.Dispose();
-        GC.SuppressFinalize(this);
     }
 }

@@ -8,7 +8,7 @@ using QwQ_Music.ViewModels.Bases;
 
 namespace QwQ_Music.ViewModels.Pages;
 
-public class SystemConfigPageViewModel : ViewModelBase {
+public class SystemConfigPageViewModel() : NavigableViewModel(nameof(SystemConfigPageViewModel)) {
     public SystemConfig Config { get; } = ConfigManager.SystemConfig;
 
     public static LoggerServiceConfig LoggerServiceConfig => ConfigManager.LoggerServiceConfig;

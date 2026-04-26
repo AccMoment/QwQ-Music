@@ -41,9 +41,9 @@ public partial class ImageCroppingViewModel(Bitmap sourceImage) : ObservableObje
                    return;
                file.OpenWriteAsync()
                    .ContinueWith(read => {
-                       if (read is { IsCompletedSuccessfully: true, Result: { } stream }) {
+                       if (read is { IsCompletedSuccessfully: true, Result: { } stream })
                            CroppedImage?.Save(stream);
-                       } else
+                       else
                            NotificationService.Error("坏欸", "保存文件失败了！");
                    });
            })

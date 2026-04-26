@@ -7,68 +7,26 @@ using SoundFlow.Structs;
 
 namespace QwQ_Music.Models.SoundEffectModels;
 
-public partial class ChorusModel : ObservableObject, ISoundModifierModel<ChorusModifier>
-{
-    [JsonIgnore] public ChorusModifier? Modifier { get; private set; }
-
-    [JsonIgnore] SoundModifier? ISoundModifierModel.Modifier => Modifier;
-
-    [JsonIgnore] public string Name { get; } = "合唱效果";
-
-    public void Initialize(AudioFormat audioFormat)
-    {
-        var modifier = new ChorusModifier(audioFormat, DepthMs, RateHz, Feedback, WetDryMix)
-        {
-            Enabled = Enabled
-        };
-
-        Modifier = modifier;
-    }
-
-    public void Revoke()
-    {
-        Modifier = null;
-    }
-
-    public bool Enabled
-    {
-        get;
-        set
-        {
-            if (SetProperty(ref field, value))
-            {
-                Modifier?.Enabled = value;
-            }
-        }
-    }
-
+public partial class ChorusModel : ObservableObject, ISoundModifierModel<ChorusModifier> {
     /// <summary>
     ///     合唱效果的深度（毫秒）。
     /// </summary>
-    public float DepthMs
-    {
+    public float DepthMs {
         get;
-        set
-        {
+        set {
             if (SetProperty(ref field, value))
-            {
                 Modifier?.DepthMs = value;
-            }
         }
     } = 3f;
 
     /// <summary>
     ///     LFO 调制速率（Hz）。
     /// </summary>
-    public float RateHz
-    {
+    public float RateHz {
         get;
-        set
-        {
+        set {
             if (SetProperty(ref field, value))
-            {
                 Modifier?.RateHz = value;
-            }
         }
     } = 1f;
 
@@ -81,15 +39,36 @@ public partial class ChorusModel : ObservableObject, ISoundModifierModel<ChorusM
     /// <summary>
     ///     湿/干混合比例（0.0 - 1.0）。
     /// </summary>
-    public float WetDryMix
-    {
+    public float WetDryMix {
         get;
-        set
-        {
+        set {
             if (SetProperty(ref field, value))
-            {
                 Modifier?.WetDryMix = value;
-            }
         }
     } = 0.5f;
+
+    [JsonIgnore]
+    public ChorusModifier? Modifier { get; private set; }
+
+    [JsonIgnore]
+    SoundModifier? ISoundModifierModel.Modifier => Modifier;
+
+    [JsonIgnore]
+    public string Name { get; } = "合唱效果";
+
+    public void Initialize(AudioFormat audioFormat) {
+        var modifier = new ChorusModifier(audioFormat, DepthMs, RateHz, Feedback, WetDryMix) { Enabled = Enabled };
+
+        Modifier = modifier;
+    }
+
+    public void Revoke() { Modifier = null; }
+
+    public bool Enabled {
+        get;
+        set {
+            if (SetProperty(ref field, value))
+                Modifier?.Enabled = value;
+        }
+    }
 }

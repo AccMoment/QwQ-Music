@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
@@ -8,7 +9,7 @@ using Ursa.Controls;
 
 namespace QwQ_Music.ViewModels.Pages;
 
-public partial class SoundEffectConfigViewModel() : NavigationViewModel("音效") {
+public partial class SoundEffectConfigViewModel() : NavigableViewModel(nameof(SoundEffectConfigViewModel)) {
     public SoundModifierManager SoundModifierManager => SoundModifierManager.Default;
 
     [RelayCommand]
@@ -24,14 +25,13 @@ public partial class SoundEffectConfigViewModel() : NavigationViewModel("音效"
 
                          SoundModifierManager.Clear();
 
-                         foreach (var builtInSoundEffect in
-                                  SoundModifierManager.SoundEffectConfig.BuiltInSoundEffects) {
-                             if (builtInSoundEffect.Value) {
+                         foreach (KeyValuePair<string, bool> builtInSoundEffect in SoundModifierManager
+                                      .SoundEffectConfig
+                                      .BuiltInSoundEffects)
+                             if (builtInSoundEffect.Value)
                                  SoundModifierManager.LoadModifier(builtInSoundEffect.Key);
-                             } else {
+                             else
                                  SoundModifierManager.UnLoadModifier(builtInSoundEffect.Key);
-                             }
-                         }
                      })
                      .ContinueWith(LoggerService.HandleException)
                      .ConfigureAwait(false);

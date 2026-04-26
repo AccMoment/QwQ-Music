@@ -3,289 +3,282 @@
              xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
              xmlns:utilities="clr-namespace:QwQ_Music.Common.Utilities"
              xmlns:panelVms="clr-namespace:QwQ_Music.ViewModels.Panels"
-             xmlns:pages="clr-namespace:QwQ_Music.Views.Pages"
-             xmlns:pageVms="clr-namespace:QwQ_Music.ViewModels.Pages"
              xmlns:models="clr-namespace:QwQ_Music.Models"
+             xmlns:pages="clr-namespace:QwQ_Music.Views.Pages"
              x:DataType="panelVms:AllMusicListsPanelViewModel"
              x:Class="QwQ_Music.Views.Panels.AllMusicListsPanel"
-             Name="MusicListsContainer">
+             Name="AllMusicListsContainer">
+    <Carousel SelectedIndex="{Binding CurrentStatus}">
+        <Carousel.PageTransition>
+            <CompositePageTransition>
+                <CrossFade Duration="0:0:0.5" />
+                <PageSlide Duration="0:0:0.3"
+                           Orientation="Vertical"
+                           SlideInEasing="QuadraticEaseIn"
+                           SlideOutEasing="QuadraticEaseOut" />
+            </CompositePageTransition>
+        </Carousel.PageTransition>
+        <Carousel.Items>
+            <Grid RowDefinitions="Auto,*" Margin="0,10" RowSpacing="5">
+                <Panel Grid.Row="0">
+                    <Button CornerRadius="8" HorizontalAlignment="Left"
+                            Theme="{StaticResource OutlineButton}"
+                            Margin="10,5"
+                            Command="{Binding MusicListsManager.CreateMusicListCommand}"
+                            Content="新建歌单" />
 
-    <Grid RowDefinitions="Auto,*" Margin="0,10" RowSpacing="5">
-        <Panel Grid.Row="0">
-            <TextBox CornerRadius="15"
-                     Margin="10,0"
-                     HorizontalAlignment="Right"
-                     Text="{Binding SearchText, Mode=TwoWay}"
-                     Watermark="搜索歌单"
-                     Width="200">
-                <TextBox.InnerLeftContent>
-                    <PathIcon Data="{StaticResource SemiIconSearchStroked}" Height="14" Width="14" />
-                </TextBox.InnerLeftContent>
-            </TextBox>
-            <Button CornerRadius="8" VerticalAlignment="Top" HorizontalAlignment="Left"
-                    Theme="{StaticResource OutlineButton}"
-                    Margin="10,5"
-                    Command="{Binding MusicListsManager.CreateMusicListCommand}"
-                    IsVisible="{Binding !MusicListsManager.MusicLists.Count}" Content="新建歌单" />
-        </Panel>
-        <ScrollViewer Grid.Row="1">
+                    <TextBox CornerRadius="15"
+                             Margin="10,0"
+                             HorizontalAlignment="Right"
+                             Text="{Binding SearchText, Mode=TwoWay}"
+                             Watermark="搜索歌单"
+                             Width="200">
+                        <TextBox.InnerLeftContent>
+                            <PathIcon Data="{StaticResource SemiIconSearchStroked}" Height="14" Width="14" />
+                        </TextBox.InnerLeftContent>
+                    </TextBox>
+                </Panel>
+                <Border Grid.Row="1">
+                    <ScrollViewer Width="{Binding $parent.Bounds.Width}" Height="{Binding $parent.Bounds.Height}">
+                        <ItemsRepeater Margin="10 5" Background="Transparent"
+                                       ItemsSource="{Binding FilteredList,Mode=OneWay}">
+                            <ItemsRepeater.Layout>
+                                <UniformGridLayout />
+                            </ItemsRepeater.Layout>
+                            <ItemsRepeater.Styles>
 
-            <ItemsControl Background="Transparent" ItemsSource="{Binding FilteredList,Mode=OneWay}"
-                          Padding="10,15">
+                                <Style Selector="ItemsControl > ContentPresenter">
 
-                <ItemsControl.Styles>
+                                    <Setter Property="Transitions">
+                                        <Transitions>
+                                            <TransformOperationsTransition Duration="0:0:0.2"
+                                                                           Property="RenderTransform" />
+                                        </Transitions>
+                                    </Setter>
 
-                    <Style Selector="ItemsControl > ContentPresenter">
+                                    <Setter Property="ContextMenu">
+                                        <Setter.Value>
+                                            <ContextMenu x:DataType="models:MusicListModel">
 
-                        <Setter Property="Transitions">
-                            <Transitions>
-                                <TransformOperationsTransition Duration="0:0:0.2" Property="RenderTransform" />
-                            </Transitions>
-                        </Setter>
+                                                <MenuItem
+                                                    Command="{Binding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).PlayCurrentListCommand}"
+                                                    CommandParameter="{Binding }"
+                                                    Header="播放">
+                                                    <MenuItem.Icon>
+                                                        <PathIcon Data="{StaticResource SemiIconPlay}" Margin="4" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
 
-                        <Setter Property="ContextMenu">
-                            <Setter.Value>
-                                <ContextMenu x:DataType="models:MusicListModel">
+                                                <MenuItem Header="编辑">
+                                                    <MenuItem.Icon>
+                                                        <PathIcon Data="{StaticResource SemiIconEdit}"
+                                                                  Margin="2" />
+                                                    </MenuItem.Icon>
 
-                                    <MenuItem
-                                        Command="{Binding #MusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).TogglePlaylistCommand}"
-                                        CommandParameter="{Binding }"
-                                        Header="播放">
-                                        <MenuItem.Icon>
-                                            <PathIcon Data="{StaticResource SemiIconPlay}" Margin="4" />
-                                        </MenuItem.Icon>
-                                    </MenuItem>
+                                                    <MenuItem
+                                                        Header="图标"
+                                                        Command="{Binding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).MusicListsManager.EditMusicListCoverCommand}"
+                                                        CommandParameter="{Binding }">
+                                                        <MenuItem.Icon>
+                                                            <PathIcon Data="{StaticResource SemiIconImage}"
+                                                                      Margin="2" />
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
 
-                                    <MenuItem Header="编辑">
-                                        <MenuItem.Icon>
-                                            <PathIcon Data="{StaticResource SemiIconEdit}"
-                                                      Margin="2" />
-                                        </MenuItem.Icon>
+                                                    <MenuItem
+                                                        Header="名称"
+                                                        Command="{Binding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).MusicListsManager.EditMusicListNameCommand}"
+                                                        CommandParameter="{Binding }">
+                                                        <MenuItem.Icon>
+                                                            <PathIcon Data="{StaticResource SemiIconFontColor}"
+                                                                      Margin="2" />
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
 
-                                        <MenuItem
-                                            Header="图标"
-                                            Command="{Binding #MusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).MusicListsManager.EditMusicListCoverCommand}"
-                                            CommandParameter="{Binding }">
-                                            <MenuItem.Icon>
-                                                <PathIcon Data="{StaticResource SemiIconImage}"
-                                                          Margin="2" />
-                                            </MenuItem.Icon>
-                                        </MenuItem>
+                                                    <MenuItem
+                                                        Header="描述"
+                                                        Command="{Binding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).MusicListsManager.EditMusicListDescriptionCommand}"
+                                                        CommandParameter="{Binding }">
+                                                        <MenuItem.Icon>
+                                                            <PathIcon Data="{StaticResource SemiIconFontColor}"
+                                                                      Margin="2" />
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
 
-                                        <MenuItem
-                                            Header="名称"
-                                            Command="{Binding #MusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).MusicListsManager.EditMusicListNameCommand}"
-                                            CommandParameter="{Binding }">
-                                            <MenuItem.Icon>
-                                                <PathIcon Data="{StaticResource SemiIconFontColor}"
-                                                          Margin="2" />
-                                            </MenuItem.Icon>
-                                        </MenuItem>
+                                                </MenuItem>
 
-                                        <MenuItem
-                                            Header="描述"
-                                            Command="{Binding #MusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).MusicListsManager.EditMusicListDescriptionCommand}"
-                                            CommandParameter="{Binding }">
-                                            <MenuItem.Icon>
-                                                <PathIcon Data="{StaticResource SemiIconFontColor}"
-                                                          Margin="2" />
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                        
-                                    </MenuItem>
+                                                <MenuItem
+                                                    Command="{Binding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).MusicListsManager.DeleteMusicListCommand}"
+                                                    CommandParameter="{Binding }"
+                                                    Header="删除">
+                                                    <MenuItem.Icon>
+                                                        <PathIcon Foreground="{DynamicResource SemiRed5}"
+                                                                  Data="{StaticResource SemiIconDelete}"
+                                                                  Margin="2" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
 
-                                    <MenuItem
-                                        Command="{Binding #MusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).MusicListsManager.DeleteMusicListCommand}"
-                                        CommandParameter="{Binding }"
-                                        Header="删除">
-                                        <MenuItem.Icon>
-                                            <PathIcon Foreground="{DynamicResource SemiRed5}"
-                                                      Data="{StaticResource SemiIconDelete}"
-                                                      Margin="2" />
-                                        </MenuItem.Icon>
-                                    </MenuItem>
+                                            </ContextMenu>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
 
-                                </ContextMenu>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
+                                <Style Selector="ItemsControl > ContentPresenter:pointerover">
+                                    <Setter Property="RenderTransform" Value="translateY(-10px)" />
+                                </Style>
 
-                    <Style Selector="ItemsControl > ContentPresenter:pointerover">
-                        <Setter Property="RenderTransform" Value="translateY(-10px)" />
-                    </Style>
+                            </ItemsRepeater.Styles>
+                            <ItemsRepeater.ItemTemplate>
 
-                </ItemsControl.Styles>
+                                <DataTemplate>
 
-                <ItemsControl.ItemsPanel>
+                                    <Panel Margin="5" DragDrop.AllowDrop="True">
 
-                    <ItemsPanelTemplate>
-                        <WrapPanel LineSpacing="20" ItemSpacing="20" />
-                    </ItemsPanelTemplate>
+                                        <Border CornerRadius="12"
+                                                Classes.Pointerover="{Binding $parent[Panel].IsPointerOver}"
+                                                Classes.NoPointerover="{Binding !$parent[Panel].IsPointerOver}">
 
-                </ItemsControl.ItemsPanel>
+                                            <Border.RenderTransform>
+                                                <TransformGroup>
+                                                    <ScaleTransform ScaleX="0.98" />
+                                                    <TranslateTransform Y="5" />
+                                                </TransformGroup>
+                                            </Border.RenderTransform>
 
-                <ItemsControl.ItemTemplate>
+                                            <Border.Transitions>
+                                                <Transitions>
+                                                    <BrushTransition Property="Background" Duration="0:0:0.25" />
+                                                </Transitions>
+                                            </Border.Transitions>
 
-                    <DataTemplate>
+                                            <Border.Effect>
+                                                <BlurEffect Radius="20" />
+                                            </Border.Effect>
 
-                        <Panel DragDrop.AllowDrop="True">
+                                            <Border.Styles>
 
-                            <Border CornerRadius="12"
-                                    Classes.Pointerover="{Binding $parent[Panel].IsPointerOver}"
-                                    Classes.NoPointerover="{Binding !$parent[Panel].IsPointerOver}">
+                                                <Style Selector="Border.NoPointerover">
+                                                    <Setter Property="Background" Value="{DynamicResource SemiGrey2}" />
+                                                </Style>
 
-                                <Border.RenderTransform>
-                                    <TransformGroup>
-                                        <ScaleTransform ScaleX="0.98" />
-                                        <TranslateTransform Y="5" />
-                                    </TransformGroup>
-                                </Border.RenderTransform>
+                                                <Style Selector="Border.Pointerover">
 
-                                <Border.Transitions>
-                                    <Transitions>
-                                        <BrushTransition Property="Background" Duration="0:0:0.25" />
-                                    </Transitions>
-                                </Border.Transitions>
+                                                    <Setter Property="Background">
+                                                        <LinearGradientBrush>
+                                                            <GradientStop Offset="0" Color="#886094EA" />
+                                                            <GradientStop Offset="1" Color="#88F02FC2" />
+                                                        </LinearGradientBrush>
+                                                    </Setter>
 
-                                <Border.Effect>
-                                    <BlurEffect Radius="20" />
-                                </Border.Effect>
+                                                    <Style.Animations>
+                                                        <Animation
+                                                            Duration="0:0:3"
+                                                            FillMode="Forward"
+                                                            IterationCount="Infinite">
+                                                            <KeyFrame Cue="0%">
+                                                                <Setter
+                                                                    Property="behaviors:BorderLinearGradientBrushBehavior.BackgroundRotateAngle"
+                                                                    Value="0" />
+                                                            </KeyFrame>
+                                                            <KeyFrame Cue="100%">
+                                                                <Setter
+                                                                    Property="behaviors:BorderLinearGradientBrushBehavior.BackgroundRotateAngle"
+                                                                    Value="360" />
+                                                            </KeyFrame>
+                                                        </Animation>
+                                                    </Style.Animations>
+                                                </Style>
 
-                                <Border.Styles>
+                                            </Border.Styles>
+                                        </Border>
 
-                                    <Style Selector="Border.NoPointerover">
-                                        <Setter Property="Background" Value="{DynamicResource SemiGrey2}" />
-                                    </Style>
+                                        <Button Padding="10"
+                                                BorderThickness="2"
+                                                Foreground="{DynamicResource TextBlockDefaultForeground}"
+                                                CornerRadius="12"
+                                                Background="{DynamicResource SemiColorBackground2}"
+                                                Command="{Binding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).SelectMusicListCommand}"
+                                                CommandParameter="{Binding }">
 
-                                    <Style Selector="Border.Pointerover">
+                                            <Button.Styles>
+                                                <Style Selector="Button">
 
-                                        <Setter Property="Background">
-                                            <LinearGradientBrush>
-                                                <GradientStop Offset="0" Color="#886094EA" />
-                                                <GradientStop Offset="1" Color="#88F02FC2" />
-                                            </LinearGradientBrush>
-                                        </Setter>
+                                                    <Style
+                                                        Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Background"
+                                                                Value="{DynamicResource SemiColorBackground2}" />
+                                                    </Style>
 
-                                        <Style.Animations>
-                                            <Animation
-                                                Duration="0:0:3"
-                                                FillMode="Forward"
-                                                IterationCount="Infinite">
-                                                <KeyFrame Cue="0%">
-                                                    <Setter
-                                                        Property="behaviors:BorderLinearGradientBrushBehavior.BackgroundRotateAngle"
-                                                        Value="0" />
-                                                </KeyFrame>
-                                                <KeyFrame Cue="100%">
-                                                    <Setter
-                                                        Property="behaviors:BorderLinearGradientBrushBehavior.BackgroundRotateAngle"
-                                                        Value="360" />
-                                                </KeyFrame>
-                                            </Animation>
-                                        </Style.Animations>
-                                    </Style>
+                                                    <Style
+                                                        Selector="^:focus /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Background"
+                                                                Value="{DynamicResource SemiColorBackground2}" />
+                                                    </Style>
 
-                                </Border.Styles>
-                            </Border>
+                                                </Style>
+                                            </Button.Styles>
 
-                            <Button Padding="10"
-                                    BorderThickness="2"
-                                    Command="{Binding $parent[pages:MusicListDetailsPage].((pageVms:MusicListDetailsViewModel)DataContext).SetCurrentItemCommand}"
-                                    CommandParameter="{Binding}"
-                                    Foreground="{DynamicResource TextBlockDefaultForeground}"
-                                    CornerRadius="12"
-                                    Background="{DynamicResource SemiColorBackground2}">
-                            
-                                <Button.Styles>
-                                    <Style Selector="Button">
-                            
-                                        <Style
-                                            Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                                            <Setter Property="Background"
-                                                    Value="{DynamicResource SemiColorBackground2}" />
-                                        </Style>
-                            
-                                        <Style
-                                            Selector="^:focus /template/ ContentPresenter#PART_ContentPresenter">
-                                            <Setter Property="Background"
-                                                    Value="{DynamicResource SemiColorBackground2}" />
-                                        </Style>
-                            
-                                    </Style>
-                                </Button.Styles>
-                            
-                                <DockPanel
-                                    Height="70"
-                                    Width="180"
-                                    HorizontalSpacing="10">
-                            
-                                    <Border DockPanel.Dock="Left"
-                                            CornerRadius="12"
-                                            ClipToBounds="True"
-                                            VerticalAlignment="Top">
-                            
-                                        <Image Source="{Binding Thumbnail}" IsVisible="{Binding IsCoverExist}" />
-                            
-                                    </Border>
-                            
-                                    <StackPanel DockPanel.Dock="Top" Spacing="5">
-                            
-                                        <TextBlock
-                                            TextTrimming="CharacterEllipsis"
-                                            Text="{Binding Name}" />
-                            
-                                        <Separator Margin="0" />
-                            
-                                        <TextBlock DockPanel.Dock="Bottom"
-                                                   Text="{Binding Description}"
-                                                   MaxLines="2"
-                                                   FontSize="12"
-                                                   FontWeight="Normal"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   TextWrapping="Wrap"
-                                                   Classes="Tertiary" />
-                            
-                                    </StackPanel>
-                            
-                                </DockPanel>
-                            
-                            </Button>
+                                            <DockPanel
+                                                Height="70"
+                                                Width="180"
+                                                HorizontalSpacing="10">
 
-                            <PathIcon Data="{StaticResource SemiIconBookmark}"
-                                      HorizontalAlignment="Left"
-                                      VerticalAlignment="Top"
-                                      Foreground="{x:Static utilities:ColorGenerator.RandomColor}"
-                                      Height="15">
-                                <PathIcon.RenderTransform>
-                                    <TransformGroup>
-                                        <RotateTransform Angle="135" />
-                                        <TranslateTransform X="-3" Y="-3" />
-                                    </TransformGroup>
-                                </PathIcon.RenderTransform>
-                            </PathIcon>
+                                                <Border DockPanel.Dock="Left"
+                                                        CornerRadius="12"
+                                                        ClipToBounds="True"
+                                                        VerticalAlignment="Top">
 
-                        </Panel>
+                                                    <Image Source="{Binding Thumbnail}"
+                                                           IsVisible="{Binding IsCoverExist}" />
 
-                    </DataTemplate>
+                                                </Border>
 
-                </ItemsControl.ItemTemplate>
+                                                <StackPanel DockPanel.Dock="Top" Spacing="5">
 
-                <ItemsControl.ContextMenu>
+                                                    <TextBlock
+                                                        TextTrimming="CharacterEllipsis"
+                                                        Text="{Binding Name}" />
 
-                    <ContextMenu>
-                        <MenuItem Header="新建歌单"
-                                  Command="{Binding MusicListsManager.CreateMusicListCommand}">
-                            <MenuItem.Icon>
-                                <PathIcon Data="{StaticResource SemiIconMusic}" Margin="2" />
-                            </MenuItem.Icon>
-                        </MenuItem>
-                    </ContextMenu>
+                                                    <Separator Margin="0" />
 
-                </ItemsControl.ContextMenu>
+                                                    <TextBlock DockPanel.Dock="Bottom"
+                                                               Text="{Binding Description}"
+                                                               MaxLines="2"
+                                                               FontSize="12"
+                                                               FontWeight="Normal"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               TextWrapping="Wrap"
+                                                               Classes="Tertiary" />
 
-            </ItemsControl>
+                                                </StackPanel>
 
-        </ScrollViewer>
+                                            </DockPanel>
 
-    </Grid>
+                                        </Button>
+
+                                        <PathIcon Data="{StaticResource SemiIconBookmark}"
+                                                  HorizontalAlignment="Left"
+                                                  VerticalAlignment="Top"
+                                                  Foreground="{x:Static utilities:ColorGenerator.RandomColor}"
+                                                  Height="15">
+                                            <PathIcon.RenderTransform>
+                                                <TransformGroup>
+                                                    <RotateTransform Angle="135" />
+                                                    <TranslateTransform X="-3" Y="-3" />
+                                                </TransformGroup>
+                                            </PathIcon.RenderTransform>
+                                        </PathIcon>
+
+                                    </Panel>
+
+                                </DataTemplate>
+
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+            <pages:MusicListInfoPage DataContext="{Binding }" />
+        </Carousel.Items>
+    </Carousel>
 </UserControl>

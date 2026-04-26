@@ -1,8 +1,7 @@
 namespace QwQ_Music.Models.Enums;
 
 // 音质等级枚举
-public enum AudioQualityLevel
-{
+public enum AudioQualityLevel {
     Unknown,
     Poor, // 低质
     PQ,   // 普通（Standard）

@@ -34,15 +34,17 @@ public enum MediaPlaybackMode {
 ///     基于SoundFlow实现的音频播放器
 /// </summary>
 public class AudioPlayer : IAudioPlayer {
-    private readonly PlayComponent _soundModifier = ConfigManager.SoundModifierConfig.PlayComponent;
     private readonly Thread _audioThread;
-    private readonly CancellationTokenSource _token;
-    public bool IsDisposed => _audioThread.ThreadState == ThreadState.Stopped;
 
     private readonly BlockingCollection<Action> _commandQueue = new();
+    private readonly PlayComponent _soundModifier = ConfigManager.SoundModifierConfig.PlayComponent;
+    private readonly CancellationTokenSource _token;
 
-    private static MiniAudioEngine AudioEngine { get; set; } = null!;
-    private static ISystemMediaControlImpl SystemMedia { get; set; } = null!;
+    private StreamDataProvider? _soundDataProvider;
+    private SoundPlayer? _soundPlayer;
+    private SpectrumAnalyzer? _spectrumAnalyzer;
+
+    public volatile MediaPlaybackStatus Status = MediaPlaybackStatus.Stopped;
 
     public AudioPlayer() {
         _token = new CancellationTokenSource();
@@ -50,37 +52,36 @@ public class AudioPlayer : IAudioPlayer {
         _audioThread = new Thread(() => {
             AudioEngine = new MiniAudioEngine();
             SystemMedia = SystemMediaControl.CreateSystemMediaControl();
-            while (!token.IsCancellationRequested) {
+            while (!token.IsCancellationRequested)
                 try {
                     _commandQueue.Take(token)();
+                } catch (OperationCanceledException) {
+                    LoggerService.Info("音频线程退出");
                 } catch (Exception ex) {
                     LoggerService.Error("音频线程执行中出现错误", ex);
                 }
-            }
 
             LoggerService.Info("音频播放线程已终止。");
         }) { Name = nameof(AudioPlayer), IsBackground = true, Priority = ThreadPriority.Highest };
         _audioThread.Start();
     }
 
-    public Stream? Current { get; private set; }
+    public bool IsDisposed => _audioThread.ThreadState == ThreadState.Stopped;
 
-    public volatile MediaPlaybackStatus Status = MediaPlaybackStatus.Stopped;
+    private static MiniAudioEngine AudioEngine { get; set; } = null!;
+    private static ISystemMediaControlImpl SystemMedia { get; set; } = null!;
+
+    public Stream? Current { get; private set; }
 
     private AudioPlaybackDevice PlayerDevice {
         get {
-            if (field is not { IsDisposed: false }) {
+            if (field is not { IsDisposed: false })
                 field = InitializeDevice();
-            }
 
             return field;
         }
         set;
     }
-
-    private StreamDataProvider? _soundDataProvider;
-    private SoundPlayer? _soundPlayer;
-    private SpectrumAnalyzer? _spectrumAnalyzer;
 
     private Timer FadeOutTimer {
         get {
@@ -161,8 +162,6 @@ public class AudioPlayer : IAudioPlayer {
             _soundPlayer?.PlaybackSpeed = value;
         }
     }
-
-    public bool CheckAccess() { return Thread.CurrentThread == _audioThread; }
 
     /// <summary>
     ///     开始播放
@@ -261,9 +260,8 @@ public class AudioPlayer : IAudioPlayer {
         if (_soundPlayer is null)
             return;
         Debug.Assert(PlayerDevice.MasterMixer.Components.Count <= 1);
-        foreach (SoundComponent comp in PlayerDevice.MasterMixer.Components) {
+        foreach (SoundComponent comp in PlayerDevice.MasterMixer.Components)
             PlayerDevice.MasterMixer.RemoveComponent(comp);
-        }
 
         _soundPlayer.Dispose();
         Status = MediaPlaybackStatus.Stopped;
@@ -286,6 +284,55 @@ public class AudioPlayer : IAudioPlayer {
         InitializeAudio(File.OpenRead(filePath), replayGain);
     }
 
+    public void InitializeAudio(Stream audioStream, double replayGain) {
+        if (!CheckAccess()) {
+            _commandQueue.Add(() => InitializeAudio(audioStream, replayGain));
+            return;
+        }
+
+        Stop();
+        // if (AudioFormat != PlayerDevice.Format)
+        //     TimeoutHelper.Timeout(2000, PlayerDevice.Dispose, () => PlayerDevice = null!);
+        Current = audioStream;
+        try {
+            InitializeNewTrack(audioStream, replayGain);
+        } catch (Exception e) {
+            LoggerService.Error("初始化音轨失败", e);
+        }
+    }
+
+    /// <summary>
+    ///     释放所有资源
+    /// </summary>
+    public void Dispose() {
+        if (IsDisposed) {
+            LoggerService.Warning("额外的AudioPlayer Dispose调用。已忽略");
+            return;
+        }
+
+        Stop();
+        SystemMedia.Dispose();
+        using (_commandQueue) {
+            _token.Cancel();
+            _commandQueue.CompleteAdding();
+            _audioThread.Join();
+        }
+
+        FadeOutTimer.Close();
+        SpecTimer.Stop();
+        SpecTimer = null!;
+        UpdateTimer.Stop();
+        UpdateTimer = null!;
+        PlayerDevice.Dispose();
+        PlayerDevice = null!;
+        Debug.Assert(_audioThread.ThreadState == ThreadState.Stopped);
+        PlaybackCompleted = null;
+        PositionChanged = null;
+        GC.SuppressFinalize(this);
+    }
+
+    public bool CheckAccess() { return Thread.CurrentThread == _audioThread; }
+
     /// <summary>
     ///     频谱数据更新事件
     /// </summary>
@@ -306,23 +353,6 @@ public class AudioPlayer : IAudioPlayer {
         _soundPlayer.Pause();
         UpdateTimer.Stop();
         SpecTimer.Stop();
-    }
-
-    public void InitializeAudio(Stream audioStream, double replayGain) {
-        if (!CheckAccess()) {
-            _commandQueue.Add(() => InitializeAudio(audioStream, replayGain));
-            return;
-        }
-
-        Stop();
-        // if (AudioFormat != PlayerDevice.Format)
-        //     TimeoutHelper.Timeout(2000, PlayerDevice.Dispose, () => PlayerDevice = null!);
-        Current = audioStream;
-        try {
-            InitializeNewTrack(audioStream, replayGain);
-        } catch (Exception e) {
-            LoggerService.Error("初始化音轨失败", e);
-        }
     }
 
     private void ResetTimer(Timer timer, double milliseconds = 1000) {
@@ -380,7 +410,7 @@ public class AudioPlayer : IAudioPlayer {
             !DrawerManager.Instance.IsMusicPlayerPanelVisible)
             return;
 
-        var spectrumData = _spectrumAnalyzer.SpectrumData;
+        float[] spectrumData = _spectrumAnalyzer.SpectrumData;
 
         if (spectrumData.Length <= 0)
             return;
@@ -405,12 +435,11 @@ public class AudioPlayer : IAudioPlayer {
         _soundModifier.FadeModifier.SampleRate = soundPlayer.Format.SampleRate;
         soundPlayer.AddModifier(_soundModifier.FadeModifier);
 
-        foreach (var soundModifier in SoundModifierManager.Default.SoundModifiers) {
+        foreach (ISoundModifierModel? soundModifier in SoundModifierManager.Default.SoundModifiers) {
             soundModifier.Initialize(AudioFormat);
 
-            if (soundModifier.Modifier != null) {
+            if (soundModifier.Modifier != null)
                 soundPlayer.AddModifier(soundModifier.Modifier);
-            }
         }
     }
 
@@ -459,22 +488,19 @@ public class AudioPlayer : IAudioPlayer {
         AudioEngine.UpdateAudioDevicesInfo();
         DeviceInfo targetDeviceInfo;
         // TODO [SettingsPage] Default Device
-        if (ConfigManager.PlayerConfig.DefaultDevice is not null) {
+        if (ConfigManager.PlayerConfig.DefaultDevice is not null)
             targetDeviceInfo = AudioEngine.PlaybackDevices.FirstOrDefault(
                 x => x.Name == ConfigManager.PlayerConfig.DefaultDevice,
                 AudioEngine.PlaybackDevices.Single(x => x.IsDefault));
-        } else {
+        else
             targetDeviceInfo = AudioEngine.PlaybackDevices.Single(x => x.IsDefault);
-        }
 
-        if (PlayerDevice.Info?.Id == targetDeviceInfo.Id && PlayerDevice.Info?.Name == targetDeviceInfo.Name) {
+        if (PlayerDevice.Info?.Id == targetDeviceInfo.Id && PlayerDevice.Info?.Name == targetDeviceInfo.Name)
             return;
-        }
 
         bool isPlaying = Status is MediaPlaybackStatus.Playing;
-        if (isPlaying) {
+        if (isPlaying)
             Pause();
-        }
 
 
         PlayerDevice = AudioEngine.SwitchDevice(
@@ -483,39 +509,7 @@ public class AudioPlayer : IAudioPlayer {
             ConfigManager.PlayerConfig.DeviceConfig);
 
 
-        if (isPlaying) {
+        if (isPlaying)
             Play();
-        }
-    }
-
-    /// <summary>
-    ///     释放所有资源
-    /// </summary>
-    public void Dispose() {
-        if (IsDisposed) {
-            LoggerService.Warning("额外的AudioPlayer Dispose调用。已忽略");
-            return;
-        }
-
-        Stop();
-        SystemMedia.Dispose();
-        using (_commandQueue) {
-            _token.Cancel();
-            _commandQueue.CompleteAdding();
-            _audioThread.Join();
-        }
-
-        FadeOutTimer.Dispose();
-        FadeOutTimer = null!;
-        SpecTimer.Stop();
-        SpecTimer = null!;
-        UpdateTimer.Stop();
-        UpdateTimer = null!;
-        PlayerDevice.Dispose();
-        PlayerDevice = null!;
-        Debug.Assert(_audioThread.ThreadState == ThreadState.Stopped);
-        PlaybackCompleted = null;
-        PositionChanged = null;
-        GC.SuppressFinalize(this);
     }
 }

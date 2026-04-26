@@ -28,24 +28,24 @@
     <u:NumericFloatUpDown
         Step="1"
         Value="{Binding Ratio}" />
-    
+
     <TextBlock Text="{Binding AttackMs, StringFormat='启动时间 : {0:F3} ms'}" />
     <u:NumericFloatUpDown
         InnerRightContent="ms"
         Step="10"
         Value="{Binding AttackMs}" />
-        
+
     <TextBlock Text="{Binding ReleaseMs, StringFormat='释放时间 : {0:F3} ms'}" />
     <u:NumericFloatUpDown
         InnerRightContent="ms"
         Step="100"
         Value="{Binding ReleaseMs}" />
-    
+
     <StackPanel Orientation="Horizontal" Spacing="10">
         <TextBlock Text="{Binding KneeDb, StringFormat='膝部宽度 : {0:F3} dBFS'}" />
-        <TextBlock Text="* 0 表示硬覆盖" Foreground="{DynamicResource  TextBlockTertiaryForeground}"/>
+        <TextBlock Text="* 0 表示硬覆盖" Foreground="{DynamicResource  TextBlockTertiaryForeground}" />
     </StackPanel>
-    
+
     <u:NumericFloatUpDown
         InnerRightContent="dB"
         Step="1"

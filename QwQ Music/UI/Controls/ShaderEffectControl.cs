@@ -174,7 +174,7 @@ public class ShaderEffectControl : Control {
             return;
         }
 
-        var now = DateTime.Now;
+        DateTime now = DateTime.Now;
         double elapsed = (now - _lastRenderTime).TotalMilliseconds;
 
         // 根据性能模式限制帧率
@@ -213,7 +213,7 @@ public class ShaderEffectControl : Control {
         if (_shaderService == null)
             return;
 
-        var size = Bounds.Size;
+        Size size = Bounds.Size;
 
         if (size.Width <= 0 || size.Height <= 0)
             return;
@@ -231,9 +231,8 @@ public class ShaderEffectControl : Control {
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e) {
         base.OnAttachedToVisualTree(e);
 
-        if (IsEnableAnimation) {
+        if (IsEnableAnimation)
             StartAnimation();
-        }
     }
 
     /// <summary>
@@ -256,10 +255,10 @@ public class ShaderEffectControl : Control {
             if (leaseFeature == null)
                 return;
 
-            using var lease = leaseFeature.Lease();
-            var canvas = lease.SkCanvas;
+            using ISkiaSharpApiLease lease = leaseFeature.Lease();
+            SKCanvas canvas = lease.SkCanvas;
 
-            using var shader = shaderService.CreateShader(size, mousePosition);
+            using SKShader shader = shaderService.CreateShader(size, mousePosition);
             using var paint = new SKPaint();
             paint.Shader = shader;
             paint.IsAntialias = true;

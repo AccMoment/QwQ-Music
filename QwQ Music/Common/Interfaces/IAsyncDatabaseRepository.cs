@@ -1,30 +1,38 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 using QwQ_Music.Common.Services.Databases;
 
 namespace QwQ_Music.Common.Interfaces;
 
-public interface IAsyncReadonlyDatabaseRepository<in TPrimaryKey, TOut> : IAsyncDisposable {
+public interface IAsyncReadonlyDatabaseRepository<in TPrimaryKey, TOut> : IAsyncDisposable where TPrimaryKey : notnull {
     /// <summary>
     ///     根据主键值获取单个实体对象
     /// </summary>
     /// <param name="key">实体的主键值</param>
     /// <returns>返回指定 ID的实体对象，如果不存在则返回null</returns>
     /// <remarks>该方法执行精确匹配查询，返回单个实体或null</remarks>
+    [Pure]
     Task<TOut?> SingleAsync(TPrimaryKey key);
 
     /// <summary>
     ///     获取所有实体对象的集合
     /// </summary>
-    /// <returns>返回包含所有实体的可枚举集合</returns>
-    /// <remarks>该方法会返回表中的所有记录，请注意数据量较大的情况</remarks>
-    Task<IEnumerable<TOut>> GetAsync();
+    /// <returns>包含所有目标实体的集合</returns>
+    /// <remarks>请注意数据量较大的情况</remarks>
+    [Pure]
+    Task<IEnumerable<TOut>> GetAsync(
+        string? whereClause = null,
+        Dictionary<string, object>? whereParams = null,
+        int skip = 0,
+        int limit = -1);
 
     /// <summary>
     ///     获取实体表中的记录总数
     /// </summary>
     /// <returns>返回实体表中的记录数量</returns>
+    [Pure]
     Task<int> CountAsync();
 
     /// <summary>
@@ -33,11 +41,14 @@ public interface IAsyncReadonlyDatabaseRepository<in TPrimaryKey, TOut> : IAsync
     /// <param name="key">要检查的实体主键值</param>
     /// <returns>如果实体存在返回true，否则返回false</returns>
     /// <remarks>该方法比先Get再判断null更高效</remarks>
+    [Pure]
     Task<bool> ExistsAsync(TPrimaryKey key);
 }
 
 public interface
-    IAsyncDatabaseRepository<in TPrimaryKey, in TIn, TOut> : IAsyncReadonlyDatabaseRepository<TPrimaryKey, TOut> {
+    IAsyncDatabaseRepository<in TPrimaryKey, in TIn, TOut> : IAsyncReadonlyDatabaseRepository<TPrimaryKey, TOut>
+    where TPrimaryKey : notnull
+    where TIn : notnull {
     /// <summary>
     ///     插入新的实体数据到数据库
     /// </summary>
@@ -67,7 +78,7 @@ public interface
     /// <summary>
     ///     根据主键值删除指定实体
     /// </summary>
-    /// <param name="key">要删除实体的主键值</param>
+    /// <param name="key">要删除的实体</param>
     /// <remarks>该操作不可逆，请谨慎使用</remarks>
     Task DeleteAsync(TPrimaryKey key);
 }
@@ -81,6 +92,8 @@ public interface
 ///     该接口定义了常见的CRUD操作，包括查询、插入、更新、删除等基本数据库操作
 ///     实现类需要负责管理数据库连接和事务处理
 /// </remarks>
-public interface IAsyncDatabaseRepository<in TPrimaryKey, T> : IAsyncDatabaseRepository<TPrimaryKey, T, T> { }
+public interface IAsyncDatabaseRepository<in TPrimaryKey, T> : IAsyncDatabaseRepository<TPrimaryKey, T, T>
+    where TPrimaryKey : notnull
+    where T : notnull { }
 
-public interface IAsyncDatabaseRepository<T> : IAsyncDatabaseRepository<string, T, T>;
+public interface IAsyncDatabaseRepository<T> : IAsyncDatabaseRepository<string, T, T> where T : notnull;

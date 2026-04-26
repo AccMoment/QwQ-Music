@@ -1,7 +1,6 @@
 namespace QwQ_Music.Models.Enums;
 
-public enum ClosingBehavior
-{
+public enum ClosingBehavior {
     /// <summary>
     ///     询问
     /// </summary>

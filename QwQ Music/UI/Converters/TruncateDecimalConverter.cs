@@ -5,10 +5,8 @@ using Avalonia.Data.Converters;
 
 namespace QwQ_Music.UI.Converters;
 
-public class TruncateDecimalConverter : IValueConverter
-{
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
+public class TruncateDecimalConverter : IValueConverter {
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) {
         if (value is not TimeSpan timeSpan)
             return string.Empty;
 
@@ -16,15 +14,14 @@ public class TruncateDecimalConverter : IValueConverter
         double roundedSeconds = Math.Round(timeSpan.TotalSeconds, MidpointRounding.AwayFromZero);
         timeSpan = TimeSpan.FromSeconds(roundedSeconds);
 
-        return timeSpan.TotalHours >= 2
-            ? $"{timeSpan.Days:D2}:{timeSpan.Hours:D2}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}"
-            : timeSpan.TotalHours >= 1
-                ? $"{timeSpan.Hours:D2}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}"
-                : $"{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
+        return timeSpan.TotalHours >= 2 ?
+            $"{timeSpan.Days:D2}:{timeSpan.Hours:D2}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}" :
+            timeSpan.TotalHours >= 1 ?
+                $"{timeSpan.Hours:D2}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}" :
+                $"{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
     }
 
-    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) {
         return AvaloniaProperty.UnsetValue;
     }
 }

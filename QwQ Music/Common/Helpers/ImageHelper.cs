@@ -10,6 +10,8 @@ using QwQ_Music.Common.Utilities;
 namespace QwQ_Music.Common.Helpers;
 
 public static class ImageHelper {
+    private static readonly HttpClient _httpClient = new();
+
     /// <summary>
     ///     从Avalonia资源加载图片
     /// </summary>
@@ -23,10 +25,8 @@ public static class ImageHelper {
     /// <param name="url">图片直连</param>
     /// <returns></returns>
     public static async ValueTask<Bitmap?> LoadFromWeb(Uri url) {
-        using var httpClient = new HttpClient();
-
         try {
-            var response = await httpClient.GetAsync(url).ConfigureAwait(false);
+            HttpResponseMessage response = await _httpClient.GetAsync(url).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
             byte[] data = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
 
@@ -46,10 +46,8 @@ public static class ImageHelper {
     /// <param name="maxSizeInBytes">最大文件大小（字节）</param>
     /// <returns>压缩后的位图</returns>
     public static async ValueTask<Bitmap?> LoadFromWebAndCompress(Uri url, long maxSizeInBytes) {
-        using var httpClient = new HttpClient();
-
         try {
-            var response = await httpClient.GetAsync(url).ConfigureAwait(false);
+            HttpResponseMessage response = await _httpClient.GetAsync(url).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
             byte[] data = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
 
@@ -72,10 +70,8 @@ public static class ImageHelper {
     /// <param name="width">最大尺寸（<see cref="width" /> * <see cref="width" />）</param>
     /// <returns>压缩后的位图</returns>
     public static async ValueTask<Bitmap?> LoadFromWebAndDecodeToWidthAsync(Uri url, int width = 128) {
-        using var httpClient = new HttpClient();
-
         try {
-            var response = await httpClient.GetAsync(url).ConfigureAwait(false);
+            HttpResponseMessage response = await _httpClient.GetAsync(url).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
             byte[] data = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
 
@@ -135,7 +131,7 @@ public static class ImageHelper {
                 return result;
             }
 
-            var resized = Bitmap.DecodeToWidth(stream, size);
+            Bitmap resized = Bitmap.DecodeToWidth(stream, size);
             await LoggerService.InfoAsync($"成功加载图片流[{name}]并缩放到宽度{size}px。").ConfigureAwait(false);
             return resized;
         } catch (Exception ex) {

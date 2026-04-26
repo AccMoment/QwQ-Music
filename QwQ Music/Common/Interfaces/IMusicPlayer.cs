@@ -4,8 +4,7 @@ using QwQ_Music.Models;
 
 namespace QwQ_Music.Common.Interfaces;
 
-public interface IMusicPlayer
-{
+public interface IMusicPlayer {
     /// <summary>
     ///     播放状态
     /// </summary>

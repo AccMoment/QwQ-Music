@@ -7,7 +7,6 @@ using Windows.Media.Playback;
 
 namespace QwQ_Music.Common.Audio;
 
-
 public class SystemMediaControlEventArgs : EventArgs;
 
 public class PlaybackModeChangedEventArgs(MediaPlaybackMode mode) : SystemMediaControlEventArgs {
@@ -51,12 +50,13 @@ public interface ISystemMediaControlImpl : IDisposable {
 #if _WIN_NT
 public class WindowsMediaControlImpl : ISystemMediaControlImpl {
     private static readonly MediaPlayer _player;
-    private static SystemMediaTransportControls Control => _player.SystemMediaTransportControls;
 
     static WindowsMediaControlImpl() {
         _player = new MediaPlayer();
         _player.CommandManager.IsEnabled = false;
     }
+
+    private static SystemMediaTransportControls Control => _player.SystemMediaTransportControls;
 
     public double Rate {
         get => Control.PlaybackRate;
@@ -112,29 +112,27 @@ public class WindowsMediaControlImpl : ISystemMediaControlImpl {
     public bool IsNextEnabled { get; set; }
     public bool IsStopEnabled { get; set; }
 
-    public void Dispose() {
-        _player.Dispose();
-    }
+    public void Dispose() { _player.Dispose(); }
 }
 
 public static class StatusConverter {
-    public static MediaPlaybackStatus Convert(Windows.Media.MediaPlaybackStatus status) {
+    public static MediaPlaybackStatus Convert(global::Windows.Media.MediaPlaybackStatus status) {
         return status switch {
-            Windows.Media.MediaPlaybackStatus.Changing => MediaPlaybackStatus.Changing,
-            Windows.Media.MediaPlaybackStatus.Playing  => MediaPlaybackStatus.Playing,
-            Windows.Media.MediaPlaybackStatus.Paused   => MediaPlaybackStatus.Paused,
-            Windows.Media.MediaPlaybackStatus.Stopped or Windows.Media.MediaPlaybackStatus.Closed => MediaPlaybackStatus
+            global::Windows.Media.MediaPlaybackStatus.Changing => MediaPlaybackStatus.Changing,
+            global::Windows.Media.MediaPlaybackStatus.Playing  => MediaPlaybackStatus.Playing,
+            global::Windows.Media.MediaPlaybackStatus.Paused   => MediaPlaybackStatus.Paused,
+            global::Windows.Media.MediaPlaybackStatus.Stopped or global::Windows.Media.MediaPlaybackStatus.Closed => MediaPlaybackStatus
                 .Stopped,
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
     }
 
-    public static Windows.Media.MediaPlaybackStatus Convert(MediaPlaybackStatus status) {
+    public static global::Windows.Media.MediaPlaybackStatus Convert(MediaPlaybackStatus status) {
         return status switch {
-            MediaPlaybackStatus.Changing => Windows.Media.MediaPlaybackStatus.Changing,
-            MediaPlaybackStatus.Playing  => Windows.Media.MediaPlaybackStatus.Playing,
-            MediaPlaybackStatus.Paused   => Windows.Media.MediaPlaybackStatus.Paused,
-            MediaPlaybackStatus.Stopped  => Windows.Media.MediaPlaybackStatus.Stopped,
+            MediaPlaybackStatus.Changing => global::Windows.Media.MediaPlaybackStatus.Changing,
+            MediaPlaybackStatus.Playing  => global::Windows.Media.MediaPlaybackStatus.Playing,
+            MediaPlaybackStatus.Paused   => global::Windows.Media.MediaPlaybackStatus.Paused,
+            MediaPlaybackStatus.Stopped  => global::Windows.Media.MediaPlaybackStatus.Stopped,
             _                            => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
     }

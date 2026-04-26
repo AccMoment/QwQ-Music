@@ -7,7 +7,7 @@
             x:DataType="soundEffectModels:AlgorithmicReverbModel"
             Spacing="10"
             x:Class="QwQ_Music.Views.SoundEffects.AlgorithmicReverb">
-    
+
     <DockPanel HorizontalSpacing="10" Height="40">
         <Separator VerticalAlignment="Bottom" Margin="0" DockPanel.Dock="Bottom" />
         <TextBlock FontSize="16" Text="{Binding Name}" FontWeight="Bold" VerticalAlignment="Center" />
@@ -15,7 +15,7 @@
                    VerticalAlignment="Center"
                    Foreground="{DynamicResource SemiColorTertiary}" />
     </DockPanel>
-    
+
     <TextBlock Text="{Binding Wet, StringFormat='湿信号 : {0:F3}'}" />
     <Slider
         Maximum="1.0"

@@ -19,7 +19,7 @@ public static class ParseHelper {
         // 1.2:3:4.5678 -> 1.02:03:04.5678000
         // [-]d.hh:mm:ss.fffffff
         int negative = timeStamp.IndexOf('-');
-        var times = timeStamp[(negative + 1)..].Split(':');
+        string[] times = timeStamp[(negative + 1)..].Split(':');
         int d = 0, h = 0, m = 0, s, ms, us;
         switch (times.Length) {
             case 1:
@@ -47,10 +47,10 @@ public static class ParseHelper {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         // ReSharper disable once InconsistentNaming
         static (int Second, int Millisecond, int Microsecond) _parse_ss(string time) {
-            var sms = time.Split('.');
+            string[] sms = time.Split('.');
             if (sms.Length == 1)
                 return (int.Parse(sms[0]), 0, 0);
-            var _1s = int.Parse(sms[1]);
+            int _1s = int.Parse(sms[1]);
             return (int.Parse(sms[0]), _1s / 1000, _1s % 1000);
         }
 
@@ -58,7 +58,7 @@ public static class ParseHelper {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         // ReSharper disable once InconsistentNaming
         static (int Day, int Hour) _parse_dh(string time) {
-            var sms = time.Split('.');
+            string[] sms = time.Split('.');
             if (sms.Length == 1)
                 return (0, int.Parse(sms[0]));
 
@@ -79,10 +79,25 @@ public static class ParseHelper {
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string? TryParse(Dictionary<string, object?> dict, string key) {
-        if (!dict.TryGetValue(key, out object? value) || value is not string valueString)
+    [return: NotNullIfNotNull(nameof(notnull))]
+    public static string? TryParse(Dictionary<string, object?> dict, string key, bool? notnull = null) {
+        if (dict.TryGetValue(key, out object? value) && value is string valueString)
+            return valueString;
+        if (notnull is not null)
+            throw new NullReferenceException();
+        return null;
+    }
+
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ValueTuple<string, string>? TryParseTuple(
+        Dictionary<string, object?> dict,
+        string key,
+        params char[] separator) {
+        if (!dict.TryGetValue(key, out object? value) || value is not string str)
             return null;
-        return valueString;
+        string[] data = str.Trim().Split(separator, StringSplitOptions.RemoveEmptyEntries);
+        return data.Length == 0 ? ("", "") : (data[0], data[1]);
     }
 
     [Pure]

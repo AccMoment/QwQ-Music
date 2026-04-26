@@ -174,13 +174,12 @@ public static class HotkeyService {
     /// <param name="gesture">要删除的按键组合</param>
     /// <returns>是否删除成功</returns>
     public static bool RemoveHotkey(HotkeyFunction function, KeyGesture? gesture) {
-        if (!FunctionToKeyMap.TryGetValue(function, out var gestures))
+        if (!FunctionToKeyMap.TryGetValue(function, out List<SerializableKeyGesture>? gestures))
             return false;
         if (gesture is not null)
             return gestures.RemoveAll(g => g.ToKeyGesture().Equals(gesture)) > 0;
         gestures.Clear();
         return true;
-
     }
 
     /// <summary>
@@ -190,7 +189,7 @@ public static class HotkeyService {
     /// <param name="gesture">按键组合</param>
     /// <returns>是否已注册</returns>
     public static bool HasHotkey(HotkeyFunction function, KeyGesture gesture) {
-        return FunctionToKeyMap.TryGetValue(function, out var gestures) &&
+        return FunctionToKeyMap.TryGetValue(function, out List<SerializableKeyGesture>? gestures) &&
                gestures.Any(g => g.ToKeyGesture().Equals(gesture));
     }
 
@@ -233,7 +232,7 @@ public static class HotkeyService {
             return;
 
         foreach (KeyValuePair<HotkeyFunction, List<SerializableKeyGesture>> kvp in
-                 FunctionToKeyMap.Where(kvp => kvp.Value.Any(gesture => gesture.ToKeyGesture().Matches(e)))) {
+                 FunctionToKeyMap.Where(kvp => kvp.Value.Any(gesture => gesture.ToKeyGesture().Matches(e))))
             try {
                 if (!_functionToActionMap.TryGetValue(kvp.Key, out Action? action))
                     continue;
@@ -245,7 +244,6 @@ public static class HotkeyService {
             } catch (Exception ex) {
                 LoggerService.Error($"热键执行异常 [{kvp.Key}]: {ex.Message}\n{ex.StackTrace}");
             }
-        }
     }
 
     /// <summary>
@@ -255,19 +253,19 @@ public static class HotkeyService {
     /// <returns>功能描述</returns>
     public static string GetFunctionDescription(HotkeyFunction function) {
         return function switch {
-            HotkeyFunction.Previous        => "上一首",
-            HotkeyFunction.Next            => "下一首",
-            HotkeyFunction.TogglePlay           => "播放/暂停",
-            HotkeyFunction.ToggleMute          => "静音切换",
-            HotkeyFunction.SwitchPlayMode      => "播放模式切换",
-            HotkeyFunction.VolumeUp            => "音量增加",
-            HotkeyFunction.VolumeDown          => "音量减少",
-            HotkeyFunction.Replay => "刷新当前音乐",
-            HotkeyFunction.ShowPlaylistInfo    => "显示播放列表信息",
-            HotkeyFunction.ShowAudioInfo     => "显示当前播放信息",
+            HotkeyFunction.Previous         => "上一首",
+            HotkeyFunction.Next             => "下一首",
+            HotkeyFunction.TogglePlay       => "播放/暂停",
+            HotkeyFunction.ToggleMute       => "静音切换",
+            HotkeyFunction.SwitchPlayMode   => "播放模式切换",
+            HotkeyFunction.VolumeUp         => "音量增加",
+            HotkeyFunction.VolumeDown       => "音量减少",
+            HotkeyFunction.Replay           => "刷新当前音乐",
+            HotkeyFunction.ShowPlaylistInfo => "显示播放列表信息",
+            HotkeyFunction.ShowAudioInfo    => "显示当前播放信息",
             HotkeyFunction.NextPage         => "页面前进",
-            HotkeyFunction.PrevPage        => "页面后退",
-            _                                  => throw new IndexOutOfRangeException()
+            HotkeyFunction.PrevPage         => "页面后退",
+            _                               => throw new IndexOutOfRangeException()
         };
     }
 
@@ -297,15 +295,14 @@ public static class HotkeyService {
         var usedGestures = new Dictionary<KeyGesture, List<HotkeyFunction>>();
 
         // 收集所有使用的按键
-        foreach (KeyValuePair<HotkeyFunction, List<SerializableKeyGesture>> kvp in FunctionToKeyMap) {
-            foreach (KeyGesture keyGesture in kvp.Value.Select(gesture => gesture.ToKeyGesture())) {
-                if (!usedGestures.TryGetValue(keyGesture, out var functions)) {
-                    functions = [];
-                    usedGestures[keyGesture] = functions;
-                }
-
-                functions.Add(kvp.Key);
+        foreach (KeyValuePair<HotkeyFunction, List<SerializableKeyGesture>> kvp in FunctionToKeyMap)
+        foreach (KeyGesture keyGesture in kvp.Value.Select(gesture => gesture.ToKeyGesture())) {
+            if (!usedGestures.TryGetValue(keyGesture, out List<HotkeyFunction>? functions)) {
+                functions = [];
+                usedGestures[keyGesture] = functions;
             }
+
+            functions.Add(kvp.Key);
         }
 
         // 返回冲突信息

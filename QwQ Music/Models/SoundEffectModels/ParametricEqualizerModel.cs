@@ -11,59 +11,15 @@ using SoundFlow.Structs;
 
 namespace QwQ_Music.Models.SoundEffectModels;
 
-public class ParametricEqualizerModel : ObservableObject, ISoundModifierModel<ParametricEqualizer>
-{
-    [JsonIgnore] public ParametricEqualizer? Modifier { get; private set; }
-
-    [JsonIgnore] SoundModifier? ISoundModifierModel.Modifier => Modifier;
-
-    [JsonIgnore] public string Name { get; } = "参数均衡器";
-
-    public void Initialize(AudioFormat audioFormat)
-    {
-        var modifier = new ParametricEqualizer(audioFormat)
-        {
-            Enabled = Enabled
-        };
-
-        // 添加所有已配置的频段
-        foreach (var band in Bands)
-        {
-            modifier.AddBand(band);
-        }
-
-        Modifier = modifier;
-    }
-
-    public void Revoke()
-    {
-        Modifier = null;
-    }
-
+public class ParametricEqualizerModel : ObservableObject, ISoundModifierModel<ParametricEqualizer> {
     /// <summary>
-    /// 获取或设置是否启用效果器。
+    ///     获取或设置均衡器频段列表。
     /// </summary>
-    public bool Enabled
-    {
+    public AvaloniaList<EqualizerBand> Bands {
         get;
-        set
-        {
-            if (SetProperty(ref field, value))
-            {
-                Modifier?.Enabled = value;
-            }
-        }
-    } = true;
-
-    /// <summary>
-    /// 获取或设置均衡器频段列表。
-    /// </summary>
-    public AvaloniaList<EqualizerBand> Bands
-    {
-        get;
-        set
-        {
-            if (!SetProperty(ref field, value)) return;
+        set {
+            if (!SetProperty(ref field, value))
+                return;
 
             // 当频段集合发生变化时，更新修饰器
             UpdateModifierBands();
@@ -73,89 +29,101 @@ public class ParametricEqualizerModel : ObservableObject, ISoundModifierModel<Pa
         }
     } = [];
 
-    /// <summary>
-    /// 当频段集合发生变化时调用。
-    /// </summary>
-    private void OnBandsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        UpdateModifierBands();
+    [JsonIgnore]
+    public ParametricEqualizer? Modifier { get; private set; }
+
+    [JsonIgnore]
+    SoundModifier? ISoundModifierModel.Modifier => Modifier;
+
+    [JsonIgnore]
+    public string Name { get; } = "参数均衡器";
+
+    public void Initialize(AudioFormat audioFormat) {
+        var modifier = new ParametricEqualizer(audioFormat) { Enabled = Enabled };
+
+        // 添加所有已配置的频段
+        foreach (EqualizerBand? band in Bands)
+            modifier.AddBand(band);
+
+        Modifier = modifier;
     }
 
+    public void Revoke() { Modifier = null; }
+
     /// <summary>
-    /// 更新修饰器的频段列表。
+    ///     获取或设置是否启用效果器。
     /// </summary>
-    private void UpdateModifierBands()
-    {
-        if (Modifier == null) return;
+    public bool Enabled {
+        get;
+        set {
+            if (SetProperty(ref field, value))
+                Modifier?.Enabled = value;
+        }
+    } = true;
+
+    /// <summary>
+    ///     当频段集合发生变化时调用。
+    /// </summary>
+    private void OnBandsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) { UpdateModifierBands(); }
+
+    /// <summary>
+    ///     更新修饰器的频段列表。
+    /// </summary>
+    private void UpdateModifierBands() {
+        if (Modifier == null)
+            return;
 
         // 清空现有频段并重新添加所有频段
         Modifier.Bands.Clear();
-        foreach (var band in Bands)
-        {
+        foreach (EqualizerBand? band in Bands)
             Modifier.AddBand(band);
-        }
     }
 
     /// <summary>
-    /// 添加一个均衡器频段。
+    ///     添加一个均衡器频段。
     /// </summary>
     /// <param name="band">要添加的频段。</param>
-    public void AddBand(EqualizerBand band)
-    {
+    public void AddBand(EqualizerBand band) {
         Bands.Add(band);
         // CollectionChanged 事件会自动处理更新修饰器
     }
 
     /// <summary>
-    /// 添加多个均衡器频段。
+    ///     添加多个均衡器频段。
     /// </summary>
     /// <param name="bands">要添加的频段集合。</param>
-    public void AddBands(IEnumerable<EqualizerBand> bands)
-    {
-        foreach (var band in bands)
-        {
+    public void AddBands(IEnumerable<EqualizerBand> bands) {
+        foreach (EqualizerBand band in bands)
             Bands.Add(band);
-        }
     }
 
     /// <summary>
-    /// 移除一个均衡器频段。
+    ///     移除一个均衡器频段。
     /// </summary>
     /// <param name="band">要移除的频段。</param>
-    public void RemoveBand(EqualizerBand band)
-    {
-        Bands.Remove(band);
-    }
+    public void RemoveBand(EqualizerBand band) { Bands.Remove(band); }
 
     /// <summary>
-    /// 根据索引移除均衡器频段。
+    ///     根据索引移除均衡器频段。
     /// </summary>
     /// <param name="index">要移除的频段索引。</param>
-    public void RemoveBandAt(int index)
-    {
+    public void RemoveBandAt(int index) {
         if (index >= 0 && index < Bands.Count)
-        {
             Bands.RemoveAt(index);
-        }
     }
 
     /// <summary>
-    /// 清空所有均衡器频段。
+    ///     清空所有均衡器频段。
     /// </summary>
-    public void ClearBands()
-    {
-        Bands.Clear();
-    }
+    public void ClearBands() { Bands.Clear(); }
 
     /// <summary>
-    /// 创建一个预设的均衡器配置（示例）。
+    ///     创建一个预设的均衡器配置（示例）。
     /// </summary>
-    public void ApplyPreset(string presetName)
-    {
+    public void ApplyPreset(string presetName) {
         ClearBands();
 
-        switch (presetName.ToLower())
-        {
+        switch (presetName.ToLower()) {
             case "flat":
                 // 平坦响应，不添加任何频段
                 break;

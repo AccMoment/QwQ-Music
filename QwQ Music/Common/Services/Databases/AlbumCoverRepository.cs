@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
@@ -13,10 +12,9 @@ using QwQ_Music.Models.ConfigModels;
 
 namespace QwQ_Music.Common.Services.Databases;
 
-public class AlbumCoverRepository : IAsyncDatabaseRepository<string, MusicItemModel, Bitmap?> {
-    public static readonly AlbumCoverRepository Instance = new(StaticConfig.CachePath);
-
+public class AlbumCoverRepository : IAsyncDatabaseRepository<(string Name, string Artists), MusicItemModel, Bitmap?> {
     public const string TABLE_NAME = "album_cover";
+    public static readonly AlbumCoverRepository Instance = new(StaticConfig.CachePath);
     private readonly AsyncDatabaseService _db;
 
     private AlbumCoverRepository(string dbPath) {
@@ -25,45 +23,38 @@ public class AlbumCoverRepository : IAsyncDatabaseRepository<string, MusicItemMo
         _ = AlbumThumbnailRepository.Instance; // Pre-initialize Database.
     }
 
-    private async Task InitializeAsync() {
-        await LoggerService.DebugAsync("正在初始化专辑封面仓库").ConfigureAwait(false);
-
-        await _db.CreateTableAsync(
-                     TABLE_NAME,
-                     $"""
-                      {nameof(AlbumModel.Name)} TEXT PRIMARY KEY,
-                      {nameof(AlbumModel.Cover)} BLOB
-                      """)
-                 .ConfigureAwait(false);
-    }
-
-    public async Task RebuildAsync() {
-        await LoggerService.DebugAsync("正在重建专辑封面仓库").ConfigureAwait(false);
-
-        await _db.DropTableAsync(TABLE_NAME).ConfigureAwait(false);
-        await InitializeAsync().ConfigureAwait(false);
-    }
-
     public async ValueTask DisposeAsync() {
         await _db.DisposeAsync().ConfigureAwait(false);
         GC.SuppressFinalize(this);
     }
 
-    public async Task<Bitmap?> SingleAsync(string id) {
-        await LoggerService.DebugAsync($"正在获取专辑'{id}'的封面").ConfigureAwait(false);
+    public async Task<Bitmap?> SingleAsync((string Name, string Artists) key) {
+        await LoggerService.DebugAsync($"正在获取专辑'{key.Name} - {key.Artists}'的封面").ConfigureAwait(false);
 
-        var result = await _db.SingleAsync(
-                                  $"SELECT * FROM {TABLE_NAME} WHERE {nameof(AlbumModel.Name)} = @{
-                                      nameof(AlbumModel.Name)}",
-                                  new Dictionary<string, object> { [nameof(AlbumModel.Name)] = id })
-                              .ConfigureAwait(false);
+        Dictionary<string, object?>? result = await _db.SingleAsync(
+                                                           $"SELECT * FROM {TABLE_NAME} WHERE {nameof(AlbumModel.Name)
+                                                           } = @{nameof(AlbumModel.Name)} AND {
+                                                               nameof(AlbumModel.Artists)} = @{
+                                                                   nameof(AlbumModel.Artists)}",
+                                                           new Dictionary<string, object> {
+                                                               [nameof(AlbumModel.Name)] = key.Name,
+                                                               [nameof(AlbumModel.Artists)] = key.Artists
+                                                           })
+                                                       .ConfigureAwait(false);
         return ParseHelper.ParseToBitmap(result?[nameof(AlbumModel.Cover)]);
     }
 
-    public async Task<IEnumerable<Bitmap?>> GetAsync() {
-        await LoggerService.DebugAsync("正在获取所有专辑封面。警告：可能发生长时磁盘IO，应尽可能避免该操作").ConfigureAwait(false);
+    public async Task<IEnumerable<Bitmap?>> GetAsync(
+        string? whereClause = null,
+        Dictionary<string, object>? whereParams = null,
+        int skip = 0,
+        int limit = -1) {
+        string sql = $"SELECT * FROM {TABLE_NAME} ";
+        if (whereClause is not null)
+            sql += $" WHERE {whereClause}";
 
-        var result = await _db.QueryAsync($"SELECT * FROM {TABLE_NAME}").ConfigureAwait(false);
+        List<Dictionary<string, object?>> result =
+            await _db.QueryAsync(sql, whereParams, skip, limit).ConfigureAwait(false);
         return result.Select(item => ParseHelper.ParseToBitmap(item[nameof(AlbumModel.Cover)]) ?? CacheManager.Damaged);
     }
 
@@ -73,72 +64,127 @@ public class AlbumCoverRepository : IAsyncDatabaseRepository<string, MusicItemMo
         await InsertAsync(item, null, onInsertExist).ConfigureAwait(false);
     }
 
-    public async Task InsertAsync(MusicItemModel item, byte[]? image, InsertExist onInsertExist = InsertExist.REPLACE) {
-        var value = ToDictionary(item, image);
+
+    public async Task UpdateAsync(MusicItemModel item) {
+        Dictionary<string, object?>? value = ToDictionary(item);
         if (value is null)
             return;
-        await LoggerService.DebugAsync($"正在更新专辑'{value[nameof(AlbumModel.Name)]}'的如下字段：{string.Join(',', value.Keys)}。")
+        string name = ParseHelper.TryParse(value, nameof(AlbumModel.Name), true);
+        string artists = ParseHelper.TryParse(value, nameof(AlbumModel.Artists), true);
+        await UpdateAsync(
+                (name, artists),
+                new Dictionary<string, object?> { [nameof(AlbumModel.Cover)] = value[nameof(AlbumModel.Cover)] })
+            .ConfigureAwait(false);
+    }
+
+
+    public async Task UpdateAsync((string Name, string Artists) key, Dictionary<string, object?> fieldValues) {
+        await LoggerService.DebugAsync($"正在更新专辑'{key.Name} - {key.Artists}'的如下字段：{string.Join(',', fieldValues.Keys)}。")
                            .ConfigureAwait(false);
-        if (!value.Remove(nameof(AlbumModel.Thumbnail), out var thumbnail)) {
+        if (fieldValues.Count == 0)
+            return;
+        string whereClause = $"{nameof(AlbumModel.Name)} = @{nameof(AlbumModel.Name)} AND {nameof(AlbumModel.Artists)
+        } = @{nameof(AlbumModel.Artists)}";
+        var whereParams = new Dictionary<string, object?> {
+            [nameof(AlbumModel.Name)] = key.Name, [nameof(AlbumModel.Artists)] = key.Artists
+        };
+
+        if (!fieldValues.Remove(nameof(AlbumModel.Thumbnail), out object? thumbnail)) {
+            await _db.UpdateAsync(null, TABLE_NAME, fieldValues, whereClause, whereParams).ConfigureAwait(false);
+            return;
+        }
+
+        // SqliteTransaction transaction = _db.BeginTransaction();
+        SqliteCommand coverCmd = _db.UpdateNonExecute(null, TABLE_NAME, fieldValues, whereClause, whereParams);
+        fieldValues.Remove(nameof(AlbumModel.Cover));
+        fieldValues[nameof(AlbumModel.Thumbnail)] = thumbnail;
+        SqliteCommand thumbnailCmd = _db.UpdateNonExecute(
+            null,
+            AlbumThumbnailRepository.TABLE_NAME,
+            fieldValues,
+            whereClause,
+            whereParams);
+        await AsyncDatabaseService.ExecuteAsync(coverCmd, thumbnailCmd).ConfigureAwait(false);
+    }
+
+    public async Task DeleteAsync((string Name, string Artists) key) {
+        await LoggerService.DebugAsync($"正在删除专辑{key.Name} - {key.Artists}的封面。").ConfigureAwait(false);
+        await _db.DeleteAsync(
+                     null,
+                     TABLE_NAME,
+                     $"{nameof(AlbumModel.Name)} = @{nameof(AlbumModel.Name)} AND {nameof(AlbumModel.Artists)} = @{
+                         nameof(AlbumModel.Artists)}",
+                     new Dictionary<string, object> {
+                         [nameof(AlbumModel.Name)] = key.Name, [nameof(AlbumModel.Artists)] = key.Artists
+                     })
+                 .ConfigureAwait(false);
+    }
+
+    public async Task<bool> ExistsAsync((string Name, string Artists) key) {
+        await LoggerService.DebugAsync($"正在检测是否存在专辑'{key.Name} - {key.Artists}'").ConfigureAwait(false);
+        Dictionary<string, object?>? result = await _db.SingleAsync(
+                                                           $"SELECT 1 FROM {TABLE_NAME} WHERE {nameof(AlbumModel.Name)
+                                                           } = @{nameof(AlbumModel.Name)} AND {
+                                                               nameof(AlbumModel.Artists)} = @{
+                                                                   nameof(AlbumModel.Artists)}",
+                                                           new Dictionary<string, object> {
+                                                               [nameof(AlbumModel.Name)] = key.Name,
+                                                               [nameof(AlbumModel.Artists)] = key.Artists
+                                                           })
+                                                       .ConfigureAwait(false);
+        return result is not null;
+    }
+
+    private async Task InitializeAsync() {
+        await LoggerService.DebugAsync("正在初始化专辑封面仓库").ConfigureAwait(false);
+
+        await _db.CreateTableAsync(
+                     TABLE_NAME,
+                     $"""
+                      {nameof(AlbumModel.Name)} TEXT,
+                      {nameof(AlbumModel.Artists)} TEXT,
+                      {nameof(AlbumModel.Cover)} BLOB,
+                      PRIMARY KEY({nameof(AlbumModel.Name)},{nameof(AlbumModel.Artists)})
+                      """)
+                 .ConfigureAwait(false);
+
+        // Cannot constraint foreign key from another schema
+        //,
+        // FOREIGN KEY ({nameof(AlbumModel.Name)},{nameof(AlbumModel.Artists)}) REFERENCES {
+        //                           AlbumRepository.TABLE_NAME
+        //                       }({nameof(AlbumModel.Name)},{nameof(AlbumModel.Artists)}) ON DELETE CASCADE
+    }
+
+    public async Task RebuildAsync() {
+        await LoggerService.DebugAsync("正在重建专辑封面仓库").ConfigureAwait(false);
+
+        await _db.DropTableAsync(TABLE_NAME).ConfigureAwait(false);
+        await InitializeAsync().ConfigureAwait(false);
+    }
+
+    public async Task InsertAsync(MusicItemModel item, byte[]? image, InsertExist onInsertExist = InsertExist.REPLACE) {
+        Dictionary<string, object?>? value = ToDictionary(item, image);
+        if (value is null)
+            return;
+        await LoggerService.DebugAsync(
+                               $"正在更新专辑'{value[nameof(AlbumModel.Name)]} - {value[nameof(AlbumModel.Artists)]}'的如下字段：{
+                                   string.Join(',', value.Keys)}。")
+                           .ConfigureAwait(false);
+        if (!value.Remove(nameof(AlbumModel.Thumbnail), out object? thumbnail)) {
             await _db.InsertAsync(TABLE_NAME, value, onInsertExist).ConfigureAwait(false);
             return;
         }
 
-        SqliteCommand command = _db.InsertNonExecute(TABLE_NAME, value, onInsertExist);
+        // SqliteTransaction transaction = _db.BeginTransaction();
+        SqliteCommand coverCmd = _db.InsertNonExecute(null, TABLE_NAME, value, onInsertExist);
         value.Remove(nameof(AlbumModel.Cover));
         value[nameof(AlbumModel.Thumbnail)] = thumbnail;
-        _db.InsertNonExecute(ref command, AlbumThumbnailRepository.TABLE_NAME, value, onInsertExist);
-        await AsyncDatabaseService.ExecuteAsync(command).ConfigureAwait(false);
-    }
-
-
-    public async Task UpdateAsync(MusicItemModel item) {
-        var value = ToDictionary(item);
-        if (value is not null)
-            await UpdateAsync(
-                    (value[nameof(AlbumModel.Name)] as string)!,
-                    new Dictionary<string, object?> { [nameof(AlbumModel.Cover)] = value[nameof(AlbumModel.Cover)] })
-                .ConfigureAwait(false);
-    }
-
-
-    public async Task UpdateAsync(string name, Dictionary<string, object?> fieldValues) {
-        await LoggerService.DebugAsync($"正在更新专辑'{name}'的如下字段：{string.Join(',', fieldValues.Keys)}。")
-                           .ConfigureAwait(false);
-        if (fieldValues.Count == 0)
-            return;
-        var whereClause = $"{nameof(AlbumModel.Name)} = @{nameof(AlbumModel.Name)}";
-        var whereParams = new Dictionary<string, object?> { [nameof(AlbumModel.Name)] = name };
-
-        if (!fieldValues.Remove(nameof(AlbumModel.Thumbnail), out var thumbnail)) {
-            await _db.UpdateAsync(TABLE_NAME, fieldValues, whereClause, whereParams).ConfigureAwait(false);
-            return;
-        }
-
-        SqliteCommand command = _db.UpdateNonExecute(TABLE_NAME, fieldValues, whereClause, whereParams);
-        fieldValues.Remove(nameof(AlbumModel.Cover));
-        fieldValues[nameof(AlbumModel.Thumbnail)] = thumbnail;
-        _db.UpdateNonExecute(ref command, AlbumThumbnailRepository.TABLE_NAME, fieldValues, whereClause, whereParams);
-        await AsyncDatabaseService.ExecuteAsync(command).ConfigureAwait(false);
-    }
-
-    public async Task DeleteAsync(string id) {
-        await LoggerService.DebugAsync($"正在删除专辑{id}的封面。").ConfigureAwait(false);
-        await _db.DeleteAsync(
-                     TABLE_NAME,
-                     $"{nameof(AlbumModel.Name)} = @{nameof(AlbumModel.Name)}",
-                     new Dictionary<string, object> { [nameof(AlbumModel.Name)] = id })
-                 .ConfigureAwait(false);
-    }
-
-    public async Task<bool> ExistsAsync(string id) {
-        await LoggerService.DebugAsync($"正在检测是否存在专辑'{id}'").ConfigureAwait(false);
-        var result = await _db.SingleAsync(
-                                  $"SELECT 1 FROM {TABLE_NAME} WHERE {nameof(AlbumModel.Name)} = @{
-                                      nameof(AlbumModel.Name)}",
-                                  new Dictionary<string, object> { [nameof(AlbumModel.Name)] = id })
-                              .ConfigureAwait(false);
-        return result is not null;
+        SqliteCommand thumbnailCmd = _db.InsertNonExecute(
+            null,
+            AlbumThumbnailRepository.TABLE_NAME,
+            value,
+            onInsertExist);
+        await AsyncDatabaseService.ExecuteAsync(coverCmd, thumbnailCmd).ConfigureAwait(false);
     }
 
     private static Dictionary<string, object?>? ToDictionary(MusicItemModel model, Bitmap? bitmap = null) {
@@ -154,20 +200,20 @@ public class AlbumCoverRepository : IAsyncDatabaseRepository<string, MusicItemMo
     }
 
     private static Dictionary<string, object?>? ToDictionary(MusicItemModel model, byte[]? image) {
-        if (model is { AlbumId: null })
+        if (!model.HasCover)
             return null;
         return new Dictionary<string, object?> {
-            [nameof(AlbumModel.Name)] = model.AlbumId,
+            [nameof(AlbumModel.Name)] = model.AlbumId.Name,
+            [nameof(AlbumModel.Artists)] = model.AlbumId.Artists,
             [nameof(AlbumModel.Cover)] = image ?? DumpHelper.BitmapToBytes(model.Cover),
             [nameof(AlbumModel.Thumbnail)] = DumpHelper.BitmapToBytes(model.Thumbnail)
         };
     }
 }
 
-public class AlbumThumbnailRepository : IAsyncReadonlyDatabaseRepository<string, Bitmap?> {
-    public static readonly AlbumThumbnailRepository Instance = new(StaticConfig.CachePath);
-
+public class AlbumThumbnailRepository : IAsyncReadonlyDatabaseRepository<(string Name, string Artists), Bitmap?> {
     public const string TABLE_NAME = "album_thumbnail";
+    public static readonly AlbumThumbnailRepository Instance = new(StaticConfig.CachePath);
     private readonly AsyncDatabaseService _db;
 
 
@@ -176,42 +222,37 @@ public class AlbumThumbnailRepository : IAsyncReadonlyDatabaseRepository<string,
         InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
-    private async Task InitializeAsync() {
-        await LoggerService.DebugAsync("正在初始化专辑缩略图数据库。").ConfigureAwait(false);
-        await _db.CreateTableAsync(
-                     TABLE_NAME,
-                     $"""
-                      {nameof(AlbumModel.Name)} TEXT PRIMARY KEY,
-                      {nameof(AlbumModel.Thumbnail)} BLOB
-                      """)
-                 .ConfigureAwait(false);
-    }
-
-    public async Task RebuildAsync() {
-        await LoggerService.DebugAsync("正在重建专辑缩略图数据库。").ConfigureAwait(false);
-        await _db.DropTableAsync(TABLE_NAME).ConfigureAwait(false);
-        await InitializeAsync().ConfigureAwait(false);
-    }
-
     public async ValueTask DisposeAsync() {
         await _db.DisposeAsync().ConfigureAwait(false);
         GC.SuppressFinalize(this);
     }
 
-    public async Task<Bitmap?> SingleAsync(string id) {
-        await LoggerService.DebugAsync($"正在获取专辑'{id}'的缩略图").ConfigureAwait(false);
-        var result = await _db.SingleAsync(
-                                  $"SELECT * FROM {TABLE_NAME} WHERE {nameof(AlbumModel.Name)} = @{
-                                      nameof(AlbumModel.Name)}",
-                                  new Dictionary<string, object> { [nameof(AlbumModel.Name)] = id })
-                              .ConfigureAwait(false);
+    public async Task<Bitmap?> SingleAsync((string Name, string Artists) key) {
+        await LoggerService.DebugAsync($"正在获取专辑'{key.Name} - {key.Artists}'的缩略图").ConfigureAwait(false);
+        Dictionary<string, object?>? result = await _db.SingleAsync(
+                                                           $"SELECT * FROM {TABLE_NAME} WHERE {nameof(AlbumModel.Name)
+                                                           } = @{nameof(AlbumModel.Name)} AND {
+                                                               nameof(AlbumModel.Artists)} = @{
+                                                                   nameof(AlbumModel.Artists)}",
+                                                           new Dictionary<string, object> {
+                                                               [nameof(AlbumModel.Name)] = key.Name,
+                                                               [nameof(AlbumModel.Artists)] = key.Artists
+                                                           })
+                                                       .ConfigureAwait(false);
         return ParseHelper.ParseToBitmap(result?[nameof(AlbumModel.Thumbnail)]);
     }
 
-    public async Task<IEnumerable<Bitmap?>> GetAsync() {
-        await LoggerService.DebugAsync("正在获取所有专辑缩略图。警告：可能发生长时磁盘IO，应尽可能避免该操作").ConfigureAwait(false);
+    public async Task<IEnumerable<Bitmap?>> GetAsync(
+        string? whereClause = null,
+        Dictionary<string, object>? whereParams = null,
+        int skip = 0,
+        int limit = -1) {
+        string sql = $"SELECT * FROM {TABLE_NAME} ";
+        if (whereClause is not null)
+            sql += $" WHERE {whereClause}";
 
-        var result = await _db.QueryAsync($"SELECT * FROM {TABLE_NAME}").ConfigureAwait(false);
+        List<Dictionary<string, object?>> result =
+            await _db.QueryAsync(sql, whereParams, skip, limit).ConfigureAwait(false);
         return result.Select(item => ParseHelper.ParseToBitmap(item[nameof(AlbumModel.Thumbnail)]) ??
                                      CacheManager.Damaged);
     }
@@ -221,14 +262,43 @@ public class AlbumThumbnailRepository : IAsyncReadonlyDatabaseRepository<string,
         return await _db.CountAsync(TABLE_NAME).ConfigureAwait(false);
     }
 
-    public async Task<bool> ExistsAsync(string id) {
-        await LoggerService.DebugAsync($"正在检测是否存在专辑{id}的缩略图").ConfigureAwait(false);
+    public async Task<bool> ExistsAsync((string Name, string Artists) key) {
+        await LoggerService.DebugAsync($"正在检测是否存在专辑{key.Name} - {key.Artists}的缩略图").ConfigureAwait(false);
 
-        var result = await _db.SingleAsync(
-                                  $"SELECT 1 FROM {TABLE_NAME} WHERE {nameof(AlbumModel.Name)} = @{
-                                      nameof(AlbumModel.Name)}",
-                                  new Dictionary<string, object> { [nameof(AlbumModel.Name)] = id })
-                              .ConfigureAwait(false);
+        Dictionary<string, object?>? result = await _db.SingleAsync(
+                                                           $"SELECT 1 FROM {TABLE_NAME} WHERE {nameof(AlbumModel.Name)
+                                                           } = @{nameof(AlbumModel.Name)} AND {
+                                                               nameof(AlbumModel.Artists)} = @{
+                                                                   nameof(AlbumModel.Artists)}",
+                                                           new Dictionary<string, object> {
+                                                               [nameof(AlbumModel.Name)] = key.Name,
+                                                               [nameof(AlbumModel.Artists)] = key.Artists
+                                                           })
+                                                       .ConfigureAwait(false);
         return result is not null;
+    }
+
+    private async Task InitializeAsync() {
+        await LoggerService.DebugAsync("正在初始化专辑缩略图数据库。").ConfigureAwait(false);
+        await _db.CreateTableAsync(
+                     TABLE_NAME,
+                     $"""
+                      {nameof(AlbumModel.Name)} TEXT,
+                      {nameof(AlbumModel.Artists)} TEXT,
+                      {nameof(AlbumModel.Thumbnail)} BLOB,
+                      PRIMARY KEY({nameof(AlbumModel.Name)},{nameof(AlbumModel.Artists)})
+                      """)
+                 .ConfigureAwait(false);
+        // Cannot constraint foreign key from another schema
+        //     ,
+        // FOREIGN KEY ({nameof(AlbumModel.Name)},{nameof(AlbumModel.Artists)}) REFERENCES {
+        //     AlbumRepository.TABLE_NAME
+        // }({nameof(AlbumModel.Name)},{nameof(AlbumModel.Artists)}) ON DELETE CASCADE
+    }
+
+    public async Task RebuildAsync() {
+        await LoggerService.DebugAsync("正在重建专辑缩略图数据库。").ConfigureAwait(false);
+        await _db.DropTableAsync(TABLE_NAME).ConfigureAwait(false);
+        await InitializeAsync().ConfigureAwait(false);
     }
 }

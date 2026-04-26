@@ -14,8 +14,7 @@ namespace QwQ_Music.Common.Utilities;
 ///         <item>用双重门限处理（绝对门限和相对门限）</item>
 ///     </list>
 /// </summary>
-public static class ReplayGainCalculator
-{
+public static class ReplayGainCalculator {
     // 标准目标响度值（单位：LUFS）
     private const double STREAMING_TARGET_LUFS = -16.0; // 流媒体平台常用值
     private const double EBU_R128_TARGET_LUFS = -23.0;
@@ -44,14 +43,11 @@ public static class ReplayGainCalculator
         int sampleRate,
         int channels,
         MusicReplayGainStandard standard = MusicReplayGainStandard.Streaming,
-        double customTargetLufs = STREAMING_TARGET_LUFS
-        )
-    {
+        double customTargetLufs = STREAMING_TARGET_LUFS) {
         var filter = new KWeightingFilter(sampleRate);
         var loudnessMeter = new LoudnessMeter(channels);
 
-        foreach (float[] buffer in audioBlocks)
-        {
+        foreach (float[] buffer in audioBlocks) {
             filter.ProcessBuffer(buffer);
             loudnessMeter.AnalyzeSamples(buffer);
         }
@@ -65,19 +61,16 @@ public static class ReplayGainCalculator
 
     #region 私有辅助方法
 
-    private static double GetTargetLoudness(MusicReplayGainStandard standard, double customTarget)
-    {
-        return standard switch
-        {
-            MusicReplayGainStandard.EbuR128 => EBU_R128_TARGET_LUFS,
+    private static double GetTargetLoudness(MusicReplayGainStandard standard, double customTarget) {
+        return standard switch {
+            MusicReplayGainStandard.EbuR128     => EBU_R128_TARGET_LUFS,
             MusicReplayGainStandard.ReplayGain2 => REPLAY_GAIN2_TARGET_LUFS,
-            MusicReplayGainStandard.Custom => customTarget,
-            _ => STREAMING_TARGET_LUFS
+            MusicReplayGainStandard.Custom      => customTarget,
+            _                                   => STREAMING_TARGET_LUFS
         };
     }
 
-    private static double CalculateLinearGain(double measuredLufs, double targetLufs)
-    {
+    private static double CalculateLinearGain(double measuredLufs, double targetLufs) {
         return Math.Pow(10, (targetLufs - measuredLufs) / 20.0);
     }
 
@@ -91,15 +84,13 @@ public static class ReplayGainCalculator
     ///     - 高通滤波器：38Hz, Q=0.69
     ///     - 低通滤波器：1682Hz, Q=0.69
     /// </summary>
-    private sealed class KWeightingFilter(int sampleRate)
-    {
+    private sealed class KWeightingFilter(int sampleRate) {
         private readonly BiQuadFilter _highPass = BiQuadFilter.CreateHighPass(sampleRate, 38, 0.69);
         private readonly BiQuadFilter _lowPass = BiQuadFilter.CreateLowPass(sampleRate, 1682, 0.69);
 
-        public void ProcessBuffer(float[] buffer)
-        {
+        public void ProcessBuffer(float[] buffer) {
             _highPass.Transform(buffer); // 第一阶段高通滤波
-            _lowPass.Transform(buffer); // 第二阶段低通滤波
+            _lowPass.Transform(buffer);  // 第二阶段低通滤波
         }
     }
 
@@ -107,18 +98,14 @@ public static class ReplayGainCalculator
     ///     双二阶滤波器实现（支持高低通配置）
     ///     参考：Audio EQ Cookbook (https://www.w3.org/TR/audio-eq-cookbook/)
     /// </summary>
-    private sealed class BiQuadFilter
-    {
-        private readonly double _a1,
-            _a2;
-        private readonly double _b0,
-            _b1,
-            _b2;
-        private double _z1,
-            _z2;
+    private sealed class BiQuadFilter {
+        private readonly double _a1, _a2;
 
-        private BiQuadFilter(double b0, double b1, double b2, double a1, double a2)
-        {
+        private readonly double _b0, _b1, _b2;
+
+        private double _z1, _z2;
+
+        private BiQuadFilter(double b0, double b1, double b2, double a1, double a2) {
             _b0 = b0;
             _b1 = b1;
             _b2 = b2;
@@ -126,8 +113,7 @@ public static class ReplayGainCalculator
             _a2 = a2;
         }
 
-        public static BiQuadFilter CreateHighPass(int sampleRate, double freq, double q)
-        {
+        public static BiQuadFilter CreateHighPass(int sampleRate, double freq, double q) {
             double w0 = 2 * Math.PI * freq / sampleRate;
             double cos = Math.Cos(w0);
             double sin = Math.Sin(w0);
@@ -142,8 +128,7 @@ public static class ReplayGainCalculator
             return new BiQuadFilter(b0 / a0, b1 / a0, b0 / a0, a1 / a0, a2 / a0);
         }
 
-        public static BiQuadFilter CreateLowPass(int sampleRate, double freq, double q)
-        {
+        public static BiQuadFilter CreateLowPass(int sampleRate, double freq, double q) {
             double w0 = 2 * Math.PI * freq / sampleRate;
             double cos = Math.Cos(w0);
             double sin = Math.Sin(w0);
@@ -158,10 +143,8 @@ public static class ReplayGainCalculator
             return new BiQuadFilter(b0 / a0, b1 / a0, b0 / a0, a1 / a0, a2 / a0);
         }
 
-        public void Transform(float[] buffer)
-        {
-            for (int i = 0; i < buffer.Length; i++)
-            {
+        public void Transform(float[] buffer) {
+            for (int i = 0; i < buffer.Length; i++) {
                 double input = buffer[i];
                 double output = input * _b0 + _z1;
                 _z1 = input * _b1 + _z2 - _a1 * output;
@@ -178,22 +161,18 @@ public static class ReplayGainCalculator
     ///     - 绝对门限处理（-70 LUFS）
     ///     - 相对门限处理（-10 dB）
     /// </summary>
-    private sealed class LoudnessMeter(int channels)
-    {
+    private sealed class LoudnessMeter(int channels) {
         private readonly double[] _channelSquares = new double[channels];
         private double _absoluteThresholdEnergy;
         private long _totalSamples;
 
-        public void AnalyzeSamples(float[] buffer)
-        {
+        public void AnalyzeSamples(float[] buffer) {
             int samplesPerChannel = buffer.Length / channels;
 
-            for (int c = 0; c < channels; c++)
-            {
+            for (int c = 0; c < channels; c++) {
                 double sum = 0;
 
-                for (int i = c; i < buffer.Length; i += channels)
-                {
+                for (int i = c; i < buffer.Length; i += channels) {
                     double sample = buffer[i];
                     sum += sample * sample;
                 }
@@ -207,8 +186,7 @@ public static class ReplayGainCalculator
             _absoluteThresholdEnergy = Math.Pow(10, -70 / 10.0) * _totalSamples;
         }
 
-        public double GetIntegratedLoudness()
-        {
+        public double GetIntegratedLoudness() {
             // 计算总能量（包括所有声道）
             double totalEnergy = _channelSquares.Sum();
 
@@ -229,8 +207,7 @@ public static class ReplayGainCalculator
 /// <summary>
 ///     回放增益标准类型
 /// </summary>
-public enum MusicReplayGainStandard
-{
+public enum MusicReplayGainStandard {
     /// <summary>
     ///     流媒体优化（-16 LUFS）
     /// </summary>

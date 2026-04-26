@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using ATL;
 using Avalonia.Collections;
+using Avalonia.Input.Platform;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models;
@@ -45,9 +47,8 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
 
     private static void AddInfo(AvaloniaList<MusicInfoKeyValuePair> targetList, string key, string? value) {
         // 只添加非空且有意义的信息
-        if (!string.IsNullOrWhiteSpace(value) && value != "0" && value != "0001-01-01 00:00:00") {
+        if (!string.IsNullOrWhiteSpace(value) && value != "0" && value != "0001-01-01 00:00:00")
             targetList.Add(new MusicInfoKeyValuePair(key, value));
-        }
     }
 
     private static string FormatValue(object? value, string? unit = null) {
@@ -83,9 +84,8 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
         AddInfo(items, "修改时间", _musicItem.ModificationTime.ToString("yyyy-MM-dd HH:mm:ss"));
         AddInfo(items, "编码格式", _track?.AudioFormat.ShortName ?? "未知");
 
-        if (items.Count > 0) {
+        if (items.Count > 0)
             MusicInfoGroups.Add(new MusicInfoGroup("文件信息", items));
-        }
     }
 
     private void AddBasicMetadataGroup() {
@@ -102,9 +102,8 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
         AddInfo(items, "注释", _track?.Comment ?? _musicItem.Comment);
         AddInfo(items, "语言", _track?.Language);
 
-        if (items.Count > 0) {
+        if (items.Count > 0)
             MusicInfoGroups.Add(new MusicInfoGroup("基本元数据", items));
-        }
     }
 
     private void AddPersonsAndRightsGroup() {
@@ -116,9 +115,8 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
         AddInfo(items, "编码器信息", _track?.Encoder);
         AddInfo(items, "音频源 URL", _track?.AudioSourceUrl);
 
-        if (items.Count > 0) {
+        if (items.Count > 0)
             MusicInfoGroups.Add(new MusicInfoGroup("相关人员与权利", items));
-        }
     }
 
     private void AddClassificationAndSeriesGroup() {
@@ -128,9 +126,8 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
         AddInfo(items, "系列标题/乐章名称", _track?.SeriesTitle);
         AddInfo(items, "系列部分/乐章索引", _track?.SeriesPart);
 
-        if (items.Count > 0) {
+        if (items.Count > 0)
             MusicInfoGroups.Add(new MusicInfoGroup("分类与系列", items));
-        }
     }
 
     private void AddDatesGroup() {
@@ -152,9 +149,8 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
         if (_track?.PublishingDate != null && _track.PublishingDate > DateTime.MinValue)
             AddInfo(items, "发布日期", _track.PublishingDate.Value.ToString("yyyy-MM-dd HH:mm:ss"));
 
-        if (items.Count > 0) {
+        if (items.Count > 0)
             MusicInfoGroups.Add(new MusicInfoGroup("日期信息", items));
-        }
     }
 
     private void AddNumbersAndRatingsGroup() {
@@ -173,9 +169,8 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
 
         AddInfo(items, "回放增益", _musicItem.Gain > 0 ? $"{_musicItem.Gain:F2} dB" : null);
 
-        if (items.Count > 0) {
+        if (items.Count > 0)
             MusicInfoGroups.Add(new MusicInfoGroup("编号与评分", items));
-        }
     }
 
     private void AddIdentifiersGroup() {
@@ -184,9 +179,8 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
         AddInfo(items, "ISRC", _track?.ISRC);
         AddInfo(items, "目录号", _track?.CatalogNumber);
 
-        if (items.Count > 0) {
+        if (items.Count > 0)
             MusicInfoGroups.Add(new MusicInfoGroup("标识符", items));
-        }
     }
 
     private void AddSortingGroup() {
@@ -196,40 +190,35 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
         AddInfo(items, "专辑排序", _track?.SortAlbum);
         AddInfo(items, "专辑艺术家排序", _track?.SortAlbumArtist);
 
-        if (items.Count > 0) {
+        if (items.Count > 0)
             MusicInfoGroups.Add(new MusicInfoGroup("排序信息", items));
-        }
     }
 
     private void AddLyricsAndChaptersGroup() {
         var items = new AvaloniaList<MusicInfoKeyValuePair>();
 
         // 简化处理，只显示是否存在
-        if (_track?.Lyrics is { Count: > 0 }) {
+        if (_track?.Lyrics is { Count: > 0 })
             AddInfo(items, "歌词", "存在");
-        }
 
         if (_track?.Chapters is { Count: > 0 }) {
             AddInfo(items, "章节", "存在");
             AddInfo(items, "章节表描述", _track.ChaptersTableDescription);
         }
 
-        if (items.Count > 0) {
+        if (items.Count > 0)
             MusicInfoGroups.Add(new MusicInfoGroup("歌词与章节", items));
-        }
     }
 
     private void AddAdditionalFieldsGroup() {
         if (_track?.AdditionalFields is { Count: > 0 }) {
             var items = new AvaloniaList<MusicInfoKeyValuePair>();
 
-            foreach (var field in _track.AdditionalFields) {
+            foreach (KeyValuePair<string, string> field in _track.AdditionalFields)
                 AddInfo(items, field.Key, field.Value);
-            }
 
-            if (items.Count > 0) {
+            if (items.Count > 0)
                 MusicInfoGroups.Add(new MusicInfoGroup("附加字段", items));
-            }
         }
     }
 
@@ -252,9 +241,8 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
             $"{_track?.ChannelsArrangement?.NbChannels} ({_track?.ChannelsArrangement?.Description})");
         AddInfo(items, "编解码器族", GetCodecFamilyDescription(_track?.CodecFamily ?? -1));
 
-        if (items.Count > 0) {
+        if (items.Count > 0)
             MusicInfoGroups.Add(new MusicInfoGroup("音频技术信息", items));
-        }
     }
 
     private void AddMetadataFormatsGroup() {
@@ -270,14 +258,13 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
             AddInfo(items, "支持的标签格式", string.Join(", ", supportedFormatNames));
         }
 
-        if (items.Count > 0) {
+        if (items.Count > 0)
             MusicInfoGroups.Add(new MusicInfoGroup("元数据格式", items));
-        }
     }
 
     [RelayCommand]
     private void CopyText(MusicInfoKeyValuePair keyValuePair) {
-        var clipboard = App.TopLevel?.Clipboard;
+        IClipboard? clipboard = App.TopLevel?.Clipboard;
 
         if (clipboard == null) {
             NotificationService.Error("复制失败！\n无法找到剪贴板！〒▽〒");

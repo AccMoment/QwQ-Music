@@ -9,15 +9,13 @@ using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Services.Databases;
 using QwQ_Music.Common.Utilities.StringUtilities;
-using QwQ_Music.ViewModels.Bases;
 
 namespace QwQ_Music.Models;
 
-public partial class AlbumModel : MusicItemsViewModelBase {
+public partial class AlbumModel : ObservableObject {
     private bool _isUpdating;
     public bool IsLoaded { get; private set; }
     public required string Name { get; init; }
-
     public required string Artists { get; init; }
 
     [ObservableProperty]
@@ -31,7 +29,7 @@ public partial class AlbumModel : MusicItemsViewModelBase {
 
     public Bitmap Thumbnail =>
         CacheManager.TryLoadCoverThumbnailAsync(
-                        $"{Name} - {Artists}",
+                        (Name, Artists),
                         "专辑",
                         "封面",
                         AlbumThumbnailRepository.Instance,
@@ -40,17 +38,17 @@ public partial class AlbumModel : MusicItemsViewModelBase {
                     .GetAwaiter()
                     .GetResult();
 
+    public List<MusicItemModel>? Musics { get; private set; }
+    public Bitmap Cover { get; private set; } = CacheManager.Loading;
+
     public async Task LoadCurrentAsync() {
-        Musics = (await MusicListItemsRepository.Instance.GetAllAsync((Name, Artists)).ConfigureAwait(false)).Paths
-            .Select(path => MusicItemsManager.All.MusicItems[path])
-            .ToList();
-        Cover = await MusicListCoverRepository.Instance.SingleAsync((Name, Artists)).ConfigureAwait(false) ??
+        Musics = MusicItemsManager.All.MusicItems.Values
+                                  .Where(item => item.Album == Name && item.AlbumArtists == Artists)
+                                  .ToList();
+        Cover = await AlbumCoverRepository.Instance.SingleAsync((Name, Artists)).ConfigureAwait(false) ??
                 CacheManager.NotExist;
         IsLoaded = true;
     }
-
-    public List<MusicItemModel>? Musics { get; private set; }
-    public Bitmap Cover { get; private set; } = CacheManager.Loading;
 
     public void DisposeCurrent() {
         IsLoaded = false;

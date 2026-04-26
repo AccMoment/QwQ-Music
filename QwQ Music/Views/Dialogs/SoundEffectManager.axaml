@@ -9,13 +9,13 @@
       mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
       x:DataType="dialogs:ManageSoundEffectViewModel"
       x:Class="QwQ_Music.Views.Dialogs.ManageSoundModifier">
-    
+
     <Grid.Resources>
-        
-        <converters:SoundEffectsNameConverter x:Key="SoundEffectsNameConverter"/>
-        
+
+        <converters:SoundEffectsNameConverter x:Key="SoundEffectsNameConverter" />
+
     </Grid.Resources>
-    
+
     <TextBlock Text="管理音效" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" />
 
     <Border Grid.Row="1" HorizontalAlignment="Center"
@@ -48,7 +48,7 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-            
+
         </ScrollViewer>
 
     </Border>

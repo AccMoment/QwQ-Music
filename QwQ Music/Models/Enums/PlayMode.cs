@@ -3,8 +3,7 @@ namespace QwQ_Music.Models.Enums;
 /// <summary>
 ///     播放模式枚举
 /// </summary>
-public enum PlayMode
-{
+public enum PlayMode {
     /// <summary>
     ///     顺序播放
     /// </summary>
@@ -19,7 +18,7 @@ public enum PlayMode
     ///     单曲循环
     /// </summary>
     SingleLoop,
-    
+
     /// <summary>
     ///     列表循环
     /// </summary>

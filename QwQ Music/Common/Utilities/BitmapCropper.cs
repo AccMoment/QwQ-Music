@@ -1,11 +1,12 @@
 using System;
 using Avalonia;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 
 namespace QwQ_Music.Common.Utilities;
 
-public static class BitmapCropper
-{
+public static class BitmapCropper {
     /// <summary>
     ///     裁剪图片
     /// </summary>
@@ -14,33 +15,25 @@ public static class BitmapCropper
     /// <param name="centerX">裁剪中心点X（0~1）</param>
     /// <param name="centerY">裁剪中心点Y（0~1）</param>
     /// <returns>裁剪后的Bitmap</returns>
-    public static Bitmap Crop(
-        Bitmap source,
-        double targetAspectRatio,
-        double centerX = 0.5,
-        double centerY = 0.5
-        )
-    {
+    public static void Crop(ref Bitmap source, double targetAspectRatio, double centerX = 0.5, double centerY = 0.5) {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetAspectRatio);
+        var old = source;
         centerX = Math.Clamp(centerX, 0, 1);
         centerY = Math.Clamp(centerY, 0, 1);
 
-        int srcWidth = source.PixelSize.Width;
-        int srcHeight = source.PixelSize.Height;
+        int srcWidth = old.PixelSize.Width;
+        int srcHeight = old.PixelSize.Height;
         double srcAspect = (double)srcWidth / srcHeight;
 
         int cropWidth, cropHeight;
 
         // 计算裁剪区域尺寸
-        if (srcAspect > targetAspectRatio)
-        {
+        if (srcAspect > targetAspectRatio) {
             // 原图更宽，裁剪宽度
             cropHeight = srcHeight;
             cropWidth = (int)Math.Round(cropHeight * targetAspectRatio);
-        }
-        else
-        {
+        } else {
             // 原图更高，裁剪高度
             cropWidth = srcWidth;
             cropHeight = (int)Math.Round(cropWidth / targetAspectRatio);
@@ -54,19 +47,10 @@ public static class BitmapCropper
         x = Math.Clamp(x, 0, srcWidth - cropWidth);
         y = Math.Clamp(y, 0, srcHeight - cropHeight);
 
-        // 裁剪
-        var cropped = new CroppedBitmap(source, new PixelRect(x, y, cropWidth, cropHeight));
-
-        // 渲染到 RenderTargetBitmap，保证返回 Bitmap 类型
-        var result = new RenderTargetBitmap(new PixelSize(cropWidth, cropHeight));
-        using var ctx = result.CreateDrawingContext(true);
-
-        ctx.DrawImage(
-            cropped,
-            new Rect(0, 0, cropWidth, cropHeight),
-            new Rect(0, 0, cropWidth, cropHeight)
-        );
-
-        return result;
+        WriteableBitmap result = new(new PixelSize(cropWidth, cropHeight), old.Dpi, old.Format, old.AlphaFormat);
+        using ILockedFramebuffer buffer = result.Lock();
+        old.CopyPixels(new PixelRect(x, y, cropWidth, cropHeight), buffer.Address, buffer.RowBytes*cropHeight, buffer.RowBytes);
+        source = result;
+        old.Dispose();
     }
 }

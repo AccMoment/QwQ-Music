@@ -140,12 +140,12 @@ public class NetEaseAlbumCrawler : IDisposable {
     /// </summary>
     private static string? ParseSearchResults(string json, string albumName, string? artistName) {
         try {
-            var searchResult = JsonSerializer.Deserialize(json, _jsonContext.AlbumSearchResult);
+            AlbumSearchResult? searchResult = JsonSerializer.Deserialize(json, _jsonContext.AlbumSearchResult);
 
             if (searchResult?.Result?.Albums == null || searchResult.Result.Albums.Count == 0)
                 return null;
 
-            var albums = searchResult.Result.Albums;
+            List<AlbumItem>? albums = searchResult.Result.Albums;
 
             // 如果没有艺术家名，返回第一个结果
             if (string.IsNullOrWhiteSpace(artistName))
@@ -163,17 +163,17 @@ public class NetEaseAlbumCrawler : IDisposable {
     /// </summary>
     private static AlbumItem? FindBestMatch(List<AlbumItem> albums, string albumName, string artistName) {
         // 1. 优先查找完全匹配的结果
-        var exactMatch = albums.FirstOrDefault(album => IsValidAlbum(album) &&
-                                                        IsExactMatch(album.Name, albumName) &&
-                                                        IsExactMatch(album.Artist.Name, artistName));
+        AlbumItem? exactMatch = albums.FirstOrDefault(album => IsValidAlbum(album) &&
+                                                               IsExactMatch(album.Name, albumName) &&
+                                                               IsExactMatch(album.Artist.Name, artistName));
 
         if (exactMatch != null)
             return exactMatch;
 
         // 2. 查找模糊匹配的结果
-        var fuzzyMatch = albums.FirstOrDefault(album => IsValidAlbum(album) &&
-                                                        IsFuzzyMatch(album.Name, albumName) &&
-                                                        IsFuzzyMatch(album.Artist.Name, artistName));
+        AlbumItem? fuzzyMatch = albums.FirstOrDefault(album => IsValidAlbum(album) &&
+                                                               IsFuzzyMatch(album.Name, albumName) &&
+                                                               IsFuzzyMatch(album.Artist.Name, artistName));
 
         return fuzzyMatch;
     }
@@ -208,11 +208,10 @@ public class NetEaseAlbumCrawler : IDisposable {
     /// </summary>
     private static AlbumDetail ParseAlbumDetailFromApi(string json) {
         try {
-            var detailResult = JsonSerializer.Deserialize(json, _detailJsonContext.AlbumDetailResult);
+            AlbumDetailResult? detailResult = JsonSerializer.Deserialize(json, _detailJsonContext.AlbumDetailResult);
 
-            if (detailResult?.Album is not { } album) {
+            if (detailResult?.Album is not { } album)
                 return new AlbumDetail { Description = "未找到专辑信息" };
-            }
 
             return new AlbumDetail {
                 Description = !string.IsNullOrWhiteSpace(album.Description) ? album.Description : "暂无专辑简介",

@@ -2,7 +2,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!-- <StyleInclude Source="FontSelector.axaml" /> -->
     <StyleInclude Source="MusicAlbumCover.axaml" />
-    <StyleInclude Source="MusicInfoHeader.axaml" />
     <StyleInclude Source="MusicPlayButton.axaml" />
     <!-- <StyleInclude Source="MusicPlayControllers.axaml" /> -->
     <StyleInclude Source="MusicAlbumCoverButton.axaml" />

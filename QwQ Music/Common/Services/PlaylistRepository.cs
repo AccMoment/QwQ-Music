@@ -22,16 +22,15 @@ public static class PlaylistRepository {
             }
 
             int index = 0;
-            if (latestPath is not null && data.IndexOf(latestPath) is { } val and not -1) {
+            if (latestPath is not null && data.IndexOf(latestPath) is { } val and not -1)
                 index = val;
-            }
 
             if (!data[0].StartsWith(QWQ_PLAYLIST_MEMORIZED_RANDOM_INDEXES))
                 return (null, data, data.Length, index);
             IEnumerable<int> indexes = data[0][(QWQ_PLAYLIST_MEMORIZED_RANDOM_INDEXES.Length + 1)..^1]
                                        .Split(',')
                                        .Select(int.Parse);
-            return (indexes, data.Skip(1), data.Length - 1, index-1);
+            return (indexes, data.Skip(1), data.Length - 1, index - 1);
         } catch (FileNotFoundException) {
             await LoggerService.WarningAsync("播放列表文件不存在").ConfigureAwait(false);
             return (null, [], 0, 0);
@@ -48,8 +47,7 @@ public static class PlaylistRepository {
         await using var sw = new StreamWriter(fs);
         await sw.WriteLineAsync($"QWQ_PLAYLIST_MEMORIZED_RANDOM_INDEXES[{string.Join(',', memorizedRandomOrders)}]")
                 .ConfigureAwait(false);
-        foreach (string path in paths) {
+        foreach (string path in paths)
             await sw.WriteLineAsync(path).ConfigureAwait(false);
-        }
     }
 }

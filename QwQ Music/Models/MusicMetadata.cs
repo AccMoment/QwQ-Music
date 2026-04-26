@@ -2,8 +2,7 @@ using System;
 
 namespace QwQ_Music.Models;
 
-public sealed class MusicMetadata
-{
+public sealed class MusicMetadata {
     public string Title { get; set; } = string.Empty;
 
     public string Artists { get; set; } = string.Empty;
@@ -44,12 +43,10 @@ public record MusicTagExtensions(
     // 添加技术信息
     bool IsVbr,
     string AudioFormat,
-    string EncoderInfo
-);
+    string EncoderInfo);
 
 // 添加扩展结构体用于获取更多详细信息
 public record MusicDetailedInfo(
-
     // 发布信息
     DateTime? ReleaseDate,
     DateTime? OriginalReleaseDate,
@@ -70,5 +67,4 @@ public record MusicDetailedInfo(
 
     // 技术信息
     long AudioDataOffset,
-    long AudioDataSize
-);
+    long AudioDataSize);

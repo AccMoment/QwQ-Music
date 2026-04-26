@@ -61,15 +61,14 @@ public class SpectrumVisualizerControl : Control {
             needsUpdate = true;
         }
 
-        if (needsUpdate) {
+        if (needsUpdate)
             InvalidateVisual();
-        }
     }
 
     public override void Render(DrawingContext context) {
         base.Render(context);
 
-        var bounds = Bounds;
+        Rect bounds = Bounds;
 
         if (bounds is { Width: <= 0 } or { Height: <= 0 })
             return;
@@ -133,15 +132,15 @@ public class SpectrumVisualizerControl : Control {
 
         for (int i = 0; i < dataCount - 1; i++) {
             // 获取插值所需的四个控制点
-            var p0 = i > 0 ? points[i - 1] : points[i];
-            var p1 = points[i];
-            var p2 = points[i + 1];
-            var p3 = i < dataCount - 2 ? points[i + 2] : points[i + 1];
+            Point p0 = i > 0 ? points[i - 1] : points[i];
+            Point p1 = points[i];
+            Point p2 = points[i + 1];
+            Point p3 = i < dataCount - 2 ? points[i + 2] : points[i + 1];
 
             // 对当前段进行细分插值
             for (int j = 1; j <= segmentsPerPoint; j++) {
                 double t = j / (double)segmentsPerPoint;
-                var interpolatedPoint = CatmullRomInterpolate(p0, p1, p2, p3, t);
+                Point interpolatedPoint = CatmullRomInterpolate(p0, p1, p2, p3, t);
 
                 // 确保插值点不会超出边界
                 interpolatedPoint = new Point(

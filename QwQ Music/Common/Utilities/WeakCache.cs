@@ -21,7 +21,8 @@ public class WeakCache<TKey, TValue>(int cleanupBatchSize = 10) where TValue : c
     /// </summary>
     public TValue this[TKey key] {
         get {
-            if (_cache.TryGetValue(key, out var tuple) && tuple.Reference.TryGetTarget(out var value)) {
+            if (_cache.TryGetValue(key, out (WeakReference<TValue> Reference, DateTime LastAccess) tuple) &&
+                tuple.Reference.TryGetTarget(out TValue? value)) {
                 _cache[key] = (tuple.Reference, DateTime.UtcNow); // 更新访问时间
 
                 return value;
@@ -50,7 +51,8 @@ public class WeakCache<TKey, TValue>(int cleanupBatchSize = 10) where TValue : c
     ///     尝试获取缓存值
     /// </summary>
     public bool TryGetValue(TKey key, out TValue? value) {
-        if (_cache.TryGetValue(key, out var tuple) && tuple.Reference.TryGetTarget(out var v)) {
+        if (_cache.TryGetValue(key, out (WeakReference<TValue> Reference, DateTime LastAccess) tuple) &&
+            tuple.Reference.TryGetTarget(out TValue? v)) {
             _cache[key] = (tuple.Reference, DateTime.UtcNow); // 更新访问时间
             value = v;
 
@@ -84,7 +86,8 @@ public class WeakCache<TKey, TValue>(int cleanupBatchSize = 10) where TValue : c
     ///     检查键是否存在
     /// </summary>
     public bool ContainsKey(TKey key) {
-        return _cache.TryGetValue(key, out var tuple) && tuple.Reference.TryGetTarget(out _);
+        return _cache.TryGetValue(key, out (WeakReference<TValue> Reference, DateTime LastAccess) tuple) &&
+               tuple.Reference.TryGetTarget(out _);
     }
 
     /// <summary>
@@ -96,18 +99,19 @@ public class WeakCache<TKey, TValue>(int cleanupBatchSize = 10) where TValue : c
 
         if (cleanupBatchSize <= 0) {
             // 清理全部失效引用
-            var deadKeys = _cache.Where(kvp => !kvp.Value.Reference.TryGetTarget(out _)).Select(kvp => kvp.Key);
+            IEnumerable<TKey> deadKeys =
+                _cache.Where(kvp => !kvp.Value.Reference.TryGetTarget(out _)).Select(kvp => kvp.Key);
 
-            foreach (var key in deadKeys) {
+            foreach (TKey key in deadKeys)
                 _cache.Remove(key, out _);
-            }
         } else {
             // 取最久未访问的batchSize个key
-            var oldest = _cache.OrderBy(kvp => kvp.Value.LastAccess).Take(cleanupBatchSize);
+            IEnumerable<KeyValuePair<TKey, (WeakReference<TValue> Reference, DateTime LastAccess)>> oldest =
+                _cache.OrderBy(kvp => kvp.Value.LastAccess).Take(cleanupBatchSize);
 
-            foreach (var kvp in oldest.Where(kvp => !kvp.Value.Reference.TryGetTarget(out _))) {
+            foreach (KeyValuePair<TKey, (WeakReference<TValue> Reference, DateTime LastAccess)> kvp in
+                     oldest.Where(kvp => !kvp.Value.Reference.TryGetTarget(out _)))
                 _cache.Remove(kvp.Key, out _);
-            }
         }
     }
 }

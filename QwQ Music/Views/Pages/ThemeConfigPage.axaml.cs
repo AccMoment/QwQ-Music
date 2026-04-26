@@ -3,10 +3,8 @@ using QwQ_Music.ViewModels.Pages;
 
 namespace QwQ_Music.Views.Pages;
 
-public partial class UiConfigPage : Grid
-{
-    public UiConfigPage()
-    {
+public partial class ThemeConfigPage : Grid {
+    public ThemeConfigPage() {
         InitializeComponent();
         DataContext = new UiConfigPageViewModel();
     }

@@ -95,7 +95,7 @@ public partial class DrawerManager : ObservableObject {
     } = "Default";
 
     [ObservableProperty]
-    public partial string MusicPlaylistThemeVariant { set; get; } = "Default";
+    public partial string MusicPlaylistThemeVariant { get; set; } = "Default";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NavigationWidth), nameof(IsMusicAlbumCoverTrayVisible))]

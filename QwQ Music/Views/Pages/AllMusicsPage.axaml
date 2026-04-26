@@ -4,5 +4,5 @@
              xmlns:customs="clr-namespace:QwQ_Music.Views.Customs"
              x:DataType="vm:AllMusicPageViewModel"
              x:Class="QwQ_Music.Views.Pages.AllMusicsPage">
-    <customs:MusicListDataGrid DataContext="{Binding }"/>
+    <customs:MusicListDataGrid DataContext="{Binding }" />
 </UserControl>

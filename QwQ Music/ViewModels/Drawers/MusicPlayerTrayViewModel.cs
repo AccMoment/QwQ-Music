@@ -9,10 +9,8 @@ using QwQ_Music.ViewModels.Bases;
 
 namespace QwQ_Music.ViewModels.Drawers;
 
-public partial class MusicPlayerTrayViewModel : ViewModelBase
-{
-    public MusicPlayerTrayViewModel()
-    {
+public partial class MusicPlayerTrayViewModel : ViewModelBase {
+    public MusicPlayerTrayViewModel() {
         AudioPlayManager.PlaybackStateChanged += AudioPlayManagerOnPlaybackStateChanged;
 
         NavigateService.CurrentViewChanged += CurrentViewChanged;
@@ -27,42 +25,33 @@ public partial class MusicPlayerTrayViewModel : ViewModelBase
 
     public double AlbumCoverRecordAngle { get; set; }
 
-    [ObservableProperty] public partial bool IsSoundEffectView { get; set; }
+    [ObservableProperty]
+    public partial bool IsSoundEffectView { get; set; }
 
     public static AudioPlayManager AudioPlayManager => AudioPlayManager.Instance;
 
-    private void CurrentViewChanged(string name)
-    {
+    private void CurrentViewChanged(string name) {
         IsSoundEffectView = name == "音效" || NavigateService.GetParentView(name) == "音效";
     }
 
-    private void CurrentDomain_OnProcessExit(object? sender, EventArgs e)
-    {
+    private void CurrentDomain_OnProcessExit(object? sender, EventArgs e) {
         AudioPlayManager.PlaybackStateChanged -= AudioPlayManagerOnPlaybackStateChanged;
         NavigateService.CurrentViewChanged -= CurrentViewChanged;
         AppDomain.CurrentDomain.ProcessExit -= CurrentDomain_OnProcessExit;
     }
 
     [RelayCommand]
-    private static void NavigationToSoundEffectView()
-    {
-        NavigateService.NavigateTo("音效");
-    }
+    private static void NavigationToSoundEffectView() { NavigateService.NavigateTo("音效"); }
 
     [RelayCommand]
-    private static void ResetPlaybackSpeed()
-    {
-        AudioPlayManager.Speed = 1.0f;
-    }
+    private static void ResetPlaybackSpeed() { AudioPlayManager.Speed = 1.0f; }
 
     [RelayCommand]
-    private static void OnVolumeBarPointerWheelChanged(PointerWheelEventArgs e)
-    {
+    private static void OnVolumeBarPointerWheelChanged(PointerWheelEventArgs e) {
         // 阻止事件冒泡到父级元素
         e.Handled = true;
 
-        switch (e.Delta.Y)
-        {
+        switch (e.Delta.Y) {
             // 根据你的需求处理滚轮滚动事件
             case > 0:
                 AudioPlayManager.Volume += 2;
@@ -76,12 +65,10 @@ public partial class MusicPlayerTrayViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private static void OnSpeedBarPointerWheelChanged(PointerWheelEventArgs e)
-    {
+    private static void OnSpeedBarPointerWheelChanged(PointerWheelEventArgs e) {
         e.Handled = true;
 
-        switch (e.Delta.Y)
-        {
+        switch (e.Delta.Y) {
             case > 0:
                 AudioPlayManager.Speed += 0.01f;
 
@@ -94,27 +81,19 @@ public partial class MusicPlayerTrayViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private static void PlaySpeedUp()
-    {
-        AudioPlayManager.Speed += 0.1f;
-    }
+    private static void PlaySpeedUp() { AudioPlayManager.Speed += 0.1f; }
 
     [RelayCommand]
-    private static void PlaySpeedDown()
-    {
-        AudioPlayManager.Speed -= 0.1f;
-    }
+    private static void PlaySpeedDown() { AudioPlayManager.Speed -= 0.1f; }
 
-    private void AudioPlayManagerOnPlaybackStateChanged(object? sender, bool e)
-    {
+    private void AudioPlayManagerOnPlaybackStateChanged(object? sender, bool e) {
         if (e)
             return;
 
         RecordCurrentAngle();
     }
 
-    private void RecordCurrentAngle()
-    {
+    private void RecordCurrentAngle() {
         AlbumCoverRecordAngle = AlbumCoverCurrentAngle;
         OnPropertyChanged(nameof(AlbumCoverRecordAngle));
     }

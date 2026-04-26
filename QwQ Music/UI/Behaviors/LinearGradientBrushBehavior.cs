@@ -9,57 +9,44 @@ namespace QwQ_Music.UI.Behaviors;
 /// <summary>
 ///     Border 线性渐变画刷行为，分别支持 BorderBrush 和 Background
 /// </summary>
-public class BorderLinearGradientBrushBehavior
-{
-    public static readonly AttachedProperty<double> BorderBrushRotateAngleProperty = AvaloniaProperty.RegisterAttached<
-        BorderLinearGradientBrushBehavior,
-        Border,
-        double
-    >("BorderBrushRotateAngle", coerce: OnBorderBrushRotateAngleChanged);
+public class BorderLinearGradientBrushBehavior {
+    public static readonly AttachedProperty<double> BorderBrushRotateAngleProperty =
+        AvaloniaProperty.RegisterAttached<BorderLinearGradientBrushBehavior, Border, double>(
+            "BorderBrushRotateAngle",
+            coerce: OnBorderBrushRotateAngleChanged);
 
-    public static readonly AttachedProperty<double> BackgroundRotateAngleProperty = AvaloniaProperty.RegisterAttached<
-        BorderLinearGradientBrushBehavior,
-        Border,
-        double
-    >("BackgroundRotateAngle", coerce: OnBackgroundRotateAngleChanged);
+    public static readonly AttachedProperty<double> BackgroundRotateAngleProperty =
+        AvaloniaProperty.RegisterAttached<BorderLinearGradientBrushBehavior, Border, double>(
+            "BackgroundRotateAngle",
+            coerce: OnBackgroundRotateAngleChanged);
 
-    private static double OnBorderBrushRotateAngleChanged(AvaloniaObject obj, double degrees)
-    {
+    private static double OnBorderBrushRotateAngleChanged(AvaloniaObject obj, double degrees) {
         if (obj is Border { BorderBrush: LinearGradientBrush brush } border)
-        {
             LinearGradientBrushBehaviorCore.SetGradientRotation(border, brush, degrees);
-        }
 
         return degrees;
     }
 
-    private static double OnBackgroundRotateAngleChanged(AvaloniaObject obj, double degrees)
-    {
+    private static double OnBackgroundRotateAngleChanged(AvaloniaObject obj, double degrees) {
         if (obj is Border { Background: LinearGradientBrush brush } border)
-        {
             LinearGradientBrushBehaviorCore.SetGradientRotation(border, brush, degrees);
-        }
 
         return degrees;
     }
 
-    public static void SetBorderBrushRotateAngle(Border element, double value)
-    {
+    public static void SetBorderBrushRotateAngle(Border element, double value) {
         element.SetValue(BorderBrushRotateAngleProperty, value);
     }
 
-    public static double GetBorderBrushRotateAngle(Border element)
-    {
+    public static double GetBorderBrushRotateAngle(Border element) {
         return element.GetValue(BorderBrushRotateAngleProperty);
     }
 
-    public static void SetBackgroundRotateAngle(Border element, double value)
-    {
+    public static void SetBackgroundRotateAngle(Border element, double value) {
         element.SetValue(BackgroundRotateAngleProperty, value);
     }
 
-    public static double GetBackgroundRotateAngle(Border element)
-    {
+    public static double GetBackgroundRotateAngle(Border element) {
         return element.GetValue(BackgroundRotateAngleProperty);
     }
 }
@@ -67,71 +54,55 @@ public class BorderLinearGradientBrushBehavior
 /// <summary>
 ///     TemplatedControl 线性渐变画刷行为，分别支持 Background 和 Foreground
 /// </summary>
-public class TemplatedControlLinearGradientBrushBehavior
-{
-    public static readonly AttachedProperty<double> BackgroundRotateAngleProperty = AvaloniaProperty.RegisterAttached<
-        TemplatedControlLinearGradientBrushBehavior,
-        TemplatedControl,
-        double
-    >("BackgroundRotateAngle", coerce: OnBackgroundRotateAngleChanged);
+public class TemplatedControlLinearGradientBrushBehavior {
+    public static readonly AttachedProperty<double> BackgroundRotateAngleProperty =
+        AvaloniaProperty.RegisterAttached<TemplatedControlLinearGradientBrushBehavior, TemplatedControl, double>(
+            "BackgroundRotateAngle",
+            coerce: OnBackgroundRotateAngleChanged);
 
-    public static readonly AttachedProperty<double> ForegroundRotateAngleProperty = AvaloniaProperty.RegisterAttached<
-        TemplatedControlLinearGradientBrushBehavior,
-        TemplatedControl,
-        double
-    >("ForegroundRotateAngle", coerce: OnForegroundRotateAngleChanged);
+    public static readonly AttachedProperty<double> ForegroundRotateAngleProperty =
+        AvaloniaProperty.RegisterAttached<TemplatedControlLinearGradientBrushBehavior, TemplatedControl, double>(
+            "ForegroundRotateAngle",
+            coerce: OnForegroundRotateAngleChanged);
 
-    private static double OnBackgroundRotateAngleChanged(AvaloniaObject obj, double degrees)
-    {
+    private static double OnBackgroundRotateAngleChanged(AvaloniaObject obj, double degrees) {
         if (obj is TemplatedControl { Background: LinearGradientBrush brush } control)
-        {
             LinearGradientBrushBehaviorCore.SetGradientRotation(control, brush, degrees);
-        }
 
         return degrees;
     }
 
-    private static double OnForegroundRotateAngleChanged(AvaloniaObject obj, double degrees)
-    {
+    private static double OnForegroundRotateAngleChanged(AvaloniaObject obj, double degrees) {
         if (obj is TemplatedControl { Foreground: LinearGradientBrush brush } control)
-        {
             LinearGradientBrushBehaviorCore.SetGradientRotation(control, brush, degrees);
-        }
 
         return degrees;
     }
 
-    public static void SetBackgroundRotateAngle(TemplatedControl element, double value)
-    {
+    public static void SetBackgroundRotateAngle(TemplatedControl element, double value) {
         element.SetValue(BackgroundRotateAngleProperty, value);
     }
 
-    public static double GetBackgroundRotateAngle(TemplatedControl element)
-    {
+    public static double GetBackgroundRotateAngle(TemplatedControl element) {
         return element.GetValue(BackgroundRotateAngleProperty);
     }
 
-    public static void SetForegroundRotateAngle(TemplatedControl element, double value)
-    {
+    public static void SetForegroundRotateAngle(TemplatedControl element, double value) {
         element.SetValue(ForegroundRotateAngleProperty, value);
     }
 
-    public static double GetForegroundRotateAngle(TemplatedControl element)
-    {
+    public static double GetForegroundRotateAngle(TemplatedControl element) {
         return element.GetValue(ForegroundRotateAngleProperty);
     }
 }
 
-internal static class LinearGradientBrushBehaviorCore
-{
-    public static void SetGradientRotation(Visual visual, LinearGradientBrush brush, double degrees)
-    {
+internal static class LinearGradientBrushBehaviorCore {
+    public static void SetGradientRotation(Visual visual, LinearGradientBrush brush, double degrees) {
         var rect = new Rect(visual.Bounds.Size);
         SetGradientRotation(rect, brush, degrees);
     }
 
-    public static void SetGradientRotation(Rect rect, LinearGradientBrush brush, double degrees)
-    {
+    public static void SetGradientRotation(Rect rect, LinearGradientBrush brush, double degrees) {
         degrees = (degrees % 360 + 360) % 360;
 
         if (HandleCardinalAngles(brush, degrees))
@@ -139,32 +110,22 @@ internal static class LinearGradientBrushBehaviorCore
 
         double radians = degrees * Math.PI / 180;
         (double dx, double dy) = (Math.Cos(radians), Math.Sin(radians));
-        var start = FindIntersection(rect, -dx, -dy);
-        var end = FindIntersection(rect, dx, dy);
+        Point start = FindIntersection(rect, -dx, -dy);
+        Point end = FindIntersection(rect, dx, dy);
         brush.StartPoint = new RelativePoint(start.X / rect.Width, start.Y / rect.Height, RelativeUnit.Relative);
         brush.EndPoint = new RelativePoint(end.X / rect.Width, end.Y / rect.Height, RelativeUnit.Relative);
     }
 
-    private static bool HandleCardinalAngles(LinearGradientBrush brush, double degrees)
-    {
-        var (start, end) = degrees switch
-        {
-            0 => (
-                new RelativePoint(0.0, 0.5, RelativeUnit.Relative),
-                new RelativePoint(1.0, 0.5, RelativeUnit.Relative)
-            ),
-            90 => (
-                new RelativePoint(0.5, 0.0, RelativeUnit.Relative),
-                new RelativePoint(0.5, 1.0, RelativeUnit.Relative)
-            ),
-            180 => (
-                new RelativePoint(1.0, 0.5, RelativeUnit.Relative),
-                new RelativePoint(0.0, 0.5, RelativeUnit.Relative)
-            ),
-            270 => (
-                new RelativePoint(0.5, 1.0, RelativeUnit.Relative),
-                new RelativePoint(0.5, 0.0, RelativeUnit.Relative)
-            ),
+    private static bool HandleCardinalAngles(LinearGradientBrush brush, double degrees) {
+        var (start, end) = degrees switch {
+            0 => (new RelativePoint(0.0, 0.5, RelativeUnit.Relative),
+                  new RelativePoint(1.0, 0.5, RelativeUnit.Relative)),
+            90 => (new RelativePoint(0.5, 0.0, RelativeUnit.Relative),
+                   new RelativePoint(0.5, 1.0, RelativeUnit.Relative)),
+            180 => (new RelativePoint(1.0, 0.5, RelativeUnit.Relative),
+                    new RelativePoint(0.0, 0.5, RelativeUnit.Relative)),
+            270 => (new RelativePoint(0.5, 1.0, RelativeUnit.Relative),
+                    new RelativePoint(0.5, 0.0, RelativeUnit.Relative)),
             _ => default
         };
 
@@ -177,9 +138,8 @@ internal static class LinearGradientBrushBehaviorCore
         return true;
     }
 
-    private static Point FindIntersection(Rect rect, double dx, double dy)
-    {
-        var center = rect.Center;
+    private static Point FindIntersection(Rect rect, double dx, double dy) {
+        Point center = rect.Center;
         double nearestT = double.MaxValue;
         Point intersection = default;
         CheckBoundary(0, center.X, dx, rect.Top, t => new Point(0, center.Y + dy * t));
@@ -194,9 +154,7 @@ internal static class LinearGradientBrushBehaviorCore
             double centerComponent,
             double direction,
             double min,
-            Func<double, Point> pointFactory
-            )
-        {
+            Func<double, Point> pointFactory) {
             if (direction == 0)
                 return;
 
@@ -205,7 +163,7 @@ internal static class LinearGradientBrushBehaviorCore
             if (t <= 0)
                 return;
 
-            var p = pointFactory(t);
+            Point p = pointFactory(t);
 
             if (!(p.X >= min) || !(p.X <= rect.Right) || !(p.Y >= min) || !(p.Y <= rect.Bottom) || !(t < nearestT))
                 return;

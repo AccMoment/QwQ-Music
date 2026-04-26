@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -51,9 +50,8 @@ public partial class CreateMusicListViewModel : DataVerifyModelBase, IDialogCont
                                                  new ImageCroppingViewModel(bitmap),
                                                  options: options)
                                              .ContinueWith(dialog => {
-                                                 if (dialog is { IsCompletedSuccessfully: true, Result: { } result }) {
+                                                 if (dialog is { IsCompletedSuccessfully: true, Result: { } result })
                                                      Cover = result;
-                                                 }
                                              })
                                              .ConfigureAwait(false);
                             })
@@ -64,9 +62,8 @@ public partial class CreateMusicListViewModel : DataVerifyModelBase, IDialogCont
     public MusicListModel CreateMusicListModel() {
         var model = MusicListModel.Create(Name, Cover);
 
-        if (Description != null) {
+        if (Description != null)
             model.Description = Description;
-        }
 
         return model;
     }
@@ -79,7 +76,10 @@ public partial class CreateMusicListViewModel : DataVerifyModelBase, IDialogCont
             return false;
         }
 
-        if (MusicListRepository.Instance.ExistsAsync((value, "_QWQ_LOCAL_USER")).ConfigureAwait(false).GetAwaiter().GetResult()) {
+        if (MusicListRepository.Instance.ExistsAsync((value, "_QWQ_LOCAL_USER"))
+                               .ConfigureAwait(false)
+                               .GetAwaiter()
+                               .GetResult()) {
             SetErrors(nameof(Name), "该名称已存在");
             return false;
         }

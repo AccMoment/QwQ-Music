@@ -266,7 +266,7 @@
                 <ContentPresenter>
                     <Interaction.Behaviors>
                         <IfElseTrigger Condition="{Binding #MainLyricConfig.IsChecked}">
-                            
+
                             <IfElseTrigger.IfActions>
                                 <ChangeAvaloniaPropertyAction
                                     TargetProperty="{x:Static ContentPresenter.ContentProperty}">
@@ -323,7 +323,7 @@
                                     </ChangeAvaloniaPropertyAction.Value>
                                 </ChangeAvaloniaPropertyAction>
                             </IfElseTrigger.ElseActions>
-                            
+
                         </IfElseTrigger>
                     </Interaction.Behaviors>
                 </ContentPresenter>
@@ -500,5 +500,5 @@
         </anchorControl:AnchorItem>
 
     </anchorControl:Anchor>
-    
+
 </Grid>

@@ -11,7 +11,7 @@ using QwQ_Music.ViewModels.Dialogs;
 using QwQ_Music.Views.Dialogs;
 using Ursa.Controls;
 
-namespace QwQ_Music.Views;
+namespace QwQ_Music.Windows;
 
 public partial class MainWindow : Window {
     private bool _isClosing;
@@ -53,9 +53,8 @@ public partial class MainWindow : Window {
             if (_isClosing)
                 return;
 
-            if (e.CloseReason is WindowCloseReason.OSShutdown or WindowCloseReason.ApplicationShutdown) {
+            if (e.CloseReason is WindowCloseReason.OSShutdown or WindowCloseReason.ApplicationShutdown)
                 ApplicationViewModel.Shutdown();
-            }
 
             e.Cancel = true;
 
@@ -66,7 +65,7 @@ public partial class MainWindow : Window {
     }
 
     private async Task HandleWindowClosingAsync() {
-        var behavior = ConfigManager.SystemConfig.ClosingBehavior;
+        ClosingBehavior behavior = ConfigManager.SystemConfig.ClosingBehavior;
 
         if (_isOpenClosingDialog) {
             NotificationService.Info("注意", "请不要再点啦，先选择关闭行为吧！");
@@ -76,9 +75,8 @@ public partial class MainWindow : Window {
 
         _isOpenClosingDialog = true;
 
-        if (behavior == Models.Enums.ClosingBehavior.AskAbout) {
+        if (behavior == Models.Enums.ClosingBehavior.AskAbout)
             behavior = await GetUserClosingBehaviorAsync().ConfigureAwait(true);
-        }
 
         switch (behavior) {
             case Models.Enums.ClosingBehavior.Exit:

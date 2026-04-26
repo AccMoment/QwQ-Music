@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media.Imaging;
@@ -73,7 +75,7 @@ public static class CacheManager {
     /// <summary>
     ///     设置或更新图片到缓存
     /// </summary>
-    public static void SetImage(string? id, string idType, Bitmap bitmap) {
+    public static void SetImage<T>(T? id, string idType, Bitmap bitmap) where T : notnull {
         if (id is null || bitmap == Loading)
             return;
         ImageCache[$"{idType}:{id}"] = bitmap;
@@ -83,13 +85,19 @@ public static class CacheManager {
     /// <summary>
     ///     通过图片Id删除图片
     /// </summary>
-    public static void DeleteImage(string id) { ImageCache.Remove(id); }
+    public static void DeleteImage<T>(T id) where T : notnull {
+        if (id.ToString() is not { } key)
+            return;
+        ImageCache.Remove(key);
+    }
 
     /// <summary>
     ///     通过图片Id集合批量删除图片
     /// </summary>
-    public static void DeleteImages(IEnumerable<string> ids) {
-        foreach (string id in ids) {
+    public static void DeleteImages<T>(IEnumerable<T> ids) where T : notnull {
+        foreach (string? id in ids.Select(id => id.ToString())) {
+            if (id is null)
+                continue;
             ImageCache.Remove(id);
         }
     }
@@ -101,9 +109,9 @@ public static class CacheManager {
     /// <exception cref="FileNotFoundException">无法找到图片资源时抛出异常</exception>
     public static Bitmap GetBuiltInImage(string imageFileName) {
         try {
-            var assembly = App.CurrentAssembly;
+            Assembly assembly = App.CurrentAssembly;
 
-            using var stream =
+            using Stream stream =
                 assembly.GetManifestResourceStream($"QwQ_Music.Assets.EmbeddedRes.Images.{imageFileName}") ??
                 throw new FileNotFoundException($"无法找到 {imageFileName} 资源");
 
@@ -124,9 +132,8 @@ public static class CacheManager {
         if (!ImageCache.TryGetValue($"{idType}:{id}", out Bitmap? image) ||
             image == null ||
             // image == NotExist ||
-            image == Loading) {
+            image == Loading)
             return null;
-        }
 
         try {
             _ = image.PixelSize;
@@ -146,33 +153,40 @@ public static class CacheManager {
         Action? callIfExist,
         string? alterId = null,
         int maxWidth = 128) {
-        if (id is null || uri is null) {
+        if (id is null || uri is null)
             return NotExist;
-        }
 
-        if (TryLoadFromMemory(id, idType, cacheType, alterId) is { } cache) {
+        if (TryLoadFromMemory(id, idType, cacheType, alterId) is { } cache)
             return cache;
-        }
 
-        try {
-            await LoggerService.InfoAsync($"尝试加载{idType}[{alterId ?? id}]的{cacheType}...").ConfigureAwait(false);
+        return await Task.Run(async Task<Bitmap>? () => {
+                             try {
+                                 await LoggerService.InfoAsync($"尝试加载{idType}[{alterId ?? id}]的{cacheType}...")
+                                                    .ConfigureAwait(false);
 
-            Bitmap? bitmap = await ImageHelper.LoadFromWebAndDecodeToWidthAsync(uri, maxWidth).ConfigureAwait(false);
+                                 Bitmap? bitmap =
+                                     await ImageHelper.LoadFromWebAndDecodeToWidthAsync(uri, maxWidth)
+                                                      .ConfigureAwait(false);
 
-            if (bitmap is null) {
-                SetImage(id, idType, NotExist);
-                await LoggerService.InfoAsync($"尝试加载{idType}({alterId ?? id})的{cacheType}，但不存在。").ConfigureAwait(false);
-                return NotExist;
-            }
+                                 if (bitmap is null) {
+                                     SetImage(id, idType, NotExist);
+                                     await LoggerService.InfoAsync($"尝试加载{idType}({alterId ?? id})的{cacheType}，但不存在。")
+                                                        .ConfigureAwait(false);
+                                     return NotExist;
+                                 }
 
-            SetImage(id, idType, bitmap);
-            await LoggerService.InfoAsync($"加载{idType}({alterId ?? id})的{cacheType}成功").ConfigureAwait(false);
-            callIfExist?.Invoke();
-            return bitmap;
-        } catch (Exception e) {
-            await LoggerService.ErrorAsync($"加载{idType}({alterId ?? id})的{cacheType}时发生错误: {e}").ConfigureAwait(false);
-            return Damaged;
-        }
+                                 SetImage(id, idType, bitmap);
+                                 await LoggerService.InfoAsync($"加载{idType}({alterId ?? id})的{cacheType}成功")
+                                                    .ConfigureAwait(false);
+                                 callIfExist?.Invoke();
+                                 return bitmap;
+                             } catch (Exception e) {
+                                 await LoggerService.ErrorAsync($"加载{idType}({alterId ?? id})的{cacheType}时发生错误: {e}")
+                                                    .ConfigureAwait(false);
+                                 return Damaged;
+                             }
+                         })
+                         .ConfigureAwait(false);
     }
 
     public static async ValueTask<Bitmap> TryLoadCoverThumbnailAsync<TPrimaryKey>(
@@ -181,16 +195,14 @@ public static class CacheManager {
         string cacheType,
         IAsyncReadonlyDatabaseRepository<TPrimaryKey, Bitmap?> provider,
         Action? callIfExist,
-        string? alterId = null) {
+        string? alterId = null) where TPrimaryKey : notnull {
         await LoggerService.DebugAsync($"尝试获取{idType}[{alterId ?? id?.ToString()}]的{cacheType}").ConfigureAwait(false);
 
-        if (id is null) {
+        if (id is null)
             return NotExist;
-        }
 
-        if (TryLoadFromMemory(id.ToString(), idType, cacheType, alterId) is { } cache) {
+        if (TryLoadFromMemory(id.ToString(), idType, cacheType, alterId) is { } cache)
             return cache;
-        }
 
         try {
             await LoggerService.InfoAsync($"尝试加载{idType}[{alterId ?? id.ToString()}]的{cacheType}...")
@@ -199,13 +211,15 @@ public static class CacheManager {
             Bitmap? bitmap = await provider.SingleAsync(id).ConfigureAwait(false);
 
             if (bitmap is null) {
-                SetImage(id.ToString(), idType, NotExist);
+                SetImage(id, idType, NotExist);
                 await LoggerService.InfoAsync($"尝试加载{idType}[{alterId ?? id.ToString()}]的{cacheType}，但不存在。")
                                    .ConfigureAwait(false);
                 return NotExist;
             }
 
-            SetImage(id.ToString(), idType, bitmap);
+            if (!ConfigManager.UiConfig.VisualConfig.AllowNonSquareCover && Math.Abs(bitmap.Size.AspectRatio - 1) > 1e-5)
+                BitmapCropper.Crop(ref bitmap, 1.0);
+            SetImage(id, idType, bitmap);
             await LoggerService.InfoAsync($"加载{idType}[{alterId ?? id.ToString()}]的{cacheType}成功")
                                .ConfigureAwait(false);
             callIfExist?.Invoke();
@@ -226,9 +240,8 @@ public static class CacheManager {
         NotExist.Dispose();
         Damaged.Dispose();
 
-        foreach (var bitmap in AudioQualityLevelLogo.Values) {
+        foreach (Bitmap bitmap in AudioQualityLevelLogo.Values)
             bitmap.Dispose();
-        }
     }
 
     public static bool IsValid(Bitmap image) {

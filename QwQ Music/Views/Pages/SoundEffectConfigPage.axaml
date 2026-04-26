@@ -1,5 +1,5 @@
 <Grid RowDefinitions="Auto,*"
-      ColumnDefinitions="Auto,*" 
+      ColumnDefinitions="Auto,*"
       ColumnSpacing="10"
       Margin="0,10"
       d:DesignHeight="450"
@@ -88,13 +88,13 @@
                 <DataTemplate DataType="soundEffectModels:ChorusModel">
                     <soundEffects:Chorus />
                 </DataTemplate>
-                
+
                 <DataTemplate DataType="soundEffectModels:CompressorModel">
-                    <soundEffects:Compressor/>
+                    <soundEffects:Compressor />
                 </DataTemplate>
-                
+
                 <DataTemplate DataType="soundEffectModels:DelayModel">
-                    <soundEffects:Delay/>
+                    <soundEffects:Delay />
                 </DataTemplate>
 
             </Carousel.DataTemplates>

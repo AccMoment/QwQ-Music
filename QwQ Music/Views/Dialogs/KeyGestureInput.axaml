@@ -32,19 +32,19 @@
                HorizontalAlignment="Center"
                Classes="Tertiary"
                Classes.GestureIsNull="{Binding #GestureInputInDialog.Gesture,Converter={x:Static ObjectConverters.IsNull}}">
-        
+
         <TextBlock.Styles>
-            
+
             <Style Selector="TextBlock.GestureIsNull">
-                <Setter Property="Text" Value="请输入按键"/>
+                <Setter Property="Text" Value="请输入按键" />
             </Style>
-                     
+
             <Style Selector="TextBlock">
-                <Setter Property="Text" Value="{Binding #GestureInputInDialog.Gesture,StringFormat=' 你输入了: {0} '}"/>
+                <Setter Property="Text" Value="{Binding #GestureInputInDialog.Gesture,StringFormat=' 你输入了: {0} '}" />
             </Style>
-            
+
         </TextBlock.Styles>
-        
+
     </TextBlock>
 
     <StackPanel Grid.Row="3" Spacing="20" HorizontalAlignment="Right" Orientation="Horizontal">

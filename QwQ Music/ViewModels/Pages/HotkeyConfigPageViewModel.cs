@@ -15,8 +15,8 @@ using KeyGestureInput = QwQ_Music.Views.Dialogs.KeyGestureInput;
 
 namespace QwQ_Music.ViewModels.Pages;
 
-public partial class HotkeyConfigPageViewModel : ViewModelBase {
-    public HotkeyConfigPageViewModel() { InitializeHotkeyItems(); }
+public partial class HotkeyConfigPageViewModel : NavigableViewModel {
+    public HotkeyConfigPageViewModel() : base(nameof(HotkeyConfigPageViewModel)) { InitializeHotkeyItems(); }
 
     public HotkeyConfig HotkeyConfig { get; } = ConfigManager.HotkeyConfig;
 
@@ -40,7 +40,7 @@ public partial class HotkeyConfigPageViewModel : ViewModelBase {
 
     [RelayCommand]
     private void AddNewHotkey(HotkeyFunction function) {
-        var item = HotkeyItems.FirstOrDefault(item => item.Function == function);
+        HotkeyItemModel? item = HotkeyItems.FirstOrDefault(item => item.Function == function);
 
         if (item == null)
             return;
@@ -64,9 +64,8 @@ public partial class HotkeyConfigPageViewModel : ViewModelBase {
         HotkeyService.ResetToDefaultHotkeys();
 
         // 重新初始化所有配置项
-        foreach (var item in HotkeyItems) {
+        foreach (HotkeyItemModel? item in HotkeyItems)
             item.UpdateKeyGestures();
-        }
     }
 
     [RelayCommand]
@@ -79,9 +78,8 @@ public partial class HotkeyConfigPageViewModel : ViewModelBase {
                   .ContinueWith(task => {
                       if (task is not { IsCompletedSuccessfully: true, Result: MessageBoxResult.Yes })
                           return;
-                      foreach (HotkeyItemModel item in HotkeyItems) {
+                      foreach (HotkeyItemModel item in HotkeyItems)
                           item.ClearKeyGestures();
-                      }
 
                       HotkeyService.ClearKeyGestures();
                   })
@@ -97,8 +95,7 @@ public partial class HotkeyConfigPageViewModel : ViewModelBase {
             $"热键配置验证结果: {(isValid ? "有效" : "无效")}",
             isValid ? NotificationType.Success : NotificationType.Warning);
 
-        if (!isValid) {
+        if (!isValid)
             LoggerService.Error($"热键配置验证错误！\n信息: {string.Join("\n", errors)}");
-        }
     }
 }

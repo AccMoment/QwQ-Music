@@ -61,13 +61,12 @@ public static class FileOperationService {
                 continue;
 
             try {
-                if (Directory.Exists(path)) {
+                if (Directory.Exists(path))
                     result.AddRange(Directory.GetFiles(path, "*.*", SearchOption.AllDirectories));
-                } else if (File.Exists(path)) {
+                else if (File.Exists(path))
                     result.Add(path);
-                } else {
+                else
                     LoggerService.Warning($"路径不存在: {path}");
-                }
             } catch (Exception ex) {
                 LoggerService.Error($"访问路径失败 {path}: {ex.Message}");
             }
@@ -123,7 +122,7 @@ public static class FileOperationService {
             Title = title ?? "保存文件", FileTypeChoices = fileTypes?.ToList(), SuggestedFileName = suggestedFileName
         };
 
-        var file = await topLevel.StorageProvider.SaveFilePickerAsync(options).ConfigureAwait(false);
+        IStorageFile? file = await topLevel.StorageProvider.SaveFilePickerAsync(options).ConfigureAwait(false);
 
         return file?.Path.LocalPath;
     }
@@ -133,24 +132,26 @@ public static class FileOperationService {
     /// </summary>
     /// <returns>获取的位图</returns>
     public static async Task<Bitmap?> OpenImageFile(TopLevel topLevel) {
-        var files = await topLevel.StorageProvider.OpenFilePickerAsync(
-                                      new FilePickerOpenOptions {
-                                          Title = "选择图片",
-                                          AllowMultiple = false,
-                                          FileTypeFilter = [
-                                              new FilePickerFileType("图片文件") {
-                                                  Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp"]
-                                              }
-                                          ]
-                                      })
-                                  .ConfigureAwait(false);
+        IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(
+                                                              new FilePickerOpenOptions {
+                                                                  Title = "选择图片",
+                                                                  AllowMultiple = false,
+                                                                  FileTypeFilter = [
+                                                                      new FilePickerFileType("图片文件") {
+                                                                          Patterns = [
+                                                                              "*.png", "*.jpg", "*.jpeg", "*.bmp"
+                                                                          ]
+                                                                      }
+                                                                  ]
+                                                              })
+                                                          .ConfigureAwait(false);
 
         if (files.Count == 0)
             return null;
 
         try {
-            var file = files[0];
-            await using var stream = await file.OpenReadAsync().ConfigureAwait(false);
+            IStorageFile file = files[0];
+            await using Stream stream = await file.OpenReadAsync().ConfigureAwait(false);
             return new Bitmap(stream);
         } catch (Exception ex) {
             NotificationService.Error($"打开文件失败了！\n{ex.Message}");

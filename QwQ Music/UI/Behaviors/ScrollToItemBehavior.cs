@@ -65,12 +65,12 @@ public class ScrollToItemBehavior {
                 CancelCurrentScrollAnimation();
 
                 if (smoothScrollingEnabled) {
-                    var duration = GetScrollDuration(listBox);
-                    var easing = GetScrollEasing(listBox);
+                    TimeSpan duration = GetScrollDuration(listBox);
+                    Easing easing = GetScrollEasing(listBox);
 
                     // 创建新的令牌
                     currentScrollCts = new CancellationTokenSource();
-                    var token = currentScrollCts.Token;
+                    CancellationToken token = currentScrollCts.Token;
 
                     Dispatcher.UIThread.InvokeAsync(async Task () => {
                                   try {
@@ -83,9 +83,8 @@ public class ScrollToItemBehavior {
                                             .WarningAsync($"动画期间出现{ex.GetType()}:{ex.Message}\n{ex.StackTrace}")
                                             .ConfigureAwait(true);
                                   } finally {
-                                      if (!token.IsCancellationRequested) {
+                                      if (!token.IsCancellationRequested)
                                           CancelCurrentScrollAnimation();
-                                      }
                                   }
                               })
                               // ReSharper disable once MethodSupportsCancellation
@@ -134,8 +133,8 @@ public class ScrollToItemBehavior {
             return;
 
         // 计算目标滚动位置
-        var itemBounds = container.Bounds;
-        var scrollViewerBounds = scrollViewer.Bounds;
+        Rect itemBounds = container.Bounds;
+        Rect scrollViewerBounds = scrollViewer.Bounds;
 
         if (scrollViewer.VerticalScrollBarVisibility != ScrollBarVisibility.Disabled) {
             // 垂直滚动
@@ -218,8 +217,9 @@ public class ScrollToItemBehavior {
             if (enumerator.Current is { } val)
                 element.SetValue(ScrollToItemProperty, val);
             ((IDisposable)enumerator).Dispose();
-        } else
+        } else {
             element.SetValue(ScrollToItemProperty, value);
+        }
     }
 
     public static object GetScrollToItem(Control element) { return element.GetValue(ScrollToItemProperty); }

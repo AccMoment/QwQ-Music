@@ -14,8 +14,7 @@ public static class StaticConfig {
         PathEnsurer.EnsureFileAndDirectoryExist(Path.Combine(Directory.GetCurrentDirectory(), "data", "music.QwQ.db"));
 
     public static string CachePath =>
-        PathEnsurer.EnsureFileAndDirectoryExist(
-            Path.Combine(Directory.GetCurrentDirectory(), "cache", "cache.QwQ.db"));
+        PathEnsurer.EnsureFileAndDirectoryExist(Path.Combine(Directory.GetCurrentDirectory(), "cache", "cache.QwQ.db"));
 
     public static string PlaylistPath =>
         PathEnsurer.EnsureFileAndDirectoryExist(

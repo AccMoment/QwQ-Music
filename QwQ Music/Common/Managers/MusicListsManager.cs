@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia.Collections;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -19,13 +18,11 @@ using Ursa.Controls;
 namespace QwQ_Music.Common.Managers;
 
 public partial class MusicListsManager : ObservableObject {
-    public static MusicListsManager Instance { get; } = new();
     private MusicListsManager() { InitializeAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false); }
+    public static MusicListsManager Instance { get; } = new();
 
     public List<MusicListModel> MusicLists { get; set; } = [];
     public event EventHandler? CollectionChanged;
-
-    public MusicListModel? Selected { get; private set; }
 
     private void InvokeIfChanged() { CollectionChanged?.Invoke(this, EventArgs.Empty); }
 
@@ -53,12 +50,15 @@ public partial class MusicListsManager : ObservableObject {
     }
 
     [RelayCommand]
-    private void CreatePlaylistWithMusicItem(params MusicItemModel[] items) {
+    private void CreatePlaylistWithMusicItem(IList items) {
+        if (items[0] is not MusicItemModel)
+            throw new InvalidCastException();
         CreateMusicListAsync()
             .ContinueWith(task => {
-                if (task is { IsCompletedSuccessfully: true, Result: { } list }) {
-                    AddToMusicListAsync(items, list).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
-                }
+                if (task is { IsCompletedSuccessfully: true, Result: { } list })
+                    AddToMusicListAsync(items.Cast<MusicItemModel>().ToArray(), list)
+                        .ContinueWith(LoggerService.HandleException)
+                        .ConfigureAwait(false);
             })
             .ContinueWith(LoggerService.HandleException)
             .ConfigureAwait(false);
@@ -116,49 +116,29 @@ public partial class MusicListsManager : ObservableObject {
 
         var repo = MusicListItemsRepository.Instance;
 
-        // 过滤掉已存在的音乐项
-        var newItems = musicItems.Where(item => repo.ContainsAsync((musicList.Name, musicList.Creator), item.FilePath)
+        MusicItemModel[] newItems = musicItems
+                                    .Where(item => !repo
+                                                    .ContainsAsync((musicList.Name, musicList.Creator), item.FilePath)
                                                     .ConfigureAwait(false)
                                                     .GetAwaiter()
                                                     .GetResult())
-                                 .ToArray();
+                                    .ToArray();
 
         // 如果有已存在的音乐项，显示提示
         if (newItems.Length != musicItems.Count) {
-            var existingItems = musicItems.Except(newItems).ToArray();
+            MusicItemModel[] existingItems = musicItems.Except(newItems).ToArray();
             string existingTitles = string.Join("、", existingItems.Select(item => $"《{item.Title}》"));
             NotificationService.Info("提示", $"歌曲{existingTitles}已存在于歌单 {musicList.Name} 中！");
         }
 
-        var failedItems = new List<MusicItemModel>();
-
-
-        foreach (MusicItemModel item in newItems) {
-            try {
-                await repo.InsertAsync(musicList, item).ConfigureAwait(false);
-            } catch (Exception) {
-                failedItems.Add(item);
-            }
-        }
-
-
-        MusicItemModel[] successItems;
-        if (failedItems.Count == 0) {
-            successItems = newItems;
-        } else {
-            successItems = newItems.Except(failedItems).ToArray();
-            string failedTitles = string.Join("、", failedItems.Select(item => $"《{item.Title}》"));
-            NotificationService.Error($"添加歌曲{failedTitles}到歌单失败！");
-        }
-
-        // 显示添加结果通知
-        if (successItems.Length > 0) {
-            string successTitles = string.Join("、", successItems.Select(item => $"《{item.Title}》"));
-            NotificationService.Success($"已将歌曲{successTitles}添加到歌单：{musicList.Name}！");
-
-            if (musicList.Name == Selected?.Name) {
-                Selected.Musics!.AddRange(successItems);
-            }
+        try {
+            await repo.InsertAsync(musicList, newItems).ConfigureAwait(false); // 显示添加结果通知
+            string titles = string.Join(' ', newItems.Select(item => $"《{item.Title}》"));
+            NotificationService.Success($"已将歌曲{titles}添加到歌单：{musicList.Name}！");
+            await LoggerService.DebugAsync($"已将{titles}").ConfigureAwait(false);
+        } catch (SqliteException ex) {
+            NotificationService.Error("添加歌曲失败");
+            await LoggerService.ErrorAsync("添加歌曲失败:", ex).ConfigureAwait(false);
         }
     }
 
@@ -175,13 +155,12 @@ public partial class MusicListsManager : ObservableObject {
 
         var repo = MusicListItemsRepository.Instance;
 
-        foreach (var item in musicItems) {
+        foreach (MusicItemModel item in musicItems)
             try {
                 await repo.RemoveAsync(musicList, item).ConfigureAwait(false);
             } catch (Exception) {
                 failedItems.Add(item);
             }
-        }
 
         ICollection<MusicItemModel> successItems;
         if (failedItems.Count == 0) {
@@ -197,12 +176,6 @@ public partial class MusicListsManager : ObservableObject {
             string successTitles = string.Join("、", successItems.Select(item => $"《{item.Title}》"));
 
             NotificationService.Success($"已将歌曲{successTitles}从歌单 {musicList.Name} 中移除！");
-
-            if (musicList.Name == Selected?.Name) {
-                foreach (MusicItemModel successItem in successItems) {
-                    Selected.Musics!.Remove(successItem);
-                }
-            }
         }
     }
 
@@ -222,9 +195,8 @@ public partial class MusicListsManager : ObservableObject {
                                              .ConfigureAwait(false);
 
                           // 从图片缓存中移除
-                          if (!musicList.IsCoverExist) {
+                          if (!musicList.IsCoverExist)
                               CacheManager.ImageCache.Remove(musicList.Name);
-                          }
 
                           MusicLists.Remove(musicList);
                           InvokeIfChanged();

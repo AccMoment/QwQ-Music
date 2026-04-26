@@ -17,7 +17,7 @@ public enum AddMusicBehavior {
 
 public partial class PlayerConfig : ObservableObject {
     /// <summary>
-    /// 音频设备配置
+    ///     音频设备配置
     /// </summary>
     public MiniAudioDeviceConfig DeviceConfig { get; set; } = new();
 

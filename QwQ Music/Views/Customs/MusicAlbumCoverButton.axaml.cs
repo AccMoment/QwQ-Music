@@ -12,13 +12,13 @@ public class MusicAlbumCoverButton : TemplatedControl {
             o => o.Command,
             (o, v) => o.Command = v);
 
+    public static readonly StyledProperty<bool> ExternalPointerOverProperty =
+        AvaloniaProperty.Register<MusicAlbumCoverButton, bool>(nameof(ExternalPointerOver));
+
     public ICommand? Command {
         get;
         set => SetAndRaise(CommandProperty, ref field, value);
     }
-
-    public static readonly StyledProperty<bool> ExternalPointerOverProperty =
-        AvaloniaProperty.Register<MusicAlbumCoverButton, bool>(nameof(ExternalPointerOver));
 
     public bool ExternalPointerOver {
         get => GetValue(ExternalPointerOverProperty);

@@ -68,27 +68,17 @@ public partial class LyricsModel : ObservableObject {
         CurrentIndex = 0;
         Current = Lyrics[0];
         Next = Total > 1 ? Lyrics[1] : Lyrics[0];
-        if (newValue != null) {
+        if (newValue != null)
             Lyrics = newValue;
-        }
     }
 }
 
 public class LyricsData {
-    protected LyricsData() { }
-
-    public static LyricsData Create(string? title, string? artist, string? album, string? creator = null) =>
-        new() {
-            Title = title,
-            Artist = artist,
-            Album = album,
-            Creator = creator,
-            Data = [new LyricLine(0, $"{title} - {artist}", album)]
-        };
-
     public static readonly LyricsData Loading = new() {
         Title = null, Artist = null, Album = null, Data = [new LyricLine(0, "歌词加载中...")]
     };
+
+    protected LyricsData() { }
 
     private LyricLine DefaultLyricLine => new(0, $"{Title} - {Artist}", Album);
 
@@ -118,4 +108,14 @@ public class LyricsData {
             field.AsParallel().ForAll(line => line.TimePoint += Offset);
         }
     } = [];
+
+    public static LyricsData Create(string? title, string? artist, string? album, string? creator = null) {
+        return new LyricsData {
+            Title = title,
+            Artist = artist,
+            Album = album,
+            Creator = creator,
+            Data = [new LyricLine(0, $"{title} - {artist}", album)]
+        };
+    }
 }

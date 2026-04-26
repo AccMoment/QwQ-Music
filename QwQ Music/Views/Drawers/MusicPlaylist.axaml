@@ -8,6 +8,7 @@
     xmlns:models="clr-namespace:QwQ_Music.Models"
     xmlns:customs="clr-namespace:QwQ_Music.Views.Customs"
     x:Name="PlaylistDrawer">
+
     <Panel>
         <Grid RowDefinitions="Auto,*">
             <Grid.Styles>
@@ -72,7 +73,11 @@
                      SelectionMode="Multiple"
                      SelectedItems="{Binding SelectedItems}"
                      AutoScrollToSelectedItem="True">
-
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Panel>

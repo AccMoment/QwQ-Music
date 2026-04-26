@@ -102,7 +102,7 @@
                                         <ContextMenu x:DataType="models:MusicItemModel">
 
                                             <MenuItem
-                                                Command="{Binding #PART_Data.((vm2:AllMusicPageViewModel)DataContext).SetMusicListCommand}"
+                                                Command="{Binding #PART_Data.((vm:MusicItemsViewModelBase)DataContext).SetMusicListCommand}"
                                                 CommandParameter="{Binding }"
                                                 Header="立即播放">
                                                 <MenuItem.Icon>
@@ -120,8 +120,8 @@
 
                                                 <MenuItem
                                                     Header="已有歌单"
-                                                    IsVisible="{Binding #PART_Data.((vm2:AllMusicPageViewModel)DataContext).MusicListsManager.MusicLists.Count}"
-                                                    ItemsSource="{Binding #PART_Data.((vm2:AllMusicPageViewModel)DataContext).MusicListsManager.MusicLists}">
+                                                    IsVisible="{Binding #PART_Data.((vm:MusicItemsViewModelBase)DataContext).MusicListsManager.MusicLists.Count}"
+                                                    ItemsSource="{Binding #PART_Data.((vm:MusicItemsViewModelBase)DataContext).MusicListsManager.MusicLists}">
 
                                                     <MenuItem.ItemContainerTheme>
                                                         <ControlTheme TargetType="MenuItem"
@@ -129,7 +129,7 @@
                                                                       BasedOn="{StaticResource BigIconMenuItem}">
                                                             <Setter Property="Header" Value="{Binding Name}" />
                                                             <Setter Property="Command"
-                                                                    Value="{Binding #PART_Data.((vm2:AllMusicPageViewModel)DataContext).AddSelectedToCommand}" />
+                                                                    Value="{Binding #PART_Data.((vm:MusicItemsViewModelBase)DataContext).AddSelectedToCommand}" />
                                                             <Setter Property="CommandParameter" Value="{Binding}" />
                                                             <Setter Property="Icon">
                                                                 <Template>
@@ -149,10 +149,10 @@
 
                                                 <Separator
                                                     Margin="0,5"
-                                                    IsVisible="{Binding #PART_Data.((vm2:AllMusicPageViewModel)DataContext).MusicListsManager.MusicLists.Count}" />
+                                                    IsVisible="{Binding #PART_Data.((vm:MusicItemsViewModelBase)DataContext).MusicListsManager.MusicLists.Count}" />
 
                                                 <MenuItem Header="下一首"
-                                                          Command="{Binding #PART_Data.((vm2:AllMusicPageViewModel)DataContext).AddToPlaylistNextCommand}"
+                                                          Command="{Binding #PART_Data.((vm:MusicItemsViewModelBase)DataContext).AddToPlaylistNextCommand}"
                                                           CommandParameter="{Binding #PART_Data.SelectedItems,Mode=OneWay,FallbackValue=.}">
                                                     <MenuItem.Icon>
                                                         <PathIcon Data="{StaticResource SemiIconTriangleDown}"
@@ -161,7 +161,7 @@
                                                 </MenuItem>
 
                                                 <MenuItem Header="新建歌单"
-                                                          Command="{Binding #PART_Data.((vm2:AllMusicPageViewModel)DataContext).MusicListsManager.CreatePlaylistWithMusicItemCommand}"
+                                                          Command="{Binding #PART_Data.((vm:MusicItemsViewModelBase)DataContext).MusicListsManager.CreatePlaylistWithMusicItemCommand}"
                                                           CommandParameter="{Binding #PART_Data.SelectedItems,Mode=OneWay,FallbackValue=.}">
                                                     <MenuItem.Icon>
                                                         <PathIcon Data="{StaticResource SemiIconMusic}" Margin="2" />
@@ -171,7 +171,7 @@
                                             </MenuItem>
 
                                             <MenuItem
-                                                Command="{Binding #PART_Data.((vm2:AllMusicPageViewModel)DataContext).MusicItemsManager.ClearRecordsCommand}"
+                                                Command="{Binding #PART_Data.((vm:MusicItemsViewModelBase)DataContext).MusicItemsManager.ClearRecordsCommand}"
                                                 CommandParameter="{Binding #PART_Data.SelectedItems,Mode=OneWay,FallbackValue=.}"
                                                 Header="清空播放时长">
                                                 <MenuItem.Icon>
@@ -180,7 +180,7 @@
                                             </MenuItem>
 
                                             <MenuItem
-                                                Command="{Binding #PART_Data.((vm2:AllMusicPageViewModel)DataContext).MusicItemsManager.ShowDetailedInfoCommand}"
+                                                Command="{Binding #PART_Data.((vm:MusicItemsViewModelBase)DataContext).MusicItemsManager.ShowDetailedInfoCommand}"
                                                 CommandParameter="{Binding #PART_Data.SelectedItems,Mode=OneWay,FallbackValue=.}"
                                                 Header="详细信息">
                                                 <MenuItem.Icon>
@@ -190,7 +190,7 @@
 
                                             <!--  在文件中打开  -->
                                             <MenuItem
-                                                Command="{Binding #PART_Data.((vm2:AllMusicPageViewModel)DataContext).MusicItemsManager.OpenInExplorerCommand}"
+                                                Command="{Binding #PART_Data.((vm:MusicItemsViewModelBase)DataContext).MusicItemsManager.OpenInExplorerCommand}"
                                                 CommandParameter="{Binding #PART_Data.SelectedItems,Mode=OneWay,FallbackValue=.}"
                                                 Header="在文件中打开">
                                                 <MenuItem.Icon>
@@ -201,7 +201,7 @@
                                             <!--  删除  -->
                                             <MenuItem
                                                 IsVisible="{TemplateBinding IsCustomizable}"
-                                                Command="{Binding #PART_Data.((vm2:AllMusicPageViewModel)DataContext).MusicItemsManager.RemoveItemsCommand}"
+                                                Command="{Binding #PART_Data.((vm:MusicItemsViewModelBase)DataContext).MusicItemsManager.RemoveItemsCommand}"
                                                 CommandParameter="{Binding #PART_Data.SelectedItems,Mode=OneWay,FallbackValue=.}"
                                                 Header="删除音乐">
                                                 <MenuItem.Icon>
@@ -273,11 +273,9 @@
                                         <StackPanel Orientation="Horizontal">
 
                                             <customs:MusicAlbumCoverButton
-                                                Command="{Binding $parent[DataGrid].((vm2:AllMusicPageViewModel)DataContext).SetMusicListCommand}"
+                                                Command="{Binding $parent[DataGrid].((vm:MusicItemsViewModelBase)DataContext).SetMusicListCommand}"
                                                 CornerRadius="8"
-                                                ExternalPointerOver="{Binding $parent[DataGridRow].IsPointerOver}">
-
-                                            </customs:MusicAlbumCoverButton>
+                                                ExternalPointerOver="{Binding $parent[DataGridRow].IsPointerOver}" />
 
                                             <DockPanel HorizontalSpacing="5" VerticalSpacing="5"
                                                        VerticalAlignment="Center">

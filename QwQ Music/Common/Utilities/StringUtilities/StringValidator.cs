@@ -6,26 +6,21 @@ namespace QwQ_Music.Common.Utilities.StringUtilities;
 /// <summary>
 ///     字符串验证工具类
 /// </summary>
-public static partial class StringValidator
-{
+public static partial class StringValidator {
     /// <summary>
     ///     验证字符串是否为有效的邮箱地址
     /// </summary>
     /// <param name="email">邮箱地址</param>
     /// <returns>是否为有效邮箱</returns>
-    public static bool IsValidEmail(string email)
-    {
+    public static bool IsValidEmail(string email) {
         if (string.IsNullOrEmpty(email))
             return false;
 
-        try
-        {
-            var regex = EmailRegex();
+        try {
+            Regex regex = EmailRegex();
 
             return regex.IsMatch(email);
-        }
-        catch
-        {
+        } catch {
             return false;
         }
     }
@@ -35,8 +30,7 @@ public static partial class StringValidator
     /// </summary>
     /// <param name="url">URL字符串</param>
     /// <returns>是否为有效URL</returns>
-    public static bool IsValidUrl(string url)
-    {
+    public static bool IsValidUrl(string url) {
         return !string.IsNullOrEmpty(url) && Uri.TryCreate(url, UriKind.Absolute, out _);
     }
 

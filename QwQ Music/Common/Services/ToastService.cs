@@ -5,12 +5,11 @@ using Ursa.Controls;
 
 namespace QwQ_Music.Common.Services;
 
-public class ToastService
-{
+public class ToastService {
     public static WindowToastManager? ToastManager { get; } =
-        WindowToastManager.TryGetToastManager(App.TopLevel, out var manager)
-            ? manager
-            : new WindowToastManager(App.TopLevel);
+        WindowToastManager.TryGetToastManager(App.TopLevel, out WindowToastManager? manager) ?
+            manager :
+            new WindowToastManager(App.TopLevel);
 
     public static double CharactersPerMinute { get; set; } = 200.0;
 
@@ -24,8 +23,7 @@ public class ToastService
     /// <param name="message">消息文本</param>
     /// <param name="customExpiration">自定义过期时间，如果为null则自动计算</param>
     /// <returns>计算得出的过期时间</returns>
-    private static TimeSpan CalculateExpiration(string message, TimeSpan? customExpiration)
-    {
+    private static TimeSpan CalculateExpiration(string message, TimeSpan? customExpiration) {
         // 如果提供了自定义过期时间，优先使用
         if (customExpiration.HasValue)
             return customExpiration.Value;
@@ -47,23 +45,16 @@ public class ToastService
         bool showClose = true,
         Action? onClick = null,
         Action? onClose = null,
-        string[]? classes = null
-        )
-    {
+        string[]? classes = null) {
         if (Dispatcher.UIThread.CheckAccess())
-        {
             ShowNotificationWithCalculatedExpiration();
-        }
         else
-        {
             Dispatcher.UIThread.Post(ShowNotificationWithCalculatedExpiration);
-        }
 
         return;
 
-        void ShowNotificationWithCalculatedExpiration()
-        {
-            var calculatedExpiration = CalculateExpiration(message, expiration);
+        void ShowNotificationWithCalculatedExpiration() {
+            TimeSpan calculatedExpiration = CalculateExpiration(message, expiration);
 
             ToastManager?.Show(
                 new Toast(message),
@@ -73,8 +64,7 @@ public class ToastService
                 showClose,
                 onClick,
                 onClose,
-                classes
-            );
+                classes);
         }
     }
 
@@ -85,37 +75,23 @@ public class ToastService
         bool showIcon = true,
         bool showClose = true,
         Action? onClick = null,
-        Action? onClose = null
-        )
-    {
-        Show(message,
-            type,
-            expiration,
-            showIcon,
-            showClose,
-            onClick,
-            onClose,
-            ["Light"]
-        );
+        Action? onClose = null) {
+        Show(message, type, expiration, showIcon, showClose, onClick, onClose, ["Light"]);
     }
 
-    public static void Success(string message, string[]? classes = null)
-    {
+    public static void Success(string message, string[]? classes = null) {
         Show(message, NotificationType.Success, classes: classes);
     }
 
-    public static void Error(string message, string[]? classes = null)
-    {
+    public static void Error(string message, string[]? classes = null) {
         Show(message, NotificationType.Error, classes: classes);
     }
 
-    public static void Info(string message, string[]? classes = null)
-    {
+    public static void Info(string message, string[]? classes = null) {
         Show(message, NotificationType.Information, classes: classes);
     }
 
-    public static void Warning(string message, string[]? classes = null)
-    {
+    public static void Warning(string message, string[]? classes = null) {
         Show(message, NotificationType.Warning, classes: classes);
     }
 }

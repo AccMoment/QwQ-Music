@@ -8,16 +8,14 @@
         Background="Transparent"
         xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
-        xmlns:vWindows="clr-namespace:QwQ_Music.Views.Windows"
         xmlns:vmWindows="clr-namespace:QwQ_Music.ViewModels.Windows"
         xmlns:customs="clr-namespace:QwQ_Music.Views.Customs"
-        mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="200"
-        x:Class="QwQ_Music.Views.Windows.DesktopPlayControlWindow"
+        xmlns:vWindows="clr-namespace:QwQ_Music.Windows"
+        x:Class="QwQ_Music.Windows.DesktopPlayControlWindow"
         x:DataType="vmWindows:DesktopPlayControlWindowViewModel"
         Icon="resm:QwQ_Music.Assets.EmbeddedRes.AppIcon.ico"
+        ClipToBounds="True"
         Title="QwQ Music • 播放控制">
 
     <Window.Styles>
@@ -131,16 +129,16 @@
 
             <!--  音乐信息  -->
             <StackPanel>
-                
+
                 <StackPanel.Styles>
                     <Style Selector="TextBlock">
-                        <Setter Property="VerticalAlignment" Value="Center"/>
-                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                        <Setter Property="HorizontalAlignment" Value="Center" />
                     </Style>
                 </StackPanel.Styles>
 
                 <TextBlock Text="{Binding AudioPlayManager.CurrentMusicItem.Model.Title}"
-                           FontWeight="Bold" 
+                           FontWeight="Bold"
                            Padding="0" />
 
                 <TextBlock Classes="Tertiary"
@@ -155,17 +153,18 @@
                 </TextBlock>
 
             </StackPanel>
+            <StackPanel>
 
-            <!--  专辑按钮  -->
-            <Button Classes="None"
+                <!--  专辑按钮  -->
+                <Button
+                    CornerRadius="20"
+                    ClipToBounds="True"
                     Command="{Binding ShowMusicPlayerPageCommand}">
-
-                <customs:MusicAlbumCover
-                    IsAutoRoundedCorners="False"
-                    CornerRadius="10"
-                    Thumbnail="{Binding AudioPlayManager.CurrentMusicItem.Model.Cover}" />
-            </Button>
-
+                    <Border CornerRadius="20" ClipToBounds="True">
+                        <Image Source="{Binding AudioPlayManager.CurrentMusicItem.Model.Cover}" Stretch="Uniform" />
+                    </Border>
+                </Button>
+            </StackPanel>
         </StackPanel>
 
     </Border>

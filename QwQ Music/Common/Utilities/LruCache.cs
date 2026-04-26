@@ -36,7 +36,7 @@ public class LruCache<TKey, TValue> where TKey : notnull {
     /// <exception cref="KeyNotFoundException">当键不存在时抛出</exception>
     public TValue this[TKey key] {
         get {
-            var entry = _cache[key];
+            CacheEntry entry = _cache[key];
             UpdateAccessTime(key, entry);
 
             return entry.Value;
@@ -59,7 +59,7 @@ public class LruCache<TKey, TValue> where TKey : notnull {
     /// <param name="value">缓存值</param>
     /// <returns>是否成功获取</returns>
     public bool TryGetValue(TKey key, out TValue? value) {
-        if (_cache.TryGetValue(key, out var entry)) {
+        if (_cache.TryGetValue(key, out CacheEntry entry)) {
             UpdateAccessTime(key, entry);
             value = entry.Value;
 
@@ -86,7 +86,7 @@ public class LruCache<TKey, TValue> where TKey : notnull {
     /// </summary>
     /// <param name="key">缓存键</param>
     public void Remove(TKey key) {
-        if (!_cache.TryGetValue(key, out var entry))
+        if (!_cache.TryGetValue(key, out CacheEntry entry))
             return;
         _onItemRemoved?.Invoke(entry.Value);
         _cache.Remove(key, out _);
@@ -96,11 +96,9 @@ public class LruCache<TKey, TValue> where TKey : notnull {
     ///     清空缓存
     /// </summary>
     public void Clear() {
-        if (_onItemRemoved != null) {
-            foreach (var entry in _cache.Values) {
+        if (_onItemRemoved != null)
+            foreach (CacheEntry entry in _cache.Values)
                 _onItemRemoved(entry.Value);
-            }
-        }
 
         _cache.Clear();
     }
@@ -110,19 +108,16 @@ public class LruCache<TKey, TValue> where TKey : notnull {
     /// </summary>
     /// <param name="key">缓存键</param>
     /// <returns>是否存在</returns>
-    public bool ContainsKey(TKey key) {
-            return _cache.ContainsKey(key);
-    }
+    public bool ContainsKey(TKey key) { return _cache.ContainsKey(key); }
 
     private void EnsureCapacity() {
         if (_cache.Count >= MaxCacheSize) {
-            var oldestKey = _cache.OrderBy(x => x.Value.LastAccess).First().Key;
+            TKey oldestKey = _cache.OrderBy(x => x.Value.LastAccess).First().Key;
 
-            if (_cache.TryGetValue(oldestKey, out var entry)) {
+            if (_cache.TryGetValue(oldestKey, out CacheEntry entry))
                 _onItemRemoved?.Invoke(entry.Value);
-            }
 
-            _cache.Remove(oldestKey,out _);
+            _cache.Remove(oldestKey, out _);
         }
     }
 

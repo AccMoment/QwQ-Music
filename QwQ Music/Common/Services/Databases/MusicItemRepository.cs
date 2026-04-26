@@ -12,13 +12,107 @@ using QwQ_Music.Models.Enums;
 namespace QwQ_Music.Common.Services.Databases;
 
 public class MusicItemRepository : IAsyncDatabaseRepository<MusicItemModel> {
-    public static readonly MusicItemRepository Instance = new(StaticConfig.DatabasePath);
     public const string TABLE_NAME = "music";
+    public static readonly MusicItemRepository Instance = new(StaticConfig.DatabasePath);
     private readonly AsyncDatabaseService _db;
 
     private MusicItemRepository(string dbPath) {
         _db = new AsyncDatabaseService(dbPath);
         InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+    }
+
+    public async ValueTask DisposeAsync() {
+        await _db.DisposeAsync().ConfigureAwait(false);
+        GC.SuppressFinalize(this);
+    }
+
+    public async Task<MusicItemModel?> SingleAsync(string id) {
+        await LoggerService.DebugAsync($"正在获取音频《{id}》的标签").ConfigureAwait(false);
+
+        Dictionary<string, object?>? result = await _db.SingleAsync(
+                                                           $"SELECT * FROM {TABLE_NAME} WHERE {
+                                                               nameof(MusicItemModel.FilePath)} = @primaryKey",
+                                                           new Dictionary<string, object> { ["primaryKey"] = id })
+                                                       .ConfigureAwait(false);
+
+        return result is null ? null : Parse(result);
+    }
+
+
+    public async Task<IEnumerable<MusicItemModel>> GetAsync(
+        string? whereClause = null,
+        Dictionary<string, object>? whereParams = null,
+        int skip = 0,
+        int limit = -1) {
+        string sql = $"SELECT * FROM {TABLE_NAME} ";
+        if (whereClause is not null)
+            sql += $" WHERE {whereClause}";
+
+        return (await _db.QueryAsync(sql, whereParams, skip, limit).ConfigureAwait(false)).AsParallel()
+            .Select(Parse)
+            .Where(item => item is not null);
+    }
+
+    public async Task<int> CountAsync() {
+        await LoggerService.DebugAsync("正在获取音频数量").ConfigureAwait(false);
+        return await _db.CountAsync(TABLE_NAME).ConfigureAwait(false);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public async Task InsertAsync(MusicItemModel item, InsertExist onInsertExist = InsertExist.FAIL) {
+        await _db.InsertAsync(TABLE_NAME, ToDictionary(item), onInsertExist).ConfigureAwait(false);
+        await AlbumRepository.Instance.AddOrUpdateAlbumItemAsync(item).ConfigureAwait(false);
+    }
+
+    public async Task UpdateAsync(MusicItemModel item) {
+        Dictionary<string, object?> data = ToDictionary(item);
+        data.Remove(nameof(MusicItemModel.FilePath));
+        await UpdateAsync(item.FilePath, data).ConfigureAwait(false);
+    }
+
+    public async Task UpdateAsync(string name, Dictionary<string, object?> fieldValues) {
+        if (fieldValues.Count == 0)
+            return;
+        await LoggerService.DebugAsync($"正在更新音频《{name}》的如下字段：{string.Join(',', fieldValues.Keys)}")
+                           .ConfigureAwait(false);
+
+        const string whereClause = $"{nameof(MusicItemModel.FilePath)} = @primaryKey";
+
+        await _db.UpdateAsync(
+                     null,
+                     TABLE_NAME,
+                     fieldValues,
+                     whereClause,
+                     new Dictionary<string, object?> { ["primaryKey"] = name })
+                 .ConfigureAwait(false);
+    }
+
+    public async Task DeleteAsync(string key) {
+        const string whereClause = $"{nameof(MusicItemModel.FilePath)} = @{nameof(MusicItemModel.FilePath)}";
+
+        await _db.DeleteAsync(
+                     null,
+                     TABLE_NAME,
+                     whereClause,
+                     new Dictionary<string, object> { [nameof(MusicItemModel.FilePath)] = key })
+                 .ConfigureAwait(false);
+        await AlbumRepository.Instance.RemoveAlbumIfClearAsync(await SingleAsync(key).ConfigureAwait(false))
+                             .ConfigureAwait(false);
+    }
+
+    public async Task<bool> ExistsAsync(string id) {
+        await LoggerService.DebugAsync($"正在检测音频《{id}》是否存在").ConfigureAwait(false);
+
+        Dictionary<string, object?>? result = await _db.SingleAsync(
+                                                           $"SELECT 1 FROM {TABLE_NAME} WHERE {
+                                                               nameof(MusicItemModel.FilePath)} = @{
+                                                                   nameof(MusicItemModel.FilePath)}",
+                                                           new Dictionary<string, object> {
+                                                               [nameof(MusicItemModel.FilePath)] = id
+                                                           })
+                                                       .ConfigureAwait(false);
+
+        return result is not null;
     }
 
     private async Task InitializeAsync() {
@@ -49,84 +143,12 @@ public class MusicItemRepository : IAsyncDatabaseRepository<MusicItemModel> {
                       """)
                  .ConfigureAwait(false);
     }
-    
+
 
     public async Task RebuildAsync() {
-        await LoggerService.DebugAsync($"正在重建音频数据库。").ConfigureAwait(false);
+        await LoggerService.DebugAsync("正在重建音频数据库。").ConfigureAwait(false);
         await _db.DropTableAsync(TABLE_NAME).ConfigureAwait(false);
         await InitializeAsync().ConfigureAwait(false);
-    }
-
-    public async ValueTask DisposeAsync() {
-        await _db.DisposeAsync().ConfigureAwait(false);
-        GC.SuppressFinalize(this);
-    }
-
-    public async Task<MusicItemModel?> SingleAsync(string id) {
-        await LoggerService.DebugAsync($"正在获取音频《{id}》的标签").ConfigureAwait(false);
-
-        var result = await _db.SingleAsync(
-                                  $"SELECT * FROM {TABLE_NAME} WHERE {nameof(MusicItemModel.FilePath)} = @primaryKey",
-                                  new Dictionary<string, object> { ["primaryKey"] = id })
-                              .ConfigureAwait(false);
-
-        return result is null ? null : Parse(result);
-    }
-
-    public async Task<IEnumerable<MusicItemModel>> GetAsync() {
-        await LoggerService.DebugAsync("正在获取所有音频标签。警告：可能发生长时磁盘IO，应尽可能避免该操作").ConfigureAwait(false);
-
-        return (await _db.QueryAsync($"SELECT * FROM {TABLE_NAME}").ConfigureAwait(false)).AsParallel()
-            .Select(Parse)
-            .Where(item => item is not null) as IEnumerable<MusicItemModel>;
-    }
-
-    public async Task<int> CountAsync() {
-        await LoggerService.DebugAsync("正在获取音频数量").ConfigureAwait(false);
-        return await _db.CountAsync(TABLE_NAME).ConfigureAwait(false); }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public async Task InsertAsync(MusicItemModel item,InsertExist onInsertExist = InsertExist.FAIL) {
-        await _db.InsertAsync(TABLE_NAME, ToDictionary(item),onInsertExist).ConfigureAwait(false);
-    }
-
-    public async Task UpdateAsync(MusicItemModel item) {
-        var data = ToDictionary(item);
-        data.Remove(nameof(MusicItemModel.FilePath));
-        await UpdateAsync(item.FilePath, data).ConfigureAwait(false);
-    }
-
-    public async Task UpdateAsync(string name, Dictionary<string, object?> fieldValues) {
-        if (fieldValues.Count == 0)
-            return;
-        await LoggerService.DebugAsync($"正在更新音频《{name}》的如下字段：{string.Join(',',fieldValues.Keys)}").ConfigureAwait(false);
-
-        const string whereClause = $"{nameof(MusicItemModel.FilePath)} = @primaryKey";
-
-        await _db.UpdateAsync(
-                     TABLE_NAME,
-                     fieldValues,
-                     whereClause,
-                     new Dictionary<string, object?> { ["primaryKey"] = name })
-                 .ConfigureAwait(false);
-    }
-
-    public async Task DeleteAsync(string id) {
-        const string whereClause = $"{nameof(MusicItemModel.FilePath)} = @primaryKey";
-
-        await _db.DeleteAsync(TABLE_NAME, whereClause, new Dictionary<string, object> { ["primaryKey"] = id })
-                 .ConfigureAwait(false);
-    }
-
-    public async Task<bool> ExistsAsync(string id) {
-        await LoggerService.DebugAsync($"正在检测音频《{id}》是否存在").ConfigureAwait(false);
-
-        var result = await _db.SingleAsync(
-                                  $"SELECT 1 FROM {TABLE_NAME} WHERE {nameof(MusicItemModel.FilePath)} = @primaryKey",
-                                  new Dictionary<string, object> { ["primaryKey"] = id })
-                              .ConfigureAwait(false);
-
-        return result is not null;
     }
 
     #region Helper Methods
@@ -142,7 +164,7 @@ public class MusicItemRepository : IAsyncDatabaseRepository<MusicItemModel> {
                 Album = ParseHelper.TryParse(dict, nameof(MusicItemModel.Album)) ?? Error(""),
                 AlbumArtists = ParseHelper.TryParse(dict, nameof(MusicItemModel.AlbumArtists)) ?? Error(""),
                 Composer = ParseHelper.TryParse(dict, nameof(MusicItemModel.Composer)),
-                AlbumId = ParseHelper.TryParse(dict, nameof(MusicItemModel.AlbumId)),
+                AlbumId = ParseHelper.TryParseTuple(dict, nameof(MusicItemModel.AlbumId), '\u001F') ?? Error(("", "")),
                 FileSize = ParseHelper.TryParse(dict, nameof(MusicItemModel.FileSize)) ?? Error("未知"),
                 Record =
                     TimeSpan.FromTicks(ParseHelper.TryParse<long>(dict, nameof(MusicItemModel.Record)) ?? Error(0)),
@@ -150,7 +172,7 @@ public class MusicItemRepository : IAsyncDatabaseRepository<MusicItemModel> {
                     TimeSpan.FromTicks(ParseHelper.TryParse<long>(dict, nameof(MusicItemModel.Duration)) ?? Error(0)),
                 SampleRate = ParseHelper.TryParse<int>(dict, nameof(MusicItemModel.SampleRate)) ?? Error(44100),
                 Channels = ParseHelper.TryParse<int>(dict, nameof(MusicItemModel.Channels)) ?? Error(2),
-                CoverColors = (ParseHelper.TryParse(dict, nameof(MusicItemModel.CoverColors)))?.Split("、"),
+                CoverColors = ParseHelper.TryParse(dict, nameof(MusicItemModel.CoverColors))?.Split("、"),
                 Gain = ParseHelper.TryParse<double>(dict, nameof(MusicItemModel.Gain)) ?? Error(0),
                 EncodingFormat = ParseHelper.TryParse(dict, nameof(MusicItemModel.EncodingFormat)) ?? Error("Unknown"),
                 Comment = ParseHelper.TryParse(dict, nameof(MusicItemModel.Comment)) ?? Error(""),
@@ -167,14 +189,12 @@ public class MusicItemRepository : IAsyncDatabaseRepository<MusicItemModel> {
             };
 
             if (critical) {
-                NotificationService.Warning($"检测到严重的音频存储错误。{dict[nameof(MusicItemModel.Title)]}的信息将无法恢复。");
+                NotificationService.Warning($"检测到《{model.Title}》严重的音频存储错误。音频信息将无法恢复。");
                 return null;
             }
 
-            if (errors > 0) {
-                NotificationService.Warning(
-                    $"检测到对{dict[nameof(MusicItemModel.Title)]}的信息存储存在{errors}处错误。请在设置>播放中点击[强制刷新标签]按钮以修复。");
-            }
+            if (errors > 0)
+                NotificationService.Warning($"检测到对{model.Title}的信息存储存在{errors}处错误。请在设置>播放中点击[强制刷新标签]按钮以修复。");
 
             return model;
         } catch (Exception) {
@@ -202,7 +222,7 @@ public class MusicItemRepository : IAsyncDatabaseRepository<MusicItemModel> {
             [nameof(MusicItemModel.Composer)] = model.Composer,
             [nameof(MusicItemModel.Album)] = model.Album,
             [nameof(MusicItemModel.AlbumArtists)] = model.AlbumArtists,
-            [nameof(MusicItemModel.AlbumId)] = model.AlbumId,
+            [nameof(MusicItemModel.AlbumId)] = $"{model.AlbumId.Name}\u001F{model.AlbumId.Artists} ",
             [nameof(MusicItemModel.FilePath)] = model.FilePath,
             [nameof(MusicItemModel.FileSize)] = model.FileSize,
             [nameof(MusicItemModel.Record)] = model.Record.Ticks,

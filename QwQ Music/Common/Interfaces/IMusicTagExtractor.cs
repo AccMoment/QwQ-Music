@@ -3,8 +3,7 @@ using ATL;
 
 namespace QwQ_Music.Common.Interfaces;
 
-public interface IMusicTagExtractor
-{
+public interface IMusicTagExtractor {
     /// <summary>
     ///     获取 <see cref="Track" /> 实例
     /// </summary>

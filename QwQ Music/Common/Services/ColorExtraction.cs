@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Impressionist.Abstractions;
 using Impressionist.Implementations;
 using Color = Avalonia.Media.Color;
 
@@ -50,10 +51,10 @@ public static class ColorExtraction {
         bool toLab = true,
         bool useKMeansPp = true) {
         // 从位图采样颜色
-        var sampledColors = SampleColorsFromBitmap(bitmap);
+        Dictionary<Vector3, int> sampledColors = SampleColorsFromBitmap(bitmap);
 
         // 根据选择的算法生成调色板
-        var paletteResult = algorithm switch {
+        PaletteResult? paletteResult = algorithm switch {
             ColorExtractionAlgorithm.KMeans => await PaletteGenerators.KMeansPaletteGenerator
                                                                       .CreatePalette(
                                                                           sampledColors,
@@ -85,9 +86,8 @@ public static class ColorExtraction {
     /// <param name="bitmap">位图对象</param>
     /// <returns>颜色频率字典</returns>
     private static Dictionary<Vector3, int> SampleColorsFromBitmap(Bitmap bitmap) {
-        if (bitmap.Format != PixelFormat.Bgra8888) {
+        if (bitmap.Format != PixelFormat.Bgra8888)
             throw new FormatException("requiring a Bgra8888 format writeable bitmap.");
-        }
 
         Dictionary<Vector3, int> colorFrequencies = new();
         int width = bitmap.PixelSize.Width;
@@ -108,20 +108,19 @@ public static class ColorExtraction {
             PixelFormat.Bgra8888,
             AlphaFormat.Opaque);
 
-        using var buffer = writeableBitmap.Lock();
+        using ILockedFramebuffer buffer = writeableBitmap.Lock();
         bitmap.CopyPixels(buffer, AlphaFormat.Opaque);
 
         // 遍历像素采样颜色
-        for (int y = 0; y < height; y += stride) {
-            for (int x = 0; x < width; x += stride) {
-                uint pixel = buffer.GetPixel(x, y);
-                var vector = new Vector3(
-                    (byte)((pixel >> 16 & 255) / 16 * 16),
-                    (byte)((pixel >> 8 & 255) / 16 * 16),
-                    (byte)((pixel & 255) / 16 * 16));
-                // 更新颜色频率
-                colorFrequencies[vector] = colorFrequencies.TryGetValue(vector, out int v) ? v + 1 : 1;
-            }
+        for (int y = 0; y < height; y += stride)
+        for (int x = 0; x < width; x += stride) {
+            uint pixel = buffer.GetPixel(x, y);
+            var vector = new Vector3(
+                (byte)(((pixel >> 16) & 255) / 16 * 16),
+                (byte)(((pixel >> 8) & 255) / 16 * 16),
+                (byte)((pixel & 255) / 16 * 16));
+            // 更新颜色频率
+            colorFrequencies[vector] = colorFrequencies.TryGetValue(vector, out int v) ? v + 1 : 1;
         }
 
         return colorFrequencies;

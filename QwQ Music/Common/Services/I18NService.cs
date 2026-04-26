@@ -41,9 +41,9 @@ public class I18NService {
         }
     };
 
-    public static Language CurrentLanguage { get; set; } = Language.ZhCn;
-
     public static readonly I18NService Lang = new();
+
+    public static Language CurrentLanguage { get; set; } = Language.ZhCn;
 
     public string this[string key] {
         get {

@@ -12,7 +12,11 @@ using QwQ_Music.Models.Enums;
 namespace QwQ_Music.Common.Managers;
 
 public partial class PlaylistManager : ObservableObject {
-    public static PlaylistManager Instance { get; } = new();
+    public const string Custom = nameof(Custom);
+
+    private const string Unknown = nameof(Unknown);
+
+    public readonly List<PlaylistItemModel> SequentialPlaylist = [];
 
     private PlaylistManager() {
         Task.Run(() => {
@@ -46,11 +50,9 @@ public partial class PlaylistManager : ObservableObject {
             .ConfigureAwait(false);
     }
 
+    public static PlaylistManager Instance { get; } = new();
+
     public PlaylistItemModel CurrentItem { get; set; } = PlaylistItemModel.RefDefault;
-
-    public const string Custom = nameof(Custom);
-
-    private const string Unknown = nameof(Unknown);
 
     public string CurrentListName { get; private set; } = Unknown;
 
@@ -68,14 +70,12 @@ public partial class PlaylistManager : ObservableObject {
 
     public AvaloniaList<PlaylistItemModel> ActualPlaylist { get; } = [];
 
-    public readonly List<PlaylistItemModel> SequentialPlaylist = [];
-
 
     public int Count => SequentialPlaylist.Count;
 
     public PlaylistItemModel First() {
         if (ActualPlaylist.Count == 0) {
-            var items = MusicItemsManager.All.MusicItems.Values;
+            OrderedDictionary<string, MusicItemModel>.ValueCollection items = MusicItemsManager.All.MusicItems.Values;
             if (items.Count == 0)
                 return PlaylistItemModel.RefDefault;
             ReplaceAsync(MusicItemsManager.All.Name, items, 0, true).ConfigureAwait(false).GetAwaiter().GetResult();
@@ -89,7 +89,7 @@ public partial class PlaylistManager : ObservableObject {
         PlaylistItemModel anchor,
         params IEnumerable<MusicItemModel> musicItems) {
         CurrentListName = Custom;
-        var items = musicItems.Select(item => new PlaylistItemModel(item)).ToArray();
+        PlaylistItemModel[] items = musicItems.Select(item => new PlaylistItemModel(item)).ToArray();
         SequentialPlaylist.InsertRange(SequentialPlaylist.IndexOf(anchor), items);
         ActualPlaylist.InsertRange(ActualPlaylist.IndexOf(anchor), items);
         return items;
@@ -120,8 +120,11 @@ public partial class PlaylistManager : ObservableObject {
         PlaylistItemModel[] playlistItems = SequentialPlaylist.AsParallel()
                                                               .Where(item => items.Contains(item.Model))
                                                               .ToArray();
+
         SequentialPlaylist.RemoveAll(item => playlistItems.Contains(item));
         ActualPlaylist.RemoveAll(playlistItems);
+        if (items.Contains(AudioPlayManager.Instance.CurrentMusicItem.Model))
+            AudioPlayManager.Instance.NextSong();
     }
 
     public void Clear() {
@@ -129,6 +132,7 @@ public partial class PlaylistManager : ObservableObject {
         SequentialPlaylist.Clear();
         ActualPlaylist.Clear();
         PlaylistItemModel.Reset();
+        AudioPlayManager.Instance.Stop();
     }
 
     public async Task ReplaceAsync(
@@ -168,9 +172,9 @@ public partial class PlaylistManager : ObservableObject {
                       .AsParallel()
                       .AsOrdered()
                       .Select((item, index) => (Index: index,
-                                                Item: (item.First == MusicItemModel.Default ?
+                                                Item: item.First == MusicItemModel.Default ?
                                                     PlaylistItemModel.RefDefault :
-                                                    new PlaylistItemModel(item.First)), RandomOrder: item.Second))
+                                                    new PlaylistItemModel(item.First), RandomOrder: item.Second))
                       .ForAll(data => {
                           SequentialPlaylist[data.Index] = data.Item;
                           actualPlaylist[data.RandomOrder] = data.Item;
@@ -180,13 +184,14 @@ public partial class PlaylistManager : ObservableObject {
             await AudioPlayManager.Instance.SetThisMusicAsync(SequentialPlaylist[target], isPlayNow)
                                   .ConfigureAwait(false);
             return;
+        }
+
+        SequentialPlaylist.AddRange(musicItems.Select(item => new PlaylistItemModel(item)));
+        if (PlayMode is PlayMode.Random) {
+            ActualPlaylist.Add(SequentialPlaylist[target]);
+            ActualPlaylist.AddRange(SequentialPlaylist.Where((_, index) => index != target).Shuffle());
         } else {
-            SequentialPlaylist.AddRange(musicItems.Select(item => new PlaylistItemModel(item)));
-            if (PlayMode is PlayMode.Random) {
-                ActualPlaylist.Add(SequentialPlaylist[target]);
-                ActualPlaylist.AddRange(SequentialPlaylist.Where((_, index) => index != target).Shuffle());
-            } else
-                ActualPlaylist.AddRange(SequentialPlaylist.Shuffle());
+            ActualPlaylist.AddRange(SequentialPlaylist.Shuffle());
         }
 
         if (ActualPlaylist.Count == 0)

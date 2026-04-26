@@ -25,11 +25,10 @@ public class AudioPreprocessor(AudioPlayer audioPlayer) {
         UpdateAudioFormat(musicItem);
 
         if (musicItem.Extension ==
-            AudioFileValidator.AudioFormatsExtendToNameMap[AudioFileValidator.ExtendAudioFormats.Ncm]) {
+            AudioFileValidator.AudioFormatsExtendToNameMap[AudioFileValidator.ExtendAudioFormats.Ncm])
             await InitializeNcmAudioTrackAsync(musicItem).ConfigureAwait(false);
-        } else {
+        else
             audioPlayer.InitializeAudio(musicItem.Data, musicItem.Gain);
-        }
 
         await LoggerService.InfoAsync($"《{musicItem.Title}》音频流初始化完毕。").ConfigureAwait(false);
     }
@@ -51,20 +50,17 @@ public class AudioPreprocessor(AudioPlayer audioPlayer) {
     private async Task InitializeNcmAudioTrackAsync(MusicItemModel musicItem) {
         using var crypt = new NeteaseCrypt(musicItem.FilePath);
 
-        if (await crypt.DumpToStreamAsync().ConfigureAwait(false) is { } audioStream) {
+        if (await crypt.DumpToStreamAsync().ConfigureAwait(false) is { } audioStream)
             // 对于NCM，我们暂时不处理ReplayGain
             audioPlayer.InitializeAudio(audioStream, 0);
-        }
     }
 
     public async Task UpdateMusicPlayProgressAsync(MusicItemModel musicItem, bool restart = false) {
-        if (restart || IsEnded(musicItem)) {
+        if (restart || IsEnded(musicItem))
             musicItem.Record = TimeSpan.Zero;
-        }
 
-        if (musicItem.Record != InitialTime) {
+        if (musicItem.Record != InitialTime)
             await MusicItemsManager.UpdatePlayProgressAsync(musicItem, musicItem.Record).ConfigureAwait(false);
-        }
     }
 
     private static bool IsEnded(MusicItemModel musicItem) {

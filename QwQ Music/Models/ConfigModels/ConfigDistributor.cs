@@ -2,8 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace QwQ_Music.Models.ConfigModels;
 
-public class UserConfig
-{
+public class UserConfig {
     public UiConfig UiConfig { get; set; } = new();
 
     public PlayerConfig PlayerConfig { get; set; } = new();
@@ -17,8 +16,7 @@ public class UserConfig
     public HotkeyConfig HotkeyConfig { get; set; } = new();
 }
 
-public class ServiceConfig
-{
+public class ServiceConfig {
     public LoggerServiceConfig LoggerServiceConfig { get; set; } = new();
 }
 

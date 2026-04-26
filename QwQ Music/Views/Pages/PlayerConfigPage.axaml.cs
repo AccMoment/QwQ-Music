@@ -3,10 +3,8 @@ using QwQ_Music.ViewModels.Pages;
 
 namespace QwQ_Music.Views.Pages;
 
-public partial class PlayConfigPage : UserControl
-{
-    public PlayConfigPage()
-    {
+public partial class PlayerConfigPage : UserControl {
+    public PlayerConfigPage() {
         InitializeComponent();
         DataContext = new PlayConfigPageViewModel();
     }

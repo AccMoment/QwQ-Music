@@ -2,13 +2,13 @@ using QwQ_Music.Common.Services;
 
 namespace QwQ_Music.ViewModels.Bases;
 
-public class NavigationViewModel : ViewModelBase {
-    protected NavigationViewModel(string navViewName) {
-        NavViewName = navViewName;
-        NavigateService.NavigateToEvents[NavViewName] = NavigateEvent;
+public class NavigableViewModel : ViewModelBase {
+    protected NavigableViewModel(string viewModelName) {
+        ViewModelName = viewModelName;
+        NavigateService.NavigateToEvents[ViewModelName] = NavigateEvent;
     }
 
-    protected string NavViewName { get; }
+    protected string ViewModelName { get; }
 
     public int NavigationIndex {
         get;
@@ -16,7 +16,7 @@ public class NavigationViewModel : ViewModelBase {
             if (!SetProperty(ref field, value))
                 return;
 
-            NavigateService.NavigateEvent(NavViewName, field);
+            NavigateService.NavigateEvent(ViewModelName, field);
             OnNavigateTo(field);
         }
     }

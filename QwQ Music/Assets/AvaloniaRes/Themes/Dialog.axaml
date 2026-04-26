@@ -455,9 +455,9 @@
                 </MenuFlyout>
             </Setter>
         </Style>
-        
+
         <Style Selector="^:not(:modal) /template/ Border#PART_Border">
-            <Setter Property="Effect" Value="{DynamicResource LightColor1DropShadowEffect}"/>
+            <Setter Property="Effect" Value="{DynamicResource LightColor1DropShadowEffect}" />
         </Style>
 
         <Style Selector="^:not(:modal) /template/ Panel#PART_TitleArea">

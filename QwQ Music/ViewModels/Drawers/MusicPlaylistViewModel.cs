@@ -21,7 +21,7 @@ public partial class MusicPlaylistViewModel : ViewModelBase {
 
     [RelayCommand]
     private void Remove(IList items) {
-        var musicItems = items.Cast<PlaylistItemModel>().ToList();
+        List<PlaylistItemModel> musicItems = items.Cast<PlaylistItemModel>().ToList();
         PlaylistManager.Instance.Remove(musicItems);
     }
 
@@ -31,9 +31,8 @@ public partial class MusicPlaylistViewModel : ViewModelBase {
     [RelayCommand]
     private void JumpToTop(ListBox listBox) {
         // 滚动到第一行（第一行数据）
-        if (MusicList.Count > 0) {
+        if (MusicList.Count > 0)
             listBox.ScrollIntoView(MusicList.First());
-        }
     }
 
     [RelayCommand]

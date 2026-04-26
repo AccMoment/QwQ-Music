@@ -6,7 +6,7 @@
         MinWidth="600"
         Title="QwQ Music"
         Icon="resm:QwQ_Music.Assets.EmbeddedRes.AppIcon.ico"
-        x:Class="QwQ_Music.Views.MainWindow"
+        x:Class="QwQ_Music.Windows.MainWindow"
         xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:QwQ_Music.Views"
@@ -22,7 +22,7 @@
         Background="Transparent"
         TransparencyLevelHint="AcrylicBlur"
     -->
-
+    
     <Window.Styles>
 
         <Style Selector="TitleBar /template/ CaptionButtons#PART_CaptionButtons">
@@ -69,7 +69,7 @@
         </Style>
 
     </Window.Styles>
-
+    
     <Grid RowDefinitions="40,*">
 
         <views:MainView Grid.Row="0" Grid.RowSpan="2">
@@ -435,5 +435,4 @@
         <u:OverlayDialogHost Grid.Row="0" Grid.RowSpan="2" />
 
     </Grid>
-
 </Window>

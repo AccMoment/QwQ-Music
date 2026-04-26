@@ -7,7 +7,7 @@ using QwQ_Music.ViewModels.Bases;
 
 namespace QwQ_Music.ViewModels.Pages;
 
-public partial class MiaomiaoLittleToyPageViewModel : ViewModelBase {
+public partial class JoyViewModel : ViewModelBase {
     [RelayCommand]
     private static void ClickMeButton() {
         new Love().GenerateHeart().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);

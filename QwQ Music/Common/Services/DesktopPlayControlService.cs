@@ -2,11 +2,13 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Models.ConfigModels;
-using QwQ_Music.Views.Windows;
+using QwQ_Music.Windows;
 
 namespace QwQ_Music.Common.Services;
 
@@ -14,21 +16,17 @@ namespace QwQ_Music.Common.Services;
 ///     在鼠标进入屏幕顶部中心 1/3 区域时，以鼠标为中心显示 DesktopPlayControlWindow；
 ///     当鼠标既不在窗口上方，也不在该区域时隐藏窗口。
 /// </summary>
-public static partial class DesktopPlayControlService
-{
+public static partial class DesktopPlayControlService {
     private static readonly TimeSpan _pollInterval = TimeSpan.FromMilliseconds(120);
     private static readonly DesktopLyricConfig _desktopLyricConfig = ConfigManager.UserConfig.LyricConfig.DesktopLyric;
     private static DispatcherTimer? timer;
     private static DesktopPlayControlWindow? window;
     private static bool isPointerOverWindow;
     private static bool errorToRecord;
-        
+
     // Windows
     [DllImport("user32.dll")]
     private static extern bool GetCursorPos(out WinPoint lpPoint);
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct WinPoint { public int X; public int Y; }
 
     // macOS (CoreGraphics)
     [LibraryImport("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", EntryPoint = "CGEventCreateA")]
@@ -39,9 +37,6 @@ public static partial class DesktopPlayControlService
 
     [DllImport("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation")]
     private static extern void CFRelease(IntPtr cf);
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct CgPoint { public double X; public double Y; }
 
     // Linux (X11) - Wayland 不支持时优雅降级
     [LibraryImport("libX11")]
@@ -64,27 +59,21 @@ public static partial class DesktopPlayControlService
         out int root_y_return,
         out int win_x_return,
         out int win_y_return,
-        out uint mask_return
-    );
+        out uint mask_return);
 
-    public static void Start()
-    {
+    public static void Start() {
         if (timer != null)
             return;
 
-        timer = new DispatcherTimer
-        {
-            Interval = _pollInterval
-        };
+        timer = new DispatcherTimer { Interval = _pollInterval };
 
         timer.Tick += OnTick;
         timer.Start();
-        
+
         errorToRecord = false;
     }
 
-    public static void Stop()
-    {
+    public static void Stop() {
         if (timer == null)
             return;
 
@@ -96,12 +85,11 @@ public static partial class DesktopPlayControlService
         CloseWindow();
     }
 
-    private static void OnTick(object? sender, EventArgs e)
-    {
-        if (!TryGetCursorPixelPoint(out var cursor))
+    private static void OnTick(object? sender, EventArgs e) {
+        if (!TryGetCursorPixelPoint(out PixelPoint cursor))
             return;
 
-        if (!TryGetCurrentScreenBounds(cursor, out var bounds))
+        if (!TryGetCurrentScreenBounds(cursor, out PixelRect bounds))
             return;
 
         bool inTopCenterRegion = IsInTopCenterRegion(cursor, bounds);
@@ -110,17 +98,12 @@ public static partial class DesktopPlayControlService
             isPointerOverWindow = window.IsPointerOver;
 
         if (inTopCenterRegion)
-        {
             ShowOrMoveWindow(cursor);
-        }
         else if (!isPointerOverWindow)
-        {
             HideWindow();
-        }
     }
 
-    private static void ShowOrMoveWindow(PixelPoint cursor)
-    {
+    private static void ShowOrMoveWindow(PixelPoint cursor) {
         EnsureWindow();
 
         if (window == null)
@@ -128,32 +111,28 @@ public static partial class DesktopPlayControlService
 
         bool justShown = false;
 
-        if (!window.IsVisible)
-        {
+        if (!window.IsVisible) {
             window.Show();
             justShown = true;
         }
 
         // 仅在首次显示时，将窗口定位到鼠标为中心；显示后不再跟随鼠标
-        if (!justShown) return;
+        if (!justShown)
+            return;
 
         if (window.IsMeasureValid)
-        {
             Reposition();
-        }
         else
-        {
             // 延迟到 UI 循环的下一帧，确保 SizeToContent 生效
             Dispatcher.UIThread.Post(Reposition, DispatcherPriority.Background);
-        }
 
         return;
 
         // 在布局稳定后将窗口移动到鼠标为中心（水平居中，垂直贴顶）
-        void Reposition()
-        {
-            if (window == null) return;
-            if (!TryGetCurrentScreenBounds(cursor, out var bounds))
+        void Reposition() {
+            if (window == null)
+                return;
+            if (!TryGetCurrentScreenBounds(cursor, out PixelRect bounds))
                 return;
 
             int width = (int)window.Bounds.Width;
@@ -161,7 +140,7 @@ public static partial class DesktopPlayControlService
                 return;
 
             // 水平以鼠标为中心，并限制在屏幕内
-            if (window.Screens.Primary == null) 
+            if (window.Screens.Primary == null)
                 return;
 
             double scaling = window.Screens.Primary.Scaling;
@@ -175,19 +154,15 @@ public static partial class DesktopPlayControlService
         }
     }
 
-    private static void HideWindow()
-    {
+    private static void HideWindow() {
         if (window == null)
             return;
 
         if (window.IsVisible)
-        {
             window.StartMovingOut = true;
-        }
     }
 
-    private static void CloseWindow()
-    {
+    private static void CloseWindow() {
         if (window == null)
             return;
 
@@ -201,8 +176,7 @@ public static partial class DesktopPlayControlService
         window = null;
     }
 
-    private static void EnsureWindow()
-    {
+    private static void EnsureWindow() {
         if (window != null)
             return;
 
@@ -214,83 +188,75 @@ public static partial class DesktopPlayControlService
         window.Topmost = true;
     }
 
-    private static bool TryGetCursorPixelPoint(out PixelPoint cursor)
-    {
+    private static bool TryGetCursorPixelPoint(out PixelPoint cursor) {
         cursor = default;
         if (Application.Current == null)
             return false;
 
-        try
-        {
-            if (OperatingSystem.IsWindows())
-            {
-                if (!GetCursorPos(out var p))
+        try {
+            if (OperatingSystem.IsWindows()) {
+                if (!GetCursorPos(out WinPoint p))
                     return false;
                 cursor = new PixelPoint(p.X, p.Y);
                 return true;
             }
 
-            if (OperatingSystem.IsMacOS())
-            {
+            if (OperatingSystem.IsMacOS()) {
                 IntPtr evt = CGEventCreate(IntPtr.Zero);
                 if (evt == IntPtr.Zero)
                     return false;
 
-                try
-                {
-                    var loc = CGEventGetLocation(evt);
+                try {
+                    CgPoint loc = CGEventGetLocation(evt);
                     // macOS 坐标原点在左下，转换到 Avalonia 使用的左上原点
-                    var screens = App.TopLevel?.Screens;
-                    var primary = screens?.Primary;
-                    if (primary == null)
-                    {
+                    Screens? screens = App.TopLevel?.Screens;
+                    Screen? primary = screens?.Primary;
+                    if (primary == null) {
                         cursor = new PixelPoint((int)loc.X, (int)loc.Y);
-                    }
-                    else
-                    {
-                        var b = primary.Bounds;
+                    } else {
+                        PixelRect b = primary.Bounds;
                         int x = (int)Math.Round(loc.X);
                         int y = b.Y + b.Height - (int)Math.Round(loc.Y);
                         cursor = new PixelPoint(x, y);
                     }
+
                     return true;
-                }
-                finally
-                {
+                } finally {
                     CFRelease(evt);
                 }
             }
 
-            if (OperatingSystem.IsLinux())
-            {
+            if (OperatingSystem.IsLinux()) {
                 IntPtr display = XOpenDisplay(IntPtr.Zero);
                 if (display == IntPtr.Zero)
-                    return false; 
+                    return false;
 
-                try
-                {
+                try {
                     IntPtr root = XDefaultRootWindow(display);
-                    int status = XQueryPointer(display, root, out _, out _, out int rootX, out int rootY, out int _, out int _, out uint _);
+                    int status = XQueryPointer(
+                        display,
+                        root,
+                        out _,
+                        out _,
+                        out int rootX,
+                        out int rootY,
+                        out int _,
+                        out int _,
+                        out uint _);
                     if (status == 0)
                         return false;
                     cursor = new PixelPoint(rootX, rootY);
                     return true;
-                }
-                finally
-                {
+                } finally {
                     int closeResult = XCloseDisplay(display);
                     if (closeResult != 0)
-                    {
                         // 可选：记录日志（非致命错误）
                         LoggerService.Warning($"XCloseDisplay failed with code: {closeResult}");
-                    }
                 }
             }
 
             LoggerService.Warning("非桌面平台，或不支持的桌面环境！");
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             if (errorToRecord)
                 return false;
 
@@ -302,40 +268,43 @@ public static partial class DesktopPlayControlService
         return false;
     }
 
-    private static bool TryGetCurrentScreenBounds(PixelPoint cursor, out PixelRect bounds)
-    {
+    private static bool TryGetCurrentScreenBounds(PixelPoint cursor, out PixelRect bounds) {
         bounds = default;
-        var screens = App.TopLevel?.Screens;
-        var screen = screens?.ScreenFromPoint(cursor) ?? screens?.Primary;
+        Screens? screens = App.TopLevel?.Screens;
+        Screen? screen = screens?.ScreenFromPoint(cursor) ?? screens?.Primary;
         if (screen == null)
             return false;
         bounds = screen.WorkingArea;
         return true;
     }
 
-    private static bool IsInTopCenterRegion(PixelPoint cursor, PixelRect bounds)
-    {
+    private static bool IsInTopCenterRegion(PixelPoint cursor, PixelRect bounds) {
         int regionWidth = bounds.Width / 3;
         int regionX = bounds.X + (bounds.Width - regionWidth) / 2;
         int regionY = bounds.Y;
         int regionHeight = Math.Min(_desktopLyricConfig.DesktopPlayControlTriggerDistance, bounds.Height);
 
-        return cursor.X >= regionX && cursor.X <= regionX + regionWidth &&
-               cursor.Y >= regionY && cursor.Y <= regionY + regionHeight;
+        return cursor.X >= regionX &&
+               cursor.X <= regionX + regionWidth &&
+               cursor.Y >= regionY &&
+               cursor.Y <= regionY + regionHeight;
     }
 
-    private static void OnWindowPointerEntered(object? sender, PointerEventArgs e)
-    {
-        isPointerOverWindow = true;
+    private static void OnWindowPointerEntered(object? sender, PointerEventArgs e) { isPointerOverWindow = true; }
+
+    private static void OnWindowPointerExited(object? sender, PointerEventArgs e) { isPointerOverWindow = false; }
+
+    private static void OnWindowClosed(object? sender, EventArgs e) { window = null; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct WinPoint {
+        public int X;
+        public int Y;
     }
 
-    private static void OnWindowPointerExited(object? sender, PointerEventArgs e)
-    {
-        isPointerOverWindow = false;
-    }
-
-    private static void OnWindowClosed(object? sender, EventArgs e)
-    {
-        window = null;
+    [StructLayout(LayoutKind.Sequential)]
+    private struct CgPoint {
+        public double X;
+        public double Y;
     }
 }

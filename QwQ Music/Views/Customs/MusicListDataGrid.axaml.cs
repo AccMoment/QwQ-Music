@@ -21,12 +21,12 @@ public partial class MusicListDataGrid : TemplatedControl {
             (o, v) => o.IsCustomizable = v,
             true);
 
+    private DataGrid? _data;
+
     public bool IsCustomizable {
         get;
         set => SetAndRaise(IsCustomizableProperty, ref field, value);
     }
-
-    private DataGrid? _data;
 
     private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e) {
         if (_data is null)

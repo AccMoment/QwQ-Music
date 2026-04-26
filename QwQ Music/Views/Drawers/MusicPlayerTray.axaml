@@ -38,8 +38,11 @@
 
         <customs:MusicAlbumCover
             Classes="RoundAlbum"
+            Width="{Binding $self.Bounds.Height}"
+            Margin="4"
             Classes.AlbumCoverRotate="{Binding AudioPlayManager.IsPlaying}"
-            Thumbnail="{Binding AudioPlayManager.CurrentMusicItem.Model.Thumbnail}">
+            Thumbnail="{Binding AudioPlayManager.CurrentMusicItem.Model.Thumbnail}"
+            IsAutoRoundedCorners="True">
 
             <customs:MusicAlbumCover.RenderTransform>
                 <RotateTransform Angle="{Binding AlbumCoverCurrentAngle, Mode=OneWayToSource}" />
@@ -55,7 +58,7 @@
                 VerticalAlignment="Center"
                 Width="60">
 
-        <TextBlock Text="{Binding (managers:AudioPlayManager).Instance.CurrentMusicItem.Model.Title}"
+        <TextBlock Text="{Binding AudioPlayManager.CurrentMusicItem.Model.Title}"
                    FontWeight="Bold"
                    ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}"
                    Padding="0" />
@@ -174,7 +177,7 @@
         Margin="0,0,0,10"
         RowDefinitions="*,Auto">
 
-        <customs:MusicPlayControllers Spacing="10"/>
+        <customs:MusicPlayControllers Spacing="10" />
         <!--  进度条  -->
         <Slider
             Grid.Column="0"

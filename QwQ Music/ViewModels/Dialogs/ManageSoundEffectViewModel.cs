@@ -7,39 +7,26 @@ using QwQ_Music.ViewModels.Bases;
 
 namespace QwQ_Music.ViewModels.Dialogs;
 
-public partial class ManageSoundEffectViewModel : DataVerifyModelBase, IDialogContext
-{
-    public Dictionary<string,bool> BuiltInSoundEffects { get; } = ConfigManager.SoundModifierConfig.SoundEffectConfig.BuiltInSoundEffects;
-    
-    
+public partial class ManageSoundEffectViewModel : DataVerifyModelBase, IDialogContext {
+    public Dictionary<string, bool> BuiltInSoundEffects { get; } =
+        ConfigManager.SoundModifierConfig.SoundEffectConfig.BuiltInSoundEffects;
+
+
+    public void Close() { RequestClose?.Invoke(this, null); }
+
+    public event EventHandler<object?>? RequestClose;
+
+
     [RelayCommand]
-    private void ChangeEnabledStatus(string soundEffectName)
-    {
+    private void ChangeEnabledStatus(string soundEffectName) {
         BuiltInSoundEffects[soundEffectName] = !BuiltInSoundEffects[soundEffectName];
     }
 
-    
-    public void Close()
-    {
-        RequestClose?.Invoke(this, null);
-    }
-
-    public event EventHandler<object?>? RequestClose;
-    
     [RelayCommand]
-    private void Ok()
-    {
-        Close(true);
-    }
+    private void Ok() { Close(true); }
 
     [RelayCommand]
-    private void Cancel()
-    {
-        Close();
-    }
+    private void Cancel() { Close(); }
 
-    public void Close(bool result)
-    {
-        RequestClose?.Invoke(this, result);
-    }
+    public void Close(bool result) { RequestClose?.Invoke(this, result); }
 }

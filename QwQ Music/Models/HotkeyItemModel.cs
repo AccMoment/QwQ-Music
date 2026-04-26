@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Avalonia.Collections;
 using Avalonia.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -97,11 +98,10 @@ public partial class HotkeyItemModel : ObservableObject {
     public void UpdateKeyGestures() {
         KeyGestures.Clear();
 
-        if (!_config.FunctionToKeyMap.TryGetValue(Function, out var gestures))
+        if (!_config.FunctionToKeyMap.TryGetValue(Function, out List<SerializableKeyGesture>? gestures))
             return;
 
-        foreach (var gesture in gestures) {
+        foreach (SerializableKeyGesture gesture in gestures)
             KeyGestures.Add(gesture.ToKeyGesture());
-        }
     }
 }

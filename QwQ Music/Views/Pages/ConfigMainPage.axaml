@@ -102,8 +102,8 @@
             </CompositePageTransition>
         </Carousel.PageTransition>
 
-        <pages:UiConfigPage />
-        <pages:PlayConfigPage />
+        <pages:ThemeConfigPage />
+        <pages:PlayerConfigPage />
         <pages:LyricConfigPage />
         <pages:SoundEffectConfigPage />
         <pages:SystemConfigPage />
@@ -127,8 +127,8 @@
                         <Style Selector="TextBlock.Default">
                             <Setter Property="Text"
                                     Value="{Binding LastSavedTime,StringFormat='上次保存时间 : {0:HH:mm:ss}'}" />
-                            <Setter Property="Foreground" Value="{DynamicResource SemiBlue4}"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Foreground" Value="{DynamicResource SemiBlue4}" />
+                            <Setter Property="FontWeight" Value="Bold" />
                         </Style>
                     </TextBlock.Styles>
 

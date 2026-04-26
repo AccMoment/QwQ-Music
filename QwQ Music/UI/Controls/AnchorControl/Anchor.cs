@@ -155,7 +155,7 @@ public class Anchor : ItemsControl {
             if (Items[i] is not AnchorItem item)
                 continue;
 
-            var point = item.TranslatePoint(new Point(0, 0), _scrollViewer);
+            Point? point = item.TranslatePoint(new Point(0, 0), _scrollViewer);
 
             if (!point.HasValue)
                 continue;
@@ -180,11 +180,10 @@ public class Anchor : ItemsControl {
         int stickyIndex = FindStickyIndex();
 
         // 更新粘性头部内容
-        if (stickyIndex < Items.Count && Items[stickyIndex] is AnchorItem stickyItem) {
+        if (stickyIndex < Items.Count && Items[stickyIndex] is AnchorItem stickyItem)
             StickyHeader = stickyItem.Header;
-        } else {
+        else
             StickyHeader = null;
-        }
 
         // 处理推出动画效果
         UpdateStickyHeaderAnimation(stickyIndex);
@@ -200,7 +199,7 @@ public class Anchor : ItemsControl {
             return;
         }
 
-        var nextPoint = nextItem.TranslatePoint(new Point(0, 0), _scrollViewer);
+        Point? nextPoint = nextItem.TranslatePoint(new Point(0, 0), _scrollViewer);
 
         if (!nextPoint.HasValue) {
             ResetStickyHeaderTransform();
@@ -209,11 +208,10 @@ public class Anchor : ItemsControl {
         }
 
         // 当下一个项目进入粘性头部区域时，应用推出动画
-        if (nextPoint.Value.Y < _stickyHeader.Bounds.Height && nextPoint.Value.Y > 0) {
+        if (nextPoint.Value.Y < _stickyHeader.Bounds.Height && nextPoint.Value.Y > 0)
             _stickyHeader.RenderTransform = new TranslateTransform(0, nextPoint.Value.Y - _stickyHeader.Bounds.Height);
-        } else {
+        else
             ResetStickyHeaderTransform();
-        }
     }
 
     private void ResetStickyHeaderTransform() { _stickyHeader?.RenderTransform = new TranslateTransform(0, 0); }
@@ -247,7 +245,7 @@ public class Anchor : ItemsControl {
 
     private async Task ScrollToItemAsync(AnchorItem container, ScrollViewer scrollViewer) {
         try {
-            var point = container.TranslatePoint(new Point(0, 0), scrollViewer);
+            Point? point = container.TranslatePoint(new Point(0, 0), scrollViewer);
 
             if (!point.HasValue)
                 return;
@@ -261,11 +259,10 @@ public class Anchor : ItemsControl {
                 return;
             }
 
-            if (AnimatedScroll) {
+            if (AnimatedScroll)
                 await AnimateScrollAsync(scrollViewer, to);
-            } else {
+            else
                 scrollViewer.Offset = new Vector(scrollViewer.Offset.X, to);
-            }
         } catch (Exception) {
             // 忽略异常
         } finally {
@@ -274,12 +271,11 @@ public class Anchor : ItemsControl {
     }
 
     private async Task AnimateScrollAsync(ScrollViewer scrollViewer, double to) {
-        if (_scrollCts != null) {
+        if (_scrollCts != null)
             await _scrollCts.CancelAsync();
-        }
 
         _scrollCts = new CancellationTokenSource();
-        var token = _scrollCts.Token;
+        CancellationToken token = _scrollCts.Token;
 
         var animation = new Animation {
             Duration = ScrollDuration,
@@ -301,9 +297,8 @@ public class Anchor : ItemsControl {
     }
 
     private void OnScrollViewerSizeChanged(object? sender, SizeChangedEventArgs sizeChangedEventArgs) {
-        if (sizeChangedEventArgs.HeightChanged) {
+        if (sizeChangedEventArgs.HeightChanged)
             UpdateLastItemMinHeight();
-        }
     }
 
     private void UpdateLastItemMinHeight() {

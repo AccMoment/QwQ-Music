@@ -6,24 +6,24 @@ using Avalonia.Threading;
 using QwQ_Music.Common.Services;
 using QwQ_Music.ViewModels.Windows;
 
-namespace QwQ_Music.Views.Windows;
+namespace QwQ_Music.Windows;
 
 public partial class DesktopPlayControlWindow : Window {
+    public static readonly StyledProperty<bool> StartMovingOutProperty =
+        AvaloniaProperty.Register<DesktopPlayControlWindow, bool>(nameof(StartMovingOut));
+
+    public static readonly StyledProperty<TimeSpan> RemoveAnimationDurationProperty =
+        AvaloniaProperty.Register<DesktopPlayControlWindow, TimeSpan>(nameof(RemoveAnimationDuration));
+
     public DesktopPlayControlWindow() {
         InitializeComponent();
         DataContext = new DesktopPlayControlWindowViewModel();
     }
 
-    public static readonly StyledProperty<bool> StartMovingOutProperty =
-        AvaloniaProperty.Register<DesktopPlayControlWindow, bool>(nameof(StartMovingOut));
-
     public bool StartMovingOut {
         get => GetValue(StartMovingOutProperty);
         set => SetValue(StartMovingOutProperty, value);
     }
-
-    public static readonly StyledProperty<TimeSpan> RemoveAnimationDurationProperty =
-        AvaloniaProperty.Register<DesktopPlayControlWindow, TimeSpan>(nameof(RemoveAnimationDuration));
 
     public TimeSpan RemoveAnimationDuration {
         get => GetValue(RemoveAnimationDurationProperty);
@@ -37,17 +37,15 @@ public partial class DesktopPlayControlWindow : Window {
         if (change.Property == IsVisibleProperty) {
             object? newValue = change.NewValue;
 
-            if (newValue is true) {
+            if (newValue is true)
                 StartMovingOut = false;
-            }
         }
 
         if (change.Property != StartMovingOutProperty)
             return;
 
-        if (change.NewValue is true) {
+        if (change.NewValue is true)
             BeginFadeOut();
-        }
     }
 
     private void BeginFadeOut() {

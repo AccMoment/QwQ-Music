@@ -5,8 +5,8 @@
              xmlns:pages="clr-namespace:QwQ_Music.ViewModels.Pages"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              Margin="0,10"
-             x:DataType="pages:MiaomiaoLittleToyPageViewModel"
-             x:Class="QwQ_Music.Views.Pages.MiaomiaoLittleToyPage">
+             x:DataType="pages:JoyViewModel"
+             x:Class="QwQ_Music.Views.Pages.JoyPage">
 
     <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Spacing="10" Margin="10,0">
         <Button Command="{Binding ClickMeButtonCommand}" Content="❤️" ToolTip.Tip="给你比❤️" />

@@ -10,7 +10,7 @@
         WindowStartupLocation="Manual"
         Title="QwQ Music • 桌面歌词"
         Icon="resm:QwQ_Music.Assets.EmbeddedRes.AppIcon.ico"
-        x:Class="QwQ_Music.Views.Windows.DesktopLyricsWindow"
+        x:Class="QwQ_Music.Windows.DesktopLyricsWindow"
         x:DataType="windows:DesktopLyricsWindowViewModel"
         xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -74,7 +74,7 @@
 
                 <Style Selector="StackPanel">
                     <Setter Property="VerticalAlignment" Value="Center" />
-                    <Setter Property="Orientation" Value="Vertical"/>
+                    <Setter Property="Orientation" Value="Vertical" />
                 </Style>
 
                 <Style Selector="StackPanel > control|TextPath">

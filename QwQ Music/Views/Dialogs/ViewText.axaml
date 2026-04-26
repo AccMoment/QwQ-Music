@@ -14,10 +14,10 @@
 
         <SelectableTextBlock Margin="10,0"
                              TextWrapping="Wrap"
-                             MaxLines="5" 
+                             MaxLines="5"
                              MaxHeight="600"
                              MaxWidth="800"
-                             MinWidth="400" 
+                             MinWidth="400"
                              MinHeight="300"
                              Text="{Binding Text}" />
     </ScrollViewer>

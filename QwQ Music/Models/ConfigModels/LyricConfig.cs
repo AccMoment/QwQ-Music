@@ -10,37 +10,24 @@ using QwQ_Music.Common;
 
 namespace QwQ_Music.Models.ConfigModels;
 
-public class ColorJsonConverter : JsonConverter<Color>
-{
-    public override Color Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
+public class ColorJsonConverter : JsonConverter<Color> {
+    public override Color Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
         if (reader.TokenType != JsonTokenType.StartObject)
-        {
             throw new JsonException();
-        }
 
-        byte a = 255,
-            r = 0,
-            g = 0,
-            b = 0;
+        byte a = 255, r = 0, g = 0, b = 0;
 
-        while (reader.Read())
-        {
+        while (reader.Read()) {
             if (reader.TokenType == JsonTokenType.EndObject)
-            {
                 break;
-            }
 
             if (reader.TokenType != JsonTokenType.PropertyName)
-            {
                 throw new JsonException();
-            }
 
             string? propertyName = reader.GetString();
             reader.Read();
 
-            switch (propertyName)
-            {
+            switch (propertyName) {
                 case "A":
                     a = reader.GetByte();
 
@@ -63,8 +50,7 @@ public class ColorJsonConverter : JsonConverter<Color>
         return new Color(a, r, g, b);
     }
 
-    public override void Write(Utf8JsonWriter writer, Color value, JsonSerializerOptions options)
-    {
+    public override void Write(Utf8JsonWriter writer, Color value, JsonSerializerOptions options) {
         writer.WriteStartObject();
         writer.WriteNumber("A", value.A);
         writer.WriteNumber("R", value.R);
@@ -74,35 +60,24 @@ public class ColorJsonConverter : JsonConverter<Color>
     }
 }
 
-public class PixelPointJsonConverter : JsonConverter<PixelPoint>
-{
-    public override PixelPoint Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
+public class PixelPointJsonConverter : JsonConverter<PixelPoint> {
+    public override PixelPoint Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
         if (reader.TokenType != JsonTokenType.StartObject)
-        {
             throw new JsonException();
-        }
 
-        int x = 0,
-            y = 0;
+        int x = 0, y = 0;
 
-        while (reader.Read())
-        {
+        while (reader.Read()) {
             if (reader.TokenType == JsonTokenType.EndObject)
-            {
                 break;
-            }
 
             if (reader.TokenType != JsonTokenType.PropertyName)
-            {
                 throw new JsonException();
-            }
 
             string? propertyName = reader.GetString();
             reader.Read();
 
-            switch (propertyName)
-            {
+            switch (propertyName) {
                 case "X":
                     x = reader.GetInt32();
 
@@ -117,8 +92,7 @@ public class PixelPointJsonConverter : JsonConverter<PixelPoint>
         return new PixelPoint(x, y);
     }
 
-    public override void Write(Utf8JsonWriter writer, PixelPoint value, JsonSerializerOptions options)
-    {
+    public override void Write(Utf8JsonWriter writer, PixelPoint value, JsonSerializerOptions options) {
         writer.WriteStartObject();
         writer.WriteNumber("X", value.X);
         writer.WriteNumber("Y", value.Y);
@@ -126,56 +100,61 @@ public class PixelPointJsonConverter : JsonConverter<PixelPoint>
     }
 }
 
-public class LyricConfig : ObservableObject
-{
+public class LyricConfig : ObservableObject {
     public RolledLyricConfig RolledLyric { get; set; } = new();
 
     public DesktopLyricConfig DesktopLyric { get; set; } = new();
 
-    // ReSharper disable once CollectionNeverQueried.Global
     [JsonIgnore]
-    public static Dictionary<HorizontalAlignment, string> TextAlignments { get; } = new()
-    {
-        [HorizontalAlignment.Left] = "左对齐",
-        [HorizontalAlignment.Center] = "居中",
-        [HorizontalAlignment.Right] = "右对齐"
+    public static Dictionary<HorizontalAlignment, string> TextAlignments { get; } = new() {
+        [HorizontalAlignment.Left] = "左对齐", [HorizontalAlignment.Center] = "居中", [HorizontalAlignment.Right] = "右对齐"
     };
 }
 
-public partial class RolledLyricConfig : ObservableObject
-{
-    [ObservableProperty] public partial HorizontalAlignment LyricTextAlignment { get; set; } = HorizontalAlignment.Left;
+public partial class RolledLyricConfig : ObservableObject {
+    [ObservableProperty]
+    public partial HorizontalAlignment LyricTextAlignment { get; set; } = HorizontalAlignment.Left;
 
-    [ObservableProperty] public partial bool ShowTranslation { get; set; }
+    [ObservableProperty]
+    public partial bool ShowTranslation { get; set; }
 
-    [ObservableProperty] public partial string? RolledLyricsFont { get; set; } = AppResources.DEFAULT_FONT_KEY;
+    [ObservableProperty]
+    public partial string? RolledLyricsFont { get; set; } = AppResources.DEFAULT_FONT_KEY;
 
-    [ObservableProperty] public partial double PrimaryFontSize { get; set; } = 16;
+    [ObservableProperty]
+    public partial double PrimaryFontSize { get; set; } = 16;
 
-    [ObservableProperty] public partial double TranslationFontSize { get; set; } = 14;
+    [ObservableProperty]
+    public partial double TranslationFontSize { get; set; } = 14;
 
-    [ObservableProperty] public partial int LyricsLineSpacing { get; set; }
+    [ObservableProperty]
+    public partial int LyricsLineSpacing { get; set; }
 
-    [ObservableProperty] public partial int TranslationSpacing { get; set; } = 5;
+    [ObservableProperty]
+    public partial int TranslationSpacing { get; set; } = 5;
 }
 
-public partial class DesktopLyricConfig : ObservableObject
-{
+public partial class DesktopLyricConfig : ObservableObject {
     public bool LyricIsEnabled { get; set; }
 
     public bool LockLyricWindow { get; set; }
 
-    [ObservableProperty] public partial bool LyricIsDoubleLine { get; set; } = true;
+    [ObservableProperty]
+    public partial bool LyricIsDoubleLine { get; set; } = true;
 
-    [ObservableProperty] public partial bool LyricIsDualLang { get; set; }
+    [ObservableProperty]
+    public partial bool LyricIsDualLang { get; set; }
 
     public bool DesktopPlayControlIsEnabled { get; set; }
 
-    [ObservableProperty] public partial int DesktopPlayControlTriggerDistance { get; set; } = 10;
-    
-    [ObservableProperty] public partial bool LyricIsVertical { get; set; }
+    [ObservableProperty]
+    public partial int DesktopPlayControlTriggerDistance { get; set; } = 10;
 
-    [ObservableProperty] public partial string DesktopLyricsFont { get; set; } = AppResources.DEFAULT_FONT_KEY;
+    [ObservableProperty]
+    public partial bool LyricIsVertical { get; set; }
+
+    [ObservableProperty]
+    public partial string DesktopLyricsFont { get; set; } = AppResources.DEFAULT_FONT_KEY;
 
     [ObservableProperty]
     [JsonConverter(typeof(PixelPointJsonConverter))]
@@ -185,7 +164,8 @@ public partial class DesktopLyricConfig : ObservableObject
     [NotifyPropertyChangedFor(nameof(LyricMargin))]
     public partial double LyricSpacing { get; set; } = 10;
 
-    [ObservableProperty] public partial double LyricWidth { get; set; } = 500;
+    [ObservableProperty]
+    public partial double LyricWidth { get; set; } = 500;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowCornerRadius))]
@@ -195,7 +175,8 @@ public partial class DesktopLyricConfig : ObservableObject
 
     public Thickness LyricMargin => new(LyricSpacing);
 
-    [ObservableProperty] public partial HorizontalAlignment LyricTextAlignment { get; set; } = HorizontalAlignment.Center;
+    [ObservableProperty]
+    public partial HorizontalAlignment LyricTextAlignment { get; set; } = HorizontalAlignment.Center;
 
     [JsonConverter(typeof(ColorJsonConverter))]
     [ObservableProperty]
@@ -225,19 +206,27 @@ public partial class DesktopLyricConfig : ObservableObject
     [JsonConverter(typeof(ColorJsonConverter))]
     public partial Color LyricBackground { get; set; }
 
-    [ObservableProperty] public partial double LyricMainFontSize { get; set; } = 20;
+    [ObservableProperty]
+    public partial double LyricMainFontSize { get; set; } = 20;
 
-    [ObservableProperty] public partial double LyricAltFontSize { get; set; } = 18;
+    [ObservableProperty]
+    public partial double LyricAltFontSize { get; set; } = 18;
 
-    [ObservableProperty] public partial double LyricMainLetterSpacing { get; set; } = 2;
+    [ObservableProperty]
+    public partial double LyricMainLetterSpacing { get; set; } = 2;
 
-    [ObservableProperty] public partial double LyricAltLetterSpacing { get; set; } = 2;
+    [ObservableProperty]
+    public partial double LyricAltLetterSpacing { get; set; } = 2;
 
-    [ObservableProperty] public partial double LyricMainStrokeThickness { get; set; } = 3;
+    [ObservableProperty]
+    public partial double LyricMainStrokeThickness { get; set; } = 3;
 
-    [ObservableProperty] public partial double LyricAltStrokeThickness { get; set; } = 3;
+    [ObservableProperty]
+    public partial double LyricAltStrokeThickness { get; set; } = 3;
 
-    [ObservableProperty] public partial double LyricMainTranslateSpacing { get; set; } = 2;
+    [ObservableProperty]
+    public partial double LyricMainTranslateSpacing { get; set; } = 2;
 
-    [ObservableProperty] public partial double LyricAltTranslateSping { get; set; } = 2;
+    [ObservableProperty]
+    public partial double LyricAltTranslateSping { get; set; } = 2;
 }

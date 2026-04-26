@@ -7,14 +7,12 @@ namespace QwQ_Music.Common.Utilities;
 /// <summary>
 ///     内存清理工具类，支持跨平台主动触发垃圾回收并返回内存信息。
 /// </summary>
-public static class MemoryCleaner
-{
+public static class MemoryCleaner {
     /// <summary>
     ///     主动触发垃圾回收，并返回清理后的内存信息。
     /// </summary>
     /// <returns>清理后的内存信息字符串</returns>
-    public static string CleanAndGetInfo()
-    {
+    public static string CleanAndGetInfo() {
         // 获取清理前的内存信息
         long beforeTotalMemory = GC.GetTotalMemory(false);
         using var beforeProc = Process.GetCurrentProcess();
@@ -39,16 +37,12 @@ public static class MemoryCleaner
         info += $"托管内存: {afterTotalMemory / 1024 / 1024} MB";
 
         if (releasedManagedMemory > 0)
-        {
             info += $" (释放了 {releasedManagedMemory / 1024 / 1024} MB)";
-        }
 
         info += $"\n进程物理内存: {afterWorkingSet / 1024 / 1024} MB";
 
         if (releasedWorkingSet > 0)
-        {
             info += $" (释放了 {releasedWorkingSet / 1024 / 1024} MB)";
-        }
 
         return info;
     }
