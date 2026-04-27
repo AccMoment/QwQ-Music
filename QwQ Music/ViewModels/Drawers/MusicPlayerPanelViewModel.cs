@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Timers;
 using Avalonia.Input;
 using Avalonia.Media;
@@ -17,13 +13,14 @@ using QwQ_Music.Models;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels.Bases;
 using MusicItemsManager = QwQ_Music.Common.Managers.MusicItemsManager;
+using Timer = System.Timers.Timer;
 
 namespace QwQ_Music.ViewModels.Drawers;
 
-public partial class MusicCoverPageViewModel : NavigableViewModel {
+public partial class MusicPlayerPanelViewModel : NavigableViewModel {
     private const int _COLOR_COUNT = 4;
 
-    private static readonly VisualConfig _visualConfig = ConfigManager.UiConfig.VisualConfig;
+    public static VisualConfig VisualConfig => ConfigManager.UiConfig.VisualConfig;
 
     private static readonly Color[] _defaultColors = [
         Color.Parse("#FFE2D9"), Color.Parse("#F3ECFE"), Color.Parse("#DFE7FF"), Color.Parse("#E4F2FF")
@@ -34,7 +31,7 @@ public partial class MusicCoverPageViewModel : NavigableViewModel {
     private static readonly IBrush _lightThemeBrush = Brush.Parse("#88FFFFFF");
     private Timer? _coverDebounce;
 
-    public MusicCoverPageViewModel() : base("播放") {
+    public MusicPlayerPanelViewModel() : base("播放") {
         _coverDebounce = new Timer(1000) { AutoReset = false };
 
         if (AudioPlayManager.CurrentMusicItem != PlaylistItemModel.RefDefault)
@@ -76,8 +73,6 @@ public partial class MusicCoverPageViewModel : NavigableViewModel {
         }
     } = CacheManager.NotExist;
 
-    public static bool IsStaticBackground => _visualConfig.IsStaticBackground;
-
     [ObservableProperty]
     public partial Color DropShadowColor { get; private set; } = Avalonia.Media.Colors.Black;
 
@@ -112,24 +107,35 @@ public partial class MusicCoverPageViewModel : NavigableViewModel {
         AppDomain.CurrentDomain.ProcessExit -= CurrentDomain_OnProcessExit;
     }
 
-    private void OnMusicItemChanged(object? sender, MusicItemChangedEventArgs args) {
-        UpdateColorsListAsync(args.NewItem.Model).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
-        OnPropertyChanged(nameof(Colors));
+    private async void OnMusicItemChanged(object? sender, MusicItemChangedEventArgs args) {
         _ = Cover;
-        Dispatcher.UIThread.Post(UpdateThemeVariantFromColors);
+        _ = Task.Run(async Task? () => {
+                    try {
+                        await UpdateColorsListAsync(args.NewItem.Model).ConfigureAwait(false);
+                        await Dispatcher.UIThread.InvokeAsync(UpdateThemeVariantFromColors);
+                    } catch (Exception ex) {
+                        LoggerService.HandleException(Task.FromException(ex));
+                    }
+                })
+                .ContinueWith(LoggerService.HandleException)
+                .ConfigureAwait(false);
     }
 
     private async Task UpdateColorsListAsync(MusicItemModel musicItem) {
+        Color[] resolvedColors;
+
         // 如果没有封面Id，直接使用默认颜色
         if (!musicItem.HasCover) {
-            Colors = _defaultColors;
+            resolvedColors = _defaultColors;
+            await Dispatcher.UIThread.InvokeAsync(() => Colors = resolvedColors);
 
             return;
         }
 
         // 尝试从已缓存的颜色中获取
         if (musicItem.CoverColors is { Length: >= _COLOR_COUNT }) {
-            Colors = [.. musicItem.CoverColors.Select(Color.Parse)];
+            resolvedColors = [.. musicItem.CoverColors.Select(Color.Parse)];
+            await Dispatcher.UIThread.InvokeAsync(() => Colors = resolvedColors);
 
             return;
         }
@@ -138,7 +144,8 @@ public partial class MusicCoverPageViewModel : NavigableViewModel {
         Color[]? colorsList = await GetColorPaletteAsync(musicItem.Thumbnail, _COLOR_COUNT).ConfigureAwait(false);
 
         // 使用提取的颜色，为null则使用默认颜色
-        Colors = colorsList ?? _defaultColors;
+        resolvedColors = colorsList ?? _defaultColors;
+        await Dispatcher.UIThread.InvokeAsync(() => Colors = resolvedColors);
 
         // 缓存提取的颜色
         if (colorsList != null) {
@@ -182,10 +189,10 @@ public partial class MusicCoverPageViewModel : NavigableViewModel {
             await ColorExtraction.GetColorPaletteFromBitmapAsync(
                                      cover,
                                      colorCount,
-                                     _visualConfig.SelectedColorExtractionAlgorithm,
-                                     _visualConfig.IgnoreWhite,
-                                     _visualConfig.ToLab,
-                                     _visualConfig.UseKMeansPp)
+                                     VisualConfig.SelectedColorExtractionAlgorithm,
+                                     VisualConfig.IgnoreWhite,
+                                     VisualConfig.ToLab,
+                                     VisualConfig.UseKMeansPp)
                                  .ConfigureAwait(false);
     }
 

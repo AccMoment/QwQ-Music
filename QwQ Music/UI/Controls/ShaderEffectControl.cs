@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using Avalonia;
 using Avalonia.Controls;
@@ -36,9 +35,19 @@ public class ShaderEffectControl : Control {
     public static readonly StyledProperty<Color[]> ColorsProperty =
         AvaloniaProperty.Register<ShaderEffectControl, Color[]>(nameof(Colors));
 
+    // 添加颜色过渡时长属性
+    public static readonly StyledProperty<TimeSpan> ColorTransitionDurationProperty =
+        AvaloniaProperty.Register<ShaderEffectControl, TimeSpan>(
+            nameof(ColorTransitionDuration),
+            TimeSpan.FromMilliseconds(400));
+
     private DispatcherTimer? _animationTimer;
-    private bool _isAnimationRunning;
-    private DateTime _lastRenderTime = DateTime.Now;
+    private bool _isTimerRunning;
+    private Color[] _displayColors;
+    private Color[]? _transitionStartColors;
+    private DateTime _transitionStartTime;
+    private Color[]? _transitionTargetColors;
+    private bool _isColorTransitionRunning;
     private Vector2? _mousePosition;
 
     private ShaderService? _shaderService;
@@ -48,6 +57,7 @@ public class ShaderEffectControl : Control {
     /// </summary>
     public ShaderEffectControl() {
         ClipToBounds = true;
+        _displayColors = NormalizeColors(Colors);
 
         // 启用鼠标输入
         PointerMoved += OnPointerMoved;
@@ -57,6 +67,9 @@ public class ShaderEffectControl : Control {
 
         // 监听动画状态属性变化
         this.GetObservable(IsEnableAnimationProperty).Subscribe(OnIsAnimatingChanged);
+
+        // 监听性能模式变化
+        this.GetObservable(PerformanceModeProperty).Subscribe(OnPerformanceModeChanged);
 
         // 监听颜色列表属性变化
         this.GetObservable(ColorsProperty).Subscribe(OnColorsChanged);
@@ -94,31 +107,95 @@ public class ShaderEffectControl : Control {
         set => SetValue(ColorsProperty, value);
     }
 
+    /// <summary>
+    ///     颜色切换的过渡时长
+    /// </summary>
+    public TimeSpan ColorTransitionDuration {
+        get => GetValue(ColorTransitionDurationProperty);
+        set => SetValue(ColorTransitionDurationProperty, value);
+    }
+
     private void OnShaderCodeChanged(string shaderCode) {
         if (string.IsNullOrEmpty(shaderCode))
             return;
 
-        _shaderService = new ShaderService(shaderCode) { Colors = Colors };
+        _shaderService = new ShaderService(shaderCode) { Colors = _displayColors };
 
         InvalidateVisual();
     }
 
     private void OnColorsChanged(Color[] colors) {
-        if (_shaderService == null)
+        Color[] targetColors = NormalizeColors(colors);
+
+        if (_displayColors.Length == 0) {
+            _displayColors = targetColors;
+
+            _shaderService?.Colors = _displayColors;
+
+            InvalidateVisual();
+
+            return;
+        }
+
+        if (_shaderService == null) {
+            _displayColors = targetColors;
+
+            return;
+        }
+
+        if (AreColorsEqual(_displayColors, targetColors))
             return;
 
-        _shaderService.Colors = colors;
+        if (ColorTransitionDuration <= TimeSpan.Zero) {
+            _isColorTransitionRunning = false;
+            _transitionStartColors = null;
+            _transitionTargetColors = null;
+            _displayColors = targetColors;
+            _shaderService.Colors = _displayColors;
+            RefreshTimerInterval();
+            InvalidateVisual();
+
+            return;
+        }
+
+        _transitionStartColors = _displayColors.ToArray();
+        _transitionTargetColors = targetColors;
+        _transitionStartTime = DateTime.Now;
+        _isColorTransitionRunning = true;
+
+        RefreshTimerInterval();
+        EnsureTimerRunning();
         InvalidateVisual();
     }
 
-    private void OnIsAnimatingChanged(bool isAnimating) {
-        if (isAnimating == _isAnimationRunning)
-            return;
-
-        if (isAnimating)
-            StartAnimation();
+    private void OnIsAnimatingChanged(bool _) {
+        if (ShouldKeepTimerRunning())
+            EnsureTimerRunning();
         else
             StopAnimation();
+    }
+
+    private void OnPerformanceModeChanged(ShaderPerformanceMode _) {
+        RefreshTimerInterval();
+    }
+
+    private bool ShouldKeepTimerRunning() { return IsEnableAnimation || _isColorTransitionRunning; }
+
+    private void EnsureTimerRunning() {
+        if (!ShouldKeepTimerRunning() || _isTimerRunning)
+            return;
+
+        _isTimerRunning = true;
+
+        // 使用DispatcherTimer代替直接递归调用
+        if (_animationTimer == null) {
+            _animationTimer = new DispatcherTimer { Interval = GetActiveTimerInterval() };
+
+            _animationTimer.Tick += AnimationTimer_Tick;
+        }
+
+        RefreshTimerInterval();
+        _animationTimer.Start();
     }
 
     private void OnPointerMoved(object? sender, PointerEventArgs e) {
@@ -127,33 +204,22 @@ public class ShaderEffectControl : Control {
     }
 
     private void StartAnimation() {
-        if (!IsEnableAnimation || _isAnimationRunning)
-            return;
-
-        _isAnimationRunning = true;
-
-        // 使用DispatcherTimer代替直接递归调用
-        if (_animationTimer == null) {
-            _animationTimer = new DispatcherTimer { Interval = GetTimerInterval() };
-
-            _animationTimer.Tick += AnimationTimer_Tick;
-        }
-
-        _animationTimer.Start();
+        EnsureTimerRunning();
     }
 
     private void StopAnimation() {
-        _isAnimationRunning = false;
+        _isTimerRunning = false;
         _animationTimer?.Stop();
     }
 
     private void AnimationTimer_Tick(object? sender, EventArgs e) {
-        if (!_isAnimationRunning) {
-            _animationTimer?.Stop();
+        if (!ShouldKeepTimerRunning()) {
+            StopAnimation();
 
             return;
         }
 
+        RefreshTimerInterval();
         UpdateFrame();
     }
 
@@ -167,30 +233,151 @@ public class ShaderEffectControl : Control {
         };
     }
 
-    private void UpdateFrame() {
-        if (!IsEnableAnimation) {
-            _isAnimationRunning = false;
+    private TimeSpan GetActiveTimerInterval() {
+        TimeSpan baseInterval = GetTimerInterval();
 
+        // 颜色过渡期间将帧率翻倍（帧间隔减半），过渡结束后恢复基础帧率
+        if (_isColorTransitionRunning)
+            return TimeSpan.FromMilliseconds(Math.Max(1, baseInterval.TotalMilliseconds / 2.0));
+
+        return baseInterval;
+    }
+
+    private void RefreshTimerInterval() {
+        if (_animationTimer == null)
             return;
+
+        TimeSpan interval = GetActiveTimerInterval();
+        if (_animationTimer.Interval != interval)
+            _animationTimer.Interval = interval;
+    }
+
+    private void UpdateFrame() {
+        DateTime now = DateTime.Now;
+        bool shouldInvalidate = false;
+
+        if (_isColorTransitionRunning)
+            shouldInvalidate = UpdateColorTransition(now) || shouldInvalidate;
+
+        if (IsEnableAnimation)
+            shouldInvalidate = true;
+
+        if (shouldInvalidate)
+            InvalidateVisual();
+    }
+
+    private bool UpdateColorTransition(DateTime now) {
+        if (_transitionStartColors == null || _transitionTargetColors == null || _shaderService == null) {
+            _isColorTransitionRunning = false;
+            RefreshTimerInterval();
+
+            return false;
         }
 
-        DateTime now = DateTime.Now;
-        double elapsed = (now - _lastRenderTime).TotalMilliseconds;
+        double durationMs = ColorTransitionDuration.TotalMilliseconds;
 
-        // 根据性能模式限制帧率
-        double frameInterval = PerformanceMode switch {
-            ShaderPerformanceMode.HighQuality => 16, // ~60fps
-            ShaderPerformanceMode.Balanced    => 33, // ~30fps
-            ShaderPerformanceMode.PowerSaver  => 66, // ~15fps
-            _                                 => 33
-        };
+        if (durationMs <= 0) {
+            _displayColors = _transitionTargetColors.ToArray();
+            _shaderService.Colors = _displayColors;
+            _transitionStartColors = null;
+            _transitionTargetColors = null;
+            _isColorTransitionRunning = false;
+            RefreshTimerInterval();
 
-        // 限制帧率，避免过度渲染
-        if (!(elapsed > frameInterval))
-            return;
+            return true;
+        }
 
-        _lastRenderTime = now;
-        InvalidateVisual();
+        double progress = Math.Clamp((now - _transitionStartTime).TotalMilliseconds / durationMs, 0, 1);
+        double easedProgress = EaseInOut(progress);
+        _displayColors = InterpolateColors(_transitionStartColors, _transitionTargetColors, easedProgress);
+        _shaderService.Colors = _displayColors;
+
+        if (progress < 1)
+            return true;
+
+        _transitionStartColors = null;
+        _transitionTargetColors = null;
+        _isColorTransitionRunning = false;
+        RefreshTimerInterval();
+
+        return true;
+    }
+
+    private static Color[] NormalizeColors(Color[]? colors) { return colors?.ToArray() ?? []; }
+
+    private static bool AreColorsEqual(Color[] left, Color[] right) {
+        if (left.Length != right.Length)
+            return false;
+
+        for (int i = 0; i < left.Length; i++)
+            if (left[i] != right[i])
+                return false;
+
+        return true;
+    }
+
+    private static Color[] InterpolateColors(Color[] from, Color[] to, double progress) {
+        int colorCount = Math.Max(from.Length, to.Length);
+
+        if (colorCount == 0)
+            return [];
+
+        var result = new Color[colorCount];
+
+        for (int i = 0; i < colorCount; i++) {
+            Color start = GetColorAtOrFallback(from, i);
+            Color end = GetColorAtOrFallback(to, i);
+
+            double startR = SrgbToLinear(start.R / 255.0);
+            double startG = SrgbToLinear(start.G / 255.0);
+            double startB = SrgbToLinear(start.B / 255.0);
+            double endR = SrgbToLinear(end.R / 255.0);
+            double endG = SrgbToLinear(end.G / 255.0);
+            double endB = SrgbToLinear(end.B / 255.0);
+
+            byte alpha = LerpByte(start.A, end.A, progress);
+            byte red = ToByte(LinearToSrgb(LerpDouble(startR, endR, progress)));
+            byte green = ToByte(LinearToSrgb(LerpDouble(startG, endG, progress)));
+            byte blue = ToByte(LinearToSrgb(LerpDouble(startB, endB, progress)));
+
+            result[i] = Color.FromArgb(
+                alpha,
+                red,
+                green,
+                blue);
+        }
+
+        return result;
+    }
+
+    private static Color GetColorAtOrFallback(Color[] colors, int index) {
+        if (colors.Length == 0)
+            return Avalonia.Media.Colors.Transparent;
+
+        if (index < colors.Length)
+            return colors[index];
+
+        return colors[^1];
+    }
+
+    private static byte LerpByte(byte from, byte to, double progress) {
+        return (byte)Math.Clamp((int)Math.Round(from + (to - from) * progress), byte.MinValue, byte.MaxValue);
+    }
+
+    private static double LerpDouble(double from, double to, double progress) { return from + (to - from) * progress; }
+
+    private static double EaseInOut(double progress) { return progress * progress * (3.0 - 2.0 * progress); }
+
+    private static double SrgbToLinear(double value) {
+        return value <= 0.04045 ? value / 12.92 : Math.Pow((value + 0.055) / 1.055, 2.4);
+    }
+
+    private static double LinearToSrgb(double value) {
+        return value <= 0.0031308 ? value * 12.92 : 1.055 * Math.Pow(value, 1.0 / 2.4) - 0.055;
+    }
+
+    private static byte ToByte(double normalized) {
+        return (byte)Math.Clamp((int)Math.Round(normalized * 255.0), byte.MinValue, byte.MaxValue);
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e) {
@@ -231,7 +418,7 @@ public class ShaderEffectControl : Control {
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e) {
         base.OnAttachedToVisualTree(e);
 
-        if (IsEnableAnimation)
+        if (ShouldKeepTimerRunning())
             StartAnimation();
     }
 

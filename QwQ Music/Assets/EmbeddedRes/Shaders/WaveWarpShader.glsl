@@ -121,6 +121,10 @@ vec4 main(vec2 fragCoord) {
     vec3 finalComp = mix(layer1, layer2, smoothstep(0.5, -0.3, tuv.y));
     
     vec3 col = finalComp;
+
+    // Temporal dithering helps hide gradient banding on large luminance transitions.
+    float dither = (hash(fragCoord + vec2(float(iFrame), iTime * 37.0)).x - 0.5) / 255.0;
+    col = clamp(col + vec3(dither), 0.0, 1.0);
     
     return vec4(col, 1.0);
 }

@@ -1,4 +1,4 @@
-using System;
+using System.Diagnostics;
 using System.Numerics;
 using Avalonia;
 using Avalonia.Media;
@@ -12,8 +12,10 @@ namespace QwQ_Music.Common.Services.Shader;
 public class ShaderService {
     private readonly SKShader[]? _children;
     private readonly string _fragmentShader;
+    private readonly Stopwatch _timeWatch = Stopwatch.StartNew();
     private SKRuntimeEffect? _effect;
-    private DateTime _startTime;
+    private int _frameIndex;
+    private float _lastElapsedSeconds;
 
     /// <summary>
     ///     初始化着色器服务
@@ -23,7 +25,6 @@ public class ShaderService {
     public ShaderService(string fragmentShader, SKShader[]? children = null) {
         _fragmentShader = fragmentShader;
         _children = children;
-        _startTime = DateTime.Now;
         InitializeShader();
     }
 
@@ -65,16 +66,19 @@ public class ShaderService {
         var uniforms = new SKRuntimeEffectUniforms(_effect);
 
         // 设置着色器输入参数
-        float timeElapsed = (float)(DateTime.Now - _startTime).TotalSeconds;
+        float timeElapsed = (float)_timeWatch.Elapsed.TotalSeconds;
+        float timeDelta = Math.Max(timeElapsed - _lastElapsedSeconds, 1f / 240f);
+        _lastElapsedSeconds = timeElapsed;
+        _frameIndex++;
 
         // 修复Vector3转换问题，使用float数组
         float[] resolution = [(float)size.Width, (float)size.Height, 0];
         uniforms["iResolution"] = resolution;
 
         uniforms["iTime"] = timeElapsed;
-        uniforms["iTimeDelta"] = 1.0f / 60.0f; // 假设60fps
-        uniforms["iFrameRate"] = 60.0f;
-        uniforms["iFrame"] = (int)(timeElapsed * 60);
+        uniforms["iTimeDelta"] = timeDelta;
+        uniforms["iFrameRate"] = 1.0f / timeDelta;
+        uniforms["iFrame"] = _frameIndex;
 
         // 修复Vector4转换问题，使用float数组
         float[] mousePos;
@@ -122,5 +126,9 @@ public class ShaderService {
     /// <summary>
     ///     重置着色器计时器
     /// </summary>
-    public void ResetTimer() { _startTime = DateTime.Now; }
+    public void ResetTimer() {
+        _timeWatch.Restart();
+        _frameIndex = 0;
+        _lastElapsedSeconds = 0;
+    }
 }
