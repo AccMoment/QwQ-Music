@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Audio.SoundModifier;
@@ -20,6 +15,20 @@ using MusicItemsManager = QwQ_Music.Common.Managers.MusicItemsManager;
 namespace QwQ_Music.ViewModels.Pages;
 
 public partial class PlayConfigPageViewModel : ViewModelBase {
+    public PlayConfigPageViewModel() { MusicItemsManager.All.MusicItemsChanged += UpdateGainCount; }
+
+    private void UpdateGainCount(object? sender, MusicItemsChangedEventArgs args) {
+        if (args.OldItems is not null) {
+            NumberOfCompletedCalc -= args.OldItems.Count(item => item.Gain != 0);
+        }
+
+        if (args.NewItems is not null) {
+            NumberOfCompletedCalc += args.NewItems.Count(item => item.Gain != 0);
+        }
+
+        OnPropertyChanged(nameof(NumberOfCompletedCalc));
+    }
+
     public static ReadOnlyDictionary<string, AddMusicBehavior> AddMusicBehaviors { get; } = new(
         new Dictionary<string, AddMusicBehavior> {
             [nameof(AddMusicBehavior.AddToNext)] = AddMusicBehavior.AddToNext,
@@ -55,7 +64,7 @@ public partial class PlayConfigPageViewModel : ViewModelBase {
 
     [ObservableProperty]
     public partial int NumberOfCompletedCalc { get; set; } =
-        MusicItemsManager.MusicItems.Values.Count(item => item.Gain <= 0);
+        MusicItemsManager.MusicItems.Values.Count(item => item.Gain != 0);
 
     public static Dictionary<MusicReplayGainStandard, string> MusicReplayGainStandards { get; set; } = new() {
         [MusicReplayGainStandard.Streaming] = "流媒体优化（-16 LUFS）",
@@ -193,4 +202,9 @@ public partial class PlayConfigPageViewModel : ViewModelBase {
     }
 
     #endregion
+
+    ~PlayConfigPageViewModel() {
+        MusicItemsManager.All.MusicItemsChanged -= UpdateGainCount;
+        CleanupTask();
+    }
 }

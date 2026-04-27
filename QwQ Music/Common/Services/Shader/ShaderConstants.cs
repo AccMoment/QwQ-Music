@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using System.Reflection;
 
 namespace QwQ_Music.Common.Services.Shader;

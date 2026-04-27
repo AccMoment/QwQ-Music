@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media.Imaging;
 using QwQ_Music.Common.Helpers;

@@ -1,4 +1,3 @@
-using System;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using Ursa.Controls;

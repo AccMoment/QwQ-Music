@@ -1,5 +1,3 @@
-using System.Linq;
-using System.Threading.Tasks;
 using Commons.Music.Midi;
 
 namespace QwQ_Music.Amusing;
@@ -133,7 +131,7 @@ public enum Voice {
 
 public static class MidiSpring {
     public static async Task Spring() {
-        IMidiAccess? access = MidiAccessManager.Default;
+        var access = MidiAccessManager.Default;
         IMidiOutput? output = access.OpenOutputAsync(access.Outputs.Last().Id).Result;
 
         // 设置乐器为钢琴
@@ -195,11 +193,11 @@ public static class MidiSpring {
 
                     continue;
                 case 700:
-                    await Task.Delay(150);
+                    await Task.Delay(150).ConfigureAwait(false);
 
                     continue;
                 case (int)Voice._:
-                    await Task.Delay(300);
+                    await Task.Delay(300).ConfigureAwait(false);
 
                     continue;
                 case 1000:
@@ -209,11 +207,11 @@ public static class MidiSpring {
                 default:
                     // 发送音符
                     output.Send([0x90, (byte)(i + tmp), volume], 0, 3, 0);
-                    await Task.Delay(sleep);
+                    await Task.Delay(sleep).ConfigureAwait(false);
 
                     break;
             }
 
-        await output.CloseAsync();
+        await output.CloseAsync().ConfigureAwait(false);
     }
 }

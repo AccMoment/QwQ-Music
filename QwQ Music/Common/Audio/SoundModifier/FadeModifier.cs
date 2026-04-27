@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 
 namespace QwQ_Music.Common.Audio.SoundModifier;

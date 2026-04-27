@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Avalonia.Data.Converters;
+﻿using Avalonia.Data.Converters;
 
 namespace QwQ_Music.UI.Converters;
 

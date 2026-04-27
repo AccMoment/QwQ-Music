@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using System.Timers;
 using ATL;
 using Avalonia.Media.Imaging;
@@ -17,6 +12,7 @@ using QwQ_Music.Common.Services.MusicTagExtractors;
 using QwQ_Music.Common.Utilities;
 using QwQ_Music.Common.Utilities.StringUtilities;
 using QwQ_Music.Models.Enums;
+using Timer = System.Timers.Timer;
 
 namespace QwQ_Music.Models;
 

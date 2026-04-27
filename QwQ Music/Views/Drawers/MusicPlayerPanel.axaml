@@ -1,12 +1,13 @@
 <UserControl
     x:Class="QwQ_Music.Views.Drawers.MusicPlayerPanel"
-    x:DataType="drawers:MusicCoverPageViewModel"
+    x:DataType="drawers:MusicPlayerPanelViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:u="https://irihi.tech/ursa"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:QwQ_Music.UI.Controls"
     xmlns:drawers="clr-namespace:QwQ_Music.ViewModels.Drawers"
     xmlns:customs="clr-namespace:QwQ_Music.Views.Customs"
+    xmlns:transition="clr-namespace:QwQ_Music.Transition"
     x:Name="MusicInfoPanel">
     <Border>
         <Border.Background>
@@ -49,11 +50,12 @@
             </Grid.Styles>
 
             <controls:ShaderEffectControl
-                IsVisible="{Binding !IsStaticBackground}"
+                IsVisible="{Binding !VisualConfig.IsStaticBackground}"
                 Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" Grid.ColumnSpan="2"
                 Colors="{Binding Colors}"
                 PerformanceMode="Balanced"
-                ShaderCode="{Binding ShaderCode}">
+                ShaderCode="{Binding ShaderCode}"
+                ColorTransitionDuration="0:0:0.5">
                 <controls:ShaderEffectControl.IsEnableAnimation>
                     <MultiBinding Converter="{x:Static BoolConverters.And}">
                         <Binding Path="DrawerManager.IsMusicPlayerPanelVisible" />
@@ -63,7 +65,7 @@
             </controls:ShaderEffectControl>
             <TransitioningContentControl Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" Grid.ColumnSpan="2"
                                          Content="{Binding Cover}"
-                                         IsVisible="{Binding IsStaticBackground}"
+                                         IsVisible="{Binding VisualConfig.IsStaticBackground}"
                                          ClipToBounds="True">
                 <TransitioningContentControl.ContentTemplate>
                     <DataTemplate x:DataType="Bitmap">
@@ -96,18 +98,24 @@
                   Margin="50,20,10,20"
                   RowDefinitions="*,Auto"
                   RowSpacing="10"
-                  VerticalAlignment="Center">
+                  VerticalAlignment="Stretch">
 
                 <Border BoxShadow="0 0 5 0 DarkGray"
                         CornerRadius="20"
-                        ClipToBounds="True"
-                        HorizontalAlignment="Center">
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        transition:MotionTransitions.SizeTransition="True"
+                        transition:MotionTransitions.SizeDuration="400">
                     <!--  专辑封面 Image 控件  -->
                     <TransitioningContentControl
                         Content="{Binding Cover}">
                         <TransitioningContentControl.ContentTemplate>
                             <DataTemplate x:DataType="Bitmap">
-                                <Image Source="{Binding }" />
+                                <Border
+                                    CornerRadius="20"
+                                    ClipToBounds="True">
+                                    <Image Source="{Binding }" />
+                                </Border>
                             </DataTemplate>
                         </TransitioningContentControl.ContentTemplate>
                         <TransitioningContentControl.PageTransition>
@@ -119,8 +127,11 @@
                 <!--  音乐信息  -->
                 <StackPanel Grid.Row="1"
                             HorizontalAlignment="Left"
+                            VerticalAlignment="Bottom"
                             Margin="10,0"
-                            Spacing="5">
+                            Spacing="5"
+                            transition:MotionTransitions.OffsetTransition="True"
+                            transition:MotionTransitions.OffsetDuration="400">
 
                     <TextBlock FontSize="18"
                                FontWeight="Bold"

@@ -1,4 +1,3 @@
-using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Irihi.Avalonia.Shared.Contracts;

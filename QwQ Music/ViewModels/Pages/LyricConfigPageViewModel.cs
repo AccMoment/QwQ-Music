@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Managers;

@@ -1,5 +1,4 @@
-﻿using System;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;

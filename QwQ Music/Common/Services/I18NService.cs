@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace QwQ_Music.Common.Services;
+﻿namespace QwQ_Music.Common.Services;
 
 public class I18NService {
     public enum Language {

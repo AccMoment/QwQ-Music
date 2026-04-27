@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using CommunityToolkit.Mvvm.Input;
 using Irihi.Avalonia.Shared.Contracts;
 using QwQ_Music.ViewModels.Bases;

@@ -1,5 +1,3 @@
-using System;
-
 namespace QwQ_Music.Models;
 
 public sealed class MusicMetadata {

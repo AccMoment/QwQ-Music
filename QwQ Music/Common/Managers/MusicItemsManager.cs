@@ -1,10 +1,4 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Services;
@@ -63,6 +57,7 @@ public partial class MusicItemsManager : ObservableObject {
                 await successItems.WriteAsync($"《{musicItem.Title}》").ConfigureAwait(false);
                 await _addSem.WaitAsync().ConfigureAwait(false);
                 MusicItems.Add(musicItem.FilePath, musicItem);
+                OnPropertyChanged(nameof(Count));
                 MusicItemsChanged?.Invoke(
                     this,
                     new MusicItemsChangedEventArgs { OldItems = null, NewItems = [musicItem] });
@@ -167,6 +162,7 @@ public partial class MusicItemsManager : ObservableObject {
 
                               successItems.Add(musicItem);
                               MusicItems.Remove(musicItem.FilePath);
+                              OnPropertyChanged(nameof(Count));
                               MusicItemsChanged?.Invoke(
                                   this,
                                   new MusicItemsChangedEventArgs { OldItems = [musicItem], NewItems = null });

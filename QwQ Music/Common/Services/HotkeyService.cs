@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Avalonia.Input;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Models.ConfigModels;

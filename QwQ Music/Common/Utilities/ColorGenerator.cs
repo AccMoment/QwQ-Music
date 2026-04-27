@@ -1,4 +1,3 @@
-using System;
 using Avalonia.Media;
 
 namespace QwQ_Music.Common.Utilities;

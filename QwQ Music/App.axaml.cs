@@ -1,7 +1,4 @@
-using System;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -10,7 +7,6 @@ using Avalonia.Threading;
 using QwQ_Music.Common;
 using QwQ_Music.Common.Services;
 using QwQ_Music.ViewModels;
-using QwQ_Music.Views;
 using QwQ_Music.Windows;
 using Ursa.Controls;
 

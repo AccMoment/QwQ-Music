@@ -1,5 +1,3 @@
-using System.IO;
-using System.Threading.Tasks;
 using ATL;
 using NcmdumpCSharp.Core;
 using NcmdumpCSharp.Models;

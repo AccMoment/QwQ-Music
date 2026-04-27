@@ -356,22 +356,23 @@
 
                                     <TextBlock
                                         FontSize="12"
-                                        FontWeight="Bold"
-                                        Text="{Binding NumberOfCompletedCalc}" />
-
-                                    <TextBlock FontSize="12"
-                                               Text="{Binding MusicItemsManager.MusicItems.Count, StringFormat=' / {0}'}" />
+                                        FontWeight="Bold">
+                                        <Run Text="{Binding NumberOfCompletedCalc}" />
+                                        /
+                                        <Run Text="{Binding MusicItemsManager.Count}" />
+                                    </TextBlock>
 
                                 </StackPanel>
 
                                 <ProgressBar
                                     Height="120"
                                     Margin="5,25"
-                                    Maximum="{Binding MusicItemsManager.MusicItems.Count}"
+                                    Maximum="{Binding MusicItemsManager.Count}"
                                     ShowProgressText="True"
                                     Theme="{DynamicResource ProgressRing}"
                                     Value="{Binding NumberOfCompletedCalc}"
-                                    Width="120" />
+                                    Width="120">
+                                </ProgressBar>
                             </Panel>
                         </DockPanel>
 

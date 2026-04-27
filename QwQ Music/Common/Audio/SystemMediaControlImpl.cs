@@ -1,5 +1,4 @@
-﻿using System;
-#if _WIN_NT
+﻿#if _WIN_NT
 using Windows.Media;
 using Windows.Media.Playback;
 #endif

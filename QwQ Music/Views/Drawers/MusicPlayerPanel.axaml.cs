@@ -1,18 +1,17 @@
-using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using QwQ_Music.Common.Managers;
+using QwQ_Music.ViewModels.Drawers;
 using AudioPlayManager = QwQ_Music.Common.Managers.AudioPlayManager;
-using MusicCoverPageViewModel = QwQ_Music.ViewModels.Drawers.MusicCoverPageViewModel;
 
 namespace QwQ_Music.Views.Drawers;
 
 public partial class MusicPlayerPanel : UserControl {
     public MusicPlayerPanel() {
         InitializeComponent();
-        DataContext = new MusicCoverPageViewModel();
+        DataContext = new MusicPlayerPanelViewModel();
 
         PointerMoved += OnPointerMoved;
         Unloaded += OnUnloaded;

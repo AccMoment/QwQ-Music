@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using System.Timers;
 using Avalonia.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -14,6 +9,7 @@ using QwQ_Music.Models;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.Models.Enums;
 using QwQ_Music.ViewModels.Bases;
+using Timer = System.Timers.Timer;
 
 namespace QwQ_Music.Common.Managers;
 

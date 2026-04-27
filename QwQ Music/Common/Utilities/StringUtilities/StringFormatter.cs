@@ -1,5 +1,3 @@
-using System;
-
 namespace QwQ_Music.Common.Utilities.StringUtilities;
 
 /// <summary>

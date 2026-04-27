@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Avalonia.Media.Imaging;
+﻿using Avalonia.Media.Imaging;
 using Microsoft.Data.Sqlite;
 using QwQ_Music.Common.Helpers;
 using QwQ_Music.Common.Interfaces;

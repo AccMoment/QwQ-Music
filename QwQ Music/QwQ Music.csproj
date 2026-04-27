@@ -3,22 +3,22 @@
         <OutputType>WinExe</OutputType>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <AllowMissingPrunePackageData>true</AllowMissingPrunePackageData>
         <!--        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>-->
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-        <TargetFrameworks>net10.0-windows10.0.19041.0;net10.0</TargetFrameworks>
+        <TargetFrameworks>net10.0;net10.0-windows10.0.19041.0</TargetFrameworks>
         <LangVersion>preview</LangVersion>
-        <ImplicitUsings>disable</ImplicitUsings>
+        <ImplicitUsings>true</ImplicitUsings>
         <ApplicationIcon>Assets\EmbeddedRes\AppIcon.ico</ApplicationIcon>
+        <Version>2.0.6</Version>
         <PublishTrimmed>true</PublishTrimmed>
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
         <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
-        <Version>2.0.0-alpha</Version>
-        <PublishAot>true</PublishAot>
+        <PublishAot>false</PublishAot>
         <TrimMode>link</TrimMode>
-        <EnableSourceLink>false</EnableSourceLink>
-        <!--        
-                -->
+        <PublishSingleFile>true</PublishSingleFile>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     </PropertyGroup>
     <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">
         <DefineConstants>_WIN_NT</DefineConstants>
@@ -30,7 +30,7 @@
     <ItemGroup>
         <AvaloniaResource Include="Assets\AvaloniaRes\**"/>
         <EmbeddedResource Include="Assets\EmbeddedRes\**"/>
-        <AvaloniaResource Remove="Assets\EmbeddedRes\AppIcon.ico" />
+        <AvaloniaResource Remove="Assets\EmbeddedRes\AppIcon.ico"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -40,11 +40,8 @@
         <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.5"/>
         <PackageReference Include="Avalonia.Desktop" Version="11.3.12"/>
         <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.12"/>
-        <!--        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.11" />-->
-        <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.1.1">
-            <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
-            <PrivateAssets Condition="'$(Configuration)' == 'Debug'">All</PrivateAssets>
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="AvaloniaUI.DiagnosticsSupport" Version="2.1.1">
+            <PrivateAssets>All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0"/>
         <PackageReference Include="Irihi.Ursa" Version="1.15.0"/>
@@ -54,10 +51,10 @@
         <PackageReference Include="Semi.Avalonia" Version="11.3.7.3"/>
         <PackageReference Include="Semi.Avalonia.ColorPicker" Version="11.3.7.3"/>
         <PackageReference Include="Semi.Avalonia.DataGrid" Version="11.3.7.3"/>
-        <PackageReference Include="SkiaSharp" Version="3.119.2"/>
         <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.3"/>
-        <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.2"/>
+        <PackageReference Include="SkiaSharp" Version="3.119.2"/>
         <PackageReference Include="SoundFlow" Version="1.4.0"/>
+        <PackageReference Include="Tmds.DBus.Protocol" Version="0.92.0"/>
         <PackageReference Include="Xaml.Behaviors.Avalonia" Version="11.3.9.5"/>
         <PackageReference Include="z440.atl.core" Version="7.11.0"/>
     </ItemGroup>
@@ -103,23 +100,23 @@
             <DependentUpon>MusicListInfoPage.axaml</DependentUpon>
         </Compile>
         <Compile Update="Views\Panels\MainView.axaml.cs">
-          <DependentUpon>MainView.axaml</DependentUpon>
-          <SubType>Code</SubType>
+            <DependentUpon>MainView.axaml</DependentUpon>
+            <SubType>Code</SubType>
         </Compile>
         <Compile Update="Views\Windows\MainWindow.axaml.cs">
-          <DependentUpon>MainWindow.axaml</DependentUpon>
-          <SubType>Code</SubType>
+            <DependentUpon>MainWindow.axaml</DependentUpon>
+            <SubType>Code</SubType>
         </Compile>
     </ItemGroup>
 
     <ItemGroup>
-      <AdditionalFiles Include="Windows\DesktopLyricsWindow.axaml" />
-      <AdditionalFiles Include="Windows\DesktopPlayControlWindow.axaml" />
-      <AdditionalFiles Include="Windows\MainWindow.axaml" />
+        <AdditionalFiles Include="Windows\DesktopLyricsWindow.axaml"/>
+        <AdditionalFiles Include="Windows\DesktopPlayControlWindow.axaml"/>
+        <AdditionalFiles Include="Windows\MainWindow.axaml"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Content Remove="C:\Users\metaone\.nuget\packages\soundflow\1.4.0\contentFiles\any\net8.0\STATEMENT.md" />
+        <Content Remove="C:\Users\metaone\.nuget\packages\soundflow\1.4.0\contentFiles\any\net8.0\STATEMENT.md"/>
     </ItemGroup>
 
 </Project>

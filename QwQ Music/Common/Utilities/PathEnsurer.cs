@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-
-namespace QwQ_Music.Common.Utilities;
+﻿namespace QwQ_Music.Common.Utilities;
 
 public static class PathEnsurer {
     /// <summary>

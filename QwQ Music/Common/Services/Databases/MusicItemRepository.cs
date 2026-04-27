@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using QwQ_Music.Common.Helpers;
 using QwQ_Music.Common.Interfaces;
 using QwQ_Music.Models;
@@ -50,7 +46,7 @@ public class MusicItemRepository : IAsyncDatabaseRepository<MusicItemModel> {
 
         return (await _db.QueryAsync(sql, whereParams, skip, limit).ConfigureAwait(false)).AsParallel()
             .Select(Parse)
-            .Where(item => item is not null);
+            .Where(item => item is not null)!;
     }
 
     public async Task<int> CountAsync() {
