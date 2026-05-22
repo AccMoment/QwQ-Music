@@ -1,4 +1,4 @@
-﻿name: Publish
+﻿name: Publish QwQ Music
 
 on:
   workflow_dispatch:
@@ -60,56 +60,56 @@ jobs:
           include-prerelease: true
 
       - name: Publish Windows ${{matrix.rid}}
-        if: startsWith(matrix.rid,"win")
+        if: startsWith(matrix.rid,'win')
         shell: pwsh
         run: |
           dotnet publish "QwQ Music/QwQ Music.csproj" -c Release -f ${{ matrix.framework }} -r ${{ matrix.rid }} -p:DebugType=None -p:DebugSymbols=false -p:PublishTrimmed=true -p:TrimMode=full -p:PublishReadyToRun=true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:SelfContained=true -o "artifacts/${{ matrix.rid }}"
 
       - name: Publish Linux ${{matrix.rid}}
-        if: startsWith(matrix.rid,"linux")
+        if: startsWith(matrix.rid,'linux')
         shell: bash
         run: |
           dotnet publish "QwQ Music/QwQ Music.csproj" -c Release -f "${{ matrix.framework }}" -r "${{ matrix.rid }}" -p:DebugType=None -p:DebugSymbols=false -p:PublishTrimmed=true -p:TrimMode=full -p:PublishReadyToRun=true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:SelfContained=true -o "artifacts/${{ matrix.rid }}"
 
       - name: Publish macOS ${{matrix.rid}}
-        if: startsWith(matrix.rid,"osx")
+        if: startsWith(matrix.rid,'osx')
         shell: bash
         run: |
           dotnet publish "QwQ Music/QwQ Music.csproj" -c Release -f "${{ matrix.framework }}" -r "${{ matrix.rid }}" -p:DebugType=None -p:DebugSymbols=false -p:PublishTrimmed=true -p:TrimMode=full -p:PublishReadyToRun=true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:SelfContained=true -o "artifacts/${{ matrix.rid }}"
 
       - name: Remove PDBs (Windows)
-        if: startsWith(matrix.rid,"win")
+        if: startsWith(matrix.rid,'win')
         shell: pwsh
         run: |
           Get-ChildItem -Path "artifacts/${{ matrix.rid }}" -Recurse -Filter *.pdb | Remove-Item -Force -ErrorAction SilentlyContinue
 
       - name: Remove PDBs (Linux)
-        if: startsWith(matrix.rid,"linux")
+        if: startsWith(matrix.rid,'linux')
         shell: bash
         run: |
           find "artifacts/${{ matrix.rid }}" -type f -name "*.pdb" -delete
           
       - name: Remove PDBs (macOS)
-        if: startsWith(matrix.rid,"osx")
+        if: startsWith(matrix.rid,'osx')
         shell: bash
         run: |
           find "artifacts/${{ matrix.rid }}" -type f -name "*.pdb" -delete
 
       - name: Archive Windows ${{matrix.rid}}
-        if: startsWith(matrix.rid,"win")
+        if: startsWith(matrix.rid,'win')
         shell: pwsh
         run: |
           $archive = "artifacts/QwQ-Music-${{ matrix.rid }}.zip"
           Compress-Archive -Path "artifacts/${{ matrix.rid }}/*" -DestinationPath $archive
 
       - name: Archive Linux ${{matrix.rid}}
-        if: startsWith(matrix.rid,"linux")
+        if: startsWith(matrix.rid,'linux')
         shell: bash
         run: |
           tar -czf "artifacts/QwQ-Music-${{ matrix.rid }}.tar.gz" -C "artifacts/${{ matrix.rid }}" .
 
       - name: Archive macOS ${{matrix.rid}}
-        if: startsWith(matrix.rid,"osx")
+        if: startsWith(matrix.rid,'osx')
         shell: bash
         run: |
           tar -czf "artifacts/QwQ-Music-${{ matrix.rid }}.tar.gz" -C "artifacts/${{ matrix.rid }}" .
