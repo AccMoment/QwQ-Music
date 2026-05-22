@@ -5,7 +5,7 @@
         MinHeight="400"
         MinWidth="600"
         Title="QwQ Music"
-        Icon="resm:QwQ_Music.Assets.EmbeddedRes.AppIcon.ico"
+        Icon="avares://QwQ Music/Assets/AvaloniaRes/AppIcon.ico"
         x:Class="QwQ_Music.Windows.MainWindow"
         xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"

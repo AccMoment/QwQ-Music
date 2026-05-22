@@ -7,13 +7,13 @@
     xmlns:controls="clr-namespace:QwQ_Music.UI.Controls"
     xmlns:drawers="clr-namespace:QwQ_Music.ViewModels.Drawers"
     xmlns:customs="clr-namespace:QwQ_Music.Views.Customs"
-    xmlns:transition="clr-namespace:QwQ_Music.Transition"
+    xmlns:models="clr-namespace:QwQ_Music.Models"
     x:Name="MusicInfoPanel">
     <Border>
         <Border.Background>
             <SolidColorBrush Color="{Binding DropShadowColor}" />
         </Border.Background>
-        <Grid RowDefinitions="40,*,Auto" ColumnDefinitions="*,*">
+        <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*,*">
             <!--  内容层  -->
 
             <Grid.Styles>
@@ -85,30 +85,59 @@
             </TransitioningContentControl>
 
             <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Name="TopPanel" Background="Transparent">
+
                 <u:IconButton
                     Command="{Binding DrawerManager.ToggleMusicPlayerPageCommand}"
                     HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
                     Icon="{StaticResource SemiIconChevronDown}"
                     Margin="5" />
+                <!--  音乐信息  -->
+                <TransitioningContentControl Content="{Binding AudioPlayManager.CurrentMusicItem.Model}"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"
+                                             Margin="0 15 0 5">
+                    <TransitioningContentControl.ContentTemplate>
+                        <DataTemplate x:DataType="models:MusicItemModel">
+                            <StackPanel
+                                HorizontalAlignment="Center"
+                                Margin="10,0"
+                                Spacing="5">
+
+                                <TextBlock FontSize="18"
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Center"
+                                           TextAlignment="Center"
+                                           Text="{Binding Title}"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip.Tip="{Binding $self.Text}" />
+                                <TextBlock Classes="Tertiary"
+                                           FontSize="15"
+                                           HorizontalAlignment="Center"
+                                           TextAlignment="Center"
+                                           Text="{Binding Artists}"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip.Tip="{Binding $self.Text}" />
+
+                            </StackPanel>
+                        </DataTemplate>
+                    </TransitioningContentControl.ContentTemplate>
+                    <TransitioningContentControl.PageTransition>
+                        <CrossFade Duration="0:0:0.4" />
+                    </TransitioningContentControl.PageTransition>
+                </TransitioningContentControl>
 
             </Panel>
 
-            <Grid Grid.Row="1" Grid.Column="0"
-                  HorizontalAlignment="Center"
-                  Margin="50,20,10,20"
-                  RowDefinitions="*,Auto"
-                  RowSpacing="10"
-                  VerticalAlignment="Stretch">
-
+            <Panel Grid.Row="1" Grid.Column="0"
+                   Margin="50 10 10 10">
                 <Border BoxShadow="0 0 5 0 DarkGray"
                         CornerRadius="20"
                         HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        transition:MotionTransitions.SizeTransition="True"
-                        transition:MotionTransitions.SizeDuration="400">
-                    <!--  专辑封面 Image 控件  -->
+                        VerticalAlignment="Center">
                     <TransitioningContentControl
-                        Content="{Binding Cover}">
+                        Content="{Binding Cover}"
+                        ClipToBounds="True">
                         <TransitioningContentControl.ContentTemplate>
                             <DataTemplate x:DataType="Bitmap">
                                 <Border
@@ -123,62 +152,64 @@
                         </TransitioningContentControl.PageTransition>
                     </TransitioningContentControl>
                 </Border>
+            </Panel>
+            <!-- <Grid Grid.Row="1" Grid.Column="0" -->
+            <!--       HorizontalAlignment="Stretch" -->
+            <!--       Margin="50,20,10,20" -->
+            <!--       RowDefinitions="*,Auto" -->
+            <!--       RowSpacing="10" -->
+            <!--       VerticalAlignment="Stretch"> -->
+            <!-- -->
+            <!-- -->
+            <!-- </Grid> -->
 
-                <!--  音乐信息  -->
-                <StackPanel Grid.Row="1"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Bottom"
-                            Margin="10,0"
-                            Spacing="5"
-                            transition:MotionTransitions.OffsetTransition="True"
-                            transition:MotionTransitions.OffsetDuration="400">
+            <TransitioningContentControl Grid.Row="1" Grid.Column="1"
+                                         Content="{Binding AudioPlayManager.LyricsModel.Lyrics}"
+                                         ClipToBounds="True"
+                                         x:Name="LyricsTransitionControl">
+                <TransitioningContentControl.ContentTemplate>
+                    <DataTemplate x:DataType="models:LyricsData">
+                        <controls:LyricsControl
+                            Margin="10,20"
+                            TextMargin="30,10"
+                            ClickedLyricTime="{Binding #LyricsTransitionControl.((drawers:MusicPlayerPanelViewModel)DataContext).SelectLyricsTimePoint}"
+                            CurrentLyricIndex="{Binding #LyricsTransitionControl.((drawers:MusicPlayerPanelViewModel)DataContext).AudioPlayManager.LyricsModel.CurrentIndex}"
+                            LyricTextAlignment="{Binding #LyricsTransitionControl.((drawers:MusicPlayerPanelViewModel)DataContext).RolledLyric.LyricTextAlignment}"
+                            LyricsData="{Binding .}"
+                            ShowTranslation="{Binding #LyricsTransitionControl.((drawers:MusicPlayerPanelViewModel)DataContext).RolledLyric.ShowTranslation}"
+                            LineSpacing="{Binding #LyricsTransitionControl.((drawers:MusicPlayerPanelViewModel)DataContext).RolledLyric.LyricsLineSpacing}"
+                            TranslationSpacing="{Binding #LyricsTransitionControl.((drawers:MusicPlayerPanelViewModel)DataContext).RolledLyric.TranslationSpacing}">
 
-                    <TextBlock FontSize="18"
-                               FontWeight="Bold"
-                               Text="{Binding AudioPlayManager.CurrentMusicItem.Model.Title}"
-                               TextTrimming="CharacterEllipsis"
-                               ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
-                    <TextBlock Classes="Tertiary"
-                               FontSize="15"
-                               Text="{Binding AudioPlayManager.CurrentMusicItem.Model.Artists}"
-                               TextTrimming="CharacterEllipsis"
-                               ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
+                            <controls:LyricsControl.Styles>
 
-                </StackPanel>
+                                <Style Selector="TextBlock">
+                                    <Setter Property="FontSize"
+                                            Value="{Binding #LyricsTransitionControl.((drawers:MusicPlayerPanelViewModel)DataContext).RolledLyric.PrimaryFontSize}" />
+                                    <Setter Property="FontFamily"
+                                            Value="{Binding #LyricsTransitionControl.((drawers:MusicPlayerPanelViewModel)DataContext).RolledLyric.RolledLyricsFont,Converter={StaticResource StringToFontFamily}}" />
+                                    <Setter Property="Effect">
+                                        <DropShadowEffect BlurRadius="4" OffsetX="1" OffsetY="1"
+                                                          Color="{Binding #LyricsTransitionControl.((drawers:MusicPlayerPanelViewModel)DataContext).DropShadowColor}" />
+                                    </Setter>
+                                </Style>
 
-            </Grid>
+                                <!-- 普通歌词样式 -->
+                                <Style Selector="controls|LyricLineControl">
+                                    <Setter Property="PrimaryFontSize"
+                                            Value="{Binding #LyricsTransitionControl.((drawers:MusicPlayerPanelViewModel)DataContext).RolledLyric.PrimaryFontSize}" />
+                                    <Setter Property="TranslationFontSize"
+                                            Value="{Binding #LyricsTransitionControl.((drawers:MusicPlayerPanelViewModel)DataContext).RolledLyric.TranslationFontSize}" />
+                                </Style>
 
-            <controls:LyricsControl ClickedLyricTime="{Binding SelectLyricsTimePoint}"
-                                    CurrentLyricIndex="{Binding AudioPlayManager.LyricsModel.CurrentIndex}"
-                                    Grid.Row="1" Grid.Column="1"
-                                    Margin="10,20"
-                                    LyricTextAlignment="{Binding RolledLyric.LyricTextAlignment}"
-                                    LyricsData="{Binding AudioPlayManager.LyricsModel.Lyrics}"
-                                    ShowTranslation="{Binding RolledLyric.ShowTranslation}"
-                                    TextMargin="30,10"
-                                    LineSpacing="{Binding RolledLyric.LyricsLineSpacing}"
-                                    TranslationSpacing="{Binding RolledLyric.TranslationSpacing}">
+                            </controls:LyricsControl.Styles>
 
-                <controls:LyricsControl.Styles>
-
-                    <Style Selector="TextBlock">
-                        <Setter Property="FontSize" Value="{Binding RolledLyric.PrimaryFontSize}" />
-                        <Setter Property="FontFamily"
-                                Value="{Binding RolledLyric.RolledLyricsFont,Converter={StaticResource StringToFontFamily}}" />
-                        <Setter Property="Effect">
-                            <DropShadowEffect BlurRadius="4" OffsetX="1" OffsetY="1" Color="{Binding DropShadowColor}" />
-                        </Setter>
-                    </Style>
-
-                    <!-- 普通歌词样式 -->
-                    <Style Selector="controls|LyricLineControl">
-                        <Setter Property="PrimaryFontSize" Value="{Binding RolledLyric.PrimaryFontSize}" />
-                        <Setter Property="TranslationFontSize" Value="{Binding RolledLyric.TranslationFontSize}" />
-                    </Style>
-
-                </controls:LyricsControl.Styles>
-
-            </controls:LyricsControl>
+                        </controls:LyricsControl>
+                    </DataTemplate>
+                </TransitioningContentControl.ContentTemplate>
+                <TransitioningContentControl.PageTransition>
+                    <CrossFade Duration="0:0:0.4" />
+                </TransitioningContentControl.PageTransition>
+            </TransitioningContentControl>
 
             <controls:SpectrumVisualizerControl x:Name="SpectrumVisualizer"
                                                 Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"

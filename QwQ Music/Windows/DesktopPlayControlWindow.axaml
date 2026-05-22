@@ -14,7 +14,7 @@
         xmlns:vWindows="clr-namespace:QwQ_Music.Windows"
         x:Class="QwQ_Music.Windows.DesktopPlayControlWindow"
         x:DataType="vmWindows:DesktopPlayControlWindowViewModel"
-        Icon="resm:QwQ_Music.Assets.EmbeddedRes.AppIcon.ico"
+        Icon="avares://QwQ Music/Assets/AvaloniaRes/AppIcon.ico"
         ClipToBounds="True"
         Title="QwQ Music • 播放控制">
 
@@ -101,7 +101,7 @@
                     <!--  上一首  -->
                     <Button Theme="{DynamicResource BorderlessButton}"
                             ToolTip.Tip="上一首"
-                            Command="{Binding AudioPlayManager.PreviousSongCommand}"
+                            Command="{Binding AudioPlayManager.PreviousMusicCommand}"
                             Foreground="{DynamicResource TextBlockDefaultForeground}"
                             behaviors:DynamicCornerBehavior.IsEnabled="True">
                         <PathIcon
@@ -117,7 +117,7 @@
                     <Button
                         Classes="Icon"
                         ToolTip.Tip="下一首"
-                        Command="{Binding AudioPlayManager.NextSongCommand}"
+                        Command="{Binding AudioPlayManager.NextMusicCommand}"
                         Foreground="{DynamicResource TextBlockDefaultForeground}"
                         behaviors:DynamicCornerBehavior.IsEnabled="True">
                         <PathIcon Data="{StaticResource PlayIconData}" Height="30" />

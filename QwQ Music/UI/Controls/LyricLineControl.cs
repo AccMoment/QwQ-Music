@@ -36,6 +36,14 @@ public class LyricLineControl : TemplatedControl {
     public static readonly StyledProperty<double> TimePointProperty =
         AvaloniaProperty.Register<LyricLineControl, double>(nameof(TimePoint));
 
+    // 是否当前行
+    public static readonly StyledProperty<bool> IsCurrentProperty =
+        AvaloniaProperty.Register<LyricLineControl, bool>(nameof(IsCurrent));
+
+    // 是否占位空行
+    public static readonly StyledProperty<bool> IsPlaceholderProperty =
+        AvaloniaProperty.Register<LyricLineControl, bool>(nameof(IsPlaceholder));
+
     // 文本对齐方式
     public static readonly StyledProperty<HorizontalAlignment> TextAlignmentProperty =
         AvaloniaProperty.Register<LyricLineControl, HorizontalAlignment>(
@@ -80,6 +88,16 @@ public class LyricLineControl : TemplatedControl {
     public double TimePoint {
         get => GetValue(TimePointProperty);
         set => SetValue(TimePointProperty, value);
+    }
+
+    public bool IsCurrent {
+        get => GetValue(IsCurrentProperty);
+        set => SetValue(IsCurrentProperty, value);
+    }
+
+    public bool IsPlaceholder {
+        get => GetValue(IsPlaceholderProperty);
+        set => SetValue(IsPlaceholderProperty, value);
     }
 
     public HorizontalAlignment TextAlignment {

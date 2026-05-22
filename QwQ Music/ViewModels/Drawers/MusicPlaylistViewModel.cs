@@ -10,7 +10,6 @@ namespace QwQ_Music.ViewModels.Drawers;
 
 public partial class MusicPlaylistViewModel : ViewModelBase {
     public static DrawerManager DrawerManager => DrawerManager.Instance;
-    public static PlaylistManager PlaylistManager => PlaylistManager.Instance;
     public static AudioPlayManager AudioPlayManager => AudioPlayManager.Instance;
     public static MusicItemsManager MusicItemsManager => MusicItemsManager.All;
     public AvaloniaList<PlaylistItemModel> MusicList => PlaylistManager.Instance.ActualPlaylist;
@@ -24,7 +23,7 @@ public partial class MusicPlaylistViewModel : ViewModelBase {
     }
 
     [RelayCommand]
-    private void ClearMusic() { PlaylistManager.Instance.Clear(); }
+    private void ClearMusic() { AudioPlayManager.ClearPlaylist(); }
 
     [RelayCommand]
     private void JumpToTop(ListBox listBox) {

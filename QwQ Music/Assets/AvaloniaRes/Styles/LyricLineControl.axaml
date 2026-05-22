@@ -48,7 +48,7 @@
     </Style>
 
     <!-- 当前高亮歌词样式 -->
-    <Style Selector="controls|LyricLineControl.current /template/ StackPanel">
+    <Style Selector="controls|LyricLineControl[IsCurrent=True] /template/ StackPanel">
         <Setter Property="RenderTransform" Value="scale(1.12)" />
     </Style>
 
@@ -62,8 +62,8 @@
         <Setter Property="RenderTransformOrigin" Value="100%,50%" />
     </Style>
 
-    <Style Selector="controls|LyricLineControl.current /template/ TextBlock">
-        <!--<Setter Property="FontSize" Value="18" />-->
+    <Style Selector="controls|LyricLineControl[IsCurrent=True] /template/ TextBlock">
+        <!-- <Setter Property="FontSize" Value="18" /> -->
         <Setter Property="Foreground" Value="{DynamicResource SemiColorText0}" />
         <Setter Property="FontWeight" Value="Bold" />
     </Style>
@@ -74,7 +74,7 @@
     </Style>
 
     <!-- 空白歌词样式 -->
-    <Style Selector="controls|LyricLineControl.empty /template/ TextBlock#PART_PrimaryText">
+    <Style Selector="controls|LyricLineControl[IsPlaceholder=True] /template/ TextBlock#PART_PrimaryText">
         <Setter Property="Text" Value="● ● ●" />
     </Style>
 

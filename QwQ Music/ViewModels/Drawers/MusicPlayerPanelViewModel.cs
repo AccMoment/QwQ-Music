@@ -107,7 +107,7 @@ public partial class MusicPlayerPanelViewModel : NavigableViewModel {
         AppDomain.CurrentDomain.ProcessExit -= CurrentDomain_OnProcessExit;
     }
 
-    private async void OnMusicItemChanged(object? sender, MusicItemChangedEventArgs args) {
+    private void OnMusicItemChanged(object? sender, MusicItemChangedEventArgs args) {
         _ = Cover;
         _ = Task.Run(async Task? () => {
                     try {

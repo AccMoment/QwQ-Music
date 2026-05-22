@@ -312,21 +312,23 @@ public partial class MusicItemModel : ObservableObject {
 
         IsCurrent = false;
         Track = null;
-        var timer = new Timer(5000) { AutoReset = false };
+        var timer = new Timer(1000) { AutoReset = false };
         Bitmap? cover = Cover;
 
+        timer.Elapsed += Updater;
+        Cover = CacheManager.Loading;
+        timer.Start();
+        Lyrics = LyricsData.Loading;
+        LoggerService.Debug($"已释放音频《{Title}》的歌词。");
+        return;
+
         void Updater(object? sender, ElapsedEventArgs args) {
+            OnPropertyChanged(nameof(Cover));
             cover?.Dispose();
             cover = null;
             timer?.Dispose();
             timer = null;
         }
-
-        timer.Elapsed += Updater;
-        timer.Start();
-        Cover = CacheManager.Loading;
-        Lyrics = LyricsData.Loading;
-        LoggerService.Debug($"已释放音频《{Title}》的歌词。");
     }
 
     #region 播放歌曲前加载的属性
@@ -348,7 +350,8 @@ public partial class MusicItemModel : ObservableObject {
             try {
                 _ = value.PixelSize;
             } catch (NullReferenceException) {
-                field = CacheManager.Loading;
+                field = CacheManager.Damaged;
+                OnPropertyChanged();
                 return;
             }
 

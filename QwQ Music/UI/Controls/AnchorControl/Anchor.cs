@@ -268,8 +268,10 @@ public class Anchor : ItemsControl {
     }
 
     private async Task AnimateScrollAsync(ScrollViewer scrollViewer, double to) {
-        if (_scrollCts != null)
-            await _scrollCts.CancelAsync();
+        if (_scrollCts != null) {
+            await _scrollCts.CancelAsync().ConfigureAwait(true);
+            _scrollCts.Dispose();
+        }
 
         _scrollCts = new CancellationTokenSource();
         CancellationToken token = _scrollCts.Token;

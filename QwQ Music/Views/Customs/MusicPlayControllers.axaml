@@ -29,7 +29,7 @@
 
     <!--  上一首  -->
     <Button Classes="Icon"
-            Command="{Binding Instance.PreviousSongCommand}"
+            Command="{Binding Instance.PreviousMusicCommand}"
             Foreground="{DynamicResource TextBlockDefaultForeground}"
             behaviors:DynamicCornerBehavior.IsEnabled="True">
         <PathIcon
@@ -43,7 +43,7 @@
 
     <!--  下一首  -->
     <Button Classes="Icon"
-            Command="{Binding Instance.NextSongCommand}"
+            Command="{Binding Instance.NextMusicCommand}"
             Foreground="{DynamicResource TextBlockDefaultForeground}"
             behaviors:DynamicCornerBehavior.IsEnabled="True">
         <PathIcon Data="{StaticResource PlayIconData}"

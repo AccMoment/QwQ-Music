@@ -18,8 +18,13 @@
                     <Border CornerRadius="5"
                             ClipToBounds="True">
                         <Panel>
-                            <Image Source="{Binding Thumbnail}" />
-                            <Border Background="#33000000">
+                            <Border x:Name="PART_CoverClip" CornerRadius="5" ClipToBounds="True"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                                <Image x:Name="PART_Cover" Source="{Binding Thumbnail}" />
+                            </Border>
+                            <Border Background="#33000000" Width="{Binding #PART_CoverClip.Bounds.Width}"
+                                    Height="{Binding #PART_CoverClip.Bounds.Height}">
                                 <Border.IsVisible>
                                     <MultiBinding Converter="{x:Static BoolConverters.Or}">
                                         <TemplateBinding Property="ExternalPointerOver" />

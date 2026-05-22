@@ -1,22 +1,24 @@
 ﻿using System.Diagnostics;
 using Avalonia;
+using QwQ_Music.Common.Audio;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Services.Databases;
 using QwQ_Music.Common.Utilities;
 using AudioPlayManager = QwQ_Music.Common.Managers.AudioPlayManager;
+using SystemMediaControl = QwQ_Music.Common.Audio.SystemMediaControls.SystemMediaControl;
 using ThreadState = System.Diagnostics.ThreadState;
 
 namespace QwQ_Music;
 
 public static class Program {
-    public static string VersionText => "2.0.6";
+    public static string VersionText => "2.0.7";
 
     [STAThread]
     public static async Task Main(string[] args) {
+        SystemMediaControl.SetProcessInfoId();
         try {
             await LoggerService.InfoAsync(
-                                   "Starting up\n" +
                                    $"""
                                     ===========================================
                                                                                                                                 

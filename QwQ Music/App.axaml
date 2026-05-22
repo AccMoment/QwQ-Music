@@ -236,7 +236,7 @@
 
     <TrayIcon.Icons>
         <TrayIcons>
-            <TrayIcon Icon="resm:QwQ_Music.Assets.EmbeddedRes.AppIcon.ico" MacOSProperties.IsTemplateIcon="true"
+            <TrayIcon Icon="avares://QwQ Music/Assets/AvaloniaRes/AppIcon.ico" MacOSProperties.IsTemplateIcon="true"
                       ToolTipText="QwQ Music"
                       Command="{Binding ShowMainWindowCommand}">
 

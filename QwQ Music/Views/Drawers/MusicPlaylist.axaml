@@ -130,7 +130,7 @@
                                     </MenuItem>
 
                                     <MenuItem
-                                        Command="{Binding #PlaylistDrawer.((drawers:MusicPlaylistViewModel)DataContext).PlaylistManager.RemoveCommand}"
+                                        Command="{Binding #PlaylistDrawer.((drawers:MusicPlaylistViewModel)DataContext).AudioPlayManager.PlaylistManager.RemoveCommand}"
                                         CommandParameter="{Binding}"
                                         Header="移出播放列表">
                                         <MenuItem.Icon>

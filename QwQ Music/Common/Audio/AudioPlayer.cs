@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using Avalonia.Threading;
+using QwQ_Music.Common.Audio.SystemMediaControls;
 using QwQ_Music.Common.Interfaces;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
@@ -47,7 +48,6 @@ public class AudioPlayer : IAudioPlayer {
         CancellationToken token = _token.Token;
         _audioThread = new Thread(() => {
             AudioEngine = new MiniAudioEngine();
-            SystemMedia = SystemMediaControl.CreateSystemMediaControl();
             while (!token.IsCancellationRequested)
                 try {
                     _commandQueue.Take(token)();
@@ -314,7 +314,8 @@ public class AudioPlayer : IAudioPlayer {
             _audioThread.Join();
         }
 
-        FadeOutTimer.Close();
+        FadeOutTimer.Dispose();
+        FadeOutTimer = null!;
         SpecTimer.Stop();
         SpecTimer = null!;
         UpdateTimer.Stop();

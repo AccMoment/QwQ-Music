@@ -14,6 +14,7 @@ public partial class PlaylistManager : ObservableObject {
 
     public readonly List<PlaylistItemModel> SequentialPlaylist = [];
 
+
     private PlaylistManager() {
         Task.Run(() => {
                 var (indexes, paths, count, latest) = PlaylistRepository
@@ -86,8 +87,8 @@ public partial class PlaylistManager : ObservableObject {
         params IEnumerable<MusicItemModel> musicItems) {
         CurrentListName = Custom;
         PlaylistItemModel[] items = musicItems.Select(item => new PlaylistItemModel(item)).ToArray();
-        SequentialPlaylist.InsertRange(SequentialPlaylist.IndexOf(anchor), items);
-        ActualPlaylist.InsertRange(ActualPlaylist.IndexOf(anchor), items);
+        SequentialPlaylist.InsertRange(SequentialPlaylist.IndexOf(anchor) + 1, items);
+        ActualPlaylist.InsertRange(ActualPlaylist.IndexOf(anchor) + 1, items);
         return items;
     }
 
@@ -120,7 +121,7 @@ public partial class PlaylistManager : ObservableObject {
         SequentialPlaylist.RemoveAll(item => playlistItems.Contains(item));
         ActualPlaylist.RemoveAll(playlistItems);
         if (items.Contains(AudioPlayManager.Instance.CurrentMusicItem.Model))
-            AudioPlayManager.Instance.NextSong();
+            AudioPlayManager.Instance.NextMusic();
     }
 
     public void Clear() {
@@ -187,7 +188,7 @@ public partial class PlaylistManager : ObservableObject {
             ActualPlaylist.Add(SequentialPlaylist[target]);
             ActualPlaylist.AddRange(SequentialPlaylist.Where((_, index) => index != target).Shuffle());
         } else {
-            ActualPlaylist.AddRange(SequentialPlaylist.Shuffle());
+            ActualPlaylist.AddRange(SequentialPlaylist);
         }
 
         if (ActualPlaylist.Count == 0)
@@ -200,10 +201,12 @@ public partial class PlaylistManager : ObservableObject {
 
     public async Task ReplaceAsync(
         string name,
-        ICollection<MusicItemModel> musicItems,
+        IList<MusicItemModel> musicItems,
         int target,
         bool isPlayNow = false,
         IEnumerable<int>? memorizedRandomOrder = null) {
+        if (musicItems.ElementAtOrDefault(target) != SequentialPlaylist.ElementAtOrDefault(target).Model)
+            CurrentListName = Unknown;
         await ReplaceAsync(name, musicItems, musicItems.Count, target, isPlayNow, memorizedRandomOrder)
             .ConfigureAwait(false);
     }

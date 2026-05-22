@@ -5,6 +5,7 @@
         <IsPublishable>False</IsPublishable>
         <LangVersion>preview</LangVersion>
         <Nullable>disable</Nullable>
+        <AllowMissingPrunePackageData>true</AllowMissingPrunePackageData>
     </PropertyGroup>
 
 </Project>
