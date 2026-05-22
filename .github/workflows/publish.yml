@@ -1,6 +1,9 @@
 ﻿name: Publish QwQ Music
 
 on:
+  release:
+    types: 
+      - published
   workflow_dispatch:
     inputs:
       release_tag:
@@ -51,10 +54,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.0.x"
           include-prerelease: true
@@ -115,7 +118,7 @@ jobs:
           tar -czf "artifacts/QwQ-Music-${{ matrix.rid }}.tar.gz" -C "artifacts/${{ matrix.rid }}" .
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: QwQ-Music-${{ matrix.rid }}
           path: artifacts/QwQ-Music-${{ matrix.rid }}.${{ matrix.archive_ext }}
@@ -130,13 +133,13 @@ jobs:
       contents: write
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: release
           merge-multiple: true
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v5
         with:
           tag_name: ${{ inputs.release_tag }}
           name: ${{ inputs.release_name || inputs.release_tag }}
