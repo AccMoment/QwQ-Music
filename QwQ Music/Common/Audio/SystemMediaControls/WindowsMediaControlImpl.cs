@@ -46,7 +46,16 @@ public static partial class SystemMediaControl {
     }
 
     private static void TryCreateStartMenuShortcut(string appUserModelId) {
-        try {
+        if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA) {
+            TryCreateStartMenuShortcutCore();
+            return;
+        }
+        Thread thread = new(TryCreateStartMenuShortcutCore) {IsBackground = true};
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        return;
+        
+        void TryCreateStartMenuShortcutCore() {
             string? exePath = Process.GetCurrentProcess().MainModule?.FileName;
             if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
                 return;
@@ -57,27 +66,33 @@ public static partial class SystemMediaControl {
 
             string shortcutPath = Path.Combine(startMenuFolder, "QwQ Music.lnk");
             string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "QwQ Music.ico");
+            try {
+                // ReSharper disable once SuspiciousTypeConversion.Global
+                IShellLinkW link = (IShellLinkW)new ShellLink();
+                link.SetPath(exePath);
+                link.SetWorkingDirectory(AppDomain.CurrentDomain.BaseDirectory);
+                link.SetDescription("QwQ Music");
+                if (File.Exists(iconPath))
+                    link.SetIconLocation(iconPath, 0);
 
-            // ReSharper disable once SuspiciousTypeConversion.Global
-            IShellLinkW link = (IShellLinkW)new ShellLink();
-            link.SetPath(exePath);
-            link.SetWorkingDirectory(Path.GetDirectoryName(exePath) ?? AppDomain.CurrentDomain.BaseDirectory);
-            link.SetDescription("QwQ Music");
-            if (File.Exists(iconPath))
-                link.SetIconLocation(iconPath, 0);
+                // ReSharper disable once SuspiciousTypeConversion.Global
+                IPropertyStore propertyStore = (IPropertyStore)link;
+                PROPERTYKEY appIdKey = PROPERTYKEY.AppUserModelId;
+                using (PropVariant value = PropVariant.FromString(appUserModelId)) {
+                    propertyStore.SetValue(ref appIdKey, value);
+                    propertyStore.Commit();
+                }
 
-            // ReSharper disable once SuspiciousTypeConversion.Global
-            IPropertyStore propertyStore = (IPropertyStore)link;
-            PROPERTYKEY appIdKey = PROPERTYKEY.AppUserModelId;
-            using (PropVariant value = PropVariant.FromString(appUserModelId)) {
-                propertyStore.SetValue(ref appIdKey, value);
-                propertyStore.Commit();
+                // ReSharper disable once SuspiciousTypeConversion.Global
+                ((IPersistFile)link).Save(shortcutPath, true);
+                LoggerService.Error(
+                    $"已创建开始菜单快捷方式，位于{shortcutPath}");
+            } catch (Exception ex) {
+                LoggerService.Error(
+                    $"创建开始菜单快捷方式失败。\nPath:{exePath}\nDirectory:{AppDomain.CurrentDomain.BaseDirectory}\nShortcut Path:{
+                        shortcutPath}",
+                    ex);
             }
-
-            // ReSharper disable once SuspiciousTypeConversion.Global
-            ((IPersistFile)link).Save(shortcutPath, true);
-        } catch (Exception ex) {
-            LoggerService.Error($"创建开始菜单快捷方式失败: {ex.Message}");
         }
     }
 
