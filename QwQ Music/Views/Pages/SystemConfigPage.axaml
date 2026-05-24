@@ -40,6 +40,14 @@
             <StackPanel>
 
                 <Panel>
+                    <TextBlock Text="语言" VerticalAlignment="Center" />
+                    <ComboBox HorizontalAlignment="Right"
+                              ItemsSource="{Binding I18NService.AvailableLanguages}"
+                              DisplayMemberBinding="{Binding Value}"
+                              SelectedValueBinding="{Binding Key}"
+                              SelectedValue="{Binding Config.Language}" />
+                </Panel>
+                <Panel>
                     <TextBlock Text="在窗口关闭时" VerticalAlignment="Center" />
                     <ComboBox HorizontalAlignment="Right"
                               ItemsSource="{Binding ClosingBehaviors}"
@@ -66,6 +74,8 @@
                         MinWidth="80"
                         HorizontalAlignment="Right"
                         ItemsSource="{Binding LogLevels}"
+                        DisplayMemberBinding="{Binding Value}"
+                        SelectedValueBinding="{Binding Key}"
                         SelectedValue="{Binding LoggerServiceConfig.Level}" />
                 </Panel>
 

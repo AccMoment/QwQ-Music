@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using QwQ_Music.Common.Helpers;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
@@ -11,11 +12,10 @@ public class SystemConfigPageViewModel() : NavigableViewModel(nameof(SystemConfi
     public SystemConfig Config { get; } = ConfigManager.SystemConfig;
 
     public static LoggerServiceConfig LoggerServiceConfig => ConfigManager.LoggerServiceConfig;
+    public static I18NService I18NService => I18NService.Lang;
 
-    public static Dictionary<ClosingBehavior, string> ClosingBehaviors =>
-        EnumHelper<ClosingBehavior>.GetValueDescriptionDictionary();
+    public static FrozenDictionary<ClosingBehavior, string> ClosingBehaviors =>
+        EnumHelper<ClosingBehavior>.GetTranslationDictionary();
 
-    public static LogLevel[] LogLevels { get; } = EnumHelper<LogLevel>.ToArray();
+    public static FrozenDictionary<LogLevel,string> LogLevels { get; } = EnumHelper<LogLevel>.GetTranslationDictionary();
 }
-
-public record ClosingBehaviorMap(string Key, ClosingBehavior Value);

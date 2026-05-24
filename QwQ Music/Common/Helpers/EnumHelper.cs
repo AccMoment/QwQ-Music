@@ -1,3 +1,6 @@
+using System.Collections.Frozen;
+using QwQ_Music.Common.Services;
+
 namespace QwQ_Music.Common.Helpers;
 
 public static class EnumDescriptionStore {
@@ -7,17 +10,22 @@ public static class EnumDescriptionStore {
     };
 }
 
-public static class EnumHelper<T> where T : notnull {
+public static class EnumHelper<T> where T : Enum {
     public static Dictionary<T, string> GetValueDescriptionDictionary() {
         return Enum.GetValuesAsUnderlyingType(typeof(T))
                    .Cast<T>()
                    .ToDictionary(
                        e => e,
-                       e => EnumDescriptionStore.EnumDescriptions.TryGetValue(
-                           e.ToString() ?? "错误枚举",
-                           out string? desc) ?
+                       e => EnumDescriptionStore.EnumDescriptions.TryGetValue(e.ToString(), out string? desc) ?
                            desc :
-                           e.ToString() ?? "错误枚举");
+                           e.ToString());
+    }
+
+    public static FrozenDictionary<T, string> GetTranslationDictionary() {
+        string typeName = typeof(T).Name;
+        return Enum.GetValuesAsUnderlyingType(typeof(T))
+                   .Cast<T>()
+                   .ToDictionary(e => e, e => I18NService.Lang[e.ToString(),typeName]).ToFrozenDictionary();
     }
 
     public static List<T> ToList() { return GetEnumerable().ToList(); }

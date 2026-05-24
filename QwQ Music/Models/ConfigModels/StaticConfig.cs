@@ -21,4 +21,8 @@ public static class StaticConfig {
 
     public static string LyricsSavePath =>
         PathEnsurer.EnsureDirectoryExists(Path.Combine(Directory.GetCurrentDirectory(), "cache", "lyrics"));
+    
+    public static string I18NSavePath =>
+        PathEnsurer.EnsureDirectoryExists(Path.Combine(Directory.GetCurrentDirectory(), "i18n"));
+
 }

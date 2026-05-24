@@ -34,6 +34,9 @@
         <AvaloniaResource Remove="Assets\EmbeddedRes\**"/>
         <EmbeddedResource Include="Assets\EmbeddedRes\**"/>
         <AvaloniaResource Remove="AppIcon.ico"/>
+        <None Update="i18n\zh_CN.QwQ.json">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <ItemGroup>
