@@ -4,7 +4,7 @@ public enum ClosingBehavior {
     /// <summary>
     ///     询问
     /// </summary>
-    AskAbout,
+    Ask,
 
     /// <summary>
     ///     直接退出

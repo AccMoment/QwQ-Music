@@ -31,7 +31,7 @@ public partial class MainWindow : Window {
     }
 
     public void ShowMainWindow() {
-        Show();
+        Show();   
         Activate();
         WindowState = WindowState.Normal;
     }
@@ -47,12 +47,17 @@ public partial class MainWindow : Window {
     protected override void OnClosing(WindowClosingEventArgs e) {
         try {
             base.OnClosing(e);
+            if (e.CloseReason is WindowCloseReason.ApplicationShutdown) {
+                return;
+            }
 
             if (_isClosing)
                 return;
 
-            if (e.CloseReason is WindowCloseReason.OSShutdown or WindowCloseReason.ApplicationShutdown)
+            if (e.CloseReason is WindowCloseReason.OSShutdown) {
                 ApplicationViewModel.Shutdown();
+                return;
+            }
 
             e.Cancel = true;
 
@@ -73,7 +78,7 @@ public partial class MainWindow : Window {
 
         _isOpenClosingDialog = true;
 
-        if (behavior == Models.Enums.ClosingBehavior.AskAbout)
+        if (behavior == Models.Enums.ClosingBehavior.Ask)
             behavior = await GetUserClosingBehaviorAsync().ConfigureAwait(true);
 
         switch (behavior) {
@@ -86,7 +91,7 @@ public partial class MainWindow : Window {
                 Hide();
 
                 break;
-            case Models.Enums.ClosingBehavior.AskAbout:
+            case Models.Enums.ClosingBehavior.Ask:
             default:
                 // 其它情况无需处理
                 break;
@@ -104,7 +109,7 @@ public partial class MainWindow : Window {
                             .ConfigureAwait(false);
 
         if (!result)
-            return Models.Enums.ClosingBehavior.AskAbout;
+            return Models.Enums.ClosingBehavior.Ask;
 
         if (model.IsEnablePrompt)
             ConfigManager.SystemConfig.ClosingBehavior = model.ClosingBehavior;
