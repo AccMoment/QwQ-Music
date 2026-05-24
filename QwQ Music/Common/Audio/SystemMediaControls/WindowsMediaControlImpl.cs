@@ -1,5 +1,5 @@
 ﻿#if _WIN_NT
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
@@ -45,54 +45,49 @@ public static partial class SystemMediaControl {
         static extern void SetCurrentProcessExplicitAppUserModelID([MarshalAs(UnmanagedType.LPWStr)] string AppID);
     }
 
+    [RequiresUnreferencedCode("Uses COM interop types that must be preserved under trimming.")]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ShellLink))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(IShellLinkW))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(IPropertyStore))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(IPersistFile))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(PropVariant))]
     private static void TryCreateStartMenuShortcut(string appUserModelId) {
-        if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA) {
-            TryCreateStartMenuShortcutCore();
-            return;
-        }
-        Thread thread = new(TryCreateStartMenuShortcutCore) {IsBackground = true};
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        return;
-        
-        void TryCreateStartMenuShortcutCore() {
-            string? exePath = Process.GetCurrentProcess().MainModule?.FileName;
-            if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
-                return;
+        string exePath = Environment.ProcessPath ?? throw new InvalidOperationException("无法获取当前进程路径。");
 
-            string startMenuFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.StartMenu),
-                "Programs");
+        string startMenuFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.StartMenu),
+            "Programs");
+        Directory.CreateDirectory(startMenuFolder);
 
-            string shortcutPath = Path.Combine(startMenuFolder, "QwQ Music.lnk");
-            string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "QwQ Music.ico");
-            try {
-                // ReSharper disable once SuspiciousTypeConversion.Global
-                IShellLinkW link = (IShellLinkW)new ShellLink();
-                link.SetPath(exePath);
-                link.SetWorkingDirectory(AppDomain.CurrentDomain.BaseDirectory);
-                link.SetDescription("QwQ Music");
-                if (File.Exists(iconPath))
-                    link.SetIconLocation(iconPath, 0);
+        string shortcutPath = Path.Combine(startMenuFolder, "QwQ Music.lnk");
+        File.Delete(shortcutPath);
+        string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "QwQ Music.ico");
+        try {
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            var link = (IShellLinkW)new ShellLink();
+            link.SetPath(exePath);
+            link.SetWorkingDirectory(AppDomain.CurrentDomain.BaseDirectory);
+            link.SetDescription("QwQ Music");
+            if (File.Exists(iconPath))
+                link.SetIconLocation(iconPath, 0);
 
-                // ReSharper disable once SuspiciousTypeConversion.Global
-                IPropertyStore propertyStore = (IPropertyStore)link;
-                PROPERTYKEY appIdKey = PROPERTYKEY.AppUserModelId;
-                using (PropVariant value = PropVariant.FromString(appUserModelId)) {
-                    propertyStore.SetValue(ref appIdKey, value);
-                    propertyStore.Commit();
-                }
-
-                // ReSharper disable once SuspiciousTypeConversion.Global
-                ((IPersistFile)link).Save(shortcutPath, true);
-                LoggerService.Error(
-                    $"已创建开始菜单快捷方式，位于{shortcutPath}");
-            } catch (Exception ex) {
-                LoggerService.Error(
-                    $"创建开始菜单快捷方式失败。\nPath:{exePath}\nDirectory:{AppDomain.CurrentDomain.BaseDirectory}\nShortcut Path:{
-                        shortcutPath}",
-                    ex);
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            IPropertyStore propertyStore = (IPropertyStore)link;
+            PROPERTYKEY appIdKey = PROPERTYKEY.AppUserModelId;
+            using (PropVariant value = PropVariant.FromString(appUserModelId)) {
+                propertyStore.SetValue(ref appIdKey, value);
+                propertyStore.Commit();
             }
+
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            ((IPersistFile)link).Save(shortcutPath, true);
+            LoggerService.Info($"已创建开始菜单快捷方式，位于{shortcutPath}");
+        } catch (Exception ex) {
+            var err = Marshal.GetLastWin32Error();
+            LoggerService.Error(
+                $"创建开始菜单快捷方式失败。Win32ErrorCode:{err}\nPath:{exePath}\nDirectory:{AppDomain.CurrentDomain.BaseDirectory
+                }\nShortcut Path:{shortcutPath}",
+                ex);
         }
     }
 
@@ -166,7 +161,7 @@ public static partial class SystemMediaControl {
     }
 }
 
-public class WindowsMediaControlImpl : ISystemMediaControlImpl {
+public sealed class WindowsMediaControlImpl : ISystemMediaControlImpl {
     private readonly MediaPlayer _systemInterfaceProvider;
     private IRandomAccessStream? _thumbnail;
 
@@ -182,7 +177,6 @@ public class WindowsMediaControlImpl : ISystemMediaControlImpl {
 
 
     public void UpdateInfo(object? sender, MusicItemChangedEventArgs args) {
-        SystemMediaControl.SetProcessInfoId();
         Task.Run(async Task? () => {
                 MusicItemModel model = args.NewItem.Model;
                 Provider.DisplayUpdater.Type = MediaPlaybackType.Music;
@@ -260,7 +254,7 @@ public class WindowsMediaControlImpl : ISystemMediaControlImpl {
         set => throw new InvalidOperationException();
     }
 
-    public MediaPlaybackMode Mode { get; set; }
+    // public MediaPlaybackMode Mode { get; set; }
 
     public bool IsPlayEnabled {
         get => Provider.IsPlayEnabled;
@@ -325,6 +319,12 @@ public class WindowsMediaControlImpl : ISystemMediaControlImpl {
     public void Dispose() {
         Provider.ButtonPressed -= OnButtonPressed;
         Provider.PlaybackPositionChangeRequested -= OnPlaybackPositionChangeRequested;
+        PlayRequested = null;
+        PauseRequested = null;
+        NextRequested = null;
+        PreviousRequested = null;
+        StopRequested = null;
+        SeekRequested = null;
         _systemInterfaceProvider.Dispose();
         _thumbnail?.Dispose();
         _thumbnail = null!;
