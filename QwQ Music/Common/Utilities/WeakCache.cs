@@ -9,8 +9,8 @@ namespace QwQ_Music.Common.Utilities;
 ///     构造函数
 /// </remarks>
 /// <param name="cleanupBatchSize">每次清理时检查的项目数</param>
-public class WeakCache<TKey, TValue>(int cleanupBatchSize = 10) where TValue : class
-                                                                where TKey : notnull {
+public sealed class WeakCache<TKey, TValue>(int cleanupBatchSize = 10) : IDisposable where TValue : class
+    where TKey : notnull {
     private readonly ConcurrentDictionary<TKey, (WeakReference<TValue> Reference, DateTime LastAccess)> _cache = new();
 
     /// <summary>
@@ -110,5 +110,27 @@ public class WeakCache<TKey, TValue>(int cleanupBatchSize = 10) where TValue : c
                      oldest.Where(kvp => !kvp.Value.Reference.TryGetTarget(out _)))
                 _cache.Remove(kvp.Key, out _);
         }
+    }
+
+    public void Dispose() {
+        if (typeof(TKey).IsAssignableTo(typeof(IDisposable)) && typeof(TValue).IsAssignableTo(typeof(IDisposable))) {
+            _cache.AsParallel()
+                  .ForAll(item => {
+                      ((IDisposable?)item.Key)?.Dispose();
+                      if (item.Value.Reference.TryGetTarget(out TValue? value))
+                          ((IDisposable?)value)?.Dispose();
+                  });
+        } else if (typeof(TKey).IsAssignableTo(typeof(IDisposable))) {
+            _cache.Keys.AsParallel().ForAll(key => { ((IDisposable)key).Dispose(); });
+        } else if (typeof(TValue).IsAssignableTo(typeof(IDisposable))) {
+            _cache.Values.AsParallel()
+                  .Select(item => item.Reference)
+                  .ForAll(item => {
+                      if (item.TryGetTarget(out TValue? value))
+                          ((IDisposable?)value)?.Dispose();
+                  });
+        }
+
+        _cache.Clear();
     }
 }

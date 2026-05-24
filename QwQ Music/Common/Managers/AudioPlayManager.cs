@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Audio;
 using QwQ_Music.Common.Audio.SystemMediaControls;
 using QwQ_Music.Common.Services;
+using QwQ_Music.Common.Services.Databases;
 using QwQ_Music.Models;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.Models.Enums;
@@ -19,7 +20,7 @@ public class MusicItemChangedEventArgs(PlaylistItemModel oldItem, PlaylistItemMo
     public readonly PlaylistItemModel OldItem = oldItem;
 }
 
-public partial class AudioPlayManager : ObservableObject, IAsyncDisposable {
+public sealed partial class AudioPlayManager : ObservableObject, IAsyncDisposable {
     public static AudioPlayManager Instance { get; } = new();
 
     #region 属性和字段
@@ -28,7 +29,9 @@ public partial class AudioPlayManager : ObservableObject, IAsyncDisposable {
 
     public AudioPlayer AudioPlayer { get; } = new();
     private readonly AudioPreprocessor _audioPreprocessor;
-    public readonly ISystemMediaControlImpl SystemMediaControl = Audio.SystemMediaControls.SystemMediaControl.CreateSystemMediaControl();
+
+    public readonly ISystemMediaControlImpl SystemMediaControl =
+        Audio.SystemMediaControls.SystemMediaControl.CreateSystemMediaControl();
 
 
     private readonly Timer _lrcTimer;
@@ -307,30 +310,6 @@ public partial class AudioPlayManager : ObservableObject, IAsyncDisposable {
         RegisterHotkeyFunctions();
     }
 
-    // TODO : NOTE: MOVE THIS TO FINALIZER
-    public async ValueTask DisposeAsync() {
-        AudioPlayer.Stop();
-        PlayerConfig.LastPlayedFilePath = CurrentMusicItem.Model.FilePath;
-        _lrcTimer.Elapsed -= OnLrcTimerElapsed;
-        _lrcTimer.Dispose();
-        await _audioPreprocessor.UpdateMusicPlayProgressAsync(CurrentMusicItem.Model).ConfigureAwait(false);
-        IEnumerable<string> paths = PlaylistManager.Instance.SequentialPlaylist.Select(item => item.Model.FilePath);
-        if (PlayerConfig.PlayMode == PlayMode.Random) {
-            AvaloniaList<PlaylistItemModel> shuffled = PlaylistManager.Instance.ActualPlaylist;
-            IEnumerable<int> orders = PlaylistManager.Instance.SequentialPlaylist.Select(shuffled.IndexOf);
-
-            await PlaylistRepository.WriteAsync(paths, orders).ConfigureAwait(false);
-        } else {
-            await PlaylistRepository.WriteAsync(paths).ConfigureAwait(false);
-        }
-
-        AudioPlayer.Dispose();
-        PlaybackStateChanged = null;
-        UnregisterHotkeyFunctions();
-        UnregisterSystemMediaControlHandlers();
-        GC.SuppressFinalize(this);
-    }
-
     #endregion
 
     #region 事件处理
@@ -579,14 +558,7 @@ public partial class AudioPlayManager : ObservableObject, IAsyncDisposable {
         return -1;
     }
 
-    public static string PlayModeName => //TODO: i18n
-        PlayerConfig.PlayMode switch {
-            PlayMode.Sequential => "顺序播放",
-            PlayMode.Random     => "随机播放",
-            PlayMode.SingleLoop => "单曲循环",
-            PlayMode.Loop       => "列表循环",
-            _                   => throw new IndexOutOfRangeException($"不存在的播放模式:{PlayerConfig.PlayMode}")
-        };
+    public static string PlayModeName => I18NService.Lang[PlayerConfig.PlayMode.ToString(), nameof(PlayMode)];
 
     private void RegisterSystemMediaControlHandlers() {
         SystemMediaControl.IsPlayEnabled = true;
@@ -625,9 +597,7 @@ public partial class AudioPlayManager : ObservableObject, IAsyncDisposable {
 
     private void OnSystemNextRequested(object? sender, EventArgs e) { Dispatcher.UIThread.Post(NextMusic); }
 
-    private void OnSystemPreviousRequested(object? sender, EventArgs e) {
-        Dispatcher.UIThread.Post(PreviousMusic);
-    }
+    private void OnSystemPreviousRequested(object? sender, EventArgs e) { Dispatcher.UIThread.Post(PreviousMusic); }
 
     private void OnSystemStopRequested(object? sender, EventArgs e) { Dispatcher.UIThread.Post(Stop); }
 
@@ -636,4 +606,36 @@ public partial class AudioPlayManager : ObservableObject, IAsyncDisposable {
     }
 
     #endregion
+
+    public async ValueTask DisposeAsync() {
+        PlaybackStateChanged = null;
+        MusicItemChanged = null;
+        UnregisterSystemMediaControlHandlers();
+        UnregisterHotkeyFunctions();
+        AudioPlayer.Stop();
+        PlayerConfig.LastPlayedFilePath = CurrentMusicItem.Model.FilePath;
+        _lrcTimer.Elapsed -= OnLrcTimerElapsed;
+        _lrcTimer.Dispose();
+        await _audioPreprocessor.UpdateMusicPlayProgressAsync(CurrentMusicItem.Model).ConfigureAwait(false);
+        await SavePlaylist().ConfigureAwait(false);
+        GC.SuppressFinalize(this);
+        return;
+
+        async Task SavePlaylist() {
+            IEnumerable<string> paths = PlaylistManager.Instance.SequentialPlaylist.Select(item => item.Model.FilePath);
+            if (PlayerConfig.PlayMode == PlayMode.Random) {
+                AvaloniaList<PlaylistItemModel> shuffled = PlaylistManager.Instance.ActualPlaylist;
+                IEnumerable<int> orders = PlaylistManager.Instance.SequentialPlaylist.Select(shuffled.IndexOf);
+
+                await PlaylistRepository.WriteAsync(paths, orders).ConfigureAwait(false);
+            } else {
+                await PlaylistRepository.WriteAsync(paths).ConfigureAwait(false);
+            }
+
+            AudioPlayer.Dispose();
+            SystemMediaControl.Dispose();
+        }
+    }
+
+    ~AudioPlayManager() { DisposeAsync().ConfigureAwait(false).GetAwaiter().GetResult(); }
 }

@@ -34,8 +34,10 @@ public partial class ApplicationViewModel : ObservableObject {
 
     [RelayCommand]
     public static void Shutdown() {
-        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop) {
+            Environment.Exit(1);
             return;
+        }
 
         desktop.Shutdown();
     }

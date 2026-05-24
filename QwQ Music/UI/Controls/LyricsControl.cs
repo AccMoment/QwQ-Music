@@ -8,7 +8,6 @@ using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Data;
-using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -148,11 +147,6 @@ public class LyricsControl : TemplatedControl {
     private Thickness ResolveLineMargin() { return new Thickness(0, 0, 0, Math.Max(0, LineSpacing)); }
 
     private void UpdateCurrentLyric() {
-        if (!IsEffectivelyVisible) {
-            LoggerService.Debug("由于控件不可见，跳过本次歌词更新");
-            return;
-        }
-
         if (_lyricItems.Count == 0 || CurrentLyricIndex < 0 || CurrentLyricIndex >= _lyricItems.Count)
             return;
 
@@ -197,6 +191,7 @@ public class LyricsControl : TemplatedControl {
 
         double targetOffset = CalculateTargetOffset(container);
         if (_scrollAnimationCts is not null) {
+            // ReSharper disable once MethodHasAsyncOverload
             _scrollAnimationCts.Cancel();
             _scrollAnimationCts.Dispose();
         }
@@ -435,6 +430,11 @@ public class LyricsControl : TemplatedControl {
     private CancellationTokenSource? _scrollAnimationCts;
 
     #endregion
+
+    ~LyricsControl() {
+        DetachEvents();
+        LyricClicked = null;
+    }
 }
 
 public sealed class LyricLineViewItem(
@@ -444,40 +444,32 @@ public sealed class LyricLineViewItem(
     bool hasTranslation,
     bool isPlaceholder,
     double lineHeight,
-    Thickness margin) : INotifyPropertyChanged {
+    Thickness margin) : IDisposable, INotifyPropertyChanged {
     public double TimePoint { get; } = timePoint;
     public string PrimaryText { get; } = primaryText;
     public string? TranslationText { get; } = translationText;
     public bool HasTranslation { get; } = hasTranslation;
     public bool IsPlaceholder { get; } = isPlaceholder;
 
-    private bool _showTranslation;
-
     public bool ShowTranslation {
-        get => _showTranslation;
-        set => SetField(ref _showTranslation, value);
+        get;
+        set => SetField(ref field, value);
     }
-
-    private bool _isCurrent;
 
     public bool IsCurrent {
-        get => _isCurrent;
-        set => SetField(ref _isCurrent, value);
+        get;
+        set => SetField(ref field, value);
     }
-
-    private double _lineHeight = lineHeight;
 
     public double LineHeight {
-        get => _lineHeight;
-        set => SetField(ref _lineHeight, value);
-    }
-
-    private Thickness _margin = margin;
+        get;
+        set => SetField(ref field, value);
+    } = lineHeight;
 
     public Thickness Margin {
-        get => _margin;
-        set => SetField(ref _margin, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = margin;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -488,4 +480,6 @@ public sealed class LyricLineViewItem(
         field = value;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
+
+    public void Dispose() { PropertyChanged = null; }
 }

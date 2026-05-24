@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using Avalonia.Threading;
-using QwQ_Music.Common.Audio.SystemMediaControls;
 using QwQ_Music.Common.Interfaces;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
@@ -23,14 +22,11 @@ public enum MediaPlaybackStatus {
     Changing, Fading, Playing, Paused, Stopped
 }
 
-public enum MediaPlaybackMode {
-    Repeat, List, ListRepeat, Shuffle
-}
 
 /// <summary>
 ///     基于SoundFlow实现的音频播放器
 /// </summary>
-public class AudioPlayer : IAudioPlayer {
+public sealed class AudioPlayer : IAudioPlayer {
     private readonly Thread _audioThread;
 
     private readonly BlockingCollection<Action> _commandQueue = new();
@@ -65,7 +61,6 @@ public class AudioPlayer : IAudioPlayer {
     public bool IsDisposed => _audioThread.ThreadState == ThreadState.Stopped;
 
     private static MiniAudioEngine AudioEngine { get; set; } = null!;
-    private static ISystemMediaControlImpl SystemMedia { get; set; } = null!;
 
     public Stream? Current { get; private set; }
 
@@ -252,7 +247,9 @@ public class AudioPlayer : IAudioPlayer {
         // }
 
         Current?.Dispose();
+        Current = null;
         _soundDataProvider?.Dispose();
+        _soundDataProvider = null;
         if (_soundPlayer is null)
             return;
         Debug.Assert(PlayerDevice.MasterMixer.Components.Count <= 1);
@@ -297,36 +294,6 @@ public class AudioPlayer : IAudioPlayer {
         }
     }
 
-    /// <summary>
-    ///     释放所有资源
-    /// </summary>
-    public void Dispose() {
-        if (IsDisposed) {
-            LoggerService.Warning("额外的AudioPlayer Dispose调用。已忽略");
-            return;
-        }
-
-        Stop();
-        SystemMedia.Dispose();
-        using (_commandQueue) {
-            _token.Cancel();
-            _commandQueue.CompleteAdding();
-            _audioThread.Join();
-        }
-
-        FadeOutTimer.Dispose();
-        FadeOutTimer = null!;
-        SpecTimer.Stop();
-        SpecTimer = null!;
-        UpdateTimer.Stop();
-        UpdateTimer = null!;
-        PlayerDevice.Dispose();
-        PlayerDevice = null!;
-        Debug.Assert(_audioThread.ThreadState == ThreadState.Stopped);
-        PlaybackCompleted = null;
-        PositionChanged = null;
-        GC.SuppressFinalize(this);
-    }
 
     public bool CheckAccess() { return Thread.CurrentThread == _audioThread; }
 
@@ -390,7 +357,7 @@ public class AudioPlayer : IAudioPlayer {
         // Spectrum
         // ReSharper disable once InvertIf
         if (ConfigManager.UiConfig.SpectrumConfig.IsEnabled) {
-            _spectrumAnalyzer = new SpectrumAnalyzer(AudioFormat, ConfigManager.UiConfig.SpectrumConfig.FFTSize);
+            _spectrumAnalyzer = new SpectrumAnalyzer(AudioFormat, ConfigManager.UiConfig.SpectrumConfig.FftSize);
 
             _soundPlayer.AddAnalyzer(_spectrumAnalyzer);
 
@@ -508,5 +475,39 @@ public class AudioPlayer : IAudioPlayer {
 
         if (isPlaying)
             Play();
+    }
+    
+    /// <summary>
+    ///     释放所有资源
+    /// </summary>
+    public void Dispose() {
+        if (IsDisposed) {
+            LoggerService.Warning("额外的AudioPlayer Dispose调用。已忽略");
+            return;
+        }
+
+        Stop();
+        using (_commandQueue) {
+            _token.Cancel();
+            _commandQueue.CompleteAdding();
+            _audioThread.Join();
+        }
+
+        FadeOutTimer.Dispose();
+        FadeOutTimer = null!;
+        SpecTimer.Stop();
+        SpecTimer = null!;
+        UpdateTimer.Stop();
+        UpdateTimer = null!;
+        PlayerDevice.Dispose();
+        PlayerDevice = null!;
+        Debug.Assert(_audioThread.ThreadState == ThreadState.Stopped);
+        PlaybackCompleted = null;
+        PositionChanged = null;
+        GC.SuppressFinalize(this);
+    }
+
+    ~AudioPlayer() {
+        Dispose();
     }
 }

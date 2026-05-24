@@ -15,9 +15,9 @@ public class MusicItemsChangedEventArgs : EventArgs {
     public required List<MusicItemModel>? NewItems { get; init; }
 }
 
-public partial class MusicItemsManager : ObservableObject {
+public sealed partial class MusicItemsManager : ObservableObject, IDisposable {
     private readonly SemaphoreSlim _addSem = new(1, 1);
-    private MusicItemsManager() { InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult(); }
+    private MusicItemsManager() { InitializeAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false); }
     public static MusicItemsManager All { get; } = new() { Name = "QWQ_MUSIC_LIST_ALL_MUSIC_LIST" };
 
     public required string Name { get; init; }
@@ -239,4 +239,13 @@ public partial class MusicItemsManager : ObservableObject {
     public static void RemoveItems(IList items) {
         All.RemoveAsync(items.Cast<MusicItemModel>()).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
+
+    public void Dispose() {
+        MusicItemsChanged = null;
+        _addSem.Dispose();
+        MusicItems.Clear();
+        GC.SuppressFinalize(this);
+    }
+
+    ~MusicItemsManager() { Dispose(); }
 }

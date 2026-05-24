@@ -13,7 +13,7 @@ using Ursa.Controls;
 
 namespace QwQ_Music.Common.Managers;
 
-public partial class MusicListsManager : ObservableObject {
+public sealed partial class MusicListsManager : ObservableObject, IDisposable {
     private MusicListsManager() { InitializeAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false); }
     public static MusicListsManager Instance { get; } = new();
 
@@ -112,16 +112,15 @@ public partial class MusicListsManager : ObservableObject {
 
         var repo = MusicListItemsRepository.Instance;
 
-        MusicItemModel[] newItems = musicItems
-                                    .Where(item => !repo
-                                                    .ContainsAsync((musicList.Name, musicList.Creator), item.FilePath)
-                                                    .ConfigureAwait(false)
-                                                    .GetAwaiter()
-                                                    .GetResult())
-                                    .ToArray();
+        List<MusicItemModel> newItems = [];
+        foreach (MusicItemModel item in musicItems) {
+            if (!await repo.ContainsAsync((musicList.Name, musicList.Creator), item.FilePath).ConfigureAwait(false)) {
+                newItems.Add(item);
+            }
+        }
 
         // 如果有已存在的音乐项，显示提示
-        if (newItems.Length != musicItems.Count) {
+        if (newItems.Count != musicItems.Count) {
             MusicItemModel[] existingItems = musicItems.Except(newItems).ToArray();
             string existingTitles = string.Join("、", existingItems.Select(item => $"《{item.Title}》"));
             NotificationService.Info("提示", $"歌曲{existingTitles}已存在于歌单 {musicList.Name} 中！");
@@ -289,4 +288,12 @@ public partial class MusicListsManager : ObservableObject {
 
         await MusicListCoverRepository.Instance.InsertAsync(musicList).ConfigureAwait(false);
     }
+
+    public void Dispose() {
+        CollectionChanged = null;
+        MusicLists.Clear();
+        GC.SuppressFinalize(this);
+    }
+
+    ~MusicListsManager() { Dispose(); }
 }
