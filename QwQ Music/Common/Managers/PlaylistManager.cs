@@ -2,6 +2,7 @@ using Avalonia.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Services;
+using QwQ_Music.Common.Services.Databases;
 using QwQ_Music.Models;
 using QwQ_Music.Models.Enums;
 
@@ -16,13 +17,11 @@ public partial class PlaylistManager : ObservableObject {
 
 
     private PlaylistManager() {
-        Task.Run(() => {
-                var (indexes, paths, count, latest) = PlaylistRepository
+        Task.Run(async Task? () => {
+                var (indexes, paths, count, latest) = await PlaylistRepository
                                                       .ParseAsync(AudioPlayManager.PlayerConfig.LastPlayedFilePath)
-                                                      .ConfigureAwait(false)
-                                                      .GetAwaiter()
-                                                      .GetResult();
-                ReplaceAsync(
+                                                      .ConfigureAwait(false);
+                await ReplaceAsync(
                         MusicItemsManager.All.Name,
                         paths.Select((item, index) => {
                             if (!MusicItemsManager.All.MusicItems.TryGetValue(item, out MusicItemModel? model)) {
@@ -39,9 +38,7 @@ public partial class PlaylistManager : ObservableObject {
                         latest,
                         false,
                         indexes)
-                    .ConfigureAwait(false)
-                    .GetAwaiter()
-                    .GetResult();
+                    .ConfigureAwait(false);
             })
             .ContinueWith(LoggerService.HandleException)
             .ConfigureAwait(false);
@@ -75,7 +72,7 @@ public partial class PlaylistManager : ObservableObject {
             OrderedDictionary<string, MusicItemModel>.ValueCollection items = MusicItemsManager.All.MusicItems.Values;
             if (items.Count == 0)
                 return PlaylistItemModel.RefDefault;
-            ReplaceAsync(MusicItemsManager.All.Name, items, 0, true).ConfigureAwait(false).GetAwaiter().GetResult();
+            ReplaceAsync(MusicItemsManager.All.Name, items, 0, true).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
         }
 
         return ActualPlaylist.FirstOrDefault(PlaylistItemModel.RefDefault);

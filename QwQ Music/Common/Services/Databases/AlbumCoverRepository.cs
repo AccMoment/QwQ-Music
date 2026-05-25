@@ -15,8 +15,7 @@ public class AlbumCoverRepository : IAsyncDatabaseRepository<(string Name, strin
 
     private AlbumCoverRepository(string dbPath) {
         _db = new AsyncDatabaseService(dbPath);
-        InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-        _ = AlbumThumbnailRepository.Instance; // Pre-initialize Database.
+        InitializeAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 
     public async ValueTask DisposeAsync() {

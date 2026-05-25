@@ -12,7 +12,7 @@ public class AlbumRepository : IAsyncDatabaseRepository<(string Name, string Art
 
     protected AlbumRepository(string path) {
         _db = new AsyncDatabaseService(path);
-        InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+        InitializeAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 
     public async ValueTask DisposeAsync() {

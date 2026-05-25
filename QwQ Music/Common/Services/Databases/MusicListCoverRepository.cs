@@ -16,8 +16,7 @@ public class
 
     private MusicListCoverRepository(string path) {
         _db = new AsyncDatabaseService(path);
-        InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-        _ = MusicListThumbnailRepository.Instance; // Pre-initialize Database.
+        InitializeAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 
     public async ValueTask DisposeAsync() {
@@ -197,7 +196,7 @@ public class MusicListThumbnailRepository : IAsyncReadonlyDatabaseRepository<(st
 
     private MusicListThumbnailRepository(string path) {
         _db = new AsyncDatabaseService(path);
-        InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+        InitializeAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 
     public async ValueTask DisposeAsync() {

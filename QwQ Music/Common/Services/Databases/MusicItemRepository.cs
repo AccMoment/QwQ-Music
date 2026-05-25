@@ -14,7 +14,7 @@ public class MusicItemRepository : IAsyncDatabaseRepository<MusicItemModel> {
 
     private MusicItemRepository(string dbPath) {
         _db = new AsyncDatabaseService(dbPath);
-        InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+        InitializeAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 
     public async ValueTask DisposeAsync() {

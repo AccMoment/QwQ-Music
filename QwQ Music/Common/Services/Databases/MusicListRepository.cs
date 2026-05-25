@@ -14,7 +14,7 @@ public class
 
     protected MusicListRepository(string path) {
         _db = new AsyncDatabaseService(path);
-        InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+        InitializeAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 
     public async ValueTask DisposeAsync() {
