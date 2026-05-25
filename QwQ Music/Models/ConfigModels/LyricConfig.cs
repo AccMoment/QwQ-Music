@@ -114,7 +114,7 @@ public partial class RolledLyricConfig : ObservableObject {
     public partial HorizontalAlignment LyricTextAlignment { get; set; } = HorizontalAlignment.Left;
 
     [ObservableProperty]
-    public partial bool ShowTranslation { get; set; }
+    public partial bool ShowTranslation { get; set; } = true;
 
     [ObservableProperty]
     public partial string? RolledLyricsFont { get; set; } = AppResources.DEFAULT_FONT_KEY;
@@ -133,23 +133,21 @@ public partial class RolledLyricConfig : ObservableObject {
 }
 
 public partial class DesktopLyricConfig : ObservableObject {
-    public bool LyricIsEnabled { get; set; }
+    public bool LyricIsEnabled { get; set; } = true;
 
     public bool LockLyricWindow { get; set; }
 
     [ObservableProperty]
-    public partial bool LyricIsDoubleLine { get; set; } = true;
+    public partial bool LyricIsDoubleLine { get; set; }
 
     [ObservableProperty]
-    public partial bool LyricIsDualLang { get; set; }
+    public partial bool LyricIsDualLang { get; set; } = true;
 
-    public bool DesktopPlayControlIsEnabled { get; set; }
+    public bool DesktopPlayControlIsEnabled { get; set; } = true;
 
     [ObservableProperty]
     public partial int DesktopPlayControlTriggerDistance { get; set; } = 10;
 
-    [ObservableProperty]
-    public partial bool LyricIsVertical { get; set; }
 
     [ObservableProperty]
     public partial string DesktopLyricsFont { get; set; } = AppResources.DEFAULT_FONT_KEY;
