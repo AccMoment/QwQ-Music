@@ -164,31 +164,33 @@ public partial class LyricConfigPageViewModel : ViewModelBase {
 
     #region 多语言
 
-    public static string IsEnabledName => Lang[nameof(IsEnabledName)];
+    public static string IsEnabledV => Lang[nameof(IsEnabledV)];
 
-    public static string IsDoubleLineName => Lang[nameof(IsDoubleLineName)];
+    public static string IsDoubleLineV => Lang[nameof(IsDoubleLineV)];
 
-    public static string IsDualLangName => Lang[nameof(IsDualLangName)];
+    public static string IsDualLangV => Lang[nameof(IsDualLangV)];
 
-    public static string PositionXName => Lang[nameof(PositionXName)];
+    // ReSharper disable once InconsistentNaming
+    public static string PositionXV => Lang[nameof(PositionXV)];
 
-    public static string PositionYName => Lang[nameof(PositionYName)];
+    // ReSharper disable once InconsistentNaming
+    public static string PositionYV => Lang[nameof(PositionYV)];
 
-    public static string WidthName => Lang[nameof(WidthName)];
+    public static string WidthV => Lang[nameof(WidthV)];
 
-    public static string HeightName => Lang[nameof(HeightName)];
+    public static string HeightV => Lang[nameof(HeightV)];
 
-    public static string LyricMainTopColorName => Lang[nameof(LyricMainTopColorName)];
+    public static string LyricMainTopColorV => Lang[nameof(LyricMainTopColorV)];
 
-    public static string LyricMainBottomColorName => Lang[nameof(LyricMainBottomColorName)];
+    public static string LyricMainBottomColorV => Lang[nameof(LyricMainBottomColorV)];
 
-    public static string LyricMainBorderColorName => Lang[nameof(LyricMainBorderColorName)];
+    public static string LyricMainBorderColorV => Lang[nameof(LyricMainBorderColorV)];
 
-    public static string LyricAltTopColorName => Lang[nameof(LyricAltTopColorName)];
+    public static string LyricAltTopColorV => Lang[nameof(LyricAltTopColorV)];
 
-    public static string LyricAltBottomColorName => Lang[nameof(LyricAltBottomColorName)];
+    public static string LyricAltBottomColorV => Lang[nameof(LyricAltBottomColorV)];
 
-    public static string LyricAltBorderColorName => Lang[nameof(LyricAltBorderColorName)];
+    public static string LyricAltBorderColorV => Lang[nameof(LyricAltBorderColorV)];
 
     #endregion
 }

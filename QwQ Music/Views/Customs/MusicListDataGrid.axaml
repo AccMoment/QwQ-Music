@@ -36,19 +36,19 @@
                         </TextBox>
 
                         <u:IconButton ToolTip.Tip="添加音乐"
-                                      IsVisible="{Binding .,Converter={StaticResource TypeCheckConverter},ConverterParameter={x:Type vm2:AllMusicPageViewModel}}"
+                                      IsVisible="{Binding .,Converter={StaticResource TypeCheckConverter},ConverterParameter={x:Type vm2:MusicLibraryPageViewModel}}"
                                       Icon="{StaticResource SemiIconPlus}">
                             <u:IconButton.Flyout>
                                 <MenuFlyout>
                                     <MenuItem Header="文件"
-                                              Command="{Binding (vm2:AllMusicPageViewModel).OpenFileCommand}"
+                                              Command="{Binding (vm2:MusicLibraryPageViewModel).OpenFileCommand}"
                                               ToolTip.Tip="从文件添加音乐">
                                         <MenuItem.Icon>
                                             <PathIcon Data="{StaticResource SemiIconFile}" Margin="2" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem Header="文件夹"
-                                              Command="{Binding (vm2:AllMusicPageViewModel).OpenFolderCommand}"
+                                              Command="{Binding (vm2:MusicLibraryPageViewModel).OpenFolderCommand}"
                                               ToolTip.Tip="从文件夹添加音乐">
                                         <MenuItem.Icon>
                                             <PathIcon Data="{StaticResource SemiIconFolderOpen}" Margin="2" />
@@ -382,7 +382,7 @@
                     </StackPanel>
                     <Interaction.Behaviors>
                         <RoutedEventTriggerBehavior RoutedEvent="{x:Static DragDrop.DropEvent}">
-                            <InvokeCommandAction Command="{Binding (vm2:AllMusicPageViewModel).DropFilesCommand}"
+                            <InvokeCommandAction Command="{Binding (vm2:MusicLibraryPageViewModel).DropFilesCommand}"
                                                  PassEventArgsToCommand="True" />
                         </RoutedEventTriggerBehavior>
                     </Interaction.Behaviors>

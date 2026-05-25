@@ -5,13 +5,19 @@ using SoundFlow.Backends.MiniAudio.Devices;
 namespace QwQ_Music.Models.ConfigModels;
 
 public enum AddMusicBehavior {
-    //添加到下一首
+    /// <summary>
+    ///     添加到下一首
+    /// </summary>
     AddToNext,
 
-    //将播放列表替换为此歌曲
+    /// <summary>
+    ///     将播放列表替换为此歌曲
+    /// </summary>
     SetToList,
 
-    //将播放列表替换为此歌曲所在的列表
+    /// <summary>
+    ///     将播放列表替换为此歌曲所在的列表
+    /// </summary>
     ReplaceList
 }
 

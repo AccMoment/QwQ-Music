@@ -9,8 +9,8 @@ using MusicItemsManager = QwQ_Music.Common.Managers.MusicItemsManager;
 
 namespace QwQ_Music.ViewModels.Pages;
 
-public partial class AllMusicPageViewModel : MusicItemsViewModelBase {
-    public AllMusicPageViewModel() : base(nameof(AllMusicPageViewModel)) {
+public partial class MusicLibraryPageViewModel : MusicItemsViewModelBase {
+    public MusicLibraryPageViewModel() : base(nameof(MusicLibraryPageViewModel)) {
         SetCurrentList(MusicItemsManager.All.Name, MusicItemsManager.All.MusicItems.Values.ToList());
         MusicItemsManager.All.MusicItemsChanged += OnMusicsChanged;
     }
@@ -58,5 +58,5 @@ public partial class AllMusicPageViewModel : MusicItemsViewModelBase {
                         .ConfigureAwait(false);
     }
 
-    ~AllMusicPageViewModel() { MusicItemsManager.All.MusicItemsChanged -= OnMusicsChanged; }
+    ~MusicLibraryPageViewModel() { MusicItemsManager.All.MusicItemsChanged -= OnMusicsChanged; }
 }

@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using Avalonia;
-using QwQ_Music.Common.Audio;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Services.Databases;
@@ -89,7 +88,7 @@ public static class Program {
             await MusicListItemsRepository.Instance.DisposeAsync().ConfigureAwait(false);
             await LoggerService.InfoAsync("资源已释放。").ConfigureAwait(false);
         } catch (Exception ex) {
-            await LoggerService.ErrorAsync($"关闭App时发生错误: {ex.Message}").ConfigureAwait(false);
+            await LoggerService.ErrorAsync("关闭App时发生错误",ex).ConfigureAwait(false);
         } finally {
             await LoggerService.DisposeAsync().ConfigureAwait(false);
         }

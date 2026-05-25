@@ -221,25 +221,25 @@
 
                     <Grid ColumnDefinitions="Auto,*">
                         <PathIcon Data="{StaticResource SemiIconSong}" />
-                        <TextBlock Grid.Column="1" Text="{Binding MusicName}"
+                        <TextBlock Grid.Column="1" Text="{Binding LibraryV}"
                                    Classes.Transparent="{Binding !DrawerManager.IsNavigationExpand}" />
                     </Grid>
 
                     <Grid ColumnDefinitions="Auto,*">
                         <PathIcon Data="{StaticResource SemiIconDisc}" />
-                        <TextBlock Grid.Column="1" Text="{Binding ClassificationName}"
+                        <TextBlock Grid.Column="1" Text="{Binding ClassificationV}"
                                    Classes.Transparent="{Binding !DrawerManager.IsNavigationExpand}" />
                     </Grid>
 
                     <Grid ColumnDefinitions="Auto,*">
                         <PathIcon Data="{StaticResource SemiIconBox}" />
-                        <TextBlock Grid.Column="1" Text="{Binding OtherName}"
+                        <TextBlock Grid.Column="1" Text="{Binding OtherV}"
                                    Classes.Transparent="{Binding !DrawerManager.IsNavigationExpand}" />
                     </Grid>
 
                     <Grid ColumnDefinitions="Auto,*">
                         <PathIcon Data="{StaticResource SemiIconSetting}" />
-                        <TextBlock Grid.Column="1" Text="{Binding SettingsName}"
+                        <TextBlock Grid.Column="1" Text="{Binding SettingsV}"
                                    Classes.Transparent="{Binding !DrawerManager.IsNavigationExpand}" />
                     </Grid>
 

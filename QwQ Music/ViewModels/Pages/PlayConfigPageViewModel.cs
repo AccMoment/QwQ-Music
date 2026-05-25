@@ -1,7 +1,8 @@
-using System.Collections.ObjectModel;
+using System.Collections.Frozen;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Audio.SoundModifier;
+using QwQ_Music.Common.Helpers;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Utilities;
@@ -29,12 +30,8 @@ public partial class PlayConfigPageViewModel : ViewModelBase {
         OnPropertyChanged(nameof(NumberOfCompletedCalc));
     }
 
-    public static ReadOnlyDictionary<string, AddMusicBehavior> AddMusicBehaviors { get; } = new(
-        new Dictionary<string, AddMusicBehavior> {
-            [nameof(AddMusicBehavior.AddToNext)] = AddMusicBehavior.AddToNext,
-            [nameof(AddMusicBehavior.SetToList)] = AddMusicBehavior.SetToList,
-            [nameof(AddMusicBehavior.ReplaceList)] = AddMusicBehavior.ReplaceList
-        });
+    public static FrozenDictionary<AddMusicBehavior, string> AddMusicBehaviors { get; } =
+        EnumHelper<AddMusicBehavior>.GetTranslationDictionary();
 
     public PlayerConfig PlayerConfig { get; } = ConfigManager.PlayerConfig;
 

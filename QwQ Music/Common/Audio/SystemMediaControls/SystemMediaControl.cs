@@ -4,14 +4,6 @@ namespace QwQ_Music.Common.Audio.SystemMediaControls;
 
 public class SystemMediaControlEventArgs : EventArgs;
 
-public class PlaybackModeChangedEventArgs(MediaPlaybackMode mode) : SystemMediaControlEventArgs {
-    public readonly MediaPlaybackMode Mode = mode;
-}
-
-public class PlaybackStatusChangedEventArgs(MediaPlaybackStatus status) : SystemMediaControlEventArgs {
-    public readonly MediaPlaybackStatus Status = status;
-}
-
 public class PlaybackPositionChangedEventArgs(TimeSpan position) : SystemMediaControlEventArgs {
     public readonly TimeSpan Position = position;
 }
@@ -35,7 +27,7 @@ public interface ISystemMediaControlImpl : IDisposable {
     TimeSpan Duration { get; set; }
     MediaPlaybackStatus Status { get; set; }
     bool ShuffleEnabled { get; set; }
-    MediaPlaybackMode Mode { get; set; }
+    // MediaPlaybackMode Mode { get; set; }
     bool IsPlayEnabled { get; set; }
     bool IsPauseEnabled { get; set; }
     bool IsPreviousEnabled { get; set; }

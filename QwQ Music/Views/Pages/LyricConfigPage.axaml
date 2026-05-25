@@ -60,7 +60,6 @@
                 <Panel>
                     <TextBlock Text="对齐方式" VerticalAlignment="Center" />
                     <ComboBox
-                        Width="80"
                         HorizontalAlignment="Right"
                         DisplayMemberBinding="{Binding Value}"
                         SelectedValueBinding="{Binding Key}"
@@ -121,7 +120,7 @@
             <StackPanel>
 
                 <CheckBox
-                    Content="{Binding IsEnabledName}"
+                    Content="{Binding IsEnabledV}"
                     IsChecked="{Binding LyricIsEnabled}" />
 
                 <CheckBox
@@ -129,11 +128,11 @@
                     IsChecked="{Binding LockLyricWindow}" />
 
                 <CheckBox
-                    Content="{Binding IsDoubleLineName}"
+                    Content="{Binding IsDoubleLineV}"
                     IsChecked="{Binding LyricIsDoubleLine}" />
 
                 <CheckBox
-                    Content="{Binding IsDualLangName}"
+                    Content="{Binding IsDualLangV}"
                     IsChecked="{Binding LyricIsDualLang}" />
 
                 <CheckBox
@@ -175,13 +174,13 @@
                 <StackPanel Orientation="Horizontal" Spacing="10">
 
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding PositionXName}" Classes="Tertiary" />
+                        <TextBlock Text="{Binding PositionXV}" Classes="Tertiary" />
                         <TextBlock Text="{Binding LyricConfig.DesktopLyric.Position.X,StringFormat=': {0} px'}"
                                    Classes="Tertiary" />
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding PositionYName}" Classes="Tertiary" />
+                        <TextBlock Text="{Binding PositionYV}" Classes="Tertiary" />
                         <TextBlock Text="{Binding LyricConfig.DesktopLyric.Position.Y,StringFormat=': {0} px'}"
                                    Classes="Tertiary" />
                     </StackPanel>
@@ -370,7 +369,7 @@
                             Background="{Binding LyricConfig.DesktopLyric.LyricMainTopColor, Converter={StaticResource ToBrushConverter}}"
                             BorderBrush="{Binding $self.Foreground}"
                             Foreground="{Binding $self.Background, Converter={StaticResource ContrastBrushConverter}}"
-                            Content="{Binding LyricMainTopColorName}">
+                            Content="{Binding LyricMainTopColorV}">
                             <Button.Effect>
                                 <DropShadowEffect
                                     BlurRadius="8"
@@ -390,7 +389,7 @@
                             Background="{Binding LyricConfig.DesktopLyric.LyricMainBottomColor, Converter={StaticResource ToBrushConverter}}"
                             BorderBrush="{Binding $self.Foreground}"
                             Foreground="{Binding $self.Background, Converter={StaticResource ContrastBrushConverter}}"
-                            Content="{Binding LyricMainBottomColorName}">
+                            Content="{Binding LyricMainBottomColorV}">
                             <Button.Effect>
                                 <DropShadowEffect
                                     BlurRadius="8"
@@ -410,7 +409,7 @@
                             Background="{Binding LyricConfig.DesktopLyric.LyricMainBorderColor, Converter={StaticResource ToBrushConverter}}"
                             BorderBrush="{Binding $self.Foreground}"
                             Foreground="{Binding $self.Background, Converter={StaticResource ContrastBrushConverter}}"
-                            Content="{Binding LyricMainBorderColorName}">
+                            Content="{Binding LyricMainBorderColorV}">
                             <Button.Effect>
                                 <DropShadowEffect
                                     BlurRadius="8"
@@ -435,7 +434,7 @@
                             Background="{Binding LyricConfig.DesktopLyric.LyricAltTopColor, Converter={StaticResource ToBrushConverter}}"
                             BorderBrush="{Binding $self.Foreground}"
                             Foreground="{Binding $self.Background, Converter={StaticResource ContrastBrushConverter}}"
-                            Content="{Binding LyricAltTopColorName}">
+                            Content="{Binding LyricAltTopColorV}">
                             <Button.Effect>
                                 <DropShadowEffect
                                     BlurRadius="8"
@@ -455,7 +454,7 @@
                             Background="{Binding LyricConfig.DesktopLyric.LyricAltBottomColor, Converter={StaticResource ToBrushConverter}}"
                             BorderBrush="{Binding $self.Foreground}"
                             Foreground="{Binding $self.Background, Converter={StaticResource ContrastBrushConverter}}"
-                            Content="{Binding LyricAltBottomColorName}">
+                            Content="{Binding LyricAltBottomColorV}">
                             <Button.Effect>
                                 <DropShadowEffect
                                     BlurRadius="8"
@@ -475,7 +474,7 @@
                             Background="{Binding LyricConfig.DesktopLyric.LyricAltBorderColor, Converter={StaticResource ToBrushConverter}}"
                             BorderBrush="{Binding $self.Foreground}"
                             Foreground="{Binding $self.Background, Converter={StaticResource ContrastBrushConverter}}"
-                            Content="{Binding LyricAltBorderColorName}">
+                            Content="{Binding LyricAltBorderColorV}">
                             <Button.Effect>
                                 <DropShadowEffect
                                     BlurRadius="8"

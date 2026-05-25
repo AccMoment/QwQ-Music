@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using QwQ_Music.Common.Services;
 
 namespace QwQ_Music.Models;
 
@@ -70,25 +71,25 @@ public partial class LyricsModel : ObservableObject {
     }
 }
 
-public class LyricsData {
-    public static readonly LyricsData Loading = new() {
-        Title = null, Artist = null, Album = null, Data = [new LyricLine(0, "歌词加载中...")]
-    };
+public sealed class LyricsData {
+    private LyricsData() { }
 
-    protected LyricsData() { }
+    public static readonly LyricsData Loading = new() {
+        Title = null, Artist = null, Album = null, Data = [new LyricLine(0, I18NService.Lang["Loading lyrics..."])]
+    };
 
     private LyricLine DefaultLyricLine => new(0, $"{Title} - {Artist}", Album);
 
     public LyricLine this[int index] => index < Data.Count - 1 && index > 0 ? Data[index] : DefaultLyricLine;
 
     // 歌词元数据
-    public required string? Title { get; set; }
+    public required string? Title { get; init; }
 
-    public required string? Artist { get; set; }
+    public required string? Artist { get; init; }
 
-    public required string? Album { get; set; }
+    public required string? Album { get; init; }
 
-    public string? Creator { get; set; }
+    public string? Creator { get; init; }
 
     public double Offset {
         get;
@@ -100,7 +101,7 @@ public class LyricsData {
 
     public List<LyricLine> Data {
         get;
-        set {
+        private init {
             field = value;
             field.AsParallel().ForAll(line => line.TimePoint += Offset);
         }

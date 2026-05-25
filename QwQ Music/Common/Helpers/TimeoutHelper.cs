@@ -1,5 +1,4 @@
-﻿using System.Timers;
-using Timer = System.Timers.Timer;
+﻿using Timer = System.Timers.Timer;
 
 namespace QwQ_Music.Common.Helpers;
 

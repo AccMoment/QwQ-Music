@@ -1,5 +1,4 @@
 ﻿using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Rendering.Composition;
 using Avalonia.Rendering.Composition.Animations;
 

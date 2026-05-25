@@ -7,8 +7,8 @@ using QwQ_Music.Common.Services;
 
 namespace QwQ_Music.Common.Managers;
 
-public partial class DrawerManager : ObservableObject {
-    protected DrawerManager() { }
+public sealed partial class DrawerManager : ObservableObject {
+    private DrawerManager() { }
     public static DrawerManager Instance { get; } = new();
 
     [ObservableProperty]

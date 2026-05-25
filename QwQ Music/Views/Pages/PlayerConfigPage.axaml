@@ -99,8 +99,8 @@
                             <TextBlock Text="切换双击列表项行为" Classes="CardTitle" />
                         </StackPanel>
                         <ComboBox ItemsSource="{Binding AddMusicBehaviors}"
-                                  DisplayMemberBinding="{Binding Key}"
-                                  SelectedValueBinding="{Binding Value}"
+                                  DisplayMemberBinding="{Binding Value}"
+                                  SelectedValueBinding="{Binding Key}"
                                   SelectedValue="{Binding PlayerConfig.AddMusicBehavior}" />
                     </StackPanel>
                 </Border>

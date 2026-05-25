@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:QwQ_Music.ViewModels.Pages"
              xmlns:customs="clr-namespace:QwQ_Music.Views.Customs"
-             x:DataType="vm:AllMusicPageViewModel"
-             x:Class="QwQ_Music.Views.Pages.AllMusicsPage">
+             x:DataType="vm:MusicLibraryPageViewModel"
+             x:Class="QwQ_Music.Views.Pages.MusicLibraryPage">
     <customs:MusicListDataGrid DataContext="{Binding }" />
 </UserControl>

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Timers;
 using ATL;
@@ -19,9 +20,7 @@ namespace QwQ_Music.Models;
 public partial class MusicItemModel : ObservableObject {
     public static readonly MusicItemModel Default = new() { Title = "听你想听", Artists = "YOU", FilePath = string.Empty };
 
-#pragma warning disable CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑添加 'required' 修饰符或声明为可以为 null。
-    public string Extension;   // Initializes when setting FilePath.
-#pragma warning restore CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑添加 'required' 修饰符或声明为可以为 null。
+    public string Extension;
 
     public bool IsCurrent {
         get;
@@ -56,6 +55,7 @@ public partial class MusicItemModel : ObservableObject {
 
     public required string FilePath {
         get;
+        [MemberNotNull(nameof(Extension))]
         set {
             field = value;
             Extension = Path.GetExtension(FilePath).ToUpper();

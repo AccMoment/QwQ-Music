@@ -47,19 +47,19 @@ public partial class SpectrumConfig : ObservableObject {
     [ObservableProperty]
     public partial double SmoothingFactor { get; set; } = 0.15d;
 
-    public int FFTSizeIndex {
+    public int FftSizeIndex {
         get;
         set {
             if (value == field)
                 return;
 
             field = value;
-            OnPropertyChanged(nameof(FFTSize));
+            OnPropertyChanged(nameof(FftSize));
         }
     } = 11;
 
     [JsonIgnore]
-    public int FFTSize => (int)Math.Pow(2, FFTSizeIndex);
+    public int FftSize => (int)Math.Pow(2, FftSizeIndex);
 
     public int UpdateIntervalMs { get; set; } = 100;
 }

@@ -212,7 +212,8 @@ public static class CacheManager {
                 return NotExist;
             }
 
-            if (!ConfigManager.UiConfig.VisualConfig.AllowNonSquareCover && Math.Abs(bitmap.Size.AspectRatio - 1) > 1e-5)
+            if (!ConfigManager.UiConfig.VisualConfig.AllowNonSquareCover &&
+                Math.Abs(bitmap.Size.AspectRatio - 1) > 1e-5)
                 BitmapCropper.Crop(ref bitmap, 1.0);
             SetImage(id, idType, bitmap);
             await LoggerService.InfoAsync($"加载{idType}[{alterId ?? id.ToString()}]的{cacheType}成功")
@@ -237,6 +238,7 @@ public static class CacheManager {
 
         foreach (Bitmap bitmap in AudioQualityLevelLogo.Values)
             bitmap.Dispose();
+        ImageCache.Dispose();
     }
 
     public static bool IsValid(Bitmap image) {

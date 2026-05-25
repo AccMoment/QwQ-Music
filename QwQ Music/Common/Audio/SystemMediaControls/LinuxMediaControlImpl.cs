@@ -18,7 +18,7 @@ public class LinuxMediaControlImpl : ISystemMediaControlImpl {
     public TimeSpan Duration { get; set; }
     public MediaPlaybackStatus Status { get; set; }
     public bool ShuffleEnabled { get; set; }
-    public MediaPlaybackMode Mode { get; set; }
+    // public MediaPlaybackMode Mode { get; set; }
     public bool IsPlayEnabled { get; set; }
     public bool IsPauseEnabled { get; set; }
     public bool IsPreviousEnabled { get; set; }
