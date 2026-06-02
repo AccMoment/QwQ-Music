@@ -1,23 +1,8 @@
-﻿using QwQ_Music.Common.Managers;
+﻿using QwQ_Music.Common.Audio;
+using QwQ_Music.Common.Managers;
 
-namespace QwQ_Music.Common.Audio.SystemMediaControls;
+namespace QwQ_Music.PlatformUtils.SystemMediaControls;
 
-public class SystemMediaControlEventArgs : EventArgs;
-
-public class PlaybackPositionChangedEventArgs(TimeSpan position) : SystemMediaControlEventArgs {
-    public readonly TimeSpan Position = position;
-}
-
-public static partial class SystemMediaControl {
-    public const string APPID = "com.Mioter.QwQMusic";
-    public static ISystemMediaControlImpl CreateSystemMediaControl() {
-#if _WIN_NT
-        return new WindowsMediaControlImpl();
-#else
-        return new LinuxMediaControlImpl();
-#endif
-    }
-}
 
 public interface ISystemMediaControlImpl : IDisposable {
     void UpdateInfo(object? sender, MusicItemChangedEventArgs model);
@@ -26,7 +11,9 @@ public interface ISystemMediaControlImpl : IDisposable {
     TimeSpan Position { get; set; }
     TimeSpan Duration { get; set; }
     MediaPlaybackStatus Status { get; set; }
+
     bool ShuffleEnabled { get; set; }
+
     // MediaPlaybackMode Mode { get; set; }
     bool IsPlayEnabled { get; set; }
     bool IsPauseEnabled { get; set; }

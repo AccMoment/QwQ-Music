@@ -1,15 +1,15 @@
-﻿#if _WIN_NT
-#else
+﻿#if _LINUX
+
+using QwQ_Music.Common.Audio;
+using QwQ_Music.Common.Audio.SystemMediaControls;
 using QwQ_Music.Common.Managers;
+using Tmds.DBus;
 
-namespace QwQ_Music.Common.Audio.SystemMediaControls;
+namespace QwQ_Music.PlatformUtils.SystemMediaControls;
 
-public static partial class SystemMediaControl {
-    public static void SetProcessInfoId() { }
-}
 
 public class LinuxMediaControlImpl : ISystemMediaControlImpl {
-    public void UpdateInfo(object? sender, MusicItemChangedEventArgs model) { throw new NotImplementedException(); }
+    public void UpdateInfo(object? sender, MusicItemChangedEventArgs model) { }
 
     public double PlaybackSpeed { get; set; }
     public double Rate { get; set; }
@@ -17,7 +17,9 @@ public class LinuxMediaControlImpl : ISystemMediaControlImpl {
     public TimeSpan Position { get; set; }
     public TimeSpan Duration { get; set; }
     public MediaPlaybackStatus Status { get; set; }
+
     public bool ShuffleEnabled { get; set; }
+
     // public MediaPlaybackMode Mode { get; set; }
     public bool IsPlayEnabled { get; set; }
     public bool IsPauseEnabled { get; set; }
@@ -37,4 +39,24 @@ public class LinuxMediaControlImpl : ISystemMediaControlImpl {
         GC.SuppressFinalize(this);
     }
 }
+
+[DBusInterface("org.mpris.MediaPlayer2")]
+public interface IMediaPlayer2 : IDBusObject {
+    Task<string> GetIdentityAsync();
+    Task<bool> GetCanQuitAsync();
+    Task QuitAsync();
+}
+
+[DBusInterface("org.mpris.MediaPlayer2.Player")]
+public interface IMediaPlayer2Player : IDBusObject {
+    Task<string> GetPlaybackStatusAsync();
+    Task SetPlaybackStatusAsync(string value);
+    Task<IDictionary<string, object>> GetMetadataAsync();
+    Task SetMetadataAsync(IDictionary<string, object> value);
+    Task<bool> GetCanPlayAsync();
+    Task<bool> GetCanPauseAsync();
+    Task PlayAsync();
+    Task PauseAsync();
+}
+
 #endif

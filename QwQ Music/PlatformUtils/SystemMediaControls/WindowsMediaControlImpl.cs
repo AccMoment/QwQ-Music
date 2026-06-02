@@ -1,4 +1,5 @@
 ﻿#if _WIN_NT
+
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
@@ -11,156 +12,11 @@ using Microsoft.Win32;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Models;
+using MediaPlaybackStatus = QwQ_Music.Common.Audio.MediaPlaybackStatus;
 
-namespace QwQ_Music.Common.Audio.SystemMediaControls;
+namespace QwQ_Music.PlatformUtils.SystemMediaControls;
 
-public static partial class SystemMediaControl {
-    private static void TryRegisterAppUserModelId(string appUserModelId, string displayName, string iconPath) {
-        string subKey = $@"Software\Classes\AppUserModelId\{appUserModelId}";
-        try {
-            using (RegistryKey key = Registry.CurrentUser.CreateSubKey(subKey)) {
-                key.SetValue("DisplayName", displayName, RegistryValueKind.String);
-                key.SetValue("IconUri", iconPath, RegistryValueKind.String);
-            }
-
-            Console.WriteLine("应用身份信息已注册到当前用户。");
-        } catch (Exception ex) {
-            Console.WriteLine($"写入注册表失败: {ex.Message}");
-        }
-    }
-
-    public static void SetProcessInfoId() {
-        LoggerService.Info("正在注册程序...");
-        TryRegisterAppUserModelId(
-            APPID,
-            "QwQ Music",
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "QwQ Music.ico"));
-        LoggerService.Info("正在设置App ID...");
-        SetCurrentProcessExplicitAppUserModelID(APPID);
-        TryCreateStartMenuShortcut(APPID);
-        return;
-
-        [DllImport("shell32.dll", SetLastError = true)]
-        // ReSharper disable once InconsistentNaming
-        static extern void SetCurrentProcessExplicitAppUserModelID([MarshalAs(UnmanagedType.LPWStr)] string AppID);
-    }
-
-    [RequiresUnreferencedCode("Uses COM interop types that must be preserved under trimming.")]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ShellLink))]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(IShellLinkW))]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(IPropertyStore))]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(IPersistFile))]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(PropVariant))]
-    private static void TryCreateStartMenuShortcut(string appUserModelId) {
-        string exePath = Environment.ProcessPath ?? throw new InvalidOperationException("无法获取当前进程路径。");
-
-        string startMenuFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.StartMenu),
-            "Programs");
-        Directory.CreateDirectory(startMenuFolder);
-
-        string shortcutPath = Path.Combine(startMenuFolder, "QwQ Music.lnk");
-        File.Delete(shortcutPath);
-        string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "QwQ Music.ico");
-        try {
-            // ReSharper disable once SuspiciousTypeConversion.Global
-            var link = (IShellLinkW)new ShellLink();
-            link.SetPath(exePath);
-            link.SetWorkingDirectory(AppDomain.CurrentDomain.BaseDirectory);
-            link.SetDescription("QwQ Music");
-            if (File.Exists(iconPath))
-                link.SetIconLocation(iconPath, 0);
-
-            // ReSharper disable once SuspiciousTypeConversion.Global
-            IPropertyStore propertyStore = (IPropertyStore)link;
-            PROPERTYKEY appIdKey = PROPERTYKEY.AppUserModelId;
-            using (PropVariant value = PropVariant.FromString(appUserModelId)) {
-                propertyStore.SetValue(ref appIdKey, value);
-                propertyStore.Commit();
-            }
-
-            // ReSharper disable once SuspiciousTypeConversion.Global
-            ((IPersistFile)link).Save(shortcutPath, true);
-            LoggerService.Info($"已创建开始菜单快捷方式，位于{shortcutPath}");
-        } catch (Exception ex) {
-            var err = Marshal.GetLastWin32Error();
-            LoggerService.Error(
-                $"创建开始菜单快捷方式失败。Win32ErrorCode:{err}\nPath:{exePath}\nDirectory:{AppDomain.CurrentDomain.BaseDirectory
-                }\nShortcut Path:{shortcutPath}",
-                ex);
-        }
-    }
-
-    [ComImport]
-    [Guid("00021401-0000-0000-C000-000000000046")]
-    private class ShellLink { }
-
-    [ComImport]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("000214F9-0000-0000-C000-000000000046")]
-    private interface IShellLinkW {
-        void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszFile, int cch, IntPtr pfd, int fFlags);
-        void GetIDList(out IntPtr ppidl);
-        void SetIDList(IntPtr pidl);
-        void GetDescription([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszName, int cch);
-        void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string pszName);
-        void GetWorkingDirectory([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszDir, int cch);
-        void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string pszDir);
-        void GetArguments([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszArgs, int cch);
-        void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string pszArgs);
-        void GetHotkey(out short pwHotkey);
-        void SetHotkey(short wHotkey);
-        void GetShowCmd(out int piShowCmd);
-        void SetShowCmd(int iShowCmd);
-        void GetIconLocation([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszIconPath, int cch, out int piIcon);
-        void SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string pszIconPath, int iIcon);
-        void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string pszPathRel, int dwReserved);
-        void Resolve(IntPtr hwnd, int fFlags);
-        void SetPath([MarshalAs(UnmanagedType.LPWStr)] string pszFile);
-    }
-
-    [ComImport]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99")]
-    private interface IPropertyStore {
-        uint GetCount(out uint propertyCount);
-        uint GetAt(uint propertyIndex, out PROPERTYKEY key);
-        uint GetValue(ref PROPERTYKEY key, out PropVariant pv);
-        uint SetValue(ref PROPERTYKEY key, ref PropVariant pv);
-        uint Commit();
-    }
-
-    [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    // ReSharper disable once InconsistentNaming
-    private struct PROPERTYKEY {
-        public Guid fmtid;
-        public uint pid;
-
-        public static PROPERTYKEY AppUserModelId =>
-            new() { fmtid = new Guid("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"), pid = 5 };
-    }
-
-    [StructLayout(LayoutKind.Explicit)]
-    private struct PropVariant : IDisposable {
-        [FieldOffset(0)]
-        private ushort vt;
-
-        [FieldOffset(8)]
-        private IntPtr pointerValue;
-
-        public static PropVariant FromString(string value) {
-            var pv = new PropVariant { vt = 31 };
-            pv.pointerValue = Marshal.StringToCoTaskMemUni(value);
-            return pv;
-        }
-
-        public void Dispose() { PropVariantClear(ref this); }
-
-        [DllImport("ole32.dll")]
-        private static extern int PropVariantClear(ref PropVariant pvar);
-    }
-}
-
+   
 public sealed class WindowsMediaControlImpl : ISystemMediaControlImpl {
     private readonly MediaPlayer _systemInterfaceProvider;
     private IRandomAccessStream? _thumbnail;
@@ -332,6 +188,152 @@ public sealed class WindowsMediaControlImpl : ISystemMediaControlImpl {
     }
 
     ~WindowsMediaControlImpl() { Dispose(); }
+    
+     private static void TryRegisterAppUserModelId(string appUserModelId, string displayName, string iconPath) {
+        string subKey = $@"Software\Classes\AppUserModelId\{appUserModelId}";
+        try {
+            using (RegistryKey key = Registry.CurrentUser.CreateSubKey(subKey)) {
+                key.SetValue("DisplayName", displayName, RegistryValueKind.String);
+                key.SetValue("IconUri", iconPath, RegistryValueKind.String);
+            }
+
+            Console.WriteLine("应用身份信息已注册到当前用户。");
+        } catch (Exception ex) {
+            Console.WriteLine($"写入注册表失败: {ex.Message}");
+        }
+    }
+
+    [RequiresUnreferencedCode("Create start menu shortcut requires native COM interops.")]
+    public static void SetProcessInfoId() {
+        LoggerService.Info("正在注册程序...");
+        TryRegisterAppUserModelId(
+            SystemMediaControl.APPID,
+            "QwQ Music",
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "QwQ Music.ico"));
+        LoggerService.Info("正在设置App ID...");
+        SetCurrentProcessExplicitAppUserModelID(SystemMediaControl.APPID);
+        TryCreateStartMenuShortcut(SystemMediaControl.APPID);
+        return;
+
+        [DllImport("shell32.dll", SetLastError = true)]
+        // ReSharper disable once InconsistentNaming
+        static extern void SetCurrentProcessExplicitAppUserModelID([MarshalAs(UnmanagedType.LPWStr)] string AppID);
+    }
+
+    [RequiresUnreferencedCode("Uses COM interop types that must be preserved under trimming.")]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ShellLink))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(IShellLinkW))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(IPropertyStore))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(IPersistFile))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(PropVariant))]
+    private static void TryCreateStartMenuShortcut(string appUserModelId) {
+        string exePath = Environment.ProcessPath ?? throw new InvalidOperationException("无法获取当前进程路径。");
+
+        string startMenuFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.StartMenu),
+            "Programs");
+        Directory.CreateDirectory(startMenuFolder);
+
+        string shortcutPath = Path.Combine(startMenuFolder, "QwQ Music.lnk");
+        File.Delete(shortcutPath);
+        string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "QwQ Music.ico");
+        try {
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            var link = (IShellLinkW)new ShellLink();
+            link.SetPath(exePath);
+            link.SetWorkingDirectory(AppDomain.CurrentDomain.BaseDirectory);
+            link.SetDescription("QwQ Music");
+            if (File.Exists(iconPath))
+                link.SetIconLocation(iconPath, 0);
+
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            IPropertyStore propertyStore = (IPropertyStore)link;
+            PROPERTYKEY appIdKey = PROPERTYKEY.AppUserModelId;
+            using (PropVariant value = PropVariant.FromString(appUserModelId)) {
+                propertyStore.SetValue(ref appIdKey, value);
+                propertyStore.Commit();
+            }
+
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            ((IPersistFile)link).Save(shortcutPath, true);
+            LoggerService.Info($"已创建开始菜单快捷方式，位于{shortcutPath}");
+        } catch (Exception ex) {
+            var err = Marshal.GetLastWin32Error();
+            LoggerService.Error(
+                $"创建开始菜单快捷方式失败。Win32ErrorCode:{err}\nPath:{exePath}\nDirectory:{AppDomain.CurrentDomain.BaseDirectory
+                }\nShortcut Path:{shortcutPath}",
+                ex);
+        }
+    }
+
+    [ComImport]
+    [Guid("00021401-0000-0000-C000-000000000046")]
+    private class ShellLink { }
+
+    [ComImport]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("000214F9-0000-0000-C000-000000000046")]
+    private interface IShellLinkW {
+        void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszFile, int cch, IntPtr pfd, int fFlags);
+        void GetIDList(out IntPtr ppidl);
+        void SetIDList(IntPtr pidl);
+        void GetDescription([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszName, int cch);
+        void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string pszName);
+        void GetWorkingDirectory([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszDir, int cch);
+        void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string pszDir);
+        void GetArguments([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszArgs, int cch);
+        void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string pszArgs);
+        void GetHotkey(out short pwHotkey);
+        void SetHotkey(short wHotkey);
+        void GetShowCmd(out int piShowCmd);
+        void SetShowCmd(int iShowCmd);
+        void GetIconLocation([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszIconPath, int cch, out int piIcon);
+        void SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string pszIconPath, int iIcon);
+        void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string pszPathRel, int dwReserved);
+        void Resolve(IntPtr hwnd, int fFlags);
+        void SetPath([MarshalAs(UnmanagedType.LPWStr)] string pszFile);
+    }
+
+    [ComImport]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99")]
+    private interface IPropertyStore {
+        uint GetCount(out uint propertyCount);
+        uint GetAt(uint propertyIndex, out PROPERTYKEY key);
+        uint GetValue(ref PROPERTYKEY key, out PropVariant pv);
+        uint SetValue(ref PROPERTYKEY key, ref PropVariant pv);
+        uint Commit();
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
+    // ReSharper disable once InconsistentNaming
+    private struct PROPERTYKEY {
+        public Guid fmtid;
+        public uint pid;
+
+        public static PROPERTYKEY AppUserModelId =>
+            new() { fmtid = new Guid("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"), pid = 5 };
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    private struct PropVariant : IDisposable {
+        [FieldOffset(0)]
+        private ushort vt;
+
+        [FieldOffset(8)]
+        private IntPtr pointerValue;
+
+        public static PropVariant FromString(string value) {
+            var pv = new PropVariant { vt = 31 };
+            pv.pointerValue = Marshal.StringToCoTaskMemUni(value);
+            return pv;
+        }
+
+        public void Dispose() { PropVariantClear(ref this); }
+
+        [DllImport("ole32.dll")]
+        private static extern int PropVariantClear(ref PropVariant pvar);
+    }
 }
 
 public static class StatusConverter {
