@@ -5,7 +5,6 @@ using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Services.Databases;
 using QwQ_Music.Common.Utilities;
 using AudioPlayManager = QwQ_Music.Common.Managers.AudioPlayManager;
-using SystemMediaControl = QwQ_Music.Common.Audio.SystemMediaControls.SystemMediaControl;
 using ThreadState = System.Diagnostics.ThreadState;
 
 namespace QwQ_Music;
@@ -15,7 +14,9 @@ public static class Program {
 
     [STAThread]
     public static async Task Main(string[] args) {
-        SystemMediaControl.SetProcessInfoId();
+#if _WIN_NT
+        _ = PlatformUtils.SystemMediaControls.SystemMediaControl.Instance; // 提前初始化，以在窗口出现前创建好开始菜单快捷方式，为 SMTC提供程序信息
+#endif
         try {
             await LoggerService.InfoAsync(
                                    $"""
@@ -88,7 +89,7 @@ public static class Program {
             await MusicListItemsRepository.Instance.DisposeAsync().ConfigureAwait(false);
             await LoggerService.InfoAsync("资源已释放。").ConfigureAwait(false);
         } catch (Exception ex) {
-            await LoggerService.ErrorAsync("关闭App时发生错误",ex).ConfigureAwait(false);
+            await LoggerService.ErrorAsync("关闭App时发生错误", ex).ConfigureAwait(false);
         } finally {
             await LoggerService.DisposeAsync().ConfigureAwait(false);
         }
