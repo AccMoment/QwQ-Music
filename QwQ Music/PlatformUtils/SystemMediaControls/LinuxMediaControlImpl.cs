@@ -1,7 +1,6 @@
 ﻿#if _LINUX
 
 using QwQ_Music.Common.Audio;
-using QwQ_Music.Common.Audio.SystemMediaControls;
 using QwQ_Music.Common.Managers;
 using Tmds.DBus;
 

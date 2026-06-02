@@ -87,12 +87,4 @@
         </None>
 
     </ItemGroup>
-
-    <ItemGroup>
-      <Compile Include="obj\SystemMediaControls\ISystemMediaControlImpl.cs" />
-      <Compile Include="obj\SystemMediaControls\LinuxMediaControlImpl.cs" />
-      <Compile Include="obj\SystemMediaControls\SystemMediaControl.cs" />
-      <Compile Include="obj\SystemMediaControls\UnsupportedSystemMediaControlImpl.cs" />
-      <Compile Include="obj\SystemMediaControls\WindowsMediaControlImpl.cs" />
-    </ItemGroup>
 </Project>
