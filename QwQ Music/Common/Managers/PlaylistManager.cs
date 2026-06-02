@@ -19,8 +19,9 @@ public partial class PlaylistManager : ObservableObject {
     private PlaylistManager() {
         Task.Run(async Task? () => {
                 var (indexes, paths, count, latest) = await PlaylistRepository
-                                                      .ParseAsync(AudioPlayManager.PlayerConfig.LastPlayedFilePath)
-                                                      .ConfigureAwait(false);
+                                                            .ParseAsync(
+                                                                AudioPlayManager.PlayerConfig.LastPlayedFilePath)
+                                                            .ConfigureAwait(false);
                 await ReplaceAsync(
                         MusicItemsManager.All.Name,
                         paths.Select((item, index) => {
@@ -72,7 +73,9 @@ public partial class PlaylistManager : ObservableObject {
             OrderedDictionary<string, MusicItemModel>.ValueCollection items = MusicItemsManager.All.MusicItems.Values;
             if (items.Count == 0)
                 return PlaylistItemModel.RefDefault;
-            ReplaceAsync(MusicItemsManager.All.Name, items, 0, true).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
+            ReplaceAsync(MusicItemsManager.All.Name, items, 0, true)
+                .ContinueWith(LoggerService.HandleException)
+                .ConfigureAwait(false);
         }
 
         return ActualPlaylist.FirstOrDefault(PlaylistItemModel.RefDefault);
@@ -143,7 +146,7 @@ public partial class PlaylistManager : ObservableObject {
         }
 
 
-        AudioPlayManager.Instance.Pause();
+        AudioPlayManager.Instance.Pause(false);
         Clear();
         SequentialPlaylist.EnsureCapacity(capacity);
         ActualPlaylist.EnsureCapacity(capacity);

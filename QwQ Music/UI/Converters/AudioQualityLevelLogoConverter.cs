@@ -13,7 +13,7 @@ public class AudioQualityLevelLogoConverter : IValueConverter {
             CacheManager.AudioQualityLevelLogo.GetValueOrDefault(level);
     }
 
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) {
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) {
         return AvaloniaProperty.UnsetValue;
     }
 }

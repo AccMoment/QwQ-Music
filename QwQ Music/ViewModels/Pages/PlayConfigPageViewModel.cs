@@ -11,7 +11,6 @@ using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.ViewModels.Bases;
 using QwQ_Music.Views.Dialogs;
 using Ursa.Controls;
-using MusicItemsManager = QwQ_Music.Common.Managers.MusicItemsManager;
 
 namespace QwQ_Music.ViewModels.Pages;
 
