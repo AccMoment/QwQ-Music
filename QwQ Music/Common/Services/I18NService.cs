@@ -8,7 +8,13 @@ using QwQ_Music.Models.ConfigModels;
 namespace QwQ_Music.Common.Services;
 
 public class I18NService {
-    public FrozenDictionary<string, string> AvailableLanguages { get; private set; }
+    public FrozenDictionary<string, string> AvailableLanguages {
+        get;
+        private set {
+            field = value;
+            App.I18NResources.Apply(value);
+        }
+    }
 
 
     private I18NService() {

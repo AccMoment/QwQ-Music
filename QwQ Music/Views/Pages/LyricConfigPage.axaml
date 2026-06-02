@@ -120,7 +120,7 @@
             <StackPanel>
 
                 <CheckBox
-                    Content="{Binding IsEnabledV}"
+                    Content="{DynamicResource I18N.IsEnabled}"
                     IsChecked="{Binding LyricIsEnabled}" />
 
                 <CheckBox
@@ -128,11 +128,11 @@
                     IsChecked="{Binding LockLyricWindow}" />
 
                 <CheckBox
-                    Content="{Binding IsDoubleLineV}"
+                    Content="{DynamicResource  I18N.IsDoubleLine}"
                     IsChecked="{Binding LyricIsDoubleLine}" />
 
                 <CheckBox
-                    Content="{Binding IsDualLangV}"
+                    Content="{DynamicResource  I18N.IsDualLang}"
                     IsChecked="{Binding LyricIsDualLang}" />
 
                 <CheckBox

@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
@@ -16,6 +17,35 @@ public class App : Application {
     public static MainWindow? TopLevel { get; private set; }
 
     public static Assembly CurrentAssembly { get; } = Assembly.GetExecutingAssembly();
+
+    public static class I18NResources {
+        // ReSharper disable once InconsistentNaming
+        private static ResourceDictionary? _i18nDict;
+
+        public static void Apply(FrozenDictionary<string, string> translations) {
+            Dispatcher.UIThread.Post(
+                () => {
+                    if (Current == null)
+                        return;
+
+                    var dict = new ResourceDictionary();
+
+                    foreach (var (key, value) in translations) {
+                        dict[$"I18N.{key}"] = value;
+                    }
+
+                    if (_i18nDict is not null &&
+                        Current.Resources.MergedDictionaries.IndexOf(_i18nDict) is { } idx and >= 0) {
+                        Current.Resources.MergedDictionaries[idx] = dict;
+                    } else {
+                        Current.Resources.MergedDictionaries.Add(dict);
+                    }
+
+                    _i18nDict = dict;
+                },
+                DispatcherPriority.Background);
+        }
+    }
 
     public override void Initialize() {
         AvaloniaXamlLoader.Load(this);
