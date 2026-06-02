@@ -47,6 +47,13 @@
                               SelectedValueBinding="{Binding Key}"
                               SelectedValue="{Binding Config.Language}" />
                 </Panel>
+                <CheckBox
+                    Content="播放时阻止系统睡眠"
+                    IsChecked="{Binding Config.KeepSystemAwake}" />
+                <CheckBox
+                    Content="    同时保持显示器开启"
+                    IsEnabled="{Binding Config.KeepSystemAwake}"
+                    IsChecked="{Binding Config.KeepDisplay}" />
                 <Panel>
                     <TextBlock Text="在窗口关闭时" VerticalAlignment="Center" />
                     <ComboBox HorizontalAlignment="Right"
