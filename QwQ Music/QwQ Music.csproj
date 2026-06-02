@@ -19,8 +19,14 @@
         <TrimMode>link</TrimMode>
         <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">
-        <DefineConstants>_WIN_NT</DefineConstants>
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+        <DefineConstants>_WIN_NT;$(DefineConstants)</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+        <DefineConstants>_LINUX;$(DefineConstants)</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
+        <DefineConstants>_OSX;$(DefineConstants)</DefineConstants>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <DebugSymbols>false</DebugSymbols>
@@ -33,9 +39,8 @@
         <AvaloniaResource Include="Assets\AvaloniaRes\**"/>
         <AvaloniaResource Remove="Assets\EmbeddedRes\**"/>
         <EmbeddedResource Include="Assets\EmbeddedRes\**"/>
-        <AvaloniaResource Remove="AppIcon.ico"/>
         <None Update="i18n\zh_CN.QwQ.json">
-          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
@@ -62,7 +67,8 @@
         <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.2"/>
         <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="3.119.2"/>
         <PackageReference Include="SoundFlow" Version="1.4.0"/>
-        <PackageReference Include="Tmds.DBus.Protocol" Version="0.92.0"/>
+        <PackageReference Include="Tmds.DBus" Version="0.94.0"/>
+        <PackageReference Include="Tmds.DBus.Protocol" Version="0.94.0"/>
         <PackageReference Include="Xaml.Behaviors.Avalonia" Version="11.3.9.5"/>
         <PackageReference Include="z440.atl.core" Version="7.11.0"/>
     </ItemGroup>
@@ -80,5 +86,13 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
 
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Include="obj\SystemMediaControls\ISystemMediaControlImpl.cs" />
+      <Compile Include="obj\SystemMediaControls\LinuxMediaControlImpl.cs" />
+      <Compile Include="obj\SystemMediaControls\SystemMediaControl.cs" />
+      <Compile Include="obj\SystemMediaControls\UnsupportedSystemMediaControlImpl.cs" />
+      <Compile Include="obj\SystemMediaControls\WindowsMediaControlImpl.cs" />
     </ItemGroup>
 </Project>
