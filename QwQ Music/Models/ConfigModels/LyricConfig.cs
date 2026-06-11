@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Avalonia;
@@ -5,6 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using QwQ_Music.Common;
+using QwQ_Music.Common.Helpers;
 
 namespace QwQ_Music.Models.ConfigModels;
 
@@ -104,9 +106,7 @@ public class LyricConfig : ObservableObject {
     public DesktopLyricConfig DesktopLyric { get; set; } = new();
 
     [JsonIgnore]
-    public static Dictionary<HorizontalAlignment, string> TextAlignments { get; } = new() {
-        [HorizontalAlignment.Left] = "左对齐", [HorizontalAlignment.Center] = "居中", [HorizontalAlignment.Right] = "右对齐"
-    };
+    public static FrozenDictionary<string,HorizontalAlignment> TextAlignments { get; } = EnumHelper<HorizontalAlignment>.ToDictionary();
 }
 
 public partial class RolledLyricConfig : ObservableObject {

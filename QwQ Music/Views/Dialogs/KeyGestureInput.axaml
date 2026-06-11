@@ -14,7 +14,7 @@
                   Data="{StaticResource SemiIconPlusCircle}"
                   Foreground="#46C01B" />
 
-        <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" />
+        <TextBlock Text="{CompiledBinding Title}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" />
 
     </StackPanel>
 
@@ -22,7 +22,7 @@
     <u:KeyGestureInput
         Name="GestureInputInDialog"
         Grid.Row="1"
-        Gesture="{Binding KeyGesture,Mode=TwoWay}"
+        Gesture="{CompiledBinding KeyGesture,Mode=TwoWay}"
         HorizontalAlignment="Center"
         MinWidth="120"
         CornerRadius="8"
@@ -31,7 +31,7 @@
     <TextBlock Grid.Row="2"
                HorizontalAlignment="Center"
                Classes="Tertiary"
-               Classes.GestureIsNull="{Binding #GestureInputInDialog.Gesture,Converter={x:Static ObjectConverters.IsNull}}">
+               Classes.GestureIsNull="{CompiledBinding #GestureInputInDialog.Gesture,Converter={x:Static ObjectConverters.IsNull}}">
 
         <TextBlock.Styles>
 
@@ -40,7 +40,7 @@
             </Style>
 
             <Style Selector="TextBlock">
-                <Setter Property="Text" Value="{Binding #GestureInputInDialog.Gesture,StringFormat=' 你输入了: {0} '}" />
+                <Setter Property="Text" Value="{CompiledBinding #GestureInputInDialog.Gesture,StringFormat=' 你输入了: {0} '}" />
             </Style>
 
         </TextBlock.Styles>
@@ -58,12 +58,12 @@
         <Button ToolTip.Tip="还是蒜了吧..."
                 Content="取消"
                 Theme="{DynamicResource OutlineButton}"
-                Command="{Binding CancelCommand}" />
+                Command="{CompiledBinding CancelCommand}" />
 
         <Button Content="确认"
                 Classes="Danger"
-                IsEnabled="{Binding !HasErrors,Converter={x:Static StringConverters.IsNullOrEmpty}}"
-                Command="{Binding OkCommand}"
+                IsEnabled="{CompiledBinding !HasErrors,Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                Command="{CompiledBinding OkCommand}"
                 Theme="{DynamicResource SolidButton}" />
 
     </StackPanel>

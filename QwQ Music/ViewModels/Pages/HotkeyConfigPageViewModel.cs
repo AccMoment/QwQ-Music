@@ -45,7 +45,7 @@ public partial class HotkeyConfigPageViewModel : NavigableViewModel {
 
         var options = new OverlayDialogOptions { Title = "添加按键" };
 
-        OverlayDialog.ShowCustomModal<KeyGestureInput, KeyGestureInputViewModel, KeyGesture>(
+        OverlayDialog.ShowCustomAsync<KeyGestureInput, KeyGestureInputViewModel, KeyGesture>(
                          new KeyGestureInputViewModel(item, options.Title),
                          options: options)
                      .ContinueWith(task => {
@@ -68,7 +68,7 @@ public partial class HotkeyConfigPageViewModel : NavigableViewModel {
 
     [RelayCommand]
     private void ClearKeyGestures() {
-        MessageBox.ShowOverlayAsync(
+        MessageBox.ShowAsync(
                       "你真的要清除使用热键配置吗?",
                       "警告",
                       icon: MessageBoxIcon.Warning,

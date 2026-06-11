@@ -28,11 +28,11 @@
             <ToggleSwitch Name="EnableHotkeyChecked"
                           Theme="{StaticResource SimpleToggleSwitch}"
                           OffContent="〇" OnContent="｜"
-                          IsChecked="{Binding HotkeyConfig.IsEnableHotkey}" />
+                          IsChecked="{CompiledBinding HotkeyConfig.IsEnableHotkey}" />
         </StackPanel>
 
         <!-- 操作按钮 -->
-        <StackPanel IsEnabled="{Binding #EnableHotkeyChecked.IsChecked}" Orientation="Horizontal" Spacing="8"
+        <StackPanel IsEnabled="{CompiledBinding #EnableHotkeyChecked.IsChecked}" Orientation="Horizontal" Spacing="8"
                     HorizontalAlignment="Right">
 
             <StackPanel.Styles>
@@ -48,22 +48,22 @@
             <u:IconButton Icon="{StaticResource SemiIconRedoStroked}"
                           Content="重置"
                           Classes="Tertiary"
-                          Command="{Binding ResetToDefaultCommand}" />
+                          Command="{CompiledBinding ResetToDefaultCommand}" />
             <u:IconButton Icon="{StaticResource SemiIconLightningStroked}" Content="验证"
                           Classes="Secondary"
-                          Command="{Binding ValidateConfigCommand}" />
+                          Command="{CompiledBinding ValidateConfigCommand}" />
             <u:IconButton Icon="{StaticResource SemiIconMinusCircleStroked}" Content="清空"
                           Classes="Danger"
-                          Command="{Binding ClearKeyGesturesCommand}" />
+                          Command="{CompiledBinding ClearKeyGesturesCommand}" />
         </StackPanel>
 
     </Panel>
 
     <!--
             ~1~ 全部冲突提示 @1@
-            <u:Banner IsVisible="{Binding HasAnyConflict}"
+            <u:Banner IsVisible="{CompiledBinding HasAnyConflict}"
                       Classes="Bordered"
-                      Content="{Binding AllConflictMessages}"
+                      Content="{CompiledBinding AllConflictMessages}"
                       CornerRadius="8"
                       FontSize="12"
                       Type="Error"
@@ -72,8 +72,8 @@
                       -->
 
     <!-- 热键配置列表 -->
-    <ItemsControl IsEnabled="{Binding #EnableHotkeyChecked.IsChecked}"
-                  ItemsSource="{Binding HotkeyItems}">
+    <ItemsControl IsEnabled="{CompiledBinding #EnableHotkeyChecked.IsChecked}"
+                  ItemsSource="{CompiledBinding HotkeyItems}">
 
         <ItemsControl.ItemTemplate>
 
@@ -84,30 +84,30 @@
                     <Panel>
                         <!-- 功能名称 -->
                         <TextBlock VerticalAlignment="Center"
-                                   Text="{Binding FunctionName}" />
+                                   Text="{CompiledBinding FunctionName}" />
 
                         <!-- 添加新按键按钮 -->
                         <u:IconButton Icon="{StaticResource SemiIconPlusStroked}"
                                       HorizontalAlignment="Right"
-                                      Command="{Binding $parent[ItemsControl].((pages:HotkeyConfigPageViewModel)DataContext).AddNewHotkeyCommand}"
-                                      CommandParameter="{Binding Function}"
+                                      Command="{CompiledBinding $parent[ItemsControl].((pages:HotkeyConfigPageViewModel)DataContext).AddNewHotkeyCommand}"
+                                      CommandParameter="{CompiledBinding Function}"
                                       Padding="5"
                                       Theme="{DynamicResource BorderlessIconButton}" />
                     </Panel>
 
                     <!-- 默认按键显示 -->
-                    <Button IsVisible="{Binding !KeyGestures.Count}"
+                    <Button IsVisible="{CompiledBinding !KeyGestures.Count}"
                             Foreground="{DynamicResource TextBlockDefaultForeground}"
                             FontWeight="Normal"
-                            Command="{Binding $parent[ItemsControl].((pages:HotkeyConfigPageViewModel)DataContext).AddNewHotkeyCommand}"
-                            CommandParameter="{Binding Function}"
+                            Command="{CompiledBinding $parent[ItemsControl].((pages:HotkeyConfigPageViewModel)DataContext).AddNewHotkeyCommand}"
+                            CommandParameter="{CompiledBinding Function}"
                             Theme="{DynamicResource OutlineButton}"
                             Content="无按键"
                             MinWidth="200"
                             HorizontalAlignment="Stretch" />
 
                     <!-- 按键列表 -->
-                    <ItemsControl ItemsSource="{Binding KeyGestures}">
+                    <ItemsControl ItemsSource="{CompiledBinding KeyGestures}">
 
                         <ItemsControl.ItemTemplate>
 
@@ -118,10 +118,10 @@
                                     <Button Grid.Column="0"
                                             Foreground="{DynamicResource TextBlockDefaultForeground}"
                                             FontWeight="Normal"
-                                            Command="{Binding $parent[ItemsControl].((models:HotkeyItemModel)DataContext).ModifyGestureCommand}"
-                                            CommandParameter="{Binding}"
+                                            Command="{CompiledBinding $parent[ItemsControl].((models:HotkeyItemModel)DataContext).ModifyGestureCommand}"
+                                            CommandParameter="{CompiledBinding}"
                                             Theme="{DynamicResource OutlineButton}"
-                                            Content="{Binding Mode=TwoWay}"
+                                            Content="{CompiledBinding Mode=TwoWay}"
                                             HorizontalAlignment="Stretch" />
 
                                     <u:IconButton Grid.Column="1"
@@ -130,8 +130,8 @@
                                                   Theme="{DynamicResource BorderlessIconButton}"
                                                   Margin="10,0,0,0"
                                                   Padding="5"
-                                                  Command="{Binding $parent[ItemsControl].((models:HotkeyItemModel)DataContext).RemoveHotkeyCommand}"
-                                                  CommandParameter="{Binding}" />
+                                                  Command="{CompiledBinding $parent[ItemsControl].((models:HotkeyItemModel)DataContext).RemoveHotkeyCommand}"
+                                                  CommandParameter="{CompiledBinding}" />
 
                                 </Grid>
 

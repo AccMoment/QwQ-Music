@@ -11,11 +11,12 @@ namespace QwQ_Music.ViewModels.Pages;
 public class SystemConfigPageViewModel() : NavigableViewModel(nameof(SystemConfigPageViewModel)) {
     public SystemConfig Config { get; } = ConfigManager.SystemConfig;
 
+    public I18NService Lang => I18NService.Lang;
+
     public static LoggerServiceConfig LoggerServiceConfig => ConfigManager.LoggerServiceConfig;
-    public static I18NService I18NService => I18NService.Lang;
 
-    public static FrozenDictionary<ClosingBehavior, string> ClosingBehaviors =>
-        EnumHelper<ClosingBehavior>.GetTranslationDictionary();
+    public static FrozenDictionary<string, ClosingBehavior> ClosingBehaviors =>
+        EnumHelper<ClosingBehavior>.ToDictionary();
 
-    public static FrozenDictionary<LogLevel,string> LogLevels { get; } = EnumHelper<LogLevel>.GetTranslationDictionary();
+    public static FrozenDictionary<string, LogLevel> LogLevels { get; } = EnumHelper<LogLevel>.ToDictionary();
 }

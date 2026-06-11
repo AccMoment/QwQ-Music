@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using QwQ_Music.Common.Services;
 using QwQ_Music.Models.Enums;
 
 namespace QwQ_Music.Models.ConfigModels;
@@ -12,6 +13,9 @@ public partial class SystemConfig : ObservableObject {
 
     [ObservableProperty]
     public partial string Language { get; set; } = "zh_CN";
+
+    // ReSharper disable once UnusedParameterInPartialMethod
+    partial void OnLanguageChanged(string value) { I18NService.Lang.LoadLanguage(); }
 
     [ObservableProperty]
     public partial bool IsDebugMode { get; set; }

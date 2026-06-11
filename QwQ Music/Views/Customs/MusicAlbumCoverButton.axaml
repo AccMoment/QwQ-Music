@@ -8,7 +8,7 @@
             <ControlTemplate x:DataType="models:MusicItemModel">
                 <Button Classes="None"
                         Command="{TemplateBinding Command}"
-                        CommandParameter="{Binding }"
+                        CommandParameter="{CompiledBinding }"
                         Foreground="{DynamicResource SemiColorBackground4}"
                         Height="50"
                         Margin="10"
@@ -21,10 +21,10 @@
                             <Border x:Name="PART_CoverClip" CornerRadius="5" ClipToBounds="True"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center">
-                                <Image x:Name="PART_Cover" Source="{Binding Thumbnail}" />
+                                <Image x:Name="PART_Cover" Source="{CompiledBinding Thumbnail}" />
                             </Border>
-                            <Border Background="#33000000" Width="{Binding #PART_CoverClip.Bounds.Width}"
-                                    Height="{Binding #PART_CoverClip.Bounds.Height}">
+                            <Border Background="#33000000" Width="{CompiledBinding #PART_CoverClip.Bounds.Width}"
+                                    Height="{CompiledBinding #PART_CoverClip.Bounds.Height}">
                                 <Border.IsVisible>
                                     <MultiBinding Converter="{x:Static BoolConverters.Or}">
                                         <TemplateBinding Property="ExternalPointerOver" />
@@ -32,7 +32,7 @@
                                     </MultiBinding>
                                 </Border.IsVisible>
                             </Border>
-                            <Panel x:Name="PART_Current" IsVisible="{Binding IsCurrent,Mode=OneWay}">
+                            <Panel x:Name="PART_Current" IsVisible="{CompiledBinding IsCurrent,Mode=OneWay}">
                                 <StackPanel Name="PART_Wave"
                                             HorizontalAlignment="Center"
                                             Orientation="Horizontal"

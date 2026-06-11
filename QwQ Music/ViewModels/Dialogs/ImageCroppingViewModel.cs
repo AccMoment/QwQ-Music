@@ -14,11 +14,11 @@ public partial class ImageCroppingViewModel(Bitmap sourceImage) : ObservableObje
     public partial Bitmap? CroppedImage { get; set; }
 
     [ObservableProperty]
-    public partial double AspectRatio { get; set; } = AspectRatioMaps[0].Value;
+    public partial double AspectRatio { get; set; } = AspectRatioMaps["1:1"];
 
-    public static AspectRatioMap[] AspectRatioMaps { get; set; } = [
-        new("1:1", 1.0), new("4:3", 4.0 / 3.0), new("16:9", 16.0 / 9.0), new("自由比例", 0.0)
-    ];
+    public static OrderedDictionary<string, double> AspectRatioMaps { get; set; } = new() {
+        ["1:1"] = 1.0d, ["4:3"] = 4.0d / 3.0d, ["16:9"] = 16.0d / 9.0d, ["Free"] = 0d
+    };
 
     [RelayCommand]
     private void SaveImageButtonClick() {
@@ -66,5 +66,3 @@ public partial class ImageCroppingViewModel(Bitmap sourceImage) : ObservableObje
 
     #endregion
 }
-
-public record AspectRatioMap(string Key, double Value);

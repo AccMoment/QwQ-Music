@@ -140,7 +140,7 @@ public partial class PlaylistManager : ObservableObject {
         bool isPlayNow = false,
         IEnumerable<int>? memorizedRandomOrder = null) {
         if (name is not Custom and not Unknown && CurrentListName == name && ActualPlaylist.Count == capacity) {
-            await AudioPlayManager.Instance.SetThisMusicAsync(SequentialPlaylist[target], isPlayNow)
+            await AudioPlayManager.Instance.SetMusicAsync(SequentialPlaylist[target], isPlayNow)
                                   .ConfigureAwait(false);
             return;
         }
@@ -156,30 +156,34 @@ public partial class PlaylistManager : ObservableObject {
             SequentialPlaylist.Add(item);
             ActualPlaylist.Add(item);
             NotificationService.Info($"已切换到{item.Model.Title} - {item.Model.Artists}");
-            await AudioPlayManager.Instance.SetThisMusicAsync(item, isPlayNow).ConfigureAwait(false);
+            await AudioPlayManager.Instance.SetMusicAsync(item, isPlayNow).ConfigureAwait(false);
             return;
         }
 
         if (memorizedRandomOrder is not null && PlayMode is PlayMode.Random) {
             //预填充List以扩充List<>._size
             SequentialPlaylist.AddRange(Enumerable.Repeat(PlaylistItemModel.RefDefault, capacity));
-            List<PlaylistItemModel> actualPlaylist = Enumerable.Repeat(PlaylistItemModel.RefDefault, capacity).ToList();
+            List<PlaylistItemModel> actualPlaylist = [.. Enumerable.Repeat(PlaylistItemModel.RefDefault, capacity)];
+            try {
+                musicItems.Zip(memorizedRandomOrder)
+                          .AsParallel()
+                          .AsOrdered()
+                          .Select((item, index) => (Index: index,
+                                                    Item: item.First == MusicItemModel.Default ?
+                                                        PlaylistItemModel.RefDefault :
+                                                        new PlaylistItemModel(item.First), RandomOrder: item.Second))
+                          .ForAll(data => {
+                              SequentialPlaylist[data.Index] = data.Item;
+                              actualPlaylist[data.RandomOrder] = data.Item;
+                          });
+                SequentialPlaylist.RemoveAll(item => item == PlaylistItemModel.RefDefault);
+                ActualPlaylist.AddRange(actualPlaylist.Where(item => item != PlaylistItemModel.RefDefault));
+                await AudioPlayManager.Instance.SetMusicAsync(SequentialPlaylist[target], isPlayNow)
+                                      .ConfigureAwait(false);
+            } catch (IndexOutOfRangeException ex) {
+                await LoggerService.ErrorAsync("无法恢复播放列表", ex).ConfigureAwait(false);
+            }
 
-            musicItems.Zip(memorizedRandomOrder)
-                      .AsParallel()
-                      .AsOrdered()
-                      .Select((item, index) => (Index: index,
-                                                Item: item.First == MusicItemModel.Default ?
-                                                    PlaylistItemModel.RefDefault :
-                                                    new PlaylistItemModel(item.First), RandomOrder: item.Second))
-                      .ForAll(data => {
-                          SequentialPlaylist[data.Index] = data.Item;
-                          actualPlaylist[data.RandomOrder] = data.Item;
-                      });
-            SequentialPlaylist.RemoveAll(item => item == PlaylistItemModel.RefDefault);
-            ActualPlaylist.AddRange(actualPlaylist.Where(item => item != PlaylistItemModel.RefDefault));
-            await AudioPlayManager.Instance.SetThisMusicAsync(SequentialPlaylist[target], isPlayNow)
-                                  .ConfigureAwait(false);
             return;
         }
 
@@ -194,8 +198,8 @@ public partial class PlaylistManager : ObservableObject {
         if (ActualPlaylist.Count == 0)
             return;
         NotificationService.Info(
-            $"已切换到歌单{(name == MusicItemsManager.All.Name ? I18NService.Lang["All Musics"] : name)}");
-        await AudioPlayManager.Instance.SetThisMusicAsync(SequentialPlaylist[target], isPlayNow).ConfigureAwait(false);
+            $"已切换到歌单{(name == MusicItemsManager.All.Name ? I18NService.Lang.Translation["All Musics"] : name)}");
+        await AudioPlayManager.Instance.SetMusicAsync(SequentialPlaylist[target], isPlayNow).ConfigureAwait(false);
     }
 
 

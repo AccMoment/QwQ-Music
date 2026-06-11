@@ -1,11 +1,8 @@
-﻿using QwQ_Music.Common.Audio;
-using QwQ_Music.Common.Managers;
-
-namespace QwQ_Music.PlatformUtils.SystemMediaControls;
+﻿#pragma warning disable CS0067 // Event is never used
+namespace SystemMediaInterop;
 
 public class UnsupportedSystemMediaControlImpl : ISystemMediaControlImpl {
-    public void UpdateInfo(object? sender, MusicItemChangedEventArgs model) { }
-
+    public Task UpdateInfoAsync(IMediaItem model) { return Task.CompletedTask; }
     public double PlaybackSpeed { get; set; }
     public double Rate { get; set; }
     public double Volume { get; set; }

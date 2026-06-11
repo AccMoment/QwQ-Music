@@ -8,7 +8,7 @@
              x:DataType="panelVms:AllMusicListsPanelViewModel"
              x:Class="QwQ_Music.Views.Panels.AllMusicListsPanel"
              Name="AllMusicListsContainer">
-    <Carousel SelectedIndex="{Binding CurrentStatus}">
+    <Carousel SelectedIndex="{CompiledBinding CurrentStatus}">
         <Carousel.PageTransition>
             <CompositePageTransition>
                 <CrossFade Duration="0:0:0.5" />
@@ -24,14 +24,14 @@
                     <Button CornerRadius="8" HorizontalAlignment="Left"
                             Theme="{StaticResource OutlineButton}"
                             Margin="10,5"
-                            Command="{Binding MusicListsManager.CreateMusicListCommand}"
+                            Command="{CompiledBinding MusicListsManager.CreateMusicListCommand}"
                             Content="新建歌单" />
 
                     <TextBox CornerRadius="15"
                              Margin="10,0"
                              HorizontalAlignment="Right"
-                             Text="{Binding SearchText, Mode=TwoWay}"
-                             Watermark="搜索歌单"
+                             Text="{CompiledBinding SearchText, Mode=TwoWay}"
+                             PlaceholderText="搜索歌单"
                              Width="200">
                         <TextBox.InnerLeftContent>
                             <PathIcon Data="{StaticResource SemiIconSearchStroked}" Height="14" Width="14" />
@@ -39,9 +39,9 @@
                     </TextBox>
                 </Panel>
                 <Border Grid.Row="1">
-                    <ScrollViewer Width="{Binding $parent.Bounds.Width}" Height="{Binding $parent.Bounds.Height}">
+                    <ScrollViewer Width="{CompiledBinding $parent.Bounds.Width}" Height="{CompiledBinding $parent.Bounds.Height}">
                         <ItemsRepeater Margin="10 5" Background="Transparent"
-                                       ItemsSource="{Binding FilteredList,Mode=OneWay}">
+                                       ItemsSource="{CompiledBinding FilteredList,Mode=OneWay}">
                             <ItemsRepeater.Layout>
                                 <UniformGridLayout />
                             </ItemsRepeater.Layout>
@@ -61,8 +61,8 @@
                                             <ContextMenu x:DataType="models:MusicListModel">
 
                                                 <MenuItem
-                                                    Command="{Binding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).PlayCurrentListCommand}"
-                                                    CommandParameter="{Binding }"
+                                                    Command="{CompiledBinding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).PlayCurrentListCommand}"
+                                                    CommandParameter="{CompiledBinding }"
                                                     Header="播放">
                                                     <MenuItem.Icon>
                                                         <PathIcon Data="{StaticResource SemiIconPlay}" Margin="4" />
@@ -77,8 +77,8 @@
 
                                                     <MenuItem
                                                         Header="图标"
-                                                        Command="{Binding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).MusicListsManager.EditMusicListCoverCommand}"
-                                                        CommandParameter="{Binding }">
+                                                        Command="{CompiledBinding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).MusicListsManager.EditMusicListCoverCommand}"
+                                                        CommandParameter="{CompiledBinding }">
                                                         <MenuItem.Icon>
                                                             <PathIcon Data="{StaticResource SemiIconImage}"
                                                                       Margin="2" />
@@ -87,8 +87,8 @@
 
                                                     <MenuItem
                                                         Header="名称"
-                                                        Command="{Binding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).MusicListsManager.EditMusicListNameCommand}"
-                                                        CommandParameter="{Binding }">
+                                                        Command="{CompiledBinding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).MusicListsManager.EditMusicListNameCommand}"
+                                                        CommandParameter="{CompiledBinding }">
                                                         <MenuItem.Icon>
                                                             <PathIcon Data="{StaticResource SemiIconFontColor}"
                                                                       Margin="2" />
@@ -97,8 +97,8 @@
 
                                                     <MenuItem
                                                         Header="描述"
-                                                        Command="{Binding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).MusicListsManager.EditMusicListDescriptionCommand}"
-                                                        CommandParameter="{Binding }">
+                                                        Command="{CompiledBinding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).MusicListsManager.EditMusicListDescriptionCommand}"
+                                                        CommandParameter="{CompiledBinding }">
                                                         <MenuItem.Icon>
                                                             <PathIcon Data="{StaticResource SemiIconFontColor}"
                                                                       Margin="2" />
@@ -108,8 +108,8 @@
                                                 </MenuItem>
 
                                                 <MenuItem
-                                                    Command="{Binding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).MusicListsManager.DeleteMusicListCommand}"
-                                                    CommandParameter="{Binding }"
+                                                    Command="{CompiledBinding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).MusicListsManager.DeleteMusicListCommand}"
+                                                    CommandParameter="{CompiledBinding }"
                                                     Header="删除">
                                                     <MenuItem.Icon>
                                                         <PathIcon Foreground="{DynamicResource SemiRed5}"
@@ -135,8 +135,8 @@
                                     <Panel Margin="5" DragDrop.AllowDrop="True">
 
                                         <Border CornerRadius="12"
-                                                Classes.Pointerover="{Binding $parent[Panel].IsPointerOver}"
-                                                Classes.NoPointerover="{Binding !$parent[Panel].IsPointerOver}">
+                                                Classes.Pointerover="{CompiledBinding $parent[Panel].IsPointerOver}"
+                                                Classes.NoPointerover="{CompiledBinding !$parent[Panel].IsPointerOver}">
 
                                             <Border.RenderTransform>
                                                 <TransformGroup>
@@ -197,8 +197,8 @@
                                                 Foreground="{DynamicResource TextBlockDefaultForeground}"
                                                 CornerRadius="12"
                                                 Background="{DynamicResource SemiColorBackground2}"
-                                                Command="{Binding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).SelectMusicListCommand}"
-                                                CommandParameter="{Binding }">
+                                                Command="{CompiledBinding #AllMusicListsContainer.((panelVms:AllMusicListsPanelViewModel)DataContext).SelectMusicListCommand}"
+                                                CommandParameter="{CompiledBinding }">
 
                                             <Button.Styles>
                                                 <Style Selector="Button">
@@ -228,8 +228,8 @@
                                                         ClipToBounds="True"
                                                         VerticalAlignment="Top">
 
-                                                    <Image Source="{Binding Thumbnail}"
-                                                           IsVisible="{Binding IsCoverExist}" />
+                                                    <Image Source="{CompiledBinding Thumbnail}"
+                                                           IsVisible="{CompiledBinding IsCoverExist}" />
 
                                                 </Border>
 
@@ -237,12 +237,12 @@
 
                                                     <TextBlock
                                                         TextTrimming="CharacterEllipsis"
-                                                        Text="{Binding Name}" />
+                                                        Text="{CompiledBinding Name}" />
 
                                                     <Separator Margin="0" />
 
                                                     <TextBlock DockPanel.Dock="Bottom"
-                                                               Text="{Binding Description}"
+                                                               Text="{CompiledBinding Description}"
                                                                MaxLines="2"
                                                                FontSize="12"
                                                                FontWeight="Normal"
@@ -278,7 +278,7 @@
                     </ScrollViewer>
                 </Border>
             </Grid>
-            <pages:MusicListInfoPage DataContext="{Binding }" />
+            <pages:MusicListInfoPage DataContext="{CompiledBinding }" />
         </Carousel.Items>
     </Carousel>
 </UserControl>

@@ -14,21 +14,21 @@
             Data="{StaticResource SemiIconMinusCircle}"
             Foreground="{DynamicResource SemiOrange5}" />
 
-        <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" />
+        <TextBlock Text="{CompiledBinding Title}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" />
 
     </StackPanel>
 
     <StackPanel Grid.Row="1" Spacing="10">
 
-        <TextBlock Text="{Binding OldText}"
+        <TextBlock Text="{CompiledBinding OldText}"
                    HorizontalAlignment="Center"
                    TextWrapping="Wrap" />
 
         <PathIcon
             Height="10" Width="10"
             HorizontalAlignment="Center"
-            Classes.ErrorsIsNull="{Binding HasErrors}"
-            Classes.ErrorsNotNull="{Binding !HasErrors}"
+            Classes.ErrorsIsNull="{CompiledBinding HasErrors}"
+            Classes.ErrorsNotNull="{CompiledBinding !HasErrors}"
             Data="{StaticResource SemiIconSmallTriangleDown}">
 
             <PathIcon.Styles>
@@ -49,7 +49,7 @@
                  ClipToBounds="False"
                  TextWrapping="Wrap"
                  MaxLines="5"
-                 Text="{Binding NewText}"
+                 Text="{CompiledBinding NewText}"
                  HorizontalContentAlignment="Center" />
 
     </StackPanel>
@@ -59,12 +59,12 @@
         <Button ToolTip.Tip="还是蒜了吧..."
                 Content="取消"
                 Theme="{DynamicResource OutlineButton}"
-                Command="{Binding CancelCommand}" />
+                Command="{CompiledBinding CancelCommand}" />
 
         <Button Content="确认"
-                IsEnabled="{Binding !HasErrors}"
+                IsEnabled="{CompiledBinding !HasErrors}"
                 ToolTip.Tip="我确定好了！"
-                Command="{Binding OkCommand}"
+                Command="{CompiledBinding OkCommand}"
                 Theme="{DynamicResource SolidButton}" />
 
     </StackPanel>

@@ -1,11 +1,8 @@
-﻿using QwQ_Music.Common.Audio;
-using QwQ_Music.Common.Managers;
-
-namespace QwQ_Music.PlatformUtils.SystemMediaControls;
-
+﻿namespace SystemMediaInterop;
 
 public interface ISystemMediaControlImpl : IDisposable {
-    void UpdateInfo(object? sender, MusicItemChangedEventArgs model);
+    async Task UpdateInfoAsync(IMediaItemWrapper model) { await UpdateInfoAsync(model.MediaItem); }
+    Task UpdateInfoAsync(IMediaItem model);
     double PlaybackSpeed { get; set; }
     double Volume { get; set; }
     TimeSpan Position { get; set; }

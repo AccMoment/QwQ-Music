@@ -5,9 +5,10 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewModels="clr-namespace:QwQ_Music.ViewModels"
     xmlns:u="https://irihi.tech/ursa"
+    xmlns:me="clr-namespace:QwQ_Music.MarkupExtensions"
     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
     Margin="10,0"
-    x:Class="QwQ_Music.Views.MainView">
+    x:Class="QwQ_Music.Views.Panels.MainView">
     <Grid RowDefinitions="40,*" ColumnDefinitions="Auto,*" ColumnSpacing="10"
           x:DataType="viewModels:MainViewViewModel">
 
@@ -48,11 +49,11 @@
 
             <Separator Width="20" />
 
-            <Button Classes="Icon" Command="{Binding ViewBackwardCommand}">
+            <Button Classes="Icon" Command="{CompiledBinding ViewBackwardCommand}">
                 <PathIcon Data="{StaticResource Forward}" />
             </Button>
 
-            <Button Classes="Icon" Command="{Binding ViewForwardCommand}">
+            <Button Classes="Icon" Command="{CompiledBinding ViewForwardCommand}">
                 <PathIcon RenderTransform="rotate(180deg)"
                           Data="{StaticResource Forward}" />
             </Button>
@@ -63,7 +64,7 @@
 
         <Grid Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left"
               RowDefinitions="Auto,*"
-              Width="{Binding DrawerManager.NavigationWidth}">
+              Width="{CompiledBinding DrawerManager.NavigationWidth}">
 
             <Grid.Transitions>
                 <Transitions>
@@ -76,7 +77,7 @@
 
             <!-- 折叠/展开菜单栏按钮 -->
             <ToggleButton HorizontalAlignment="Right"
-                          IsChecked="{Binding DrawerManager.IsNavigationExpand}"
+                          IsChecked="{CompiledBinding DrawerManager.IsNavigationExpand}"
                           CornerRadius="30"
                           Height="35"
                           Width="35"
@@ -120,8 +121,8 @@
 
                 <ToolTip.Tip>
                     <Panel>
-                        <TextBlock IsVisible="{Binding !$parent[ToggleButton].IsChecked}" Text="展开导航栏" />
-                        <TextBlock IsVisible="{Binding $parent[ToggleButton].IsChecked}" Text="收起导航栏" />
+                        <TextBlock IsVisible="{CompiledBinding !$parent[ToggleButton].IsChecked}" Text="展开导航栏" />
+                        <TextBlock IsVisible="{CompiledBinding $parent[ToggleButton].IsChecked}" Text="收起导航栏" />
                     </Panel>
                 </ToolTip.Tip>
 
@@ -129,12 +130,12 @@
 
             <ScrollViewer Grid.Row="1">
 
-                <u:SelectionList SelectedIndex="{Binding NavigationIndex}">
+                <u:SelectionList SelectedIndex="{CompiledBinding NavigationIndex}">
 
                     <u:SelectionList.Indicator>
                         <Border Effect="{DynamicResource LightColor0DropShadowEffect}"
                                 Background="{DynamicResource SemiBlue5}"
-                                Classes.Expanded="{Binding DrawerManager.IsNavigationExpand}"
+                                Classes.Expanded="{CompiledBinding DrawerManager.IsNavigationExpand}"
                                 CornerRadius="8">
                             <Border.Transitions>
                                 <Transitions>
@@ -221,26 +222,26 @@
 
                     <Grid ColumnDefinitions="Auto,*">
                         <PathIcon Data="{StaticResource SemiIconSong}" />
-                        <TextBlock Grid.Column="1" Text="{Binding LibraryV}"
-                                   Classes.Transparent="{Binding !DrawerManager.IsNavigationExpand}" />
+                        <TextBlock Grid.Column="1" Text="{CompiledBinding LibraryV}"
+                                   Classes.Transparent="{CompiledBinding !DrawerManager.IsNavigationExpand}" />
                     </Grid>
 
                     <Grid ColumnDefinitions="Auto,*">
                         <PathIcon Data="{StaticResource SemiIconDisc}" />
-                        <TextBlock Grid.Column="1" Text="{Binding ClassificationV}"
-                                   Classes.Transparent="{Binding !DrawerManager.IsNavigationExpand}" />
+                        <TextBlock Grid.Column="1" Text="{CompiledBinding ClassificationV}"
+                                   Classes.Transparent="{CompiledBinding !DrawerManager.IsNavigationExpand}" />
                     </Grid>
 
                     <Grid ColumnDefinitions="Auto,*">
                         <PathIcon Data="{StaticResource SemiIconBox}" />
-                        <TextBlock Grid.Column="1" Text="{Binding OtherV}"
-                                   Classes.Transparent="{Binding !DrawerManager.IsNavigationExpand}" />
+                        <TextBlock Grid.Column="1" Text="{CompiledBinding OtherV}"
+                                   Classes.Transparent="{CompiledBinding !DrawerManager.IsNavigationExpand}" />
                     </Grid>
 
                     <Grid ColumnDefinitions="Auto,*">
                         <PathIcon Data="{StaticResource SemiIconSetting}" />
-                        <TextBlock Grid.Column="1" Text="{Binding SettingsV}"
-                                   Classes.Transparent="{Binding !DrawerManager.IsNavigationExpand}" />
+                        <TextBlock Grid.Column="1" Text="{CompiledBinding SettingsV}"
+                                   Classes.Transparent="{CompiledBinding !DrawerManager.IsNavigationExpand}" />
                     </Grid>
 
                 </u:SelectionList>
@@ -249,9 +250,11 @@
 
         </Grid>
 
-        <Carousel Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Pages}"
-                  SelectedIndex="{Binding NavigationIndex}">
-
+        <Carousel Grid.Row="1" Grid.Column="1" ItemsSource="{CompiledBinding Pages}"
+                  SelectedIndex="{CompiledBinding NavigationIndex}">
+            <Carousel.Template>
+                
+            </Carousel.Template>
             <Carousel.PageTransition>
                 <CompositePageTransition>
                     <CrossFade Duration="0:0:0.5" />

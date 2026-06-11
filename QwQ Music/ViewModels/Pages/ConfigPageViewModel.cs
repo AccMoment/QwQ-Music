@@ -6,10 +6,7 @@ using QwQ_Music.ViewModels.Bases;
 
 namespace QwQ_Music.ViewModels.Pages;
 
-using static I18NService;
-
 public partial class ConfigPageViewModel() : NavigableViewModel(nameof(ConfigPageViewModel)) {
-    public static string LyricConfigName => Lang[nameof(LyricConfigName)];
 
     [ObservableProperty]
     public partial DateTime? LastSavedTime { get; set; } = null;

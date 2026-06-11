@@ -43,7 +43,7 @@ public class ToastService {
         bool showIcon = true,
         bool showClose = true,
         Action? onClick = null,
-        Action? onClose = null,
+        Action<MessageCloseReason>? onClose = null,
         string[]? classes = null) {
         if (Dispatcher.UIThread.CheckAccess())
             ShowNotificationWithCalculatedExpiration();
@@ -74,7 +74,7 @@ public class ToastService {
         bool showIcon = true,
         bool showClose = true,
         Action? onClick = null,
-        Action? onClose = null) {
+        Action<MessageCloseReason>? onClose = null) {
         Show(message, type, expiration, showIcon, showClose, onClick, onClose, ["Light"]);
     }
 

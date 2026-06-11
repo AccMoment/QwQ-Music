@@ -13,7 +13,7 @@
       xmlns:vm="clr-namespace:QwQ_Music.ViewModels.Pages">
 
     <u:SelectionList HorizontalAlignment="Left"
-                     SelectedIndex="{Binding NavigationIndex}">
+                     SelectedIndex="{CompiledBinding NavigationIndex}">
 
         <u:SelectionList.Styles>
 
@@ -62,7 +62,7 @@
 
     </u:SelectionList>
 
-    <Carousel Grid.Row="1" SelectedIndex="{Binding NavigationIndex}">
+    <Carousel Grid.Row="1" SelectedIndex="{CompiledBinding NavigationIndex}">
 
         <Carousel.Styles>
 
@@ -115,18 +115,18 @@
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
             Margin="15,25"
-            Command="{Binding SaveConfigImmediatelyCommand}">
+            Command="{CompiledBinding SaveConfigImmediatelyCommand}">
         <ToolTip.Tip>
             <StackPanel>
                 <TextBlock Text="立即保存配置" />
                 <TextBlock FontSize="12"
-                           Classes.Default="{Binding LastSavedTime,Converter={x:Static ObjectConverters.IsNotNull}}"
-                           Classes.TextIsNull="{Binding LastSavedTime,Converter={x:Static ObjectConverters.IsNull}}">
+                           Classes.Default="{CompiledBinding LastSavedTime,Converter={x:Static ObjectConverters.IsNotNull}}"
+                           Classes.TextIsNull="{CompiledBinding LastSavedTime,Converter={x:Static ObjectConverters.IsNull}}">
 
                     <TextBlock.Styles>
                         <Style Selector="TextBlock.Default">
                             <Setter Property="Text"
-                                    Value="{Binding LastSavedTime,StringFormat='上次保存时间 : {0:HH:mm:ss}'}" />
+                                    Value="{CompiledBinding LastSavedTime,StringFormat='上次保存时间 : {0:HH:mm:ss}'}" />
                             <Setter Property="Foreground" Value="{DynamicResource SemiBlue4}" />
                             <Setter Property="FontWeight" Value="Bold" />
                         </Style>

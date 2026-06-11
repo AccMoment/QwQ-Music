@@ -1,16 +1,18 @@
 using Avalonia;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
+using Ursa.Controls;
 using Notification = Ursa.Controls.Notification;
 using WindowNotificationManager = Ursa.Controls.WindowNotificationManager;
 
 namespace QwQ_Music.Common.Services;
 
 public static class NotificationService {
-    public static WindowNotificationManager? NotificationManager { get; } =
-        WindowNotificationManager.TryGetNotificationManager(App.TopLevel, out WindowNotificationManager? manager) ?
+    public static WindowNotificationManager NotificationManager { get; } =
+        (WindowNotificationManager.TryGetNotificationManager(App.TopLevel, out WindowNotificationManager? manager) ?
             manager :
-            new WindowNotificationManager(App.TopLevel) { Margin = new Thickness(0, 40, 0, 0) };
+            null) ??
+        new WindowNotificationManager(App.TopLevel) { Margin = new Thickness(0, 40, 0, 0) };
 
     public static double CharactersPerMinute { get; set; } = 200.0;
 
@@ -46,7 +48,7 @@ public static class NotificationService {
         bool showIcon = true,
         bool showClose = true,
         Action? onClick = null,
-        Action? onClose = null,
+        Action<MessageCloseReason>? onClose = null,
         string[]? classes = null) {
         if (Dispatcher.UIThread.CheckAccess())
             ShowNotificationWithCalculatedExpiration();
@@ -58,7 +60,7 @@ public static class NotificationService {
         void ShowNotificationWithCalculatedExpiration() {
             TimeSpan calculatedExpiration = CalculateExpiration(message, expiration);
 
-            NotificationManager?.Show(
+            NotificationManager.Show(
                 new Notification(title, message),
                 type,
                 calculatedExpiration,
@@ -78,7 +80,7 @@ public static class NotificationService {
         bool showIcon = true,
         bool showClose = true,
         Action? onClick = null,
-        Action? onClose = null) {
+        Action<MessageCloseReason>? onClose = null) {
         Show(title, message, type, expiration, showIcon, showClose, onClick, onClose, ["Light"]);
     }
 

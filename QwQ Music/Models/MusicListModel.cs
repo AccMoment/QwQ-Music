@@ -29,15 +29,12 @@ public partial class MusicListModel : ObservableObject {
 
     public Bitmap Thumbnail {
         get =>
-            CacheManager.TryLoadCoverThumbnailAsync(
+            CacheManager.TryLoadThumbnail(
                             (Name, Creator),
                             "音乐列表",
                             "封面",
                             MusicListThumbnailRepository.Instance,
-                            () => OnPropertyChanged())
-                        .ConfigureAwait(false)
-                        .GetAwaiter()
-                        .GetResult();
+                            () => OnPropertyChanged());
         set {
             CacheManager.SetImage(Name, "音乐列表", value);
             OnPropertyChanged();

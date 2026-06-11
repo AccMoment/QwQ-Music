@@ -8,7 +8,7 @@
             <ControlTemplate x:DataType="models:PlaylistItemModel">
                 <Button Classes="None"
                         Command="{TemplateBinding Command}"
-                        CommandParameter="{Binding }"
+                        CommandParameter="{CompiledBinding }"
                         Foreground="{DynamicResource SemiColorBackground4}"
                         Height="50"
                         Margin="10"
@@ -17,7 +17,7 @@
                     <Border CornerRadius="5"
                             ClipToBounds="True">
                         <Panel>
-                            <Image Source="{Binding Model.Thumbnail}" />
+                            <Image Source="{CompiledBinding Model.Thumbnail}" />
                             <Border Background="#33000000">
                                 <Border.IsVisible>
                                     <MultiBinding Converter="{x:Static BoolConverters.Or}">
@@ -26,7 +26,7 @@
                                     </MultiBinding>
                                 </Border.IsVisible>
                             </Border>
-                            <Panel x:Name="PART_Current" IsVisible="{Binding Model.IsCurrent,Mode=OneWay}">
+                            <Panel x:Name="PART_Current" IsVisible="{CompiledBinding Model.IsCurrent,Mode=OneWay}">
                                 <StackPanel Name="PART_Wave"
                                             HorizontalAlignment="Center"
                                             Orientation="Horizontal"

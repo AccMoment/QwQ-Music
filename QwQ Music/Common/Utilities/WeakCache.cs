@@ -9,8 +9,10 @@ namespace QwQ_Music.Common.Utilities;
 ///     构造函数
 /// </remarks>
 /// <param name="cleanupBatchSize">每次清理时检查的项目数</param>
-public sealed class WeakCache<TKey, TValue>(int cleanupBatchSize = 10) : IDisposable where TValue : class
-    where TKey : notnull {
+public sealed class WeakCache<TKey, TValue>(int cleanupBatchSize = 20, int cleanInterval = 15)
+    : IDisposable where TValue : class
+                  where TKey : notnull {
+    private int _cleanCount;
     private readonly ConcurrentDictionary<TKey, (WeakReference<TValue> Reference, DateTime LastAccess)> _cache = new();
 
     /// <summary>
@@ -28,7 +30,7 @@ public sealed class WeakCache<TKey, TValue>(int cleanupBatchSize = 10) : IDispos
             throw new KeyNotFoundException($"The key '{key}' was not found in the cache.");
         }
         set {
-            CleanupDeadReferences();
+            CleanZombies();
             _cache[key] = (new WeakReference<TValue>(value), DateTime.UtcNow);
         }
     }
@@ -38,7 +40,7 @@ public sealed class WeakCache<TKey, TValue>(int cleanupBatchSize = 10) : IDispos
     /// </summary>
     public int Count {
         get {
-            CleanupDeadReferences();
+            CleanZombies(true);
 
             return _cache.Count;
         }
@@ -65,7 +67,7 @@ public sealed class WeakCache<TKey, TValue>(int cleanupBatchSize = 10) : IDispos
     ///     添加缓存项
     /// </summary>
     public void Add(TKey key, TValue value) {
-        CleanupDeadReferences();
+        CleanZombies();
         _cache[key] = (new WeakReference<TValue>(value), DateTime.UtcNow);
     }
 
@@ -90,11 +92,13 @@ public sealed class WeakCache<TKey, TValue>(int cleanupBatchSize = 10) : IDispos
     /// <summary>
     ///     部分清理已失效的弱引用（只检查最久未访问的batchSize个项目）
     /// </summary>
-    private void CleanupDeadReferences() {
-        if (_cache.Count == 0)
+    private void CleanZombies(bool isForced = false) {
+        if (_cache.IsEmpty)
             return;
-
-        if (cleanupBatchSize <= 0) {
+        if (!isForced && Interlocked.Increment(ref _cleanCount) <= cleanInterval)
+            return;
+        Interlocked.Exchange(ref _cleanCount, 0);
+        if (isForced || cleanupBatchSize <= 0) {
             // 清理全部失效引用
             IEnumerable<TKey> deadKeys =
                 _cache.Where(kvp => !kvp.Value.Reference.TryGetTarget(out _)).Select(kvp => kvp.Key);

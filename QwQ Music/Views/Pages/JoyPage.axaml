@@ -9,10 +9,10 @@
              x:Class="QwQ_Music.Views.Pages.JoyPage">
 
     <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Spacing="10" Margin="10,0">
-        <Button Command="{Binding ClickMeButtonCommand}" Content="❤️" ToolTip.Tip="给你比❤️" />
-        <Button Command="{Binding LagButtonClickCommand}" Content="❔" ToolTip.Tip="这是什么？卡一下" />
-        <Button Command="{Binding IceButtonClickCommand}" Content="🧊" ToolTip.Tip="为什么要播放《春日影》" />
-        <Button Command="{Binding ExecuteMemoryCleanerCommand}" Content="🧹" ToolTip.Tip="减少自身内存占用，应该能减少吧..." />
+        <Button Command="{CompiledBinding ClickMeButtonCommand}" Content="❤️" ToolTip.Tip="给你比❤️" />
+        <Button Command="{CompiledBinding LagButtonClickCommand}" Content="❔" ToolTip.Tip="这是什么？卡一下" />
+        <Button Command="{CompiledBinding IceButtonClickCommand}" Content="🧊" ToolTip.Tip="为什么要播放《春日影》" />
+        <Button Command="{CompiledBinding ExecuteMemoryCleanerCommand}" Content="🧹" ToolTip.Tip="减少自身内存占用，应该能减少吧..." />
     </StackPanel>
 
 </UserControl>

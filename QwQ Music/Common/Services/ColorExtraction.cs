@@ -105,7 +105,7 @@ public static class ColorExtraction {
             AlphaFormat.Opaque);
 
         using ILockedFramebuffer buffer = writeableBitmap.Lock();
-        bitmap.CopyPixels(buffer, AlphaFormat.Opaque);
+        bitmap.CopyPixels(buffer);
 
         // 遍历像素采样颜色
         for (int y = 0; y < height; y += stride)

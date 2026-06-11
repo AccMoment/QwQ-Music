@@ -13,11 +13,12 @@ using QwQ_Music.Common.Services.MusicTagExtractors;
 using QwQ_Music.Common.Utilities;
 using QwQ_Music.Common.Utilities.StringUtilities;
 using QwQ_Music.Models.Enums;
+using SystemMediaInterop;
 using Timer = System.Timers.Timer;
 
 namespace QwQ_Music.Models;
 
-public partial class MusicItemModel : ObservableObject {
+public partial class MusicItemModel : ObservableObject, IMediaItem {
     public static readonly MusicItemModel Default = new() { Title = "听你想听", Artists = "YOU", FilePath = string.Empty };
 
     public string Extension;
@@ -79,16 +80,21 @@ public partial class MusicItemModel : ObservableObject {
     public string Comment { get; set; } = "";
 
     public Bitmap Thumbnail =>
-        CacheManager.TryLoadCoverThumbnailAsync(
-                        AlbumId,
-                        "音频",
-                        "封面",
-                        AlbumThumbnailRepository.Instance,
-                        () => OnPropertyChanged(),
-                        Title)
-                    .ConfigureAwait(false)
-                    .GetAwaiter()
-                    .GetResult();
+        CacheManager.TryLoadThumbnail(
+            AlbumId,
+            "音频",
+            "封面",
+            AlbumThumbnailRepository.Instance,
+            () => OnPropertyChanged(),
+            Title);
+
+    public Stream ThumbnailStream {
+        get {
+            MemoryStream thumbnailStream = new();
+            Thumbnail.Save(thumbnailStream);
+            return thumbnailStream;
+        }
+    }
 
     [ObservableProperty]
     public partial string Remarks { get; set; } = "";
@@ -369,7 +375,7 @@ public partial class MusicItemModel : ObservableObject {
     #endregion 播放歌曲前加载的属性
 }
 
-public readonly record struct PlaylistItemModel {
+public readonly record struct PlaylistItemModel : IMediaItemWrapper {
     public static readonly PlaylistItemModel RefDefault = new(MusicItemModel.Default, 0);
     public readonly ulong Id = 0L;
 
@@ -391,4 +397,5 @@ public readonly record struct PlaylistItemModel {
     public MusicItemModel Model { get; } = MusicItemModel.Default;
 
     public static void Reset() { IdAllocator = 1; }
+    public IMediaItem MediaItem => Model;
 }

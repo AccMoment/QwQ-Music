@@ -1,4 +1,4 @@
-﻿namespace QwQ_Music.PlatformUtils.SystemMediaControls;
+﻿namespace SystemMediaInterop;
 
 public class SystemMediaControlEventArgs : EventArgs;
 
@@ -6,9 +6,18 @@ public class PlaybackPositionChangedEventArgs(TimeSpan position) : SystemMediaCo
     public readonly TimeSpan Position = position;
 }
 
+public enum MediaPlaybackStatus {
+    Changing, Playing, Paused, Stopped
+}
+
 public static class SystemMediaControl {
-    public const string APPID = "com.Mioter.QwQMusic";
-    public static ISystemMediaControlImpl Instance = CreateSystemMediaControl();
+    public static string AppId {
+        get =>
+            field ?? throw new NullReferenceException("You have to set AppId before use SystemMediaControl Instance.");
+        set;
+    }
+
+    public static ISystemMediaControlImpl Instance { get; } = CreateSystemMediaControl();
 
     public static ISystemMediaControlImpl CreateSystemMediaControl() {
 #if _WIN_NT

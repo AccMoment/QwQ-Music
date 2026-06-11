@@ -22,10 +22,10 @@
                   Margin="0,5"
                   Theme="{StaticResource OutlineIconButton}"
                   CornerRadius="10"
-                  Command="{Binding OpenSoundEffectManagerPanelCommand}" />
+                  Command="{CompiledBinding OpenSoundEffectManagerPanelCommand}" />
 
     <u:SelectionList Grid.Row="1" Grid.Column="0" Name="SoundEffSelectionList" Margin="0,5"
-                     ItemsSource="{Binding SoundModifierManager.SoundModifiers}">
+                     ItemsSource="{CompiledBinding SoundModifierManager.SoundModifiers}">
 
         <u:SelectionList.Styles>
 
@@ -60,9 +60,9 @@
         <u:SelectionList.ItemTemplate>
             <DataTemplate>
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                    <TextBlock Text="{Binding Name}" FontSize="15" />
+                    <TextBlock Text="{CompiledBinding Name}" FontSize="15" />
                     <CheckBox Grid.Column="1"
-                              IsChecked="{Binding Enabled,Mode=TwoWay}" />
+                              IsChecked="{CompiledBinding Enabled,Mode=TwoWay}" />
                 </Grid>
             </DataTemplate>
 
@@ -72,8 +72,8 @@
 
     <ScrollViewer Grid.Row="0" Grid.RowSpan="2" Grid.Column="1">
 
-        <Carousel Margin="10,0" ItemsSource="{Binding SoundModifierManager.SoundModifiers}"
-                  SelectedIndex="{Binding #SoundEffSelectionList.SelectedIndex}">
+        <Carousel Margin="10,0" ItemsSource="{CompiledBinding SoundModifierManager.SoundModifiers}"
+                  SelectedIndex="{CompiledBinding #SoundEffSelectionList.SelectedIndex}">
 
             <Carousel.DataTemplates>
 

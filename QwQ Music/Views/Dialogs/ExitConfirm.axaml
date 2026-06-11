@@ -22,7 +22,7 @@
         <TextBlock Text="确定要退出程序吗？" VerticalAlignment="Center" HorizontalAlignment="Center" />
 
         <CheckBox Grid.Row="1" HorizontalAlignment="Center" CornerRadius="10" Content="不要再让我选了！"
-                  IsChecked="{Binding IsEnablePrompt}" />
+                  IsChecked="{CompiledBinding IsEnablePrompt}" />
 
     </Grid>
 
@@ -31,17 +31,17 @@
         <Button ToolTip.Tip="还是蒜了吧..."
                 Content="取消"
                 Theme="{DynamicResource OutlineButton}"
-                Command="{Binding CancelCommand}" />
+                Command="{CompiledBinding CancelCommand}" />
 
         <Button ToolTip.Tip="要把我藏到系统托盘吗？"
                 Content="隐藏"
                 Theme="{DynamicResource OutlineButton}"
-                Command="{Binding HideCommand}" />
+                Command="{CompiledBinding HideCommand}" />
 
         <Button Content="确认"
                 Classes="Danger"
                 ToolTip.Tip="确定以及肯定，我现在就要退出！！！"
-                Command="{Binding ExitCommand}"
+                Command="{CompiledBinding ExitCommand}"
                 Theme="{DynamicResource SolidButton}" />
 
     </StackPanel>

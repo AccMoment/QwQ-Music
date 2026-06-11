@@ -12,7 +12,7 @@
 
 
     <u:SelectionList HorizontalAlignment="Left"
-                     SelectedIndex="{Binding NavigationIndex}">
+                     SelectedIndex="{CompiledBinding NavigationIndex}">
 
         <u:SelectionList.Styles>
 
@@ -59,7 +59,7 @@
 
     </u:SelectionList>
 
-    <Carousel Grid.Row="1" SelectedIndex="{Binding NavigationIndex}">
+    <Carousel Grid.Row="1" SelectedIndex="{CompiledBinding NavigationIndex}">
         <Carousel.PageTransition>
             <CompositePageTransition>
                 <CrossFade Duration="0:0:0.5" />

@@ -42,8 +42,7 @@ public interface IAsyncReadonlyDatabaseRepository<in TPrimaryKey, TOut> : IAsync
     Task<bool> ExistsAsync(TPrimaryKey key);
 }
 
-public interface
-    IAsyncDatabaseRepository<in TPrimaryKey, in TIn, TOut> : IAsyncReadonlyDatabaseRepository<TPrimaryKey, TOut>
+public interface IAsyncDatabaseRepository<in TPrimaryKey, in TIn, TOut> : IAsyncReadonlyDatabaseRepository<TPrimaryKey, TOut>
     where TPrimaryKey : notnull
     where TIn : notnull {
     /// <summary>

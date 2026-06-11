@@ -10,46 +10,46 @@
 
     <DockPanel HorizontalSpacing="10" Height="40">
         <Separator VerticalAlignment="Bottom" Margin="0" DockPanel.Dock="Bottom" />
-        <TextBlock FontSize="16" Text="{Binding Name}" FontWeight="Bold" VerticalAlignment="Center" />
+        <TextBlock FontSize="16" Text="{CompiledBinding Name}" FontWeight="Bold" VerticalAlignment="Center" />
         <TextBlock Text="Free-verb 算法混响效果器"
                    VerticalAlignment="Center"
                    Foreground="{DynamicResource SemiColorTertiary}" />
     </DockPanel>
 
-    <TextBlock Text="{Binding Wet, StringFormat='湿信号 : {0:F3}'}" />
+    <TextBlock Text="{CompiledBinding Wet, StringFormat='湿信号 : {0:F3}'}" />
     <Slider
         Maximum="1.0"
         Minimum="0.0"
-        Value="{Binding Wet}" />
+        Value="{CompiledBinding Wet}" />
 
-    <TextBlock Text="{Binding Mix, StringFormat='干湿混合比例: {0:F3} '}" />
+    <TextBlock Text="{CompiledBinding Mix, StringFormat='干湿混合比例: {0:F3} '}" />
     <Slider
         Maximum="1"
         Minimum="0"
-        Value="{Binding Mix}" />
+        Value="{CompiledBinding Mix}" />
 
-    <TextBlock Text="{Binding RoomSize, StringFormat='房间大小 : {0:F3}'}" />
+    <TextBlock Text="{CompiledBinding RoomSize, StringFormat='房间大小 : {0:F3}'}" />
     <Slider
         Maximum="1"
         Minimum="0"
-        Value="{Binding RoomSize}" />
+        Value="{CompiledBinding RoomSize}" />
 
-    <TextBlock Text="{Binding Damp, StringFormat='阻尼 : {0:F3}'}" />
+    <TextBlock Text="{CompiledBinding Damp, StringFormat='阻尼 : {0:F3}'}" />
     <Slider
         Maximum="1"
         Minimum="0"
-        Value="{Binding Damp}" />
+        Value="{CompiledBinding Damp}" />
 
-    <TextBlock Text="{Binding Width, StringFormat='立体声宽度 : {0:F3}'}" />
+    <TextBlock Text="{CompiledBinding Width, StringFormat='立体声宽度 : {0:F3}'}" />
     <Slider
         Maximum="1"
         Minimum="0"
-        Value="{Binding Width}" />
+        Value="{CompiledBinding Width}" />
 
-    <TextBlock Text="{Binding PreDelay, StringFormat='预延迟: {0:F0} ms'}" />
+    <TextBlock Text="{CompiledBinding PreDelay, StringFormat='预延迟: {0:F0} ms'}" />
     <Slider
         Maximum="100"
         Minimum="0"
-        Value="{Binding PreDelay}" />
+        Value="{CompiledBinding PreDelay}" />
 
 </StackPanel>

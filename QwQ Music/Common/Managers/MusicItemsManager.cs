@@ -143,7 +143,7 @@ public sealed partial class MusicItemsManager : ObservableObject, IDisposable {
         // 构建确认提示信息
         string titles = string.Join("、", items.Select(item => $"《{item.Title}》"));
 
-        MessageBoxResult result = await MessageBox.ShowOverlayAsync(
+        MessageBoxResult result = await MessageBox.ShowAsync(
                                                       $"你真的要删除以下音乐吗？\n{titles}",
                                                       "警告",
                                                       icon: MessageBoxIcon.Warning,
@@ -210,7 +210,7 @@ public sealed partial class MusicItemsManager : ObservableObject, IDisposable {
         foreach (MusicItemModel item in musicItems) {
             var options = new OverlayDialogOptions { Title = "详细信息", CanLightDismiss = true, Mode = DialogMode.Info };
 
-            OverlayDialog.ShowCustomModal<AudioDetailedInfo, AudioDetailedInfoViewModel, DialogResult>(
+            OverlayDialog.ShowCustomAsync<AudioDetailedInfo, AudioDetailedInfoViewModel, DialogResult>(
                              new AudioDetailedInfoViewModel(item, item.Track),
                              options: options)
                          .ContinueWith(LoggerService.HandleException)

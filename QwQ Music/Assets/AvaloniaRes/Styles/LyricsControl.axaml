@@ -40,17 +40,17 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="controls:LyricLineViewItem">
                             <controls:LyricLineControl
-                                Height="{Binding LineHeight}"
-                                Margin="{Binding Margin}"
-                                Text="{Binding PrimaryText}"
-                                Translation="{Binding TranslationText}"
-                                TimePoint="{Binding TimePoint}"
-                                IsCurrent="{Binding IsCurrent}"
-                                IsPlaceholder="{Binding IsPlaceholder}"
-                                ShowTranslation="{Binding ShowTranslation}"
-                                TextAlignment="{Binding LyricTextAlignment, RelativeSource={RelativeSource AncestorType=controls:LyricsControl}}"
-                                TextMargin="{Binding TextMargin, RelativeSource={RelativeSource AncestorType=controls:LyricsControl}}"
-                                TranslationSpacing="{Binding TranslationSpacing, RelativeSource={RelativeSource AncestorType=controls:LyricsControl}}" />
+                                Height="{CompiledBinding LineHeight}"
+                                Margin="{CompiledBinding Margin}"
+                                Text="{CompiledBinding PrimaryText}"
+                                Translation="{CompiledBinding TranslationText}"
+                                TimePoint="{CompiledBinding TimePoint}"
+                                IsCurrent="{CompiledBinding IsCurrent}"
+                                IsPlaceholder="{CompiledBinding IsPlaceholder}"
+                                ShowTranslation="{CompiledBinding ShowTranslation}"
+                                TextAlignment="{CompiledBinding LyricTextAlignment, RelativeSource={RelativeSource AncestorType=controls:LyricsControl}}"
+                                TextMargin="{CompiledBinding TextMargin, RelativeSource={RelativeSource AncestorType=controls:LyricsControl}}"
+                                TranslationSpacing="{CompiledBinding TranslationSpacing, RelativeSource={RelativeSource AncestorType=controls:LyricsControl}}" />
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>

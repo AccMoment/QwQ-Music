@@ -11,7 +11,7 @@
         <PathIcon Height="20" Width="20" Data="{StaticResource SemiIconPlusCircle}"
                   Foreground="#46C01B" />
 
-        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" />
+        <TextBlock Text="{CompiledBinding Name}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" />
 
     </StackPanel>
 
@@ -29,12 +29,12 @@
                 Height="180"
                 Width="180"
                 Padding="0"
-                Command="{Binding SetCoverCommand}"
+                Command="{CompiledBinding SetCoverCommand}"
                 Background="#F5F5F6"
                 CornerRadius="8">
 
             <Interaction.Behaviors>
-                <IfElseTrigger Condition="{Binding Cover,Converter={x:Static ObjectConverters.IsNull}}">
+                <IfElseTrigger Condition="{CompiledBinding Cover,Converter={x:Static ObjectConverters.IsNull}}">
 
                     <IfElseTrigger.IfActions>
                         <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentPresenter.ContentProperty}">
@@ -48,8 +48,8 @@
                     <IfElseTrigger.ElseActions>
                         <ChangeAvaloniaPropertyAction TargetProperty="{x:Static ContentPresenter.ContentProperty}">
                             <ChangeAvaloniaPropertyAction.Value>
-                                <Border CornerRadius="{Binding $parent[Button].CornerRadius}" ClipToBounds="True">
-                                    <Image Source="{Binding Cover}" />
+                                <Border CornerRadius="{CompiledBinding $parent[Button].CornerRadius}" ClipToBounds="True">
+                                    <Image Source="{CompiledBinding Cover}" />
                                 </Border>
                             </ChangeAvaloniaPropertyAction.Value>
                         </ChangeAvaloniaPropertyAction>
@@ -63,7 +63,7 @@
             <TextBlock Text="名称 :"
                        FontWeight="Bold" />
 
-            <TextBox Name="NameTextBlock" CornerRadius="8" Text="{Binding   Name}" />
+            <TextBox Name="NameTextBlock" CornerRadius="8" Text="{CompiledBinding   Name}" />
         </StackPanel>
 
         <StackPanel>
@@ -73,7 +73,7 @@
                      TextWrapping="Wrap"
                      VerticalContentAlignment="Top"
                      Padding="8,5"
-                     Text="{Binding Description}" />
+                     Text="{CompiledBinding Description}" />
         </StackPanel>
 
     </DockPanel>
@@ -88,11 +88,11 @@
 
         <Button Content="取消"
                 Theme="{DynamicResource OutlineButton}"
-                Command="{Binding CancelCommand}" />
+                Command="{CompiledBinding CancelCommand}" />
 
         <Button Content="确认"
-                IsEnabled="{Binding !HasErrors}"
-                Command="{Binding OkCommand}"
+                IsEnabled="{CompiledBinding !HasErrors}"
+                Command="{CompiledBinding OkCommand}"
                 Theme="{DynamicResource SolidButton}" />
 
     </StackPanel>

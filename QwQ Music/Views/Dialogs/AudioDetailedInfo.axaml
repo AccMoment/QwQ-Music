@@ -19,7 +19,7 @@
 
     <ScrollViewer Grid.Row="1">
 
-        <ItemsControl ItemsSource="{Binding MusicInfoGroups}" Margin="10,0">
+        <ItemsControl ItemsSource="{CompiledBinding MusicInfoGroups}" Margin="10,0">
 
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -32,9 +32,9 @@
 
                     <StackPanel Spacing="10">
 
-                        <TextBlock Text="{Binding Header}" FontWeight="Bold" />
+                        <TextBlock Text="{CompiledBinding Header}" FontWeight="Bold" />
 
-                        <ItemsControl ItemsSource="{Binding Items}">
+                        <ItemsControl ItemsSource="{CompiledBinding Items}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <WrapPanel ItemSpacing="10" LineSpacing="10" />
@@ -45,18 +45,18 @@
                                 <DataTemplate>
                                     <SelectableTextBlock
                                         MinWidth="260"
-                                        SelectedText="{Binding #MusicInfoContainer.((dialogs:AudioDetailedInfoViewModel)DataContext).SelectedText}"
+                                        SelectedText="{CompiledBinding #MusicInfoContainer.((dialogs:AudioDetailedInfoViewModel)DataContext).SelectedText}"
                                         TextWrapping="Wrap"
                                         VerticalAlignment="Center">
                                         <Run Foreground="{DynamicResource TextBlockTertiaryForeground}"
-                                             Text="{Binding Key}" />
+                                             Text="{CompiledBinding Key}" />
                                         <Run Text=" : " />
-                                        <Run Text="{Binding Value}" />
+                                        <Run Text="{CompiledBinding Value}" />
                                         <SelectableTextBlock.ContextMenu>
                                             <ContextMenu>
                                                 <MenuItem
-                                                    Command="{Binding #MusicInfoContainer.((dialogs:AudioDetailedInfoViewModel)DataContext).CopyTextCommand}"
-                                                    CommandParameter="{Binding}"
+                                                    Command="{CompiledBinding #MusicInfoContainer.((dialogs:AudioDetailedInfoViewModel)DataContext).CopyTextCommand}"
+                                                    CommandParameter="{CompiledBinding}"
                                                     Header="{DynamicResource STRING_MENU_COPY}"
                                                     InputGesture="{x:Static TextBox.CopyGesture}" />
                                             </ContextMenu>

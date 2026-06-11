@@ -1,42 +1,28 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:u="https://irihi.tech/ursa">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!-- Add Resources Here -->
-    <ControlTheme x:Key="{x:Type u:TitleBar}" TargetType="u:TitleBar">
-        <Setter Property="Background" Value="{x:Null}" />
-        <Setter Property="VerticalAlignment" Value="Top" />
-        <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <ControlTheme x:Key="{x:Type WindowDrawnDecorations}" TargetType="WindowDrawnDecorations">
         <Setter Property="Template">
-            <ControlTemplate TargetType="u:TitleBar">
-                <Panel Background="{TemplateBinding Background}">
-                    <Panel>
-                        <u:WindowThumb
-                            Background="{TemplateBinding Background}"
-                            IsHitTestVisible="{TemplateBinding IsTitleBarHitTestVisible}" />
-                        <Grid HorizontalAlignment="Stretch" ColumnDefinitions="Auto, *, Auto, Auto">
-                            <ContentPresenter
-                                Grid.Column="0"
-                                Content="{TemplateBinding LeftContent}"
-                                IsVisible="{TemplateBinding IsTitleVisible}" />
-                            <ContentPresenter
-                                Grid.Column="1"
-                                Content="{TemplateBinding Content}"
-                                IsVisible="{TemplateBinding IsTitleVisible}" />
-                            <ContentPresenter
-                                Grid.Column="2"
-                                Content="{TemplateBinding RightContent}"
-                                IsVisible="{TemplateBinding IsTitleVisible}" />
-                            <u:CaptionButtons
-                                Name="{x:Static u:TitleBar.PART_CaptionButtons}"
-                                Grid.Column="3"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Top"
-                                DockPanel.Dock="Right"
-                                Foreground="{TemplateBinding Foreground}" />
-                        </Grid>
-                    </Panel>
-                </Panel>
-            </ControlTemplate>
+            <WindowDrawnDecorationsTemplate>
+                <WindowDrawnDecorationsContent>
+                    <WindowDrawnDecorationsContent.Overlay>
+                        <DockPanel Height="{TemplateBinding TitleBarHeight}"
+                                   Background="{x:Null}"
+                                   HorizontalAlignment="Stretch"
+                                   VerticalAlignment="Top"
+                                   Margin="{TemplateBinding ShadowThickness}">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="2">
+                                <Button x:Name="PART_FullScreenButton" Content="{StaticResource WindowExpandGlyph}" />
+                                <Button x:Name="PART_MinimizeButton" Content="─" />
+                                <Button x:Name="PART_MaximizeButton" Content="□" />
+                                <Button x:Name="PART_CloseButton">
+                                    <PathIcon Data="{StaticResource PauseIconData}"></PathIcon>
+                                </Button>
+                            </StackPanel>
+                        </DockPanel>
+                    </WindowDrawnDecorationsContent.Overlay>
+                </WindowDrawnDecorationsContent>
+            </WindowDrawnDecorationsTemplate>
         </Setter>
     </ControlTheme>
 </ResourceDictionary>

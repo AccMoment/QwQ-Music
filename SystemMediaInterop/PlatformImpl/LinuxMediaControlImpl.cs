@@ -1,15 +1,11 @@
 ﻿#if _LINUX
 
-using QwQ_Music.Common.Audio;
-using QwQ_Music.Common.Managers;
 using Tmds.DBus;
 
-namespace QwQ_Music.PlatformUtils.SystemMediaControls;
-
+namespace SystemMediaInterop.PlatformImpl;
 
 public class LinuxMediaControlImpl : ISystemMediaControlImpl {
-    public void UpdateInfo(object? sender, MusicItemChangedEventArgs model) { }
-
+    public Task UpdateInfoAsync(IMediaItem model) { return Task.CompletedTask; }
     public double PlaybackSpeed { get; set; }
     public double Rate { get; set; }
     public double Volume { get; set; }

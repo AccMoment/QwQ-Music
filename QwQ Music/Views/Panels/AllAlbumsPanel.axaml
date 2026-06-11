@@ -7,7 +7,7 @@
     x:DataType="panels:AllAlbumsPanelViewModel"
     x:Class="QwQ_Music.Views.Panels.AllAlbumsPanel"
     Name="AllAlbumsContainer">
-    <Carousel SelectedIndex="{Binding CurrentState}">
+    <Carousel SelectedIndex="{CompiledBinding CurrentState}">
         <Carousel.PageTransition>
             <CompositePageTransition>
                 <CrossFade Duration="0:0:0.5" />
@@ -24,15 +24,15 @@
                             Margin="20 5" Theme="{StaticResource RadioButtonGroupBorder}" CornerRadius="8">
                         <!-- 卡片样式选择 -->
                         <StackPanel Orientation="Horizontal">
-                            <RadioButton Name="CardSimple" IsChecked="{Binding StyleConfig.AlbumCard[0]}"
+                            <RadioButton Name="CardSimple" IsChecked="{CompiledBinding StyleConfig.AlbumCard[0]}"
                                          Theme="{DynamicResource ButtonRadioButton}">
                                 简约
                             </RadioButton>
-                            <RadioButton Name="CardFancy" IsChecked="{Binding StyleConfig.AlbumCard[1]}"
+                            <RadioButton Name="CardFancy" IsChecked="{CompiledBinding StyleConfig.AlbumCard[1]}"
                                          Theme="{DynamicResource ButtonRadioButton}">
                                 梦幻
                             </RadioButton>
-                            <RadioButton Name="CardMini" IsChecked="{Binding StyleConfig.AlbumCard[2]}"
+                            <RadioButton Name="CardMini" IsChecked="{CompiledBinding StyleConfig.AlbumCard[2]}"
                                          Theme="{DynamicResource ButtonRadioButton}">
                                 迷你
                             </RadioButton>
@@ -42,8 +42,8 @@
                     <TextBox CornerRadius="15"
                              Margin="10,0"
                              HorizontalAlignment="Right"
-                             Text="{Binding SearchText, Mode=TwoWay}"
-                             Watermark="搜索专辑"
+                             Text="{CompiledBinding SearchText, Mode=TwoWay}"
+                             PlaceholderText="搜索专辑"
                              Width="200">
                         <TextBox.InnerLeftContent>
                             <PathIcon Data="{StaticResource SemiIconSearchStroked}" Height="14" Width="14" />
@@ -51,8 +51,8 @@
                     </TextBox>
                 </Panel>
                 <Border Grid.Row="1">
-                    <ScrollViewer Width="{Binding $parent.Bounds.Width}" Height="{Binding $parent.Bounds.Height}">
-                        <ItemsRepeater Margin="10 5" Background="Transparent" ItemsSource="{Binding FilteredList}">
+                    <ScrollViewer Width="{CompiledBinding $parent.Bounds.Width}" Height="{CompiledBinding $parent.Bounds.Height}">
+                        <ItemsRepeater Margin="10 5" Background="Transparent" ItemsSource="{CompiledBinding FilteredList}">
                             <ItemsRepeater.Layout>
                                 <UniformGridLayout />
                             </ItemsRepeater.Layout>
@@ -65,8 +65,8 @@
                                             <ContextMenu>
 
                                                 <MenuItem
-                                                    Command="{Binding #AllAlbumsContainer.((panels:AllAlbumsPanelViewModel)DataContext).PlayAlbumMusicCommand}"
-                                                    CommandParameter="{Binding}"
+                                                    Command="{CompiledBinding #AllAlbumsContainer.((panels:AllAlbumsPanelViewModel)DataContext).PlayAlbumMusicCommand}"
+                                                    CommandParameter="{CompiledBinding}"
                                                     Header="播放">
                                                     <MenuItem.Icon>
                                                         <PathIcon Data="{StaticResource SemiIconPlay}" Margin="4" />
@@ -81,7 +81,7 @@
 
                             </ItemsRepeater.Styles>
                             <Interaction.Behaviors>
-                                <IfElseTrigger Condition="{Binding #CardSimple.IsChecked}">
+                                <IfElseTrigger Condition="{CompiledBinding #CardSimple.IsChecked}">
 
                                     <IfElseTrigger.IfActions>
                                         <ChangeAvaloniaPropertyAction
@@ -95,8 +95,8 @@
                                                             FontWeight="Normal"
                                                             Foreground="{DynamicResource TextBlockDefaultForeground}"
                                                             Background="{DynamicResource SemiColorBackground2}"
-                                                            Command="{Binding #AllAlbumsContainer.((panels:AllAlbumsPanelViewModel)DataContext).SelectAlbumCommand}"
-                                                            CommandParameter="{Binding}">
+                                                            Command="{CompiledBinding #AllAlbumsContainer.((panels:AllAlbumsPanelViewModel)DataContext).SelectAlbumCommand}"
+                                                            CommandParameter="{CompiledBinding}">
 
                                                         <Button.Transitions>
                                                             <Transitions>
@@ -135,7 +135,7 @@
                                                                     VerticalAlignment="Top"
                                                                     Height="60" Width="60"
                                                                     ClipToBounds="True">
-                                                                <Image Source="{Binding Thumbnail}" />
+                                                                <Image Source="{CompiledBinding Thumbnail}" />
                                                             </Border>
 
                                                             <Rectangle Grid.Row="0" Grid.RowSpan="2" Grid.Column="1"
@@ -143,11 +143,11 @@
                                                                        Width="1" />
 
                                                             <TextBlock Grid.Row="0" Grid.Column="2"
-                                                                       Text="{Binding Name}"
+                                                                       Text="{CompiledBinding Name}"
                                                                        FontWeight="Bold" TextWrapping="Wrap"
                                                                        MaxLines="3" />
                                                             <TextBlock Grid.Row="1" Grid.Column="2"
-                                                                       Text="{Binding Artists}"
+                                                                       Text="{CompiledBinding Artists}"
                                                                        TextWrapping="Wrap"
                                                                        FontSize="12"
                                                                        Classes="Tertiary"
@@ -162,7 +162,7 @@
 
                                 </IfElseTrigger>
 
-                                <IfElseTrigger Condition="{Binding #CardFancy.IsChecked}">
+                                <IfElseTrigger Condition="{CompiledBinding #CardFancy.IsChecked}">
 
                                     <IfElseTrigger.IfActions>
                                         <ChangeAvaloniaPropertyAction
@@ -176,8 +176,8 @@
                                                             BorderThickness="0"
                                                             Foreground="{DynamicResource TextBlockDefaultForeground}"
                                                             Background="{DynamicResource SemiColorBackground2}"
-                                                            Command="{Binding #AllAlbumsContainer.((panels:AllAlbumsPanelViewModel)DataContext).SelectAlbumCommand}"
-                                                            CommandParameter="{Binding}">
+                                                            Command="{CompiledBinding #AllAlbumsContainer.((panels:AllAlbumsPanelViewModel)DataContext).SelectAlbumCommand}"
+                                                            CommandParameter="{CompiledBinding}">
 
                                                         <Button.Transitions>
                                                             <Transitions>
@@ -224,7 +224,7 @@
                                                                 <Panel>
                                                                     <Panel.Background>
                                                                         <ImageBrush Stretch="UniformToFill"
-                                                                                Source="{Binding Thumbnail}" />
+                                                                                Source="{CompiledBinding Thumbnail}" />
                                                                     </Panel.Background>
 
                                                                     <Panel.Effect>
@@ -243,7 +243,7 @@
                                                                             Height="60" Width="60"
                                                                             ClipToBounds="True">
 
-                                                                        <Image Source="{Binding Thumbnail}" />
+                                                                        <Image Source="{CompiledBinding Thumbnail}" />
                                                                     </Border>
 
                                                                     <Grid Grid.Column="1" RowDefinitions="3*,2*">
@@ -254,13 +254,13 @@
 
                                                                         <TextBlock Grid.Row="0"
                                                                                 Margin="10,10,10,0"
-                                                                                Text="{Binding Name}"
+                                                                                Text="{CompiledBinding Name}"
                                                                                 FontWeight="Bold" TextWrapping="Wrap"
                                                                                 MaxLines="3" />
 
                                                                         <TextBlock Grid.Row="1"
                                                                                 Margin="10,0,10,10"
-                                                                                Text="{Binding Artists}"
+                                                                                Text="{CompiledBinding Artists}"
                                                                                 TextWrapping="Wrap"
                                                                                 FontSize="12"
                                                                                 Classes="Tertiary"
@@ -282,7 +282,7 @@
 
                                 </IfElseTrigger>
 
-                                <IfElseTrigger Condition="{Binding #CardMini.IsChecked}">
+                                <IfElseTrigger Condition="{CompiledBinding #CardMini.IsChecked}">
 
                                     <IfElseTrigger.IfActions>
                                         <ChangeAvaloniaPropertyAction
@@ -296,8 +296,8 @@
                                                             BorderThickness="0"
                                                             Foreground="{DynamicResource TextBlockDefaultForeground}"
                                                             Background="{DynamicResource SemiColorBackground2}"
-                                                            Command="{Binding #AllAlbumsContainer.((panels:AllAlbumsPanelViewModel)DataContext).SelectAlbumCommand}"
-                                                            CommandParameter="{Binding}">
+                                                            Command="{CompiledBinding #AllAlbumsContainer.((panels:AllAlbumsPanelViewModel)DataContext).SelectAlbumCommand}"
+                                                            CommandParameter="{CompiledBinding}">
                                                         <Button.Transitions>
                                                             <Transitions>
                                                                 <EffectTransition Duration="0:0:0.3"
@@ -343,7 +343,7 @@
                                                                 <Panel>
                                                                     <Panel.Background>
                                                                         <ImageBrush Stretch="UniformToFill"
-                                                                                Source="{Binding Thumbnail}" />
+                                                                                Source="{CompiledBinding Thumbnail}" />
                                                                     </Panel.Background>
 
                                                                     <Panel.Effect>
@@ -354,7 +354,7 @@
 
                                                                 <Grid Height="60" Width="240" ColumnDefinitions="60,*">
 
-                                                                    <Image Source="{Binding Thumbnail}" />
+                                                                    <Image Source="{CompiledBinding Thumbnail}" />
 
                                                                     <Grid Grid.Column="1" RowDefinitions="3*,2*">
 
@@ -364,13 +364,13 @@
 
                                                                         <TextBlock Grid.Row="0"
                                                                                 Margin="10,10,10,0"
-                                                                                Text="{Binding Name}"
+                                                                                Text="{CompiledBinding Name}"
                                                                                 FontWeight="Bold" TextWrapping="Wrap"
                                                                                 MaxLines="3" />
 
                                                                         <TextBlock Grid.Row="1"
                                                                                 Margin="10,0,10,10"
-                                                                                Text="{Binding Artists}"
+                                                                                Text="{CompiledBinding Artists}"
                                                                                 TextWrapping="Wrap"
                                                                                 Classes="Tertiary"
                                                                                 FontSize="12"
@@ -397,7 +397,7 @@
                 </Border>
             </Grid>
 
-            <pages:AlbumInfoPage DataContext="{Binding .,Mode=OneWay}" />
+            <pages:AlbumInfoPage DataContext="{CompiledBinding .,Mode=OneWay}" />
         </Carousel.Items>
     </Carousel>
 </UserControl>

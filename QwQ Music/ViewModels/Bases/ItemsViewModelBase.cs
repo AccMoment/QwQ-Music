@@ -11,6 +11,10 @@ using QwQ_Music.Models.ConfigModels;
 
 namespace QwQ_Music.ViewModels.Bases;
 
+public class DataList<T> : List<T> {
+    
+}
+
 public abstract partial class ItemsViewModelBase<T>(string viewModelName) : NavigableViewModel(viewModelName) {
     [ObservableProperty]
     public partial double DataGridHorizontalScrollValue { get; set; }

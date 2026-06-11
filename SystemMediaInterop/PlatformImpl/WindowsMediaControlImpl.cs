@@ -7,61 +7,49 @@ using System.Text;
 using Windows.Media;
 using Windows.Media.Playback;
 using Windows.Storage.Streams;
-using Avalonia.Media.Imaging;
 using Microsoft.Win32;
-using QwQ_Music.Common.Managers;
-using QwQ_Music.Common.Services;
-using QwQ_Music.Models;
-using MediaPlaybackStatus = QwQ_Music.Common.Audio.MediaPlaybackStatus;
 
-namespace QwQ_Music.PlatformUtils.SystemMediaControls;
+namespace SystemMediaInterop.PlatformImpl;
 
-   
 public sealed class WindowsMediaControlImpl : ISystemMediaControlImpl {
     private readonly MediaPlayer _systemInterfaceProvider;
-    private IRandomAccessStream? _thumbnail;
+    private InMemoryRandomAccessStream? _thumbnail;
 
     public WindowsMediaControlImpl() {
         _systemInterfaceProvider = new MediaPlayer();
         _systemInterfaceProvider.CommandManager.IsEnabled = false;
         Provider.IsEnabled = true;
-        Provider.DisplayUpdater.AppMediaId = SystemMediaControl.APPID;
+        Provider.DisplayUpdater.AppMediaId = SystemMediaControl.AppId;
         Provider.DisplayUpdater.Update();
         Provider.ButtonPressed += OnButtonPressed;
         Provider.PlaybackPositionChangeRequested += OnPlaybackPositionChangeRequested;
     }
 
 
-    public void UpdateInfo(object? sender, MusicItemChangedEventArgs args) {
-        Task.Run(async Task? () => {
-                MusicItemModel model = args.NewItem.Model;
-                Provider.DisplayUpdater.Type = MediaPlaybackType.Music;
-                Provider.DisplayUpdater.MusicProperties.Title = model.Title;
-                Provider.DisplayUpdater.MusicProperties.Artist = model.Artists;
-                Provider.DisplayUpdater.MusicProperties.AlbumTitle = model.Album;
-                IRandomAccessStream? old = _thumbnail;
-                await UpdateThumbnailAsync(model.Thumbnail).ConfigureAwait(false);
-                if (_thumbnail is not null)
-                    Provider.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromStream(_thumbnail);
-                Duration = model.Duration;
-                Provider.DisplayUpdater.Update();
-                old?.Dispose();
-            })
-            .ContinueWith(LoggerService.HandleException)
-            .ConfigureAwait(false);
+    public async Task UpdateInfoAsync(IMediaItem model) {
+        Provider.DisplayUpdater.Type = MediaPlaybackType.Music;
+        Provider.DisplayUpdater.MusicProperties.Title = model.Title;
+        Provider.DisplayUpdater.MusicProperties.Artist = model.Artists;
+        Provider.DisplayUpdater.MusicProperties.AlbumTitle = model.Album;
+        InMemoryRandomAccessStream? old = _thumbnail;
+        await UpdateThumbnailAsync(model.ThumbnailStream).ConfigureAwait(false);
+        if (_thumbnail is not null)
+            Provider.DisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromStream(_thumbnail);
+        Duration = model.Duration;
+        Provider.DisplayUpdater.Update();
+        old?.Dispose();
         return;
 
-        async Task UpdateThumbnailAsync(Bitmap source) {
+        async Task UpdateThumbnailAsync(Stream source) {
             var stream = new InMemoryRandomAccessStream();
-            Stream? memory = stream.AsStreamForWrite();
-            source.Save(memory);
-            await memory.FlushAsync().ConfigureAwait(false);
+            await source.CopyToAsync(stream.AsStreamForWrite());
             stream.Seek(0);
             _thumbnail = stream;
         }
     }
 
     private SystemMediaTransportControls Provider => _systemInterfaceProvider.SystemMediaTransportControls;
+
 
     public double PlaybackSpeed {
         get => Provider.PlaybackRate;
@@ -188,8 +176,8 @@ public sealed class WindowsMediaControlImpl : ISystemMediaControlImpl {
     }
 
     ~WindowsMediaControlImpl() { Dispose(); }
-    
-     private static void TryRegisterAppUserModelId(string appUserModelId, string displayName, string iconPath) {
+
+    private static void TryRegisterAppUserModelId(string appUserModelId, string displayName, string iconPath) {
         string subKey = $@"Software\Classes\AppUserModelId\{appUserModelId}";
         try {
             using (RegistryKey key = Registry.CurrentUser.CreateSubKey(subKey)) {
@@ -205,14 +193,12 @@ public sealed class WindowsMediaControlImpl : ISystemMediaControlImpl {
 
     [RequiresUnreferencedCode("Create start menu shortcut requires native COM interops.")]
     public static void SetProcessInfoId() {
-        LoggerService.Info("正在注册程序...");
         TryRegisterAppUserModelId(
-            SystemMediaControl.APPID,
+            SystemMediaControl.AppId,
             "QwQ Music",
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "QwQ Music.ico"));
-        LoggerService.Info("正在设置App ID...");
-        SetCurrentProcessExplicitAppUserModelID(SystemMediaControl.APPID);
-        TryCreateStartMenuShortcut(SystemMediaControl.APPID);
+        SetCurrentProcessExplicitAppUserModelID(SystemMediaControl.AppId);
+        TryCreateStartMenuShortcut(SystemMediaControl.AppId);
         return;
 
         [DllImport("shell32.dll", SetLastError = true)]
@@ -256,13 +242,10 @@ public sealed class WindowsMediaControlImpl : ISystemMediaControlImpl {
 
             // ReSharper disable once SuspiciousTypeConversion.Global
             ((IPersistFile)link).Save(shortcutPath, true);
-            LoggerService.Info($"已创建开始菜单快捷方式，位于{shortcutPath}");
         } catch (Exception ex) {
             var err = Marshal.GetLastWin32Error();
-            LoggerService.Error(
-                $"创建开始菜单快捷方式失败。Win32ErrorCode:{err}\nPath:{exePath}\nDirectory:{AppDomain.CurrentDomain.BaseDirectory
-                }\nShortcut Path:{shortcutPath}",
-                ex);
+            ex.Data.Add("LastWin32Error", err);
+            throw;
         }
     }
 
@@ -354,7 +337,6 @@ public static class StatusConverter {
             MediaPlaybackStatus.Playing  => global::Windows.Media.MediaPlaybackStatus.Playing,
             MediaPlaybackStatus.Paused   => global::Windows.Media.MediaPlaybackStatus.Paused,
             MediaPlaybackStatus.Stopped  => global::Windows.Media.MediaPlaybackStatus.Stopped,
-            MediaPlaybackStatus.Fading   => global::Windows.Media.MediaPlaybackStatus.Playing,
             _                            => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
     }

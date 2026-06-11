@@ -1,11 +1,10 @@
 <Application
-    RequestedThemeVariant="{Binding ThemeConfig.Theme}"
+    RequestedThemeVariant="{CompiledBinding ThemeConfig.Theme}"
     x:Class="QwQ_Music.App"
     x:CompileBindings="True"
     xmlns="https://github.com/avaloniaui"
     xmlns:semi="https://irihi.tech/semi"
     x:DataType="viewModels:ApplicationViewModel"
-    xmlns:u-Semi="https://irihi.tech/ursa/themes/semi"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:u="https://irihi.tech/ursa"
     xmlns:viewModels="clr-namespace:QwQ_Music.ViewModels"
@@ -18,7 +17,7 @@
         <semi:SemiTheme Locale="zh-CN" />
         <semi:ColorPickerSemiTheme />
         <semi:DataGridSemiTheme />
-        <u-Semi:SemiTheme Locale="zh-CN" />
+        <semi:UrsaSemiTheme Locale="zh-CN" />
         <StyleInclude Source="Views/Customs/_indexes.axaml" />
         <StyleInclude Source="Assets/AvaloniaRes/Styles/_indexes.axaml" />
         <StyleInclude Source="avares://QwQ.Avalonia.Control/Themes/_indexes.axaml" />
@@ -40,7 +39,7 @@
         <Style Selector="u|MessageBoxControl">
             <Setter Property="ContentTemplate">
                 <DataTemplate x:DataType="{x:Type x:String}">
-                    <SelectableTextBlock Text="{Binding}" />
+                    <SelectableTextBlock Text="{CompiledBinding}" />
                 </DataTemplate>
             </Setter>
         </Style>
@@ -212,7 +211,7 @@
         <converters:ScrollOffsetConverter x:Key="OffsetToIsAtTopConverter" />
         <converters:AudioQualityLevelLogoConverter x:Key="AudioQualityLevelLogoConverter" />
         <converters:TypeCheckConverter x:Key="TypeCheckConverter" />
-
+        <converters:TranslationConverter x:Key="TranslationConverter" />
         <!-- 基础 -->
 
         <DropShadowEffect x:Key="LightColor0DropShadowEffect" BlurRadius="10" Color="{DynamicResource SemiGrey2Color}"
@@ -238,12 +237,12 @@
         <TrayIcons>
             <TrayIcon Icon="avares://QwQ Music/Assets/AvaloniaRes/AppIcon.ico" MacOSProperties.IsTemplateIcon="true"
                       ToolTipText="QwQ Music"
-                      Command="{Binding ShowMainWindowCommand}">
+                      Command="{CompiledBinding ShowMainWindowCommand}">
 
                 <TrayIcon.Menu>
                     <NativeMenu>
-                        <NativeMenuItem Header="显示窗口" Command="{Binding ShowMainWindowCommand}" />
-                        <NativeMenuItem Header="退出" Command="{Binding ShutdownCommand}" />
+                        <NativeMenuItem Header="显示窗口" Command="{CompiledBinding ShowMainWindowCommand}" />
+                        <NativeMenuItem Header="退出" Command="{CompiledBinding ShutdownCommand}" />
                     </NativeMenu>
                 </TrayIcon.Menu>
 

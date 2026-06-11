@@ -75,7 +75,10 @@ public sealed class LyricsData {
     private LyricsData() { }
 
     public static readonly LyricsData Loading = new() {
-        Title = null, Artist = null, Album = null, Data = [new LyricLine(0, I18NService.Lang["Loading lyrics..."])]
+        Title = null,
+        Artist = null,
+        Album = null,
+        Data = [new LyricLine(0, I18NService.Lang.Translation["Loading lyrics..."])]
     };
 
     private LyricLine DefaultLyricLine => new(0, $"{Title} - {Artist}", Album);
@@ -96,6 +99,7 @@ public sealed class LyricsData {
         set {
             Data.AsParallel().ForAll(line => line.TimePoint += value - field);
             field = value;
+            LoggerService.Debug($"更新音频偏移量：{field} -> {value}");
         }
     }
 

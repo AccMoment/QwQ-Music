@@ -11,7 +11,7 @@ using Ursa.Controls;
 
 namespace QwQ_Music.Windows;
 
-public partial class MainWindow : Window {
+public partial class MainWindow : UrsaWindow {
     private bool _isClosing;
     private bool _isOpenClosingDialog;
     private object? _lastContent;
@@ -105,7 +105,7 @@ public partial class MainWindow : Window {
 
         var model = new ExitConfirmViewModel();
         bool result = await OverlayDialog
-                            .ShowCustomModal<ExitConfirm, ExitConfirmViewModel, bool>(model, options: options)
+                            .ShowCustomAsync<ExitConfirm, ExitConfirmViewModel, bool>(model, options: options)
                             .ConfigureAwait(false);
 
         if (!result)

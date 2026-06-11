@@ -41,8 +41,8 @@
                                 <ScrollViewer
                                     Grid.Row="0"
                                     Grid.RowSpan="2"
-                                    HorizontalScrollBarVisibility="{Binding (ScrollViewer.HorizontalScrollBarVisibility), RelativeSource={RelativeSource TemplatedParent}}"
-                                    VerticalScrollBarVisibility="{Binding (ScrollViewer.VerticalScrollBarVisibility), RelativeSource={RelativeSource TemplatedParent}}">
+                                    HorizontalScrollBarVisibility="{CompiledBinding (ScrollViewer.HorizontalScrollBarVisibility), RelativeSource={RelativeSource TemplatedParent}}"
+                                    VerticalScrollBarVisibility="{CompiledBinding (ScrollViewer.VerticalScrollBarVisibility), RelativeSource={RelativeSource TemplatedParent}}">
 
                                     <ContentPresenter
                                         Name="PART_ContentPresenter"
@@ -74,7 +74,7 @@
 
                     </Border>
 
-                    <u:DialogResizer Margin="{Binding #PART_Border.Margin}" IsVisible="{TemplateBinding CanResize}" />
+                    <u:DialogResizer Margin="{CompiledBinding #PART_Border.Margin}" IsVisible="{TemplateBinding CanResize}" />
 
                 </Panel>
 
@@ -95,7 +95,7 @@
         <Style Selector="^ /template/ Panel#PART_TitleArea">
             <Setter Property="ContextFlyout">
                 <MenuFlyout>
-                    <MenuItem Command="{Binding $parent[u:DialogControlBase].Close}"
+                    <MenuItem Command="{CompiledBinding $parent[u:DialogControlBase].Close}"
                               Header="{DynamicResource STRING_MENU_DIALOG_CLOSE}">
                         <MenuItem.Icon>
                             <PathIcon Data="{DynamicResource SemiIconClose}" Theme="{StaticResource InnerPathIcon}" />
@@ -111,7 +111,7 @@
                 <MenuFlyout>
 
                     <MenuItem
-                        Command="{Binding $parent[u:DialogControlBase].UpdateLayer}"
+                        Command="{CompiledBinding $parent[u:DialogControlBase].UpdateLayer}"
                         CommandParameter="{x:Static u:DialogLayerChangeType.BringForward}"
                         Header="{DynamicResource STRING_MENU_BRING_FORWARD}">
                         <MenuItem.Icon>
@@ -121,7 +121,7 @@
                     </MenuItem>
 
                     <MenuItem
-                        Command="{Binding $parent[u:DialogControlBase].UpdateLayer}"
+                        Command="{CompiledBinding $parent[u:DialogControlBase].UpdateLayer}"
                         CommandParameter="{x:Static u:DialogLayerChangeType.BringToFront}"
                         Header="{DynamicResource STRING_MENU_BRING_TO_FRONT}">
                         <MenuItem.Icon>
@@ -131,7 +131,7 @@
                     </MenuItem>
 
                     <MenuItem
-                        Command="{Binding $parent[u:DialogControlBase].UpdateLayer}"
+                        Command="{CompiledBinding $parent[u:DialogControlBase].UpdateLayer}"
                         CommandParameter="{x:Static u:DialogLayerChangeType.SendBackward}"
                         Header="{DynamicResource STRING_MENU_SEND_BACKWARD}">
                         <MenuItem.Icon>
@@ -141,7 +141,7 @@
                     </MenuItem>
 
                     <MenuItem
-                        Command="{Binding $parent[u:DialogControlBase].UpdateLayer}"
+                        Command="{CompiledBinding $parent[u:DialogControlBase].UpdateLayer}"
                         CommandParameter="{x:Static u:DialogLayerChangeType.SendToBack}"
                         Header="{DynamicResource STRING_MENU_SEND_TO_BACK}">
                         <MenuItem.Icon>
@@ -150,7 +150,7 @@
                         </MenuItem.Icon>
                     </MenuItem>
 
-                    <MenuItem Command="{Binding $parent[u:DialogControlBase].Close}"
+                    <MenuItem Command="{CompiledBinding $parent[u:DialogControlBase].Close}"
                               Header="{DynamicResource STRING_MENU_DIALOG_CLOSE}">
                         <MenuItem.Icon>
                             <PathIcon Data="{DynamicResource SemiIconClose}" Theme="{StaticResource InnerPathIcon}" />
@@ -163,7 +163,7 @@
         </Style>
     </ControlTheme>
 
-    <ControlTheme x:Key="{x:Type u:DefaultDialogControl}" TargetType="u:DefaultDialogControl">
+    <ControlTheme x:Key="{x:Type u:StandardDialogControl}" TargetType="u:StandardDialogControl">
         <Setter Property="MinWidth" Value="{DynamicResource DialogMinWidth}" />
         <Setter Property="MinHeight" Value="{DynamicResource DialogMinHeight}" />
         <Setter Property="CornerRadius" Value="{DynamicResource DialogCornerRadius}" />
@@ -175,7 +175,7 @@
             </Transitions>
         </Setter>
         <Setter Property="Template">
-            <ControlTemplate TargetType="u:DefaultDialogControl">
+            <ControlTemplate TargetType="u:StandardDialogControl">
 
                 <Panel>
 
@@ -242,8 +242,8 @@
                                 <ScrollViewer
                                     Grid.Row="1"
                                     Margin="10,0"
-                                    HorizontalScrollBarVisibility="{Binding (ScrollViewer.HorizontalScrollBarVisibility), RelativeSource={RelativeSource TemplatedParent}}"
-                                    VerticalScrollBarVisibility="{Binding (ScrollViewer.VerticalScrollBarVisibility), RelativeSource={RelativeSource TemplatedParent}}">
+                                    HorizontalScrollBarVisibility="{CompiledBinding (ScrollViewer.HorizontalScrollBarVisibility), RelativeSource={RelativeSource TemplatedParent}}"
+                                    VerticalScrollBarVisibility="{CompiledBinding (ScrollViewer.VerticalScrollBarVisibility), RelativeSource={RelativeSource TemplatedParent}}">
 
                                     <ContentPresenter
                                         Name="PART_ContentPresenter"
@@ -260,10 +260,10 @@
                                     HorizontalAlignment="Right"
                                     Spacing="20">
 
-                                    <Button Name="{x:Static u:DefaultDialogControl.PART_CancelButton}" />
-                                    <Button Name="{x:Static u:DefaultDialogControl.PART_NoButton}" />
-                                    <Button Name="{x:Static u:DefaultDialogControl.PART_YesButton}" />
-                                    <Button Name="{x:Static u:DefaultDialogControl.PART_OKButton}" />
+                                    <Button Name="{x:Static u:StandardDialogControl.PART_CancelButton}" />
+                                    <Button Name="{x:Static u:StandardDialogControl.PART_NoButton}" />
+                                    <Button Name="{x:Static u:StandardDialogControl.PART_YesButton}" />
+                                    <Button Name="{x:Static u:StandardDialogControl.PART_OKButton}" />
 
                                 </StackPanel>
 
@@ -273,7 +273,7 @@
 
                     </Border>
 
-                    <u:DialogResizer Margin="{Binding #PART_Border.Margin}" IsVisible="{TemplateBinding CanResize}" />
+                    <u:DialogResizer Margin="{CompiledBinding #PART_Border.Margin}" IsVisible="{TemplateBinding CanResize}" />
 
                 </Panel>
 
@@ -446,7 +446,7 @@
         <Style Selector="^ /template/ Panel#PART_TitleArea">
             <Setter Property="ContextFlyout">
                 <MenuFlyout>
-                    <MenuItem Command="{Binding $parent[u:DialogControlBase].Close}"
+                    <MenuItem Command="{CompiledBinding $parent[u:DialogControlBase].Close}"
                               Header="{DynamicResource STRING_MENU_DIALOG_CLOSE}">
                         <MenuItem.Icon>
                             <PathIcon Data="{DynamicResource SemiIconClose}" Theme="{StaticResource InnerPathIcon}" />
@@ -465,7 +465,7 @@
                 <MenuFlyout>
 
                     <MenuItem
-                        Command="{Binding $parent[u:DialogControlBase].UpdateLayer}"
+                        Command="{CompiledBinding $parent[u:DialogControlBase].UpdateLayer}"
                         CommandParameter="{x:Static u:DialogLayerChangeType.BringForward}"
                         Header="{DynamicResource STRING_MENU_BRING_FORWARD}">
                         <MenuItem.Icon>
@@ -475,7 +475,7 @@
                     </MenuItem>
 
                     <MenuItem
-                        Command="{Binding $parent[u:DialogControlBase].UpdateLayer}"
+                        Command="{CompiledBinding $parent[u:DialogControlBase].UpdateLayer}"
                         CommandParameter="{x:Static u:DialogLayerChangeType.BringToFront}"
                         Header="{DynamicResource STRING_MENU_BRING_TO_FRONT}">
                         <MenuItem.Icon>
@@ -485,7 +485,7 @@
                     </MenuItem>
 
                     <MenuItem
-                        Command="{Binding $parent[u:DialogControlBase].UpdateLayer}"
+                        Command="{CompiledBinding $parent[u:DialogControlBase].UpdateLayer}"
                         CommandParameter="{x:Static u:DialogLayerChangeType.SendBackward}"
                         Header="{DynamicResource STRING_MENU_SEND_BACKWARD}">
                         <MenuItem.Icon>
@@ -495,7 +495,7 @@
                     </MenuItem>
 
                     <MenuItem
-                        Command="{Binding $parent[u:DialogControlBase].UpdateLayer}"
+                        Command="{CompiledBinding $parent[u:DialogControlBase].UpdateLayer}"
                         CommandParameter="{x:Static u:DialogLayerChangeType.SendToBack}"
                         Header="{DynamicResource STRING_MENU_SEND_TO_BACK}">
                         <MenuItem.Icon>
@@ -505,7 +505,7 @@
                     </MenuItem>
 
                     <MenuItem
-                        Command="{Binding $parent[u:DialogControlBase].Close}"
+                        Command="{CompiledBinding $parent[u:DialogControlBase].Close}"
                         CommandParameter="{x:Static u:DialogLayerChangeType.BringForward}"
                         Header="{DynamicResource STRING_MENU_DIALOG_CLOSE}">
                         <MenuItem.Icon>

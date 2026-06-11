@@ -4,18 +4,19 @@ using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Services.Databases;
 using QwQ_Music.Common.Utilities;
+using SystemMediaInterop;
 using AudioPlayManager = QwQ_Music.Common.Managers.AudioPlayManager;
 using ThreadState = System.Diagnostics.ThreadState;
 
 namespace QwQ_Music;
 
 public static class Program {
-    public static string VersionText => "2.0.7";
+    public static string VersionText => "2.1.0";
 
     [STAThread]
     public static async Task Main(string[] args) {
 #if _WIN_NT
-        _ = PlatformUtils.SystemMediaControls.SystemMediaControl.Instance; // 提前初始化，以在窗口出现前创建好开始菜单快捷方式，为 SMTC提供程序信息
+        _ = SystemMediaControl.Instance; // 提前初始化，以在窗口出现前创建好开始菜单快捷方式，为 SMTC提供程序信息
 #endif
         try {
             await LoggerService.InfoAsync(
@@ -49,10 +50,10 @@ public static class Program {
         ThreadPool.GetMinThreads(out int a, out int b);
         ThreadPool.GetMaxThreads(out int c, out int d);
         Console.WriteLine($"[{a},{c}] | [{b},{d}]");
-        Environment.Exit(0); // TODO FIXME TIER 1 
-        // NOTE: Here must be some leaks.
-        // The program did not exit so that I have to exit it manually and explicitly here.
-        // We must fix this bug in the future.
+        // Environment.Exit(0); // TODO FIXME TIER 1 
+        // // NOTE: Here must be some leaks.
+        // // The program did not exit so that I have to exit it manually and explicitly here.
+        // // We must fix this bug in the future.
     }
 
     private static void LogActiveThreads() {

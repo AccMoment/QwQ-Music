@@ -15,37 +15,7 @@ namespace QwQ_Music;
 
 public class App : Application {
     public static MainWindow? TopLevel { get; private set; }
-
     public static Assembly CurrentAssembly { get; } = Assembly.GetExecutingAssembly();
-
-    public static class I18NResources {
-        // ReSharper disable once InconsistentNaming
-        private static ResourceDictionary? _i18nDict;
-
-        public static void Apply(FrozenDictionary<string, string> translations) {
-            Dispatcher.UIThread.Post(
-                () => {
-                    if (Current == null)
-                        return;
-
-                    var dict = new ResourceDictionary();
-
-                    foreach (var (key, value) in translations) {
-                        dict[$"I18N.{key}"] = value;
-                    }
-
-                    if (_i18nDict is not null &&
-                        Current.Resources.MergedDictionaries.IndexOf(_i18nDict) is { } idx and >= 0) {
-                        Current.Resources.MergedDictionaries[idx] = dict;
-                    } else {
-                        Current.Resources.MergedDictionaries.Add(dict);
-                    }
-
-                    _i18nDict = dict;
-                },
-                DispatcherPriority.Background);
-        }
-    }
 
     public override void Initialize() {
         AvaloniaXamlLoader.Load(this);
@@ -97,7 +67,7 @@ public class App : Application {
             throw new InvalidOperationException();
         }
 
-        MessageBox.ShowOverlayAsync(message, title, icon: icon, button: button)
+        MessageBox.ShowAsync(message, title, icon: icon, button: button)
                   .ContinueWith(_ => Interlocked.Decrement(ref _errors))
                   .ConfigureAwait(false);
     }
@@ -114,7 +84,6 @@ public class App : Application {
     private static void CurrentDomain_OnUnhandledException(object sender, UnhandledExceptionEventArgs e) {
         // LoggerService.Error("应用域错误: ", (e.ExceptionObject as Exception)!);
     }
-
     private static void HandleException(string message, Exception? exception = null) {
         string fullMessage = exception != null ? $"{message}\n\n详细信息:\n{exception}" : message;
 

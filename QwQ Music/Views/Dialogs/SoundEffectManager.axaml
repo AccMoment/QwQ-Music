@@ -25,7 +25,7 @@
 
         <ScrollViewer>
 
-            <ItemsControl ItemsSource="{Binding BuiltInSoundEffects}"
+            <ItemsControl ItemsSource="{CompiledBinding BuiltInSoundEffects}"
                           Margin="10"
                           MinWidth="300">
                 <ItemsControl.ItemsPanel>
@@ -37,12 +37,12 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Text="{Binding Key,Converter={StaticResource SoundEffectsNameConverter}}" />
-                            <ToggleSwitch Grid.Column="1" IsChecked="{Binding Value}"
+                            <TextBlock Text="{CompiledBinding Key,Converter={StaticResource SoundEffectsNameConverter}}" />
+                            <ToggleSwitch Grid.Column="1" IsChecked="{CompiledBinding Value}"
                                           Theme="{StaticResource SimpleToggleSwitch}"
                                           OffContent="〇" OnContent="｜"
-                                          Command="{Binding $parent[ItemsControl].((dialogs:ManageSoundEffectViewModel)DataContext).ChangeEnabledStatusCommand}"
-                                          CommandParameter="{Binding Key}" />
+                                          Command="{CompiledBinding $parent[ItemsControl].((dialogs:ManageSoundEffectViewModel)DataContext).ChangeEnabledStatusCommand}"
+                                          CommandParameter="{CompiledBinding Key}" />
 
                         </Grid>
                     </DataTemplate>
@@ -58,12 +58,12 @@
         <Button ToolTip.Tip="还是蒜了吧..."
                 Content="取消"
                 Theme="{DynamicResource OutlineButton}"
-                Command="{Binding CancelCommand}" />
+                Command="{CompiledBinding CancelCommand}" />
 
         <Button Content="确认"
-                IsEnabled="{Binding !HasErrors}"
+                IsEnabled="{CompiledBinding !HasErrors}"
                 ToolTip.Tip="我确定好了！"
-                Command="{Binding OkCommand}"
+                Command="{CompiledBinding OkCommand}"
                 Theme="{DynamicResource SolidButton}" />
 
     </StackPanel>

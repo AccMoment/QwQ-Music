@@ -78,8 +78,6 @@ public partial class MusicPlayerPanelViewModel : NavigableViewModel {
 
     public static DrawerManager DrawerManager => DrawerManager.Instance;
 
-    public static string OffsetName => I18NService.Lang[nameof(OffsetName)];
-
     public static AudioPlayManager AudioPlayManager => AudioPlayManager.Instance;
 
     public static RolledLyricConfig RolledLyric { get; } = ConfigManager.LyricConfig.RolledLyric;

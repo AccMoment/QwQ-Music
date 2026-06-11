@@ -30,7 +30,7 @@ public partial class PlayConfigPageViewModel : ViewModelBase {
     }
 
     public static FrozenDictionary<AddMusicBehavior, string> AddMusicBehaviors { get; } =
-        EnumHelper<AddMusicBehavior>.GetTranslationDictionary();
+        new Dictionary<AddMusicBehavior, string>().ToFrozenDictionary();
 
     public PlayerConfig PlayerConfig { get; } = ConfigManager.PlayerConfig;
 
@@ -47,7 +47,7 @@ public partial class PlayConfigPageViewModel : ViewModelBase {
     [RelayCommand]
     public void OpenCurrentStreamInfo() {
         // ReSharper disable once UseConfigureAwaitFalse
-        OverlayDialog.ShowCustomModal<CurrentStreamInfo, ViewModelBase?, DialogResult>(
+        OverlayDialog.ShowCustomAsync<CurrentStreamInfo, ViewModelBase?, DialogResult>(
                          null,
                          options: new OverlayDialogOptions {
                              Title = "详细信息", CanLightDismiss = true, Mode = DialogMode.Info
@@ -90,7 +90,7 @@ public partial class PlayConfigPageViewModel : ViewModelBase {
 
     [RelayCommand]
     private async Task ClearCallbackGain() {
-        MessageBoxResult result = await MessageBox.ShowOverlayAsync(
+        MessageBoxResult result = await MessageBox.ShowAsync(
                                                       "你真的要清空已经计算的回放增益值吗？",
                                                       "警告",
                                                       icon: MessageBoxIcon.Warning,

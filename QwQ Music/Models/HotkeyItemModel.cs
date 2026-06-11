@@ -70,7 +70,7 @@ public partial class HotkeyItemModel : ObservableObject {
     private void ModifyGesture(KeyGesture oldKeyGesture) {
         var options = new OverlayDialogOptions { Title = "修改按键" };
 
-        OverlayDialog.ShowCustomModal<KeyGestureInput, KeyGestureInputViewModel, KeyGesture>(
+        OverlayDialog.ShowCustomAsync<KeyGestureInput, KeyGestureInputViewModel, KeyGesture>(
                          new KeyGestureInputViewModel(this, options.Title, oldKeyGesture),
                          options: options)
                      .ContinueWith(task => {

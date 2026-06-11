@@ -85,7 +85,7 @@
                             <TextBlock Text="强制刷新音乐标签" Classes="CardTitle" />
                         </StackPanel>
                         <u:IconButton Content="刷新音乐标签"
-                                      Command="{Binding ForceRefreshMusicItemsTagsCommand}"
+                                      Command="{CompiledBinding ForceRefreshMusicItemsTagsCommand}"
                                       Background="Transparent"
                                       CornerRadius="8"
                                       FontSize="12" />
@@ -98,10 +98,10 @@
                                       Foreground="{x:Static utilities:ColorGenerator.RandomColor}" />
                             <TextBlock Text="切换双击列表项行为" Classes="CardTitle" />
                         </StackPanel>
-                        <ComboBox ItemsSource="{Binding AddMusicBehaviors}"
-                                  DisplayMemberBinding="{Binding Value}"
-                                  SelectedValueBinding="{Binding Key}"
-                                  SelectedValue="{Binding PlayerConfig.AddMusicBehavior}" />
+                        <ComboBox ItemsSource="{CompiledBinding AddMusicBehaviors}"
+                                  DisplayMemberBinding="{CompiledBinding Value}"
+                                  SelectedValueBinding="{CompiledBinding Key}"
+                                  SelectedValue="{CompiledBinding PlayerConfig.AddMusicBehavior}" />
                     </StackPanel>
                 </Border>
                 <Border>
@@ -112,8 +112,8 @@
                             <TextBlock Text="播放完成后 : " Classes="CardTitle" />
                         </StackPanel>
 
-                        <RadioButton Content="自动切换" IsChecked="{Binding PlayerConfig.AutoSwitchNext}" />
-                        <RadioButton Content="回到开头" IsChecked="{Binding !PlayerConfig.AutoSwitchNext,Mode=OneWay}" />
+                        <RadioButton Content="自动切换" IsChecked="{CompiledBinding PlayerConfig.AutoSwitchNext}" />
+                        <RadioButton Content="回到开头" IsChecked="{CompiledBinding !PlayerConfig.AutoSwitchNext,Mode=OneWay}" />
                     </StackPanel>
                 </Border>
 
@@ -125,8 +125,8 @@
                             <TextBlock Text="切换音乐时 : " Classes="CardTitle" />
                         </StackPanel>
 
-                        <RadioButton Content="从头开始播放" IsChecked="{Binding PlayerConfig.IsRestartPlay}" />
-                        <RadioButton Content="继续上次播放" IsChecked="{Binding !PlayerConfig.IsRestartPlay,Mode=OneWay}" />
+                        <RadioButton Content="从头开始播放" IsChecked="{CompiledBinding PlayerConfig.IsRestartPlay}" />
+                        <RadioButton Content="继续上次播放" IsChecked="{CompiledBinding !PlayerConfig.IsRestartPlay,Mode=OneWay}" />
                     </StackPanel>
                 </Border>
 
@@ -138,8 +138,8 @@
                             <TextBlock Text="随机模式 : " Classes="CardTitle" />
                         </StackPanel>
 
-                        <RadioButton Content="随机切换一首" IsChecked="{Binding PlayerConfig.IsRealRandom}" />
-                        <RadioButton Content="打乱播放列表" IsChecked="{Binding !PlayerConfig.IsRealRandom,Mode=OneWay}" />
+                        <RadioButton Content="随机切换一首" IsChecked="{CompiledBinding PlayerConfig.IsRealRandom}" />
+                        <RadioButton Content="打乱播放列表" IsChecked="{CompiledBinding !PlayerConfig.IsRealRandom,Mode=OneWay}" />
                     </StackPanel>
                 </Border>
 
@@ -152,15 +152,15 @@
                         </StackPanel>
 
                         <ComboBox
-                            IsEnabled="{Binding !PlayerConfig.IsAutoReSample}"
-                            ItemsSource="{Binding PlayerConfig.AudioOutputSampleRateArray}"
+                            IsEnabled="{CompiledBinding !PlayerConfig.IsAutoReSample}"
+                            ItemsSource="{CompiledBinding PlayerConfig.AudioOutputSampleRateArray}"
                             Margin="25,0"
                             MinWidth="100"
-                            SelectedItem="{Binding PlayerConfig.SampleRate}" />
+                            SelectedItem="{CompiledBinding PlayerConfig.SampleRate}" />
 
                         <CheckBox
                             Content="重采样"
-                            IsChecked="{Binding PlayerConfig.IsAutoReSample}"
+                            IsChecked="{CompiledBinding PlayerConfig.IsAutoReSample}"
                             Margin="25,0" />
 
                     </StackPanel>
@@ -182,10 +182,10 @@
                         </StackPanel>
 
                         <RadioButton Content="共享播放"
-                                     IsChecked="{Binding PlayerConfig.DeviceConfig.Playback.ShareMode,Converter={StaticResource BoolToShareModeConverter}}" />
+                                     IsChecked="{CompiledBinding PlayerConfig.DeviceConfig.Playback.ShareMode,Converter={StaticResource BoolToShareModeConverter}}" />
 
                         <RadioButton Content="独占播放"
-                                     IsChecked="{Binding PlayerConfig.DeviceConfig.Playback.ShareMode,Mode=OneWay,Converter={StaticResource ShareModeToBoolConverter}}" />
+                                     IsChecked="{CompiledBinding PlayerConfig.DeviceConfig.Playback.ShareMode,Mode=OneWay,Converter={StaticResource ShareModeToBoolConverter}}" />
 
                     </StackPanel>
                 </Border>
@@ -200,7 +200,7 @@
                             <TextBlock Text="音频信息" Classes="CardTitle" />
                         </StackPanel>
 
-                        <Button Command="{Binding OpenCurrentStreamInfo}" />
+                        <Button Command="{CompiledBinding OpenCurrentStreamInfo}" />
                     </StackPanel>
                 </Border>
 
@@ -262,7 +262,7 @@
                                 Fill="{x:Static utilities:ColorGenerator.RandomColor}" />
 
                             <TextBlock FontWeight="Bold" Text="启用回放增益" Classes="CardTitle" />
-                            <CheckBox IsChecked="{Binding PlayComponent.ReplayGainModifier.Enabled}" />
+                            <CheckBox IsChecked="{CompiledBinding PlayComponent.ReplayGainModifier.Enabled}" />
                         </StackPanel>
 
                         <DockPanel>
@@ -273,28 +273,28 @@
                                 Spacing="10">
 
                                 <Button
-                                    Command="{Binding ToggleCalculationCommand}"
+                                    Command="{CompiledBinding ToggleCalculationCommand}"
                                     Content="开始"
                                     CornerRadius="8"
                                     FontSize="12"
-                                    IsEnabled="{Binding CancellationTokenSource,Converter={x:Static ObjectConverters.IsNull}}"
+                                    IsEnabled="{CompiledBinding CancellationTokenSource,Converter={x:Static ObjectConverters.IsNull}}"
                                     Background="Transparent"
                                     Padding="8" />
 
                                 <Button
-                                    Command="{Binding CancelCalculationCommand}"
+                                    Command="{CompiledBinding CancelCalculationCommand}"
                                     Content="取消"
                                     Background="Transparent"
                                     CornerRadius="8"
                                     FontSize="12"
-                                    IsEnabled="{Binding CancellationTokenSource,Converter={x:Static ObjectConverters.IsNotNull}}"
+                                    IsEnabled="{CompiledBinding CancellationTokenSource,Converter={x:Static ObjectConverters.IsNotNull}}"
                                     Padding="8" />
 
                                 <u:IconButton
-                                    Command="{Binding ClearCallbackGainCommand}"
+                                    Command="{CompiledBinding ClearCallbackGainCommand}"
                                     Content="清空"
                                     Background="Transparent"
-                                    IsEnabled="{Binding CancellationTokenSource,Converter={x:Static ObjectConverters.IsNull}}"
+                                    IsEnabled="{CompiledBinding CancellationTokenSource,Converter={x:Static ObjectConverters.IsNull}}"
                                     Foreground="{DynamicResource SemiRed4}"
                                     CornerRadius="8"
                                     FontSize="12" />
@@ -310,21 +310,21 @@
 
                                 <ComboBox
                                     HorizontalAlignment="Right"
-                                    ItemsSource="{Binding MusicReplayGainStandards}"
-                                    SelectedValueBinding="{Binding Key}"
-                                    SelectedValue="{Binding SelectedMusicReplayGainStandard}"
+                                    ItemsSource="{CompiledBinding MusicReplayGainStandards}"
+                                    SelectedValueBinding="{CompiledBinding Key}"
+                                    SelectedValue="{CompiledBinding SelectedMusicReplayGainStandard}"
                                     Width="125">
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding Key}" ToolTip.Tip="{Binding Value}" />
+                                            <TextBlock Text="{CompiledBinding Key}" ToolTip.Tip="{CompiledBinding Value}" />
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
 
-                                <TextBlock Text="{Binding SelectedMusicReplayGainStandardDescription}" FontSize="12"
+                                <TextBlock Text="{CompiledBinding SelectedMusicReplayGainStandardDescription}" FontSize="12"
                                            Classes="Tertiary"
                                            TextWrapping="Wrap"
-                                           IsVisible="{Binding SelectedMusicReplayGainStandard, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter='{x:Static utilities:MusicReplayGainStandard.Custom}'}"
+                                           IsVisible="{CompiledBinding SelectedMusicReplayGainStandard, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter='{x:Static utilities:MusicReplayGainStandard.Custom}'}"
                                            TextAlignment="Right" />
 
                                 <u:NumericIntUpDown
@@ -332,8 +332,8 @@
                                     InnerRightContent="LUFS"
                                     Minimum="-40"
                                     Maximum="10"
-                                    IsVisible="{Binding SelectedMusicReplayGainStandard, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='{x:Static utilities:MusicReplayGainStandard.Custom}'}"
-                                    Value="{Binding PlayerConfig.CustomMusicReplayGainStandard}"
+                                    IsVisible="{CompiledBinding SelectedMusicReplayGainStandard, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='{x:Static utilities:MusicReplayGainStandard.Custom}'}"
+                                    Value="{CompiledBinding PlayerConfig.CustomMusicReplayGainStandard}"
                                     Width="110" />
 
                             </StackPanel>
@@ -357,9 +357,9 @@
                                     <TextBlock
                                         FontSize="12"
                                         FontWeight="Bold">
-                                        <Run Text="{Binding NumberOfCompletedCalc}" />
+                                        <Run Text="{CompiledBinding NumberOfCompletedCalc}" />
                                         /
-                                        <Run Text="{Binding MusicItemsManager.Count}" />
+                                        <Run Text="{CompiledBinding MusicItemsManager.Count}" />
                                     </TextBlock>
 
                                 </StackPanel>
@@ -367,10 +367,10 @@
                                 <ProgressBar
                                     Height="120"
                                     Margin="5,25"
-                                    Maximum="{Binding MusicItemsManager.Count}"
+                                    Maximum="{CompiledBinding MusicItemsManager.Count}"
                                     ShowProgressText="True"
                                     Theme="{DynamicResource ProgressRing}"
-                                    Value="{Binding NumberOfCompletedCalc}"
+                                    Value="{CompiledBinding NumberOfCompletedCalc}"
                                     Width="120">
                                 </ProgressBar>
                             </Panel>
@@ -386,7 +386,7 @@
                             <Rectangle Fill="{x:Static utilities:ColorGenerator.RandomColor}" />
 
                             <TextBlock Text="启用淡入淡出" Classes="CardTitle" />
-                            <CheckBox IsChecked="{Binding PlayComponent.FadeModifier.Enabled}" />
+                            <CheckBox IsChecked="{CompiledBinding PlayComponent.FadeModifier.Enabled}" />
                         </StackPanel>
 
                         <TextBlock
@@ -398,7 +398,7 @@
                             Maximum="60000"
                             Minimum="0"
                             Step="200"
-                            Value="{Binding PlayComponent.FadeModifier.FadeInTimeMs}" />
+                            Value="{CompiledBinding PlayComponent.FadeModifier.FadeInTimeMs}" />
 
                         <TextBlock
                             FontSize="12"
@@ -409,18 +409,18 @@
                             Maximum="60000"
                             Minimum="0"
                             Step="200"
-                            Value="{Binding PlayComponent.FadeModifier.FadeOutTimeMs}" />
+                            Value="{CompiledBinding PlayComponent.FadeModifier.FadeOutTimeMs}" />
 
                         <TextBlock
                             FontSize="12"
                             FontWeight="Bold"
                             Text="渐变曲线" />
                         <ComboBox
-                            ItemsSource="{Binding FadeCurves}"
+                            ItemsSource="{CompiledBinding FadeCurves}"
                             MinWidth="150"
-                            DisplayMemberBinding="{Binding Value}"
-                            SelectedValueBinding="{Binding Key}"
-                            SelectedValue="{Binding PlayComponent.FadeModifier.CurveType}" />
+                            DisplayMemberBinding="{CompiledBinding Value}"
+                            SelectedValueBinding="{CompiledBinding Key}"
+                            SelectedValue="{CompiledBinding PlayComponent.FadeModifier.CurveType}" />
 
                     </StackPanel>
                 </Border>
@@ -452,7 +452,7 @@
                         <u:NumericIntUpDown Step="1"
                                             InnerRightContent="period"
                                             Minimum="0"
-                                            Value="{Binding PlayerConfig.DeviceConfig.Periods}" />
+                                            Value="{CompiledBinding PlayerConfig.DeviceConfig.Periods}" />
 
                         <Panel>
                             <TextBlock Text="以每个声道的帧数为单位"
@@ -469,7 +469,7 @@
                         <u:NumericIntUpDown Step="100"
                                             InnerRightContent="frame"
                                             Minimum="0"
-                                            Value="{Binding PlayerConfig.DeviceConfig.PeriodSizeInFrames}" />
+                                            Value="{CompiledBinding PlayerConfig.DeviceConfig.PeriodSizeInFrames}" />
 
                         <TextBlock Text="以每个通道的毫秒时间为单位"
                                    Classes="Tertiary"
@@ -478,7 +478,7 @@
                         <u:NumericIntUpDown Step="10"
                                             Minimum="0"
                                             InnerRightContent="ms"
-                                            Value="{Binding PlayerConfig.DeviceConfig.PeriodSizeInMilliseconds}" />
+                                            Value="{CompiledBinding PlayerConfig.DeviceConfig.PeriodSizeInMilliseconds}" />
 
                     </StackPanel>
 

@@ -11,38 +11,38 @@
 
     <DockPanel HorizontalSpacing="10" Height="40">
         <Separator VerticalAlignment="Bottom" Margin="0" DockPanel.Dock="Bottom" />
-        <TextBlock FontSize="16" Text="{Binding Name}" FontWeight="Bold" VerticalAlignment="Center" />
+        <TextBlock FontSize="16" Text="{CompiledBinding Name}" FontWeight="Bold" VerticalAlignment="Center" />
         <TextBlock Text="实现合唱效果"
                    VerticalAlignment="Center"
                    Foreground="{DynamicResource SemiColorTertiary}" />
     </DockPanel>
 
-    <TextBlock Text="{Binding DepthMs, StringFormat='深度 : {0} ms'}" />
+    <TextBlock Text="{CompiledBinding DepthMs, StringFormat='深度 : {0} ms'}" />
     <u:NumericIntUpDown
         InnerRightContent="ms"
         Step="1"
-        Value="{Binding DepthMs}" />
+        Value="{CompiledBinding DepthMs}" />
 
-    <TextBlock Text="{Binding RateHz, StringFormat='LFO 调制速率 : {0:F3} Hz'}" />
+    <TextBlock Text="{CompiledBinding RateHz, StringFormat='LFO 调制速率 : {0:F3} Hz'}" />
     <u:NumericFloatUpDown
         InnerRightContent="Hz"
         Step="1"
-        Value="{Binding RateHz}" />
+        Value="{CompiledBinding RateHz}" />
 
     <StackPanel Orientation="Horizontal" Spacing="10">
-        <TextBlock Text="{Binding Feedback, StringFormat='反馈量 : {0:F3}'}" />
+        <TextBlock Text="{CompiledBinding Feedback, StringFormat='反馈量 : {0:F3}'}" />
         <TextBlock Text="* 重新加载时生效" Foreground="{DynamicResource  TextBlockTertiaryForeground}" />
     </StackPanel>
 
     <Slider
         Minimum="0"
         Maximum="1"
-        Value="{Binding Feedback}" />
+        Value="{CompiledBinding Feedback}" />
 
-    <TextBlock Text="{Binding WetDryMix, StringFormat='湿/干混合比例 : {0:F3}'}" />
+    <TextBlock Text="{CompiledBinding WetDryMix, StringFormat='湿/干混合比例 : {0:F3}'}" />
     <Slider
         Minimum="0"
         Maximum="1"
-        Value="{Binding WetDryMix}" />
+        Value="{CompiledBinding WetDryMix}" />
 
 </StackPanel>

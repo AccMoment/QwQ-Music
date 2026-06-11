@@ -4,6 +4,7 @@
             xmlns:behaviors="clr-namespace:QwQ_Music.UI.Behaviors"
             xmlns:enums="clr-namespace:QwQ_Music.Models.Enums"
             xmlns:customs="clr-namespace:QwQ_Music.Views.Customs"
+            xmlns:me="clr-namespace:QwQ_Music.MarkupExtensions"
             x:Class="QwQ_Music.Views.Customs.MusicPlayControllers"
             x:DataType="managers:AudioPlayManager"
             HorizontalAlignment="Center"
@@ -19,17 +20,17 @@
 
     <!--  刷新播放  -->
     <Button Classes="Icon"
-            Command="{Binding Instance.ReplayCommand}"
+            Command="{CompiledBinding Instance.ReplayCommand}"
             Foreground="{DynamicResource TextBlockDefaultForeground}"
             Height="25"
-            IsEnabled="{Binding Instance.CurrentMusicItem.Model.FilePath, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=''}"
+            IsEnabled="{CompiledBinding Instance.CurrentMusicItem.Model.FilePath, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=''}"
             behaviors:DynamicCornerBehavior.IsEnabled="True">
         <PathIcon Data="{StaticResource SemiIconRefresh2}" Margin="5" />
     </Button>
 
     <!--  上一首  -->
     <Button Classes="Icon"
-            Command="{Binding Instance.PreviousMusicCommand}"
+            Command="{CompiledBinding Instance.PreviousMusicCommand}"
             Foreground="{DynamicResource TextBlockDefaultForeground}"
             behaviors:DynamicCornerBehavior.IsEnabled="True">
         <PathIcon
@@ -43,20 +44,19 @@
 
     <!--  下一首  -->
     <Button Classes="Icon"
-            Command="{Binding Instance.NextMusicCommand}"
+            Command="{CompiledBinding Instance.NextMusicCommand}"
             Foreground="{DynamicResource TextBlockDefaultForeground}"
             behaviors:DynamicCornerBehavior.IsEnabled="True">
         <PathIcon Data="{StaticResource PlayIconData}"
                   Height="30" />
     </Button>
-
     <!--  播放模式  -->
     <Button Classes="Icon"
-            Command="{Binding Instance.TogglePlayModeCommand}"
+            Command="{CompiledBinding Instance.TogglePlayModeCommand}"
             Foreground="{DynamicResource TextBlockDefaultForeground}"
             Height="25"
             ToolTip.Placement="Top"
-            ToolTip.Tip="{Binding Instance.PlayModeName}"
+            ToolTip.Tip="{CompiledBinding PlayerConfig.PlayMode,Converter={StaticResource TranslationConverter}}"
             ToolTip.VerticalOffset="-10"
             behaviors:DynamicCornerBehavior.IsEnabled="True">
 
@@ -64,7 +64,7 @@
 
             <Interaction.Behaviors>
 
-                <DataTrigger Binding="{Binding PlayerConfig.PlayMode}"
+                <DataTrigger Binding="{CompiledBinding PlayerConfig.PlayMode}"
                              Value="{x:Static enums:PlayMode.Sequential}">
 
                     <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
@@ -73,7 +73,7 @@
                                                   Value="{StaticResource Sequential}" />
                 </DataTrigger>
 
-                <DataTrigger Binding="{Binding PlayerConfig.PlayMode}"
+                <DataTrigger Binding="{CompiledBinding PlayerConfig.PlayMode}"
                              Value="{x:Static enums:PlayMode.Loop}">
 
                     <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
@@ -83,7 +83,7 @@
 
                 </DataTrigger>
 
-                <DataTrigger Binding="{Binding PlayerConfig.PlayMode}"
+                <DataTrigger Binding="{CompiledBinding PlayerConfig.PlayMode}"
                              Value="{x:Static enums:PlayMode.Random}">
 
                     <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"
@@ -93,7 +93,7 @@
 
                 </DataTrigger>
 
-                <DataTrigger Binding="{Binding PlayerConfig.PlayMode}"
+                <DataTrigger Binding="{CompiledBinding PlayerConfig.PlayMode}"
                              Value="{x:Static enums:PlayMode.SingleLoop}">
 
                     <ChangeAvaloniaPropertyAction TargetProperty="{x:Static Layoutable.MarginProperty}"

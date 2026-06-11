@@ -15,7 +15,7 @@ public partial class SoundEffectConfigViewModel() : NavigableViewModel(nameof(So
     private void OpenSoundEffectManagerPanel() {
         var options = new OverlayDialogOptions { Title = "管理音效" };
 
-        OverlayDialog.ShowCustomModal<ManageSoundModifier, ManageSoundEffectViewModel, bool>(
+        OverlayDialog.ShowCustomAsync<ManageSoundModifier, ManageSoundEffectViewModel, bool>(
                          new ManageSoundEffectViewModel(),
                          options: options)
                      .ContinueWith(task => {

@@ -16,10 +16,10 @@
        Name="AboutPageContainer">
 
     <Panel VerticalAlignment="Top" Margin="10,0" ZIndex="1"
-           Classes.Transparent="{Binding #AboutScrollViewer.Offset,
+           Classes.Transparent="{CompiledBinding #AboutScrollViewer.Offset,
            Converter={StaticResource OffsetToIsAtTopConverter}}"
 
-           Classes.NotTransparent="{Binding #AboutScrollViewer.Offset,
+           Classes.NotTransparent="{CompiledBinding #AboutScrollViewer.Offset,
            Converter={StaticResource OffsetToIsAtTopConverter},
            ConverterParameter='nottop'}">
 
@@ -33,14 +33,14 @@
                     Orientation="Horizontal" Spacing="8">
 
             <u:IconButton Theme="{StaticResource BorderlessIconButton}"
-                          Command="{Binding OpenUriCommand}"
+                          Command="{CompiledBinding OpenUriCommand}"
                           CommandParameter="https://www.bilibili.com/video/BV1mnhyzvEmp/"
                           CornerRadius="8"
                           ToolTip.Tip="图片来源与授权信息"
                           Icon="{StaticResource SemiIconPaperclip}" />
 
             <u:IconButton Theme="{StaticResource BorderlessIconButton}"
-                          Command="{Binding OpenContributorFromGayHubCommand}"
+                          Command="{CompiledBinding OpenContributorFromGayHubCommand}"
                           CommandParameter="Mioter/QwQ-Music"
                           CornerRadius="8"
                           ToolTip.Tip="访问本项目Github仓库"
@@ -79,7 +79,7 @@
             <!-- 头图 -->
             <Panel Background="Aquamarine">
 
-                <Image Width="{Binding #StackedLayer.Bounds.Width}" Height="{Binding #StackedLayer.Bounds.Height}"
+                <Image Width="{CompiledBinding #StackedLayer.Bounds.Width}" Height="{CompiledBinding #StackedLayer.Bounds.Height}"
                        Stretch="UniformToFill" Source="resm:QwQ_Music.Assets.EmbeddedRes.Images.Cat.webp" />
 
                 <Panel Name="StackedLayer" Background="{DynamicResource SemiColorBackground0}" Opacity="0.2" />
@@ -87,7 +87,7 @@
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" Margin="30">
 
                     <Button Classes="None"
-                            Command="{Binding OpenContributorFromGayHubCommand}"
+                            Command="{CompiledBinding OpenContributorFromGayHubCommand}"
                             CommandParameter="Mioter/QwQ-Music"
                             CornerRadius="40"
                             Height="70"
@@ -108,7 +108,7 @@
                                       Text="QwQ Music" FontWeight="Bold"
                                       HorizontalAlignment="Center" />
 
-                    <Button Command="{Binding CopyTextCommand}"
+                    <Button Command="{CompiledBinding CopyTextCommand}"
                             Foreground="{DynamicResource SemiColorText0}"
                             CornerRadius="20"
                             Classes="None"
@@ -118,7 +118,7 @@
                             <Panel>
                                 <Panel Background="{DynamicResource SemiColorBackground2}" Opacity="0.5" />
 
-                                <TextBlock Text="{Binding VersionText}" VerticalAlignment="Center" Margin="10" />
+                                <TextBlock Text="{CompiledBinding VersionText}" VerticalAlignment="Center" Margin="10" />
                             </Panel>
                         </Border>
                     </Button>
@@ -178,7 +178,7 @@
                            Foreground="{DynamicResource SemiColorTertiary}" />
             </DockPanel>
 
-            <ItemsControl ItemsSource="{Binding Contributors}">
+            <ItemsControl ItemsSource="{CompiledBinding Contributors}">
 
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -193,8 +193,8 @@
 
                                 <Border CornerRadius="30"
                                         Height="45" Width="45"
-                                        Classes.Pointerover="{Binding $parent[Panel].IsPointerOver}"
-                                        Classes.NoPointerover="{Binding !$parent[Panel].IsPointerOver}">
+                                        Classes.Pointerover="{CompiledBinding $parent[Panel].IsPointerOver}"
+                                        Classes.NoPointerover="{CompiledBinding !$parent[Panel].IsPointerOver}">
 
                                     <Border.RenderTransform>
                                         <TransformGroup>
@@ -252,23 +252,23 @@
 
                                 <Button Height="50" Width="50"
                                         Classes="None"
-                                        ToolTip.Tip="{Binding Comment}"
-                                        Command="{Binding !#AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenContributorFromGayHubCommand}"
-                                        CommandParameter="{Binding Name}"
+                                        ToolTip.Tip="{CompiledBinding Comment}"
+                                        Command="{CompiledBinding !#AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenContributorFromGayHubCommand}"
+                                        CommandParameter="{CompiledBinding Name}"
                                         CornerRadius="30"
                                         Background="{DynamicResource SemiColorBackground2}">
 
                                     <Border CornerRadius="30"
                                             ClipToBounds="True">
                                         <Image
-                                            Source="{Binding Hp}" />
+                                            Source="{CompiledBinding Hp}" />
                                     </Border>
 
                                 </Button>
 
                             </Panel>
 
-                            <TextBlock Text="{Binding Name}"
+                            <TextBlock Text="{CompiledBinding Name}"
                                        HorizontalAlignment="Center" />
 
                         </StackPanel>
@@ -292,7 +292,7 @@
                            Foreground="{DynamicResource SemiColorTertiary}" />
             </DockPanel>
 
-            <ItemsControl ItemsSource="{Binding ThankItems}">
+            <ItemsControl ItemsSource="{CompiledBinding ThankItems}">
 
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -306,8 +306,8 @@
                         <Button Classes="None"
                                 Width="150"
                                 Background="Transparent"
-                                Command="{Binding !#AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenContributorFromGayHubCommand}"
-                                CommandParameter="{Binding RepoUrl}">
+                                Command="{CompiledBinding !#AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenContributorFromGayHubCommand}"
+                                CommandParameter="{CompiledBinding RepoUrl}">
 
                             <DockPanel HorizontalSpacing="10" VerticalSpacing="5">
 
@@ -316,13 +316,13 @@
                                            RadiusX="2" RadiusY="2"
                                            Width="4" />
 
-                                <TextBlock DockPanel.Dock="Top" Text="{Binding Name}" />
+                                <TextBlock DockPanel.Dock="Top" Text="{CompiledBinding Name}" />
 
                                 <control:RunningText
                                     Speed="40"
                                     Padding="0"
                                     Foreground="{DynamicResource TextBlockTertiaryForeground}"
-                                    Text="{Binding Description}" FontWeight="Normal" />
+                                    Text="{CompiledBinding Description}" FontWeight="Normal" />
 
                             </DockPanel>
 
@@ -346,7 +346,7 @@
                            Foreground="{DynamicResource SemiColorTertiary}" />
             </DockPanel>
 
-            <ItemsControl ItemsSource="{Binding SpecialThanks}">
+            <ItemsControl ItemsSource="{CompiledBinding SpecialThanks}">
 
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -360,21 +360,21 @@
                         <Button Classes="None"
                                 Width="150"
                                 Background="Transparent"
-                                Command="{Binding !#AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenUriCommand}"
-                                CommandParameter="{Binding Uri}">
+                                Command="{CompiledBinding !#AboutPageContainer.((pages:AboutPageViewModel)DataContext).OpenUriCommand}"
+                                CommandParameter="{CompiledBinding Uri}">
 
                             <DockPanel HorizontalSpacing="10" VerticalSpacing="5">
 
-                                <Image Source="{Binding Logo}"
+                                <Image Source="{CompiledBinding Logo}"
                                        Width="40" Height="40" />
 
-                                <TextBlock DockPanel.Dock="Top" Text="{Binding Name}" />
+                                <TextBlock DockPanel.Dock="Top" Text="{CompiledBinding Name}" />
 
                                 <control:RunningText
                                     Speed="40"
                                     Padding="0"
                                     Foreground="{DynamicResource TextBlockTertiaryForeground}"
-                                    Text="{Binding Description}" FontWeight="Normal" />
+                                    Text="{CompiledBinding Description}" FontWeight="Normal" />
 
                             </DockPanel>
 

@@ -19,7 +19,7 @@
 
     </u:SelectionList>
 
-    <anchorControl:Anchor Grid.Column="1" IndexSource="{Binding ElementName=NavigationList}">
+    <anchorControl:Anchor Grid.Column="1" IndexSource="{CompiledBinding ElementName=NavigationList}">
 
         <anchorControl:Anchor.Styles>
 
@@ -33,7 +33,7 @@
 
             <DataTemplate DataType="x:String">
                 <Panel>
-                    <TextBlock FontSize="16" Text="{Binding}" FontWeight="Bold" VerticalAlignment="Center" />
+                    <TextBlock FontSize="16" Text="{CompiledBinding}" FontWeight="Bold" VerticalAlignment="Center" />
                     <Separator VerticalAlignment="Bottom" Margin="0" />
                 </Panel>
             </DataTemplate>
@@ -43,12 +43,12 @@
 
             <StackPanel Spacing="10">
 
-                <CheckBox IsChecked="{Binding UiConfig.VisualConfig.IsStaticBackground}">
+                <CheckBox IsChecked="{CompiledBinding UiConfig.VisualConfig.IsStaticBackground}">
                     <TextBlock Text="播放界面静态背景" />
                 </CheckBox>
 
                 <!-- TODO -->
-                <CheckBox IsEnabled="False" IsChecked="{Binding UiConfig.VisualConfig.ColorfulUi}">
+                <CheckBox IsEnabled="False" IsChecked="{CompiledBinding UiConfig.VisualConfig.ColorfulUi}">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <TextBlock Text="封面采色界面" Foreground="{DynamicResource  TextBlockTertiaryForeground}" />
                         <TextBlock Text="未完成的功能" Foreground="{DynamicResource  TextBlockTertiaryForeground}" />
@@ -56,7 +56,7 @@
                 </CheckBox>
 
                 <CheckBox
-                    IsChecked="{Binding UiConfig.VisualConfig.AllowNonSquareCover}">
+                    IsChecked="{CompiledBinding UiConfig.VisualConfig.AllowNonSquareCover}">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <TextBlock Text="允许异形封面" />
                         <TextBlock Text="* 重新加载时生效" Foreground="{DynamicResource  TextBlockTertiaryForeground}" />
@@ -66,7 +66,7 @@
                 <Panel>
                     <TextBlock Text="颜色缓存 : " VerticalAlignment="Center" />
                     <Button
-                        Command="{Binding ClearCoverColorCommand}"
+                        Command="{CompiledBinding ClearCoverColorCommand}"
                         Content="清空"
                         HorizontalAlignment="Right" />
                 </Panel>
@@ -75,13 +75,13 @@
                     <TextBlock Text="取色算法 : " VerticalAlignment="Center" />
 
                     <ComboBox HorizontalAlignment="Right"
-                              ItemsSource="{Binding ColorExtractionAlgorithms}"
-                              SelectedValueBinding="{Binding Key}"
-                              SelectedValue="{Binding UiConfig.VisualConfig.SelectedColorExtractionAlgorithm}">
+                              ItemsSource="{CompiledBinding ColorExtractionAlgorithms}"
+                              SelectedValueBinding="{CompiledBinding Key}"
+                              SelectedValue="{CompiledBinding UiConfig.VisualConfig.SelectedColorExtractionAlgorithm}">
 
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding Key}" ToolTip.Tip="{Binding Value}" />
+                                <TextBlock Text="{CompiledBinding Key}" ToolTip.Tip="{CompiledBinding Value}" />
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
@@ -89,17 +89,17 @@
 
                 <CheckBox
                     Content="忽略白色"
-                    IsChecked="{Binding UiConfig.VisualConfig.IgnoreWhite}" />
+                    IsChecked="{CompiledBinding UiConfig.VisualConfig.IgnoreWhite}" />
 
                 <CheckBox
                     Content="转化为Lab矢量"
-                    IsVisible="{Binding UiConfig.VisualConfig.SelectedColorExtractionAlgorithm,Converter={x:Static ObjectConverters.Equal},ConverterParameter='{x:Static services:ColorExtractionAlgorithm.KMeans}'}"
-                    IsChecked="{Binding UiConfig.VisualConfig.ToLab}" />
+                    IsVisible="{CompiledBinding UiConfig.VisualConfig.SelectedColorExtractionAlgorithm,Converter={x:Static ObjectConverters.Equal},ConverterParameter='{x:Static services:ColorExtractionAlgorithm.KMeans}'}"
+                    IsChecked="{CompiledBinding UiConfig.VisualConfig.ToLab}" />
 
                 <CheckBox
                     Content="使用UseKMeansPp"
-                    IsVisible="{Binding UiConfig.VisualConfig.SelectedColorExtractionAlgorithm,Converter={x:Static ObjectConverters.Equal},ConverterParameter='{x:Static services:ColorExtractionAlgorithm.KMeans}'}"
-                    IsChecked="{Binding UiConfig.VisualConfig.UseKMeansPp}" />
+                    IsVisible="{CompiledBinding UiConfig.VisualConfig.SelectedColorExtractionAlgorithm,Converter={x:Static ObjectConverters.Equal},ConverterParameter='{x:Static services:ColorExtractionAlgorithm.KMeans}'}"
+                    IsChecked="{CompiledBinding UiConfig.VisualConfig.UseKMeansPp}" />
 
             </StackPanel>
 
@@ -113,7 +113,7 @@
                     <TextBlock Text="字体" VerticalAlignment="Center" />
                     <Button HorizontalAlignment="Right"
                             Theme="{StaticResource ComboButton}"
-                            Content="{Binding AppResources.CurrentFont}">
+                            Content="{CompiledBinding AppResources.CurrentFont}">
 
                         <Button.Styles>
 
@@ -127,7 +127,7 @@
                             <Flyout>
 
                                 <customs:FontSelector
-                                    SelectedFont="{Binding AppResources.CurrentFont}" />
+                                    SelectedFont="{CompiledBinding AppResources.CurrentFont}" />
 
                             </Flyout>
                         </Button.Flyout>
@@ -137,10 +137,10 @@
                 <Panel>
                     <TextBlock Text="主题模式 " VerticalAlignment="Center" />
                     <ComboBox HorizontalAlignment="Right"
-                              ItemsSource="{Binding ThemeModes}"
-                              DisplayMemberBinding="{Binding Value}"
-                              SelectedValueBinding="{Binding Key}"
-                              SelectedValue="{Binding ThemeMode}" />
+                              ItemsSource="{CompiledBinding ThemeModes}"
+                              DisplayMemberBinding="{CompiledBinding Value}"
+                              SelectedValueBinding="{CompiledBinding Key}"
+                              SelectedValue="{CompiledBinding ThemeMode}" />
                 </Panel>
 
             </StackPanel>

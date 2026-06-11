@@ -23,15 +23,12 @@ public partial class AlbumModel : ObservableObject {
     public partial string? Company { get; set; }
 
     public Bitmap Thumbnail =>
-        CacheManager.TryLoadCoverThumbnailAsync(
+        CacheManager.TryLoadThumbnail(
                         (Name, Artists),
                         "专辑",
                         "封面",
                         AlbumThumbnailRepository.Instance,
-                        () => OnPropertyChanged())
-                    .ConfigureAwait(false)
-                    .GetAwaiter()
-                    .GetResult();
+                        () => OnPropertyChanged());
 
     public List<MusicItemModel>? Musics { get; private set; }
     public Bitmap Cover { get; private set; } = CacheManager.Loading;

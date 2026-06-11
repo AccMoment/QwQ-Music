@@ -50,14 +50,14 @@
 
                 <Button Grid.Column="1"
                         Classes="Icon"
-                        Command="{Binding ClearMusicCommand}"
+                        Command="{CompiledBinding ClearMusicCommand}"
                         ToolTip.Tip="清空播放列表">
                     <PathIcon Data="{StaticResource ClearEmpty}" Foreground="{DynamicResource SemiRed4}" />
                 </Button>
 
                 <Button Grid.Column="3"
                         Classes="Icon"
-                        Command="{Binding DrawerManager.ToggleMusicPlaylistCommand}"
+                        Command="{CompiledBinding DrawerManager.ToggleMusicPlaylistCommand}"
                         ToolTip.Tip="隐藏播放列表">
                     <PathIcon
                         Data="{StaticResource RoundedTriangle}"
@@ -67,11 +67,11 @@
             </Grid>
 
             <ListBox Grid.Row="1"
-                     ItemsSource="{Binding MusicList}"
+                     ItemsSource="{CompiledBinding MusicList}"
                      Margin="0,5"
                      Name="PlaylistBox"
                      SelectionMode="Multiple"
-                     SelectedItems="{Binding SelectedItems}"
+                     SelectedItems="{CompiledBinding SelectedItems}"
                      AutoScrollToSelectedItem="True">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -85,7 +85,7 @@
 
                                 <customs:PlaylistAlbumCoverButton
                                     CornerRadius="8"
-                                    ExternalPointerOver="{Binding $parent[ListBoxItem].IsPointerOver}" />
+                                    ExternalPointerOver="{CompiledBinding $parent[ListBoxItem].IsPointerOver}" />
                                 <!--<Button.Effect>
                                 <DropShadowEffect
                                     BlurRadius="10"
@@ -96,11 +96,11 @@
                             </Button.Effect>-->
 
                                 <StackPanel Spacing="5" VerticalAlignment="Center">
-                                    <TextBlock FontWeight="Bold" Text="{Binding Model.Title}" />
+                                    <TextBlock FontWeight="Bold" Text="{CompiledBinding Model.Title}" />
                                     <TextBlock
                                         Classes="Tertiary"
                                         FontSize="12"
-                                        Text="{Binding Model.Artists}" />
+                                        Text="{CompiledBinding Model.Artists}" />
                                 </StackPanel>
 
                             </StackPanel>
@@ -121,8 +121,8 @@
                                     x:DataType="models:PlaylistItemModel">
 
                                     <MenuItem
-                                        Command="{Binding #PlaylistDrawer.((drawers:MusicPlaylistViewModel)DataContext).AudioPlayManager.PlayThisMusicCommand}"
-                                        CommandParameter="{Binding}"
+                                        Command="{CompiledBinding #PlaylistDrawer.((drawers:MusicPlaylistViewModel)DataContext).AudioPlayManager.PlayMusicCommand}"
+                                        CommandParameter="{CompiledBinding}"
                                         Header="立即播放">
                                         <MenuItem.Icon>
                                             <PathIcon Data="{StaticResource SemiIconPlay}" Margin="2" />
@@ -130,8 +130,8 @@
                                     </MenuItem>
 
                                     <MenuItem
-                                        Command="{Binding #PlaylistDrawer.((drawers:MusicPlaylistViewModel)DataContext).AudioPlayManager.PlaylistManager.RemoveCommand}"
-                                        CommandParameter="{Binding}"
+                                        Command="{CompiledBinding #PlaylistDrawer.((drawers:MusicPlaylistViewModel)DataContext).AudioPlayManager.PlaylistManager.RemoveCommand}"
+                                        CommandParameter="{CompiledBinding}"
                                         Header="移出播放列表">
                                         <MenuItem.Icon>
                                             <PathIcon
@@ -144,8 +144,8 @@
 
                                     <!--  在文件中打开  -->
                                     <MenuItem
-                                        Command="{Binding #PlaylistDrawer.((drawers:MusicPlaylistViewModel)DataContext).MusicItemsManager.OpenInExplorerCommand}"
-                                        CommandParameter="{Binding Model}"
+                                        Command="{CompiledBinding #PlaylistDrawer.((drawers:MusicPlaylistViewModel)DataContext).MusicItemsManager.OpenInExplorerCommand}"
+                                        CommandParameter="{CompiledBinding Model}"
                                         Header="在文件中打开">
                                         <MenuItem.Icon>
                                             <PathIcon Data="{StaticResource SemiIconFolder}" Margin="2" />
@@ -153,8 +153,8 @@
                                     </MenuItem>
 
                                     <MenuItem
-                                        Command="{Binding #PlaylistDrawer.((drawers:MusicPlaylistViewModel)DataContext).MusicItemsManager.ShowDetailedInfoCommand}"
-                                        CommandParameter="{Binding Model}"
+                                        Command="{CompiledBinding #PlaylistDrawer.((drawers:MusicPlaylistViewModel)DataContext).MusicItemsManager.ShowDetailedInfoCommand}"
+                                        CommandParameter="{CompiledBinding Model}"
                                         Header="详细信息">
                                         <MenuItem.Icon>
                                             <PathIcon Data="{StaticResource SemiIconArticle}" Margin="2" />
@@ -171,8 +171,8 @@
 
                 <Interaction.Behaviors>
                     <DoubleTappedTrigger>
-                        <InvokeCommandAction Command="{Binding AudioPlayManager.PlayThisMusicCommand}"
-                                             CommandParameter="{Binding #PlaylistBox.SelectedItem}" />
+                        <InvokeCommandAction Command="{CompiledBinding AudioPlayManager.PlayMusicCommand}"
+                                             CommandParameter="{CompiledBinding #PlaylistBox.SelectedItem}" />
                     </DoubleTappedTrigger>
                 </Interaction.Behaviors>
             </ListBox>
@@ -206,20 +206,20 @@
                 </Style>
             </StackPanel.Styles>
 
-            <Button Classes.Transparent="{Binding (managers:DrawerManager).Instance.IsMusicPlayerPanelVisible}"
-                    Classes.FloatButton="{Binding !(managers:DrawerManager).Instance.IsMusicPlayerPanelVisible}"
-                    Command="{Binding JumpToTopCommand}"
-                    CommandParameter="{Binding #PlaylistBox}"
-                    IsVisible="{Binding !#PlaylistBox.Scroll.Offset,Converter={StaticResource OffsetToIsAtTopConverter},ConverterParameter='nottop'}"
+            <Button Classes.Transparent="{CompiledBinding (managers:DrawerManager).Instance.IsMusicPlayerPanelVisible}"
+                    Classes.FloatButton="{CompiledBinding !(managers:DrawerManager).Instance.IsMusicPlayerPanelVisible}"
+                    Command="{CompiledBinding JumpToTopCommand}"
+                    CommandParameter="{CompiledBinding #PlaylistBox}"
+                    IsVisible="{CompiledBinding !#PlaylistBox.Scroll.Offset,Converter={StaticResource OffsetToIsAtTopConverter},ConverterParameter='nottop'}"
                     ToolTip.Tip="跳转到顶部">
                 <PathIcon Data="{StaticResource SemiIconAlignTop}" />
             </Button>
 
-            <Button Classes.Transparent="{Binding (managers:DrawerManager).Instance.IsMusicPlayerPanelVisible}"
-                    Classes.FloatButton="{Binding !(managers:DrawerManager).Instance.IsMusicPlayerPanelVisible}"
-                    IsVisible="{Binding MusicList.Count}"
-                    Command="{Binding ScrollToCurrentCommand}"
-                    CommandParameter="{Binding #PlaylistBox}"
+            <Button Classes.Transparent="{CompiledBinding (managers:DrawerManager).Instance.IsMusicPlayerPanelVisible}"
+                    Classes.FloatButton="{CompiledBinding !(managers:DrawerManager).Instance.IsMusicPlayerPanelVisible}"
+                    IsVisible="{CompiledBinding MusicList.Count}"
+                    Command="{CompiledBinding ScrollToCurrentCommand}"
+                    CommandParameter="{CompiledBinding #PlaylistBox}"
                     ToolTip.Tip="跳转当前音乐">
                 <PathIcon Data="{StaticResource SemiIconAlignCenterVertical}" />
             </Button>

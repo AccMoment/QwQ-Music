@@ -11,24 +11,24 @@
 
     <DockPanel HorizontalSpacing="10" Height="40">
         <Separator VerticalAlignment="Bottom" Margin="0" DockPanel.Dock="Bottom" />
-        <TextBlock FontSize="16" Text="{Binding Name}" FontWeight="Bold" VerticalAlignment="Center" />
+        <TextBlock FontSize="16" Text="{CompiledBinding Name}" FontWeight="Bold" VerticalAlignment="Center" />
         <TextBlock Text="使用共振低通滤波器提高低音频率"
                    VerticalAlignment="Center"
                    Foreground="{DynamicResource SemiColorTertiary}" />
     </DockPanel>
 
-    <TextBlock Text="{Binding Cutoff, StringFormat='截至频繁 : {0} Hz'}" />
+    <TextBlock Text="{CompiledBinding Cutoff, StringFormat='截至频繁 : {0} Hz'}" />
     <u:NumericIntUpDown
         InnerRightContent="Hz"
         Step="100"
-        Value="{Binding Cutoff}" />
+        Value="{CompiledBinding Cutoff}" />
 
-    <TextBlock Text="{Binding BoostGainDb, StringFormat='增益 : {0:F3} dB'}" />
+    <TextBlock Text="{CompiledBinding BoostGainDb, StringFormat='增益 : {0:F3} dB'}" />
     <u:NumericFloatUpDown
         Maximum="12"
         Minimum="-12"
         InnerRightContent="dB"
         Step="0.1"
-        Value="{Binding BoostGainDb}" />
+        Value="{CompiledBinding BoostGainDb}" />
 
 </StackPanel>

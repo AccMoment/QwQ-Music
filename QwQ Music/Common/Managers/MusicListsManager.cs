@@ -70,7 +70,7 @@ public sealed partial class MusicListsManager : ObservableObject, IDisposable {
         MusicListModel? model = await Dispatcher.UIThread
                                                 .InvokeAsync(async Task<MusicListModel?> () =>
                                                                  await OverlayDialog
-                                                                       .ShowCustomModal<CreateMusicList,
+                                                                       .ShowCustomAsync<CreateMusicList,
                                                                            CreateMusicListViewModel, MusicListModel>(
                                                                            new CreateMusicListViewModel(""),
                                                                            options: options)
@@ -176,7 +176,7 @@ public sealed partial class MusicListsManager : ObservableObject, IDisposable {
 
     [RelayCommand]
     private void DeleteMusicList(MusicListModel musicList) {
-        MessageBox.ShowOverlayAsync(
+        MessageBox.ShowAsync(
                       $"你真的要删除歌单《{musicList.Name}》吗?",
                       "警告",
                       icon: MessageBoxIcon.Warning,
@@ -215,7 +215,7 @@ public sealed partial class MusicListsManager : ObservableObject, IDisposable {
     private static async Task EditMusicListName(MusicListModel musicList) {
         var options = new OverlayDialogOptions { Title = "修改名称" };
 
-        string? result = await OverlayDialog.ShowCustomModal<EditText, EditTextViewModel, string>(
+        string? result = await OverlayDialog.ShowCustomAsync<EditText, EditTextViewModel, string>(
                                                 new EditTextViewModel(musicList.Name, options.Title, 64),
                                                 options: options)
                                             .ConfigureAwait(false);
@@ -243,7 +243,7 @@ public sealed partial class MusicListsManager : ObservableObject, IDisposable {
     private static async Task EditMusicListDescription(MusicListModel musicList) {
         var options = new OverlayDialogOptions { Title = "修改描述", Mode = DialogMode.Info };
 
-        string? result = await OverlayDialog.ShowCustomModal<EditText, EditTextViewModel, string>(
+        string? result = await OverlayDialog.ShowCustomAsync<EditText, EditTextViewModel, string>(
                                                 new EditTextViewModel(musicList.Description, options.Title),
                                                 options: options)
                                             .ConfigureAwait(false);
@@ -278,7 +278,7 @@ public sealed partial class MusicListsManager : ObservableObject, IDisposable {
         var options = new OverlayDialogOptions { Title = "图片裁剪" };
 
         if (await FileOperationService.OpenImageFile(App.TopLevel).ConfigureAwait(false) is not { } bitmap ||
-            await OverlayDialog.ShowCustomModal<ImageCropping, ImageCroppingViewModel, Bitmap>(
+            await OverlayDialog.ShowCustomAsync<ImageCropping, ImageCroppingViewModel, Bitmap>(
                                    new ImageCroppingViewModel(bitmap),
                                    options: options)
                                .ConfigureAwait(false) is not { } newCover)

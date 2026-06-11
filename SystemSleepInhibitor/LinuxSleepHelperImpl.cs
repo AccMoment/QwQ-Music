@@ -1,25 +1,23 @@
 ﻿#if _LINUX
 
-namespace QwQ_Music.PlatformUtils.SystemSleep;
-
-using System;
-using System.Threading.Tasks;
 using Tmds.DBus;
+
+namespace SystemSleepInhibitor.SystemSleep;
 
 /// <summary>
 /// 通过 xdg-desktop-portal 的 Inhibit 接口阻止 Linux 系统休眠、屏保或锁屏。
 /// 使用现代 org.freedesktop.portal.Inhibit 接口（推荐替代旧的 PowerManagement 接口）。
 /// </summary>
 public sealed class LinuxSleepHelperImpl : ISystemSleepHelperImpl {
-    public async ValueTask PreventSleepAsync(bool keepDisplay, string reason) {
-        await RestoreSleepAsync().ConfigureAwait(false);
+    public async Task InhibitAsync(bool keepDisplay, string reason) {
+        await RestoreAsync().ConfigureAwait(false);
         InhibitFlags flags = keepDisplay ?
             InhibitFlags.InhibitIdle | InhibitFlags.InhibitScreensaver :
             InhibitFlags.InhibitIdle;
-        _sessionHandle = await InhibitAsync("", (uint)flags, reason).ConfigureAwait(false);
+        _sessionHandle = await InhibitSleepAsync("", (uint)flags, reason).ConfigureAwait(false);
     }
 
-    public async ValueTask RestoreSleepAsync() {
+    public async Task RestoreAsync() {
         if (_sessionHandle is null)
             return;
         await _sessionHandle.DisposeAsync().ConfigureAwait(false);
@@ -34,7 +32,7 @@ public sealed class LinuxSleepHelperImpl : ISystemSleepHelperImpl {
     /// 通过 D-Bus 调用 org.freedesktop.portal.Inhibit.Inhibit 方法。
     /// </summary>
     /// <returns>返回一个代表会话句柄的 IDisposable 对象，Dispose 时会自动释放抑制锁</returns>
-    private async Task<IAsyncDisposable> InhibitAsync(string parentWindow, uint flags, string reason) {
+    private async Task<IAsyncDisposable> InhibitSleepAsync(string parentWindow, uint flags, string reason) {
         // 建立 Session Bus 连接（用户会话总线）
         Connection connection = Connection.Session;
 

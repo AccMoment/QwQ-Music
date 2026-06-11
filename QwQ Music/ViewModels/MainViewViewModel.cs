@@ -30,13 +30,13 @@ public partial class MainViewViewModel : NavigableViewModel {
 
     public static DrawerManager DrawerManager => DrawerManager.Instance;
 
-    public static string LibraryV => Lang[nameof(LibraryV),"NavBar"];
+    public static string LibraryV => I18NService.Lang.Translation[nameof(LibraryV), "NavBar"];
 
-    public static string ClassificationV => Lang[nameof(ClassificationV),"NavBar"];
+    public static string ClassificationV => I18NService.Lang.Translation[nameof(ClassificationV), "NavBar"];
 
-    public static string OtherV => Lang[nameof(OtherV),"NavBar"];
+    public static string OtherV => I18NService.Lang.Translation[nameof(OtherV), "NavBar"];
 
-    public static string SettingsV => Lang[nameof(SettingsV),"NavBar"];
+    public static string SettingsV => I18NService.Lang.Translation[nameof(SettingsV), "NavBar"];
 
     public AvaloniaList<Control> Pages { get; } = [
         new MusicLibraryPage(), new ClassificationPage(), new OtherPage(), new ConfigMainPage()

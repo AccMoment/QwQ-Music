@@ -12,38 +12,47 @@ public enum LogLevel {
     ///     关闭
     /// </summary>
     Off = 0,
+
     /// <summary>
     ///     调试
     /// </summary>
     Debug = 1,
+
     /// <summary>
     ///     信息
     /// </summary>
     Info = 1 << 2,
+
     /// <summary>
     ///     警告
     /// </summary>
     Warning = 1 << 3,
+
     /// <summary>
     ///     错误
     /// </summary>
     Error = 1 << 4,
+
     /// <summary>
     ///     崩溃
     /// </summary>
     Fatal = 1 << 5,
+
     /// <summary>
     ///     自定义
     /// </summary>
     Custom,
+
     /// <summary>
     ///     基础
     /// </summary>
     Basic = Fatal | Error | Warning,
+
     /// <summary>
     ///     详细
     /// </summary>
     Detail = Basic | Info,
+
     /// <summary>
     ///     完整
     /// </summary>
@@ -296,6 +305,7 @@ public static class LoggerService {
         await LogAsync(LogLevel.Custom, status.ToUpper(), message, line, function, filename).ConfigureAwait(false);
     }
 
+    [StackTraceHidden]
     public static void HandleException(Task withException) {
         if (withException.Exception is null)
             return;

@@ -164,33 +164,33 @@ public partial class LyricConfigPageViewModel : ViewModelBase {
 
     #region 多语言
 
-    public static string IsEnabledV => Lang[nameof(IsEnabledV)];
+    public static string IsEnabledV => I18NService.Lang.Translation[nameof(IsEnabledV)];
 
-    public static string IsDoubleLineV => Lang[nameof(IsDoubleLineV)];
+    public static string IsDoubleLineV => I18NService.Lang.Translation[nameof(IsDoubleLineV)];
 
-    public static string IsDualLangV => Lang[nameof(IsDualLangV)];
-
-    // ReSharper disable once InconsistentNaming
-    public static string PositionXV => Lang[nameof(PositionXV)];
+    public static string IsDualLangV => I18NService.Lang.Translation[nameof(IsDualLangV)];
 
     // ReSharper disable once InconsistentNaming
-    public static string PositionYV => Lang[nameof(PositionYV)];
+    public static string PositionXV => I18NService.Lang.Translation[nameof(PositionXV)];
 
-    public static string WidthV => Lang[nameof(WidthV)];
+    // ReSharper disable once InconsistentNaming
+    public static string PositionYV => I18NService.Lang.Translation[nameof(PositionYV)];
 
-    public static string HeightV => Lang[nameof(HeightV)];
+    public static string WidthV => I18NService.Lang.Translation[nameof(WidthV)];
 
-    public static string LyricMainTopColorV => Lang[nameof(LyricMainTopColorV)];
+    public static string HeightV => I18NService.Lang.Translation[nameof(HeightV)];
 
-    public static string LyricMainBottomColorV => Lang[nameof(LyricMainBottomColorV)];
+    public static string LyricMainTopColorV => I18NService.Lang.Translation[nameof(LyricMainTopColorV)];
 
-    public static string LyricMainBorderColorV => Lang[nameof(LyricMainBorderColorV)];
+    public static string LyricMainBottomColorV => I18NService.Lang.Translation[nameof(LyricMainBottomColorV)];
 
-    public static string LyricAltTopColorV => Lang[nameof(LyricAltTopColorV)];
+    public static string LyricMainBorderColorV => I18NService.Lang.Translation[nameof(LyricMainBorderColorV)];
 
-    public static string LyricAltBottomColorV => Lang[nameof(LyricAltBottomColorV)];
+    public static string LyricAltTopColorV => I18NService.Lang.Translation[nameof(LyricAltTopColorV)];
 
-    public static string LyricAltBorderColorV => Lang[nameof(LyricAltBorderColorV)];
+    public static string LyricAltBottomColorV => I18NService.Lang.Translation[nameof(LyricAltBottomColorV)];
+
+    public static string LyricAltBorderColorV => I18NService.Lang.Translation[nameof(LyricAltBorderColorV)];
 
     #endregion
 }

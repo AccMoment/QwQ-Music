@@ -45,7 +45,7 @@
 
     <ContentPresenter Grid.Row="1">
         <Interaction.Behaviors>
-            <IfElseTrigger Condition="{Binding #CustomFontConfig.IsChecked}">
+            <IfElseTrigger Condition="{CompiledBinding #CustomFontConfig.IsChecked}">
 
                 <IfElseTrigger.IfActions>
                     <ChangeAvaloniaPropertyAction
@@ -53,13 +53,13 @@
                         <ChangeAvaloniaPropertyAction.Value>
 
                             <ListBox
-                                ItemsSource="{Binding AppResources.CustomFonts}"
-                                SelectedValueBinding="{Binding Key}"
-                                SelectedValue="{Binding SelectedFont}">
+                                ItemsSource="{CompiledBinding AppResources.CustomFonts}"
+                                SelectedValueBinding="{CompiledBinding Key}"
+                                SelectedValue="{CompiledBinding SelectedFont}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Key}"
-                                                   FontFamily="{Binding Value}" />
+                                        <TextBlock Text="{CompiledBinding Key}"
+                                                   FontFamily="{CompiledBinding Value}" />
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
@@ -70,7 +70,7 @@
 
             </IfElseTrigger>
 
-            <IfElseTrigger Condition="{Binding #SystemFontConfig.IsChecked}">
+            <IfElseTrigger Condition="{CompiledBinding #SystemFontConfig.IsChecked}">
 
                 <IfElseTrigger.IfActions>
                     <ChangeAvaloniaPropertyAction
@@ -78,13 +78,13 @@
                         <ChangeAvaloniaPropertyAction.Value>
 
                             <ListBox
-                                ItemsSource="{Binding AppResources.SystemFonts}"
-                                SelectedValueBinding="{Binding Key}"
-                                SelectedValue="{Binding SelectedFont}">
+                                ItemsSource="{CompiledBinding AppResources.SystemFonts}"
+                                SelectedValueBinding="{CompiledBinding Key}"
+                                SelectedValue="{CompiledBinding SelectedFont}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Key}"
-                                                   FontFamily="{Binding Value}" />
+                                        <TextBlock Text="{CompiledBinding Key}"
+                                                   FontFamily="{CompiledBinding Value}" />
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>

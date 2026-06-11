@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using ATL.Logging;
 using Avalonia.Threading;
 using QwQ_Music.Common.Interfaces;
 using QwQ_Music.Common.Managers;
@@ -22,7 +23,6 @@ public enum MediaPlaybackStatus {
     Changing, Fading, Playing, Paused, Stopped
 }
 
-
 /// <summary>
 ///     基于SoundFlow实现的音频播放器
 /// </summary>
@@ -44,6 +44,7 @@ public sealed class AudioPlayer : IAudioPlayer {
         CancellationToken token = _token.Token;
         _audioThread = new Thread(() => {
             AudioEngine = new MiniAudioEngine();
+            LoggerService.Debug("音频线程初始化完毕");
             while (!token.IsCancellationRequested)
                 try {
                     _commandQueue.Take(token)();
@@ -74,12 +75,12 @@ public sealed class AudioPlayer : IAudioPlayer {
         set;
     }
 
-    private Timer FadeOutTimer {
+    private Timer FadeoutTimer {
         get {
             // ReSharper disable once InvertIf
             if (field is null) {
                 field = new Timer { AutoReset = false };
-                field.Elapsed += FadeOutAwaiter;
+                field.Elapsed += OnFadeoutComplete;
             }
 
             return field;
@@ -92,17 +93,18 @@ public sealed class AudioPlayer : IAudioPlayer {
             return field ??= new DispatcherTimer(
                 TimeSpan.FromMilliseconds(1000),
                 DispatcherPriority.Render,
+                Dispatcher.UIThread,
                 OnProgressTimerTick);
         }
         set => field = value is null ? null : throw new InvalidOperationException();
     }
-
 
     private DispatcherTimer SpecTimer {
         get {
             return field ??= new DispatcherTimer(
                 TimeSpan.FromMilliseconds(ConfigManager.UiConfig.SpectrumConfig.UpdateIntervalMs),
                 DispatcherPriority.Render,
+                Dispatcher.UIThread,
                 OnSpectrumVisualizer);
         }
         set => field = value is null ? null : throw new InvalidOperationException();
@@ -132,6 +134,8 @@ public sealed class AudioPlayer : IAudioPlayer {
         set {
             field = value;
             _soundPlayer?.Volume = value ? 0 : Volume;
+
+            LoggerService.Info(value ? "静音" : "恢复音量");
             // _soundPlayer?.Mute = value;
         }
     }
@@ -142,6 +146,7 @@ public sealed class AudioPlayer : IAudioPlayer {
         set {
             field = value;
             _soundPlayer?.Volume = value;
+            LoggerService.Info($"设定音量：{value}");
         }
     }
 
@@ -151,6 +156,7 @@ public sealed class AudioPlayer : IAudioPlayer {
         set {
             field = value;
             _soundPlayer?.PlaybackSpeed = value;
+            LoggerService.Info($"设定播放速度：{value}");
         }
     }
 
@@ -177,8 +183,6 @@ public sealed class AudioPlayer : IAudioPlayer {
         // 检查淡入效果器是否启用
         if (_soundModifier.FadeModifier.Enabled) {
             Status = MediaPlaybackStatus.Fading;
-            // 应用淡入效果
-            ResetTimer(FadeOutTimer);
             _soundModifier.FadeModifier.BeginFadeIn();
         }
 
@@ -188,6 +192,7 @@ public sealed class AudioPlayer : IAudioPlayer {
         SpecTimer.Start();
 
         UpdateTimer.Start();
+        LoggerService.Info("继续播放");
     }
 
     /// <summary>
@@ -214,8 +219,8 @@ public sealed class AudioPlayer : IAudioPlayer {
             // 应用淡出效果
             _soundModifier.FadeModifier.BeginFadeOut();
             // 重置淡出计时器，等待淡出效果完成
-            ResetTimer(FadeOutTimer, _soundModifier.FadeModifier.FadeOutTimeMs);
-            FadeOutTimer.Start();
+            ResetTimer(FadeoutTimer, _soundModifier.FadeModifier.FadeOutTimeMs);
+            FadeoutTimer.Start();
         } else {
             // 直接暂停
             Debug.Assert(_soundPlayer is not null);
@@ -223,6 +228,8 @@ public sealed class AudioPlayer : IAudioPlayer {
             UpdateTimer.Stop();
             SpecTimer.Stop();
         }
+
+        LoggerService.Info("暂停播放");
     }
 
     /// <summary>
@@ -238,14 +245,6 @@ public sealed class AudioPlayer : IAudioPlayer {
         _soundPlayer?.PlaybackEnded -= OnPlaybackCompleted;
         UpdateTimer.Stop();
         SpecTimer.Stop();
-        // try {
-        //     // 此处可能导致超长时间卡顿并阻塞UI，使用超时计时器来处理
-        //     PlayerDevice.Stop();
-        //     TimeoutHelper.Timeout(1500, PlayerDevice.Stop, () => PlayerDevice = null!);
-        // } catch (TimeoutException) {
-        //     LoggerService.Error("播放设备停止超时，已放弃。");
-        // }
-
         Current?.Dispose();
         Current = null;
         _soundDataProvider?.Dispose();
@@ -270,6 +269,7 @@ public sealed class AudioPlayer : IAudioPlayer {
         }
 
         _soundPlayer?.Seek((float)Math.Clamp(positionInSeconds, 0, _soundPlayer.Duration));
+        LoggerService.Info($"跳转到{positionInSeconds}s处");
     }
 
     /// <inheritdoc />
@@ -305,7 +305,7 @@ public sealed class AudioPlayer : IAudioPlayer {
     /// <summary>
     ///     淡出定时器事件处理
     /// </summary>
-    private void FadeOutAwaiter(object? sender, EventArgs e) {
+    private void OnFadeoutComplete(object? sender, EventArgs e) {
         // 事件触发，不需要做验证
         if (Status is MediaPlaybackStatus.Playing) {
             LoggerService.Warning("警告：已忽略的暂停");
@@ -476,7 +476,7 @@ public sealed class AudioPlayer : IAudioPlayer {
         if (isPlaying)
             Play();
     }
-    
+
     /// <summary>
     ///     释放所有资源
     /// </summary>
@@ -493,8 +493,8 @@ public sealed class AudioPlayer : IAudioPlayer {
             _audioThread.Join();
         }
 
-        FadeOutTimer.Dispose();
-        FadeOutTimer = null!;
+        FadeoutTimer.Dispose();
+        FadeoutTimer = null!;
         SpecTimer.Stop();
         SpecTimer = null!;
         UpdateTimer.Stop();
@@ -507,7 +507,5 @@ public sealed class AudioPlayer : IAudioPlayer {
         GC.SuppressFinalize(this);
     }
 
-    ~AudioPlayer() {
-        Dispose();
-    }
+    ~AudioPlayer() { Dispose(); }
 }

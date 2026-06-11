@@ -1,6 +1,7 @@
 ﻿using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
+using CommunityToolkit.Mvvm.ComponentModel;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services.ConfigIO;
 using QwQ_Music.Models.ConfigModels;
@@ -8,51 +9,27 @@ using QwQ_Music.Models.ConfigModels;
 namespace QwQ_Music.Common.Services;
 
 public class I18NService {
-    public FrozenDictionary<string, string> AvailableLanguages {
-        get;
-        private set {
-            field = value;
-            App.I18NResources.Apply(value);
-        }
-    }
+    public FrozenDictionary<string, string> AvailableLanguages { get; private set; } =
+        new Dictionary<string, string>().ToFrozenDictionary();
 
+    public static I18NService Lang { get; } = new();
 
     private I18NService() {
-        UpdateAvailableLanguagesAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-        LoadLanguage();
+        UpdateAvailableLanguagesAsync()
+            .ContinueWith(_ => LoadLanguage())
+            .ContinueWith(LoggerService.HandleException)
+            .ConfigureAwait(false);
     }
 
-    private FrozenDictionary<string, string>? _translation;
+    public Translation Translation { get; set; }
 
-    public static readonly I18NService Lang = new();
-
-    public string this[string key, string callerIdentifier = ""] {
-        get {
-            if (key.EndsWith('V'))
-                key = key[..^1];
-
-            if (!string.IsNullOrWhiteSpace(callerIdentifier))
-                callerIdentifier += ".";
-
-
-            callerIdentifier += key;
-
-            if (_translation?.TryGetValue(callerIdentifier, out string? value) ?? false)
-                return value;
-            if (AvailableLanguages[ConfigManager.SystemConfig.Language] != "English (Default)")
-                LoggerService.Warning($"无法获取{callerIdentifier}在{ConfigManager.SystemConfig.Language}下的翻译");
-            return key;
-        }
-    }
 
     [MemberNotNull(nameof(AvailableLanguages))]
-    public async ValueTask UpdateAvailableLanguagesAsync(bool isForced = false) {
+    public async Task UpdateAvailableLanguagesAsync(bool isForced = false) {
         var identifier = new JsonConfigService(I18NJsonContext.Default, StaticConfig.ConfigSavePath);
         var old = identifier.Load<Dictionary<string, string>>("i18n-identifiers");
         string directory = Path.Combine(Environment.CurrentDirectory, "i18n");
-        HashSet<string> files = Directory.GetFiles(directory, "*.QwQ.json")
-                                         .Select(s => Path.GetFileName(s)[..^9])
-                                         .ToHashSet();
+        HashSet<string> files = [.. Directory.GetFiles(directory, "*.QwQ.json").Select(s => Path.GetFileName(s)[..^9])];
         if (old is null) {
             old = new Dictionary<string, string>();
             await foreach (var (k, v) in GetLanguageNames(files).ConfigureAwait(false)) {
@@ -60,7 +37,7 @@ public class I18NService {
             }
 
             await identifier.SaveAsync(old, "i18n-identifiers").ConfigureAwait(false);
-            AvailableLanguages = old.ToFrozenDictionary();
+            SetAvailableLanguages(old);
             return;
         }
 
@@ -110,20 +87,42 @@ public class I18NService {
     public void LoadLanguage() {
         string fileName = ConfigManager.SystemConfig.Language;
         try {
-            _translation = new JsonConfigService(I18NJsonContext.Default, StaticConfig.I18NSavePath)
-                           .Load<Dictionary<string, string>>(fileName)
-                           ?.ToFrozenDictionary();
+            Translation = new Translation(
+                (new JsonConfigService(I18NJsonContext.Default, StaticConfig.I18NSavePath)
+                     .Load<Dictionary<string, string>>(fileName) ??
+                 new Dictionary<string, string>()).ToFrozenDictionary());
         } catch (TypeInitializationException ex) {
             LoggerService.Error($"加载语言文件{fileName}失败，可能是翻译文件格式错误", ex);
         } catch (FileNotFoundException ex) {
             LoggerService.Error($"加载语言文件{fileName}失败，未找到文件。", ex);
         }
 
-        if (_translation is null) {
+        if (Translation.Count == 0) {
             LoggerService.Error($"加载语言文件{fileName}失败，未找到翻译数据。");
-            _translation = new Dictionary<string, string>().ToFrozenDictionary();
+            Translation = new Translation(new Dictionary<string, string>().ToFrozenDictionary());
         } else
-            LoggerService.Info($"成功加载语言文件{fileName}，共{_translation.Count}条翻译数据。");
+            LoggerService.Info($"成功加载语言文件{fileName}，共{Translation.Count}条翻译数据。");
+    }
+}
+
+public readonly struct Translation(FrozenDictionary<string, string> translation) {
+    public int Count => translation.Count;
+
+    public string this[string key, string callerIdentifier = ""] {
+        get {
+            if (key.EndsWith('V'))
+                key = key[..^1];
+
+            if (!string.IsNullOrWhiteSpace(callerIdentifier))
+                callerIdentifier += ".";
+            callerIdentifier += key;
+
+            if (translation?.TryGetValue(callerIdentifier, out string? value) ?? false)
+                return value;
+            if (I18NService.Lang.AvailableLanguages[ConfigManager.SystemConfig.Language] != "English (Default)")
+                LoggerService.Warning($"无法获取{callerIdentifier}在{ConfigManager.SystemConfig.Language}下的翻译");
+            return key;
+        }
     }
 }
 

@@ -45,7 +45,7 @@ public partial class CreateMusicListViewModel : DataVerifyModelBase, IDialogCont
                             .ContinueWith(task => {
                                 if (task is not { IsCompletedSuccessfully: true, Result: { } bitmap })
                                     return;
-                                OverlayDialog.ShowCustomModal<ImageCropping, ImageCroppingViewModel, Bitmap>(
+                                OverlayDialog.ShowCustomAsync<ImageCropping, ImageCroppingViewModel, Bitmap>(
                                                  new ImageCroppingViewModel(bitmap),
                                                  options: options)
                                              .ContinueWith(dialog => {

@@ -184,47 +184,50 @@ public static class CacheManager {
                          .ConfigureAwait(false);
     }
 
-    public static async ValueTask<Bitmap> TryLoadCoverThumbnailAsync<TPrimaryKey>(
+    public static Bitmap TryLoadThumbnail<TPrimaryKey>(
         TPrimaryKey? id,
         string idType,
         string cacheType,
         IAsyncReadonlyDatabaseRepository<TPrimaryKey, Bitmap?> provider,
         Action? callIfExist,
         string? alterId = null) where TPrimaryKey : notnull {
-        await LoggerService.DebugAsync($"尝试获取{idType}[{alterId ?? id?.ToString()}]的{cacheType}").ConfigureAwait(false);
+        LoggerService.Debug($"尝试获取{idType}[{alterId ?? id?.ToString()}]的{cacheType}");
 
         if (id is null)
             return NotExist;
 
         if (TryLoadFromMemory(id.ToString(), idType, cacheType, alterId) is { } cache)
             return cache;
-
-        try {
-            await LoggerService.InfoAsync($"尝试加载{idType}[{alterId ?? id.ToString()}]的{cacheType}...")
-                               .ConfigureAwait(false);
-
-            Bitmap? bitmap = await provider.SingleAsync(id).ConfigureAwait(false);
-
-            if (bitmap is null) {
-                SetImage(id, idType, NotExist);
-                await LoggerService.InfoAsync($"尝试加载{idType}[{alterId ?? id.ToString()}]的{cacheType}，但不存在。")
+        _ = Task.Run(async Task? () => {
+            try {
+                await LoggerService.InfoAsync($"尝试加载{idType}[{alterId ?? id.ToString()}]的{cacheType}...")
                                    .ConfigureAwait(false);
-                return NotExist;
-            }
 
-            if (!ConfigManager.UiConfig.VisualConfig.AllowNonSquareCover &&
-                Math.Abs(bitmap.Size.AspectRatio - 1) > 1e-5)
-                BitmapCropper.Crop(ref bitmap, 1.0);
-            SetImage(id, idType, bitmap);
-            await LoggerService.InfoAsync($"加载{idType}[{alterId ?? id.ToString()}]的{cacheType}成功")
-                               .ConfigureAwait(false);
-            callIfExist?.Invoke();
-            return bitmap;
-        } catch (Exception ex) {
-            await LoggerService.ErrorAsync($"加载{idType}({alterId ?? id.ToString()})的{cacheType}时发生错误", ex)
-                               .ConfigureAwait(false);
-            return Damaged;
-        }
+                Bitmap? bitmap = await provider.SingleAsync(id).ConfigureAwait(false);
+
+                if (bitmap is null) {
+                    SetImage(id, idType, NotExist);
+                    await LoggerService.InfoAsync($"尝试加载{idType}[{alterId ?? id.ToString()}]的{cacheType}，但不存在。")
+                                       .ConfigureAwait(false);
+                    return;
+                }
+
+                if (!ConfigManager.UiConfig.VisualConfig.AllowNonSquareCover &&
+                    Math.Abs(bitmap.Size.AspectRatio - 1) > 1e-5)
+                    BitmapCropper.Crop(ref bitmap, 1.0);
+                SetImage(id, idType, bitmap);
+                await LoggerService.InfoAsync($"加载{idType}[{alterId ?? id.ToString()}]的{cacheType}成功")
+                                   .ConfigureAwait(false);
+            } catch (Exception ex) {
+                await LoggerService.ErrorAsync($"加载{idType}({alterId ?? id.ToString()})的{cacheType}时发生错误", ex)
+                                   .ConfigureAwait(false);
+
+                SetImage(id, idType, Damaged);
+            } finally {
+                callIfExist?.Invoke();
+            }
+        });
+        return Loading;
     }
 
     /// <summary>

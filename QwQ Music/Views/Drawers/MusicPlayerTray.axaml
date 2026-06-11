@@ -20,11 +20,11 @@
                     FillMode="Forward"
                     IterationCount="Infinite">
                     <KeyFrame Cue="0%">
-                        <Setter Property="RotateTransform.Angle" Value="{Binding AlbumCoverRecordAngle}" />
+                        <Setter Property="RotateTransform.Angle" Value="{CompiledBinding AlbumCoverRecordAngle}" />
                     </KeyFrame>
                     <KeyFrame Cue="100%">
                         <Setter Property="RotateTransform.Angle"
-                                Value="{Binding AlbumCoverRecordAngle, Converter={StaticResource CalcConverter}, ConverterParameter='@VALUE + 360'}" />
+                                Value="{CompiledBinding AlbumCoverRecordAngle, Converter={StaticResource CalcConverter}, ConverterParameter='@VALUE + 360'}" />
                     </KeyFrame>
                 </Animation>
             </Style.Animations>
@@ -34,18 +34,18 @@
 
     <!--  专辑按钮  -->
     <Button Classes="None"
-            Command="{Binding DrawerManager.ToggleMusicPlayerPageCommand}">
+            Command="{CompiledBinding DrawerManager.ToggleMusicPlayerPageCommand}">
 
         <customs:MusicAlbumCover
             Classes="RoundAlbum"
-            Width="{Binding $self.Bounds.Height}"
+            Width="{CompiledBinding $self.Bounds.Height}"
             Margin="4"
-            Classes.AlbumCoverRotate="{Binding AudioPlayManager.IsPlaying}"
-            Thumbnail="{Binding AudioPlayManager.CurrentMusicItem.Model.Thumbnail}"
+            Classes.AlbumCoverRotate="{CompiledBinding AudioPlayManager.IsPlaying}"
+            Thumbnail="{CompiledBinding AudioPlayManager.CurrentMusicItem.Model.Thumbnail}"
             IsAutoRoundedCorners="True">
 
             <customs:MusicAlbumCover.RenderTransform>
-                <RotateTransform Angle="{Binding AlbumCoverCurrentAngle, Mode=OneWayToSource}" />
+                <RotateTransform Angle="{CompiledBinding AlbumCoverCurrentAngle, Mode=OneWayToSource}" />
             </customs:MusicAlbumCover.RenderTransform>
 
         </customs:MusicAlbumCover>
@@ -58,15 +58,15 @@
                 VerticalAlignment="Center"
                 Width="60">
 
-        <TextBlock Text="{Binding AudioPlayManager.CurrentMusicItem.Model.Title}"
+        <TextBlock Text="{CompiledBinding AudioPlayManager.CurrentMusicItem.Model.Title}"
                    FontWeight="Bold"
-                   ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}"
+                   ToolTip.Tip="{CompiledBinding RelativeSource={RelativeSource Self}, Path=Text}"
                    Padding="0" />
 
         <ContentPresenter>
             <Interaction.Behaviors>
 
-                <IfElseTrigger Condition="{Binding (managers:AudioPlayManager).Instance.IsPlaying}">
+                <IfElseTrigger Condition="{CompiledBinding (managers:AudioPlayManager).Instance.IsPlaying}">
 
                     <IfElseTrigger.IfActions>
 
@@ -100,10 +100,10 @@
 
                                                         <TextBlock FontSize="12"
                                                                    MaxLines="2"
-                                                                   Text="{Binding AudioPlayManager.LyricsModel.Current.Secondary}"
+                                                                   Text="{CompiledBinding AudioPlayManager.LyricsModel.Current.Secondary}"
                                                                    TextTrimming="CharacterEllipsis"
                                                                    TextWrapping="Wrap"
-                                                                   ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
+                                                                   ToolTip.Tip="{CompiledBinding RelativeSource={RelativeSource Self}, Path=Text}" />
 
                                                     </ChangeAvaloniaPropertyAction.Value>
 
@@ -120,10 +120,10 @@
 
                                                         <TextBlock FontSize="12"
                                                                    MaxLines="2"
-                                                                   Text="{Binding AudioPlayManager.LyricsModel.Current.Primary}"
+                                                                   Text="{CompiledBinding AudioPlayManager.LyricsModel.Current.Primary}"
                                                                    TextTrimming="CharacterEllipsis"
                                                                    TextWrapping="Wrap"
-                                                                   ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
+                                                                   ToolTip.Tip="{CompiledBinding RelativeSource={RelativeSource Self}, Path=Text}" />
 
                                                     </ChangeAvaloniaPropertyAction.Value>
 
@@ -152,10 +152,10 @@
                                 <TextBlock FontSize="12"
                                            MaxLines="2"
                                            Classes="Tertiary"
-                                           Text="{Binding AudioPlayManager.CurrentMusicItem.Model.Artists}"
+                                           Text="{CompiledBinding AudioPlayManager.CurrentMusicItem.Model.Artists}"
                                            TextTrimming="CharacterEllipsis"
                                            TextWrapping="Wrap"
-                                           ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
+                                           ToolTip.Tip="{CompiledBinding RelativeSource={RelativeSource Self}, Path=Text}" />
 
                             </ChangeAvaloniaPropertyAction.Value>
 
@@ -183,8 +183,8 @@
             Grid.Column="0"
             Grid.Row="1"
             Margin="10,0"
-            Maximum="{Binding AudioPlayManager.CurrentMusicItem.Model.Duration.TotalSeconds}"
-            Value="{Binding AudioPlayManager.Position}" />
+            Maximum="{CompiledBinding AudioPlayManager.CurrentMusicItem.Model.Duration.TotalSeconds}"
+            Value="{CompiledBinding AudioPlayManager.Position}" />
 
         <!--  播放时长 / 总时长  -->
         <StackPanel
@@ -194,12 +194,12 @@
 
             <TextBlock
                 FontSize="13"
-                Text="{Binding AudioPlayManager.Position, Mode=OneWay, Converter={StaticResource SecondsToStringConverter}}"
+                Text="{CompiledBinding AudioPlayManager.Position, Mode=OneWay, Converter={StaticResource SecondsToStringConverter}}"
                 VerticalAlignment="Center" />
 
             <TextBlock
                 FontSize="11"
-                Text="{Binding AudioPlayManager.CurrentMusicItem.Model.Duration, Mode=OneWay, Converter={StaticResource TruncateDecimalConverter}, StringFormat=' / {0}'}"
+                Text="{CompiledBinding AudioPlayManager.CurrentMusicItem.Model.Duration, Mode=OneWay, Converter={StaticResource TruncateDecimalConverter}, StringFormat=' / {0}'}"
                 VerticalAlignment="Center" />
 
             <StackPanel.Styles>
@@ -262,17 +262,17 @@
                                 FontSize="12"
                                 FontWeight="Bold"
                                 HorizontalAlignment="Center"
-                                Text="{Binding AudioPlayManager.Speed, StringFormat='播放速率 : {0:F3}'}" />
+                                Text="{CompiledBinding AudioPlayManager.Speed, StringFormat='播放速率 : {0:F3}'}" />
 
                             <Slider
                                 Maximum="1.5"
                                 Minimum="0.5"
-                                Value="{Binding AudioPlayManager.Speed}">
+                                Value="{CompiledBinding AudioPlayManager.Speed}">
 
                                 <Interaction.Behaviors>
 
                                     <PointerWheelChangedTrigger>
-                                        <InvokeCommandAction Command="{Binding SpeedBarPointerWheelChangedCommand}"
+                                        <InvokeCommandAction Command="{CompiledBinding SpeedBarPointerWheelChangedCommand}"
                                                              PassEventArgsToCommand="True" />
                                     </PointerWheelChangedTrigger>
 
@@ -298,8 +298,8 @@
                                     HorizontalAlignment="Left"
                                     Classes="Icon"
                                     ToolTip.Tip="跳转至音效"
-                                    Command="{Binding NavigationToSoundEffectViewCommand}"
-                                    IsEnabled="{Binding !IsSoundEffectView}">
+                                    Command="{CompiledBinding NavigationToSoundEffectViewCommand}"
+                                    IsEnabled="{CompiledBinding !IsSoundEffectView}">
                                     <PathIcon
                                         Data="{StaticResource SemiIconLink}" />
                                 </Button>
@@ -326,7 +326,7 @@
                                         <Button
                                             ToolTip.Tip="播放速度➖"
                                             Classes="Icon"
-                                            Command="{Binding PlaySpeedDownCommand}"
+                                            Command="{CompiledBinding PlaySpeedDownCommand}"
                                             Foreground="{DynamicResource TextBlockDefaultForeground}">
                                             <PathIcon
                                                 Data="{StaticResource PlayIconData}"
@@ -339,7 +339,7 @@
                                             Width="30"
                                             ToolTip.Tip="重置播放速度"
                                             Padding="7"
-                                            Command="{Binding ResetPlaybackSpeedCommand}">
+                                            Command="{CompiledBinding ResetPlaybackSpeedCommand}">
                                             <PathIcon
                                                 Data="{StaticResource SemiIconRefresh}" />
                                         </Button>
@@ -348,7 +348,7 @@
                                         <Button
                                             Classes="Icon"
                                             ToolTip.Tip="播放速度➕"
-                                            Command="{Binding PlaySpeedUpCommand}"
+                                            Command="{CompiledBinding PlaySpeedUpCommand}"
                                             Foreground="{DynamicResource TextBlockDefaultForeground}">
                                             <PathIcon Data="{StaticResource PlayIconData}" />
                                         </Button>
@@ -373,7 +373,7 @@
                 <Panel>
                     <Border
                         Background="#20c997"
-                        IsVisible="{Binding !AudioPlayManager.IsMuted}"
+                        IsVisible="{CompiledBinding !AudioPlayManager.IsMuted}"
                         Margin="8,4,2,4"
                         behaviors:DynamicCornerBehavior.IsEnabled="True" />
                     <PathIcon
@@ -384,7 +384,7 @@
                     <Border
                         Background="{DynamicResource SemiRed4}"
                         CornerRadius="5"
-                        IsVisible="{Binding AudioPlayManager.IsMuted}"
+                        IsVisible="{CompiledBinding AudioPlayManager.IsMuted}"
                         RenderTransform="rotate(120deg)"
                         Width="2" />
                 </Panel>
@@ -403,19 +403,19 @@
                                 FontWeight="Bold"
                                 HorizontalAlignment="Center"
                                 Margin="0,0,0,3"
-                                Text="{Binding AudioPlayManager.Volume}" />
+                                Text="{CompiledBinding AudioPlayManager.Volume}" />
 
                             <Slider
                                 Grid.Row="1"
                                 HorizontalAlignment="Center"
                                 Maximum="100"
                                 Orientation="Vertical"
-                                Value="{Binding AudioPlayManager.Volume}" />
+                                Value="{CompiledBinding AudioPlayManager.Volume}" />
 
                             <Button
                                 Classes="Icon"
-                                Classes.Silent="{Binding AudioPlayManager.IsMuted}"
-                                Command="{Binding AudioPlayManager.ToggleMuteCommand}"
+                                Classes.Silent="{CompiledBinding AudioPlayManager.IsMuted}"
+                                Command="{CompiledBinding AudioPlayManager.ToggleMuteCommand}"
                                 CornerRadius="8"
                                 Grid.Row="2"
                                 Margin="8"
@@ -437,7 +437,7 @@
 
                                     <PointerWheelChangedTrigger>
                                         <InvokeCommandAction
-                                            Command="{Binding VolumeBarPointerWheelChangedCommand}"
+                                            Command="{CompiledBinding VolumeBarPointerWheelChangedCommand}"
                                             PassEventArgsToCommand="True" />
                                     </PointerWheelChangedTrigger>
 
@@ -454,7 +454,7 @@
 
                         <Interaction.Behaviors>
 
-                            <IfElseTrigger Condition="{Binding AudioPlayManager.Volume,Mode=OneWay}">
+                            <IfElseTrigger Condition="{CompiledBinding AudioPlayManager.Volume,Mode=OneWay}">
 
                                 <IfElseTrigger.IfActions>
                                     <ChangeAvaloniaPropertyAction
@@ -462,7 +462,7 @@
                                         <ChangeAvaloniaPropertyAction.Value>
                                             <TextBlock>
                                                 <Run Text="当前音量：" />
-                                                <Run Text="{Binding AudioPlayManager.Volume}" />
+                                                <Run Text="{CompiledBinding AudioPlayManager.Volume}" />
                                                 <Run Text="%" />
                                             </TextBlock>
                                         </ChangeAvaloniaPropertyAction.Value>
@@ -491,7 +491,7 @@
                 <Interaction.Behaviors>
 
                     <PointerWheelChangedTrigger>
-                        <InvokeCommandAction Command="{Binding VolumeBarPointerWheelChangedCommand}"
+                        <InvokeCommandAction Command="{CompiledBinding VolumeBarPointerWheelChangedCommand}"
                                              PassEventArgsToCommand="True" />
                     </PointerWheelChangedTrigger>
 
@@ -501,7 +501,7 @@
 
             <Button Classes="Icon"
                     ToolTip.Tip="切换播放列表"
-                    Command="{Binding DrawerManager.ToggleMusicPlaylistCommand}">
+                    Command="{CompiledBinding DrawerManager.ToggleMusicPlaylistCommand}">
                 <PathIcon
                     Data="{StaticResource SemiIconDescend2}"
                     Height="12"

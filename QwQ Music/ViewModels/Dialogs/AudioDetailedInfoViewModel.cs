@@ -230,7 +230,7 @@ public partial class AudioDetailedInfoViewModel : ViewModelBase {
         AddInfo(
             items,
             "位深度",
-            _track?.BitDepth == -1 ? I18NService.Lang["Not Applicable"] : FormatValue(_track?.BitDepth, "bit"));
+            _track?.BitDepth == -1 ? I18NService.Lang.Translation["Not Applicable"] : FormatValue(_track?.BitDepth, "bit"));
 
         AddInfo(
             items,

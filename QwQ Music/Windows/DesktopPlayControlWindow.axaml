@@ -2,7 +2,7 @@
         Focusable="False"
         ShowActivated="False"
         ShowInTaskbar="False"
-        SystemDecorations="None"
+        WindowDecorations="None"
         RemoveAnimationDuration="0:0:0.25"
         SizeToContent="WidthAndHeight"
         Background="Transparent"
@@ -74,8 +74,8 @@
             Padding="10"
             Margin="10"
             Width="180"
-            Classes.MiniStatus="{Binding $parent[vWindows:DesktopPlayControlWindow].StartMovingOut}"
-            Classes.AnimationDuringDisplay="{Binding $parent[Window].IsVisible}"
+            Classes.MiniStatus="{CompiledBinding $parent[vWindows:DesktopPlayControlWindow].StartMovingOut}"
+            Classes.AnimationDuringDisplay="{CompiledBinding $parent[Window].IsVisible}"
             Effect="{DynamicResource LightColor0DropShadowEffect}"
             RenderTransformOrigin="50%,0%"
             Background="{DynamicResource SemiColorBackground0}"
@@ -101,7 +101,7 @@
                     <!--  上一首  -->
                     <Button Theme="{DynamicResource BorderlessButton}"
                             ToolTip.Tip="上一首"
-                            Command="{Binding AudioPlayManager.PreviousMusicCommand}"
+                            Command="{CompiledBinding AudioPlayManager.PreviousMusicCommand}"
                             Foreground="{DynamicResource TextBlockDefaultForeground}"
                             behaviors:DynamicCornerBehavior.IsEnabled="True">
                         <PathIcon
@@ -117,7 +117,7 @@
                     <Button
                         Classes="Icon"
                         ToolTip.Tip="下一首"
-                        Command="{Binding AudioPlayManager.NextMusicCommand}"
+                        Command="{CompiledBinding AudioPlayManager.NextMusicCommand}"
                         Foreground="{DynamicResource TextBlockDefaultForeground}"
                         behaviors:DynamicCornerBehavior.IsEnabled="True">
                         <PathIcon Data="{StaticResource PlayIconData}" Height="30" />
@@ -137,7 +137,7 @@
                     </Style>
                 </StackPanel.Styles>
 
-                <TextBlock Text="{Binding AudioPlayManager.CurrentMusicItem.Model.Title}"
+                <TextBlock Text="{CompiledBinding AudioPlayManager.CurrentMusicItem.Model.Title}"
                            FontWeight="Bold"
                            Padding="0" />
 
@@ -146,10 +146,10 @@
                            MaxLines="2"
                            TextTrimming="CharacterEllipsis"
                            TextWrapping="Wrap"
-                           ToolTip.Tip="{Binding RelativeSource={RelativeSource Self}, Path=Text}">
-                    <Run Text="{Binding AudioPlayManager.CurrentMusicItem.Model.Artists}" />
+                           ToolTip.Tip="{CompiledBinding RelativeSource={RelativeSource Self}, Path=Text}">
+                    <Run Text="{CompiledBinding AudioPlayManager.CurrentMusicItem.Model.Artists}" />
                     -
-                    <Run Text="{Binding AudioPlayManager.CurrentMusicItem.Model.Album}" />
+                    <Run Text="{CompiledBinding AudioPlayManager.CurrentMusicItem.Model.Album}" />
                 </TextBlock>
 
             </StackPanel>
@@ -159,9 +159,9 @@
                 <Button
                     CornerRadius="20"
                     ClipToBounds="True"
-                    Command="{Binding ShowMusicPlayerPageCommand}">
+                    Command="{CompiledBinding ShowMusicPlayerPageCommand}">
                     <Border CornerRadius="20" ClipToBounds="True">
-                        <Image Source="{Binding AudioPlayManager.CurrentMusicItem.Model.Cover}" Stretch="Uniform" />
+                        <Image Source="{CompiledBinding AudioPlayManager.CurrentMusicItem.Model.Cover}" Stretch="Uniform" />
                     </Border>
                 </Button>
             </StackPanel>

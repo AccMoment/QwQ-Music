@@ -6,7 +6,7 @@
     xmlns:u="https://irihi.tech/ursa"
     x:Class="QwQ_Music.Views.Pages.MusicListInfoPage"
     x:DataType="panelVms:AllMusicListsPanelViewModel">
-    <DockPanel IsVisible="{Binding SelectedItem,Converter={x:Static ObjectConverters.IsNotNull}}">
+    <DockPanel IsVisible="{CompiledBinding SelectedItem,Converter={x:Static ObjectConverters.IsNotNull}}">
 
         <DockPanel.Styles>
 
@@ -25,7 +25,7 @@
                 <Border CornerRadius="12"
                         ClipToBounds="True">
                     <Image MaxWidth="256" MaxHeight="256"
-                           Source="{Binding SelectedItem.Cover}" Stretch="Uniform" />
+                           Source="{CompiledBinding SelectedItem.Cover}" Stretch="Uniform" />
                 </Border>
             </Border>
 
@@ -39,7 +39,7 @@
                      Classes="Secondary"
                      Padding="10 10"
                      VerticalContentAlignment="Top"
-                     Text="{Binding SelectedItem.Description}"
+                     Text="{CompiledBinding SelectedItem.Description}"
                      IsReadOnly="False" />
 
         </Grid>
@@ -55,26 +55,26 @@
                               VerticalAlignment="Top"
                               DockPanel.Dock="Right"
                               Theme="{StaticResource BorderlessIconButton}"
-                              Command="{Binding BackToPanelCommand}"
+                              Command="{CompiledBinding BackToPanelCommand}"
                               Icon="{StaticResource SemiIconReplyStroked}" />
 
                 <TextBlock FontSize="16"
                            DockPanel.Dock="Top"
-                           Text="{Binding SelectedItem.Name}"
+                           Text="{CompiledBinding SelectedItem.Name}"
                            FontWeight="Bold" />
 
                 <StackPanel Spacing="10" Orientation="Horizontal" DockPanel.Dock="Bottom">
 
                     <TextBlock>
                         <Run Text="发布时间 : " Foreground="{DynamicResource TextBlockTertiaryForeground}" />
-                        <Run Text="{Binding SelectedItem.CreateTime}" />
+                        <Run Text="{CompiledBinding SelectedItem.CreateTime}" />
                     </TextBlock>
 
                 </StackPanel>
 
                 <TextBlock Classes="Secondary"
                            FontSize="15"
-                           Text="{Binding SelectedItem.Creator}" />
+                           Text="{CompiledBinding SelectedItem.Creator}" />
 
             </DockPanel>
 
@@ -83,12 +83,12 @@
                           Classes="WithTextIconButton"
                           HorizontalAlignment="Left"
                           Icon="{StaticResource SemiIconMusicNoteStroked}"
-                          IsEnabled="{Binding FilteredList.Count}"
-                          Command="{Binding PlayCurrentListCommand}" />
+                          IsEnabled="{CompiledBinding FilteredList.Count}"
+                          Command="{CompiledBinding PlayCurrentListCommand}" />
 
             <customs:MusicListDataGrid
                 Grid.Row="2"
-                DataContext="{Binding Current}"
+                DataContext="{CompiledBinding Current}"
                 IsCustomizable="False" />
         </Grid>
 

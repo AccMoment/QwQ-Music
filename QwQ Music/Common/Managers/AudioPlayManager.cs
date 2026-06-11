@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Runtime.CompilerServices;
 using System.Timers;
 using Avalonia.Collections;
@@ -5,13 +6,14 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QwQ_Music.Common.Audio;
+using QwQ_Music.Common.Helpers;
 using QwQ_Music.Common.Services;
 using QwQ_Music.Common.Services.Databases;
 using QwQ_Music.Models;
 using QwQ_Music.Models.ConfigModels;
 using QwQ_Music.Models.Enums;
-using QwQ_Music.PlatformUtils.SystemMediaControls;
-using QwQ_Music.PlatformUtils.SystemSleep;
+using SystemMediaInterop;
+using SystemSleepInhibitor;
 using Timer = System.Timers.Timer;
 
 namespace QwQ_Music.Common.Managers;
@@ -31,7 +33,7 @@ public sealed partial class AudioPlayManager : ObservableObject, IAsyncDisposabl
     public AudioPlayer AudioPlayer { get; } = new();
     private readonly AudioPreprocessor _audioPreprocessor;
 
-    public ISystemMediaControlImpl SystemMediaControl = PlatformUtils.SystemMediaControls.SystemMediaControl.Instance;
+    public readonly ISystemMediaControlImpl SystemMediaControl = SystemMediaInterop.SystemMediaControl.Instance;
 
 
     private readonly Timer _lrcTimer;
@@ -288,13 +290,17 @@ public sealed partial class AudioPlayManager : ObservableObject, IAsyncDisposabl
 
     #region 初始化与终结
 
+    private void UpdateSystemMedia(object? sender, MusicItemChangedEventArgs args) {
+        SystemMediaControl.UpdateInfoAsync(args.NewItem).ConfigureAwait(false);
+    }
+
     private AudioPlayManager() {
         _audioPreprocessor = new AudioPreprocessor(AudioPlayer);
 
         AudioPlayer.Volume = NormalizeVolume(Volume);
         AudioPlayer.IsMute = IsMuted;
         AudioPlayer.Speed = Speed;
-        MusicItemChanged += SystemMediaControl.UpdateInfo;
+        MusicItemChanged += UpdateSystemMedia;
         RegisterSystemMediaControlHandlers();
 
         AudioPlayer.PositionChanged += OnPositionChanged;
@@ -364,7 +370,7 @@ public sealed partial class AudioPlayManager : ObservableObject, IAsyncDisposabl
                 Replay(); // 单曲循环模式下，重新播放当前歌曲
             } else if (PlayerConfig.AutoSwitchNext) {
                 LoggerService.Debug("自动切换到下一首");
-                NextMusicAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
+                NextMusicAsync(false).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
             } else {
                 LoggerService.Debug("由于自动切换关闭，已暂停。");
                 Pause(true);
@@ -399,11 +405,11 @@ public sealed partial class AudioPlayManager : ObservableObject, IAsyncDisposabl
     }
 
     [RelayCommand]
-    public void PlayThisMusic(PlaylistItemModel? musicItem) {
-        SetThisMusicAsync(musicItem, true).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
+    public void PlayMusic(PlaylistItemModel? musicItem) {
+        SetMusicAsync(musicItem, true).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 
-    public async Task SetThisMusicAsync(PlaylistItemModel? musicItem, bool isPlaynow) {
+    public async Task SetMusicAsync(PlaylistItemModel? musicItem, bool isPlaynow) {
         if (musicItem is not { } item || !VerifyMusicItem(musicItem))
             return;
 
@@ -415,22 +421,24 @@ public sealed partial class AudioPlayManager : ObservableObject, IAsyncDisposabl
         }
     }
 
-    public async Task PreviousMusicAsync() {
-        await SetAndPlayAsync(GetMusicItemIndex(PlaylistManager.Instance.CurrentIndex, -1)).ConfigureAwait(false);
+    public async Task PreviousMusicAsync(bool isUserRequested) {
+        await SetAndPlayAsync(GetMusicItemIndex(PlaylistManager.Instance.CurrentIndex, -1), isUserRequested)
+            .ConfigureAwait(false);
     }
 
 
-    public async Task NextMusicAsync() {
-        await SetAndPlayAsync(GetMusicItemIndex(PlaylistManager.Instance.CurrentIndex, 1)).ConfigureAwait(false);
+    public async Task NextMusicAsync(bool isUserRequested) {
+        await SetAndPlayAsync(GetMusicItemIndex(PlaylistManager.Instance.CurrentIndex, 1), isUserRequested)
+            .ConfigureAwait(false);
     }
 
     [RelayCommand(CanExecute = nameof(IsPreviousEnabled))]
     public void PreviousMusic() {
-        PreviousMusicAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
+        PreviousMusicAsync(true).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 
     [RelayCommand(CanExecute = nameof(IsNextEnabled))]
-    public void NextMusic() { NextMusicAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false); }
+    public void NextMusic() { NextMusicAsync(true).ContinueWith(LoggerService.HandleException).ConfigureAwait(false); }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Pause(bool isUserRequested) { OnPlayingChanged(false, isUserRequested); }
@@ -467,7 +475,7 @@ public sealed partial class AudioPlayManager : ObservableObject, IAsyncDisposabl
         }
 
         NotificationService.Info($"当前音乐《{CurrentMusicItem.Model.Title}》被移除了哦~");
-        NextMusicAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
+        NextMusicAsync(true).ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 
     #endregion
@@ -476,18 +484,26 @@ public sealed partial class AudioPlayManager : ObservableObject, IAsyncDisposabl
 
     private void OnPlayingChanged(bool isPlayNow, bool isUserRequested) {
         IsPlaying = isPlayNow;
-        SystemMediaControl.Status = isPlayNow ? MediaPlaybackStatus.Playing : MediaPlaybackStatus.Paused;
+        SystemMediaControl.Status = isPlayNow ?
+            SystemMediaInterop.MediaPlaybackStatus.Playing :
+            SystemMediaInterop.MediaPlaybackStatus.Paused;
 
         if (isPlayNow) {
             if (isUserRequested && ConfigManager.SystemConfig.KeepSystemAwake)
-                SystemSleepHelper.Instance.PreventSleepAsync(
-                    ConfigManager.SystemConfig.KeepDisplay,
-                    $"正在播放{CurrentMusicItem.Model.Title}");
+                Dispatcher.UIThread.Post(
+                    () => _ = Inhibitor.Instance.InhibitAsync(
+                                           ConfigManager.SystemConfig.KeepDisplay,
+                                           $"正在播放{CurrentMusicItem.Model.Title}")
+                                       .ConfigureAwait(true),
+                    DispatcherPriority.Background);
+
             AudioPlayer.Play();
             UpdateLyricsTimer();
         } else {
             if (isUserRequested && ConfigManager.SystemConfig.KeepSystemAwake)
-                SystemSleepHelper.Instance.RestoreSleepAsync();
+                Dispatcher.UIThread.Post(
+                    () => _ = Inhibitor.Instance.RestoreAsync().ConfigureAwait(true),
+                    DispatcherPriority.Background);
             AudioPlayer.Pause();
             _lrcTimer.Stop();
         }
@@ -519,7 +535,7 @@ public sealed partial class AudioPlayManager : ObservableObject, IAsyncDisposabl
         return true;
     }
 
-    private async Task SetAndPlayAsync(int index) {
+    private async Task SetAndPlayAsync(int index, bool isUserRequested) {
         if (index == -1) {
             IsPreviousEnabled = false;
             IsNextEnabled = false;
@@ -535,7 +551,7 @@ public sealed partial class AudioPlayManager : ObservableObject, IAsyncDisposabl
 
         if (VerifyMusicItem(musicItem)) {
             await SetCurrentMusicItemAsync(musicItem, PlayerConfig.IsRestartPlay).ConfigureAwait(false);
-            Play(true);
+            Play(isUserRequested);
         }
     }
 
@@ -570,7 +586,7 @@ public sealed partial class AudioPlayManager : ObservableObject, IAsyncDisposabl
         return -1;
     }
 
-    public static string PlayModeName => I18NService.Lang[PlayerConfig.PlayMode.ToString(), nameof(PlayMode)];
+    public string PlayModeName => I18NService.Lang.Translation[PlayerConfig.PlayMode.ToString(), nameof(PlayMode)];
 
     private void RegisterSystemMediaControlHandlers() {
         SystemMediaControl.IsPlayEnabled = true;
