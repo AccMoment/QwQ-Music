@@ -208,6 +208,7 @@
 
             <Button Classes.Transparent="{CompiledBinding (managers:DrawerManager).Instance.IsMusicPlayerPanelVisible}"
                     Classes.FloatButton="{CompiledBinding !(managers:DrawerManager).Instance.IsMusicPlayerPanelVisible}"
+                    ClipToBounds="False"
                     Command="{CompiledBinding JumpToTopCommand}"
                     CommandParameter="{CompiledBinding #PlaylistBox}"
                     IsVisible="{CompiledBinding !#PlaylistBox.Scroll.Offset,Converter={StaticResource OffsetToIsAtTopConverter},ConverterParameter='nottop'}"
@@ -217,6 +218,7 @@
 
             <Button Classes.Transparent="{CompiledBinding (managers:DrawerManager).Instance.IsMusicPlayerPanelVisible}"
                     Classes.FloatButton="{CompiledBinding !(managers:DrawerManager).Instance.IsMusicPlayerPanelVisible}"
+                    ClipToBounds="False"
                     IsVisible="{CompiledBinding MusicList.Count}"
                     Command="{CompiledBinding ScrollToCurrentCommand}"
                     CommandParameter="{CompiledBinding #PlaylistBox}"

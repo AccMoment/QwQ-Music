@@ -74,8 +74,8 @@
                                         <CheckBox Content="备注" Name="MoreColumn1" />
                                         <CheckBox Content="大小" Name="MoreColumn2" />
                                         <CheckBox Content="附注" Name="MoreColumn3" />
-                                        <CheckBox Content="添加时间" Name="MoreColumn4"/>
-                                        <CheckBox Content="最后一次听的时间"/>
+                                        <CheckBox Content="添加时间" Name="MoreColumn4" />
+                                        <CheckBox Content="最后一次听的时间" />
                                     </StackPanel>
                                 </Flyout>
                             </Button.Flyout>
@@ -132,7 +132,8 @@
                                                             <Setter Property="Header" Value="{CompiledBinding Name}" />
                                                             <Setter Property="Command"
                                                                     Value="{CompiledBinding #PART_Data.((vm:MusicItemsViewModelBase)DataContext).AddSelectedToCommand}" />
-                                                            <Setter Property="CommandParameter" Value="{CompiledBinding}" />
+                                                            <Setter Property="CommandParameter"
+                                                                    Value="{CompiledBinding}" />
                                                             <Setter Property="Icon">
                                                                 <Template>
 
@@ -367,7 +368,9 @@
                                 Spacing="10"
                                 Margin="15,20">
 
+
                         <Button Classes="FloatButton"
+                                ClipToBounds="False"
                                 Command="{CompiledBinding JumpToTopCommand}"
                                 CommandParameter="{CompiledBinding #PART_Data}"
                                 IsVisible="{CompiledBinding DataGridHorizontalScrollValue,Converter={StaticResource ValueComparisonConverter},ConverterParameter='@VALUE != 0'}"
@@ -376,6 +379,7 @@
                         </Button>
 
                         <Button Classes="FloatButton"
+                                ClipToBounds="False"
                                 IsVisible="{CompiledBinding FilteredList.Count}"
                                 Command="{CompiledBinding ScrollToCurrentCommand,RelativeSource={RelativeSource TemplatedParent}}"
                                 ToolTip.Tip="跳转当前音乐">
@@ -384,8 +388,9 @@
                     </StackPanel>
                     <Interaction.Behaviors>
                         <RoutedEventTriggerBehavior RoutedEvent="{x:Static DragDrop.DropEvent}">
-                            <InvokeCommandAction Command="{CompiledBinding (vm2:MusicLibraryPageViewModel).DropFilesCommand}"
-                                                 PassEventArgsToCommand="True" />
+                            <InvokeCommandAction
+                                Command="{CompiledBinding (vm2:MusicLibraryPageViewModel).DropFilesCommand}"
+                                PassEventArgsToCommand="True" />
                         </RoutedEventTriggerBehavior>
                     </Interaction.Behaviors>
                 </Grid>

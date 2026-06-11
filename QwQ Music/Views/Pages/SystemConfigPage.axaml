@@ -40,7 +40,10 @@
             <StackPanel>
 
                 <Panel>
-                    <TextBlock Text="语言" VerticalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="语言" />
+                        <TextBlock Text="* 需要重启程序" Foreground="{DynamicResource  TextBlockTertiaryForeground}" />
+                    </StackPanel>
                     <ComboBox HorizontalAlignment="Right"
                               ItemsSource="{CompiledBinding Lang.AvailableLanguages }"
                               DisplayMemberBinding="{CompiledBinding Value}"
