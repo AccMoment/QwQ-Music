@@ -161,7 +161,7 @@ public partial class DesktopLyricConfig : ObservableObject {
     public partial double LyricSpacing { get; set; } = 10;
 
     [ObservableProperty]
-    public partial double LyricWidth { get; set; } = 500;
+    public partial double LyricWidth { get; set; } = 800;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowCornerRadius))]
