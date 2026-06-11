@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using Avalonia;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services;
@@ -11,7 +12,7 @@ using ThreadState = System.Diagnostics.ThreadState;
 namespace QwQ_Music;
 
 public static class Program {
-    public static string VersionText => "2.1.0";
+    public static string VersionText => "2.1.1";
 
     [STAThread]
     public static async Task Main(string[] args) {
