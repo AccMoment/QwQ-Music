@@ -318,23 +318,9 @@ public partial class MusicItemModel : ObservableObject, IMediaItem {
 
         IsCurrent = false;
         Track = null;
-        var timer = new Timer(1000) { AutoReset = false };
-        Bitmap? cover = Cover;
-
-        timer.Elapsed += Updater;
         Cover = CacheManager.Loading;
-        timer.Start();
         Lyrics = LyricsData.Loading;
         LoggerService.Debug($"已释放音频《{Title}》的歌词。");
-        return;
-
-        void Updater(object? sender, ElapsedEventArgs args) {
-            OnPropertyChanged(nameof(Cover));
-            cover?.Dispose();
-            cover = null;
-            timer?.Dispose();
-            timer = null;
-        }
     }
 
     #region 播放歌曲前加载的属性
@@ -344,7 +330,7 @@ public partial class MusicItemModel : ObservableObject, IMediaItem {
             try {
                 _ = field.PixelSize;
                 return field;
-            } catch (NullReferenceException) {
+            } catch (Exception ex) when (ex is NullReferenceException or ObjectDisposedException) {
                 Cover = Track?.EmbeddedPictures.Count > 0 ?
                     new Bitmap(new MemoryStream(Track.EmbeddedPictures[0].PictureData)) :
                     CacheManager.NotExist;
@@ -355,7 +341,7 @@ public partial class MusicItemModel : ObservableObject, IMediaItem {
         private set {
             try {
                 _ = value.PixelSize;
-            } catch (NullReferenceException) {
+            } catch (Exception ex) when (ex is NullReferenceException or ObjectDisposedException) {
                 field = CacheManager.Damaged;
                 OnPropertyChanged();
                 return;

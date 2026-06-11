@@ -33,8 +33,9 @@ public static class CacheManager {
         get {
             try {
                 _ = field.PixelSize;
-            } catch (NullReferenceException) {
+            } catch (Exception ex) when (ex is NullReferenceException or ObjectDisposedException) {
                 field = GetBuiltInImage("图片绘制中.webp");
+                LoggerService.Warning("Loading 图片资源意外释放，正在重新加载...");
             }
 
             return field;
@@ -45,8 +46,9 @@ public static class CacheManager {
         get {
             try {
                 _ = field.PixelSize;
-            } catch (NullReferenceException) {
+            } catch (Exception ex) when (ex is NullReferenceException or ObjectDisposedException) {
                 field = GetBuiltInImage("图片压坏了.webp");
+                LoggerService.Warning("Damaged 图片资源意外释放，正在重新加载...");
             }
 
             return field;
@@ -57,8 +59,9 @@ public static class CacheManager {
         get {
             try {
                 _ = field.PixelSize;
-            } catch (NullReferenceException) {
+            } catch (Exception ex) when (ex is NullReferenceException or ObjectDisposedException) {
                 field = GetBuiltInImage("看我.webp");
+                LoggerService.Warning("NotExist 图片资源意外释放，正在重新加载...");
             }
 
             return field;
@@ -134,7 +137,7 @@ public static class CacheManager {
             _ = image.PixelSize;
             LoggerService.Debug($"缓存命中: 已加载{idType}[{alterId ?? id}]的{cacheType}");
             return image;
-        } catch (NullReferenceException) {
+        } catch (Exception ex) when (ex is NullReferenceException or ObjectDisposedException) {
             ImageCache.Remove($"{idType}:{id}");
             return null;
         }
@@ -251,7 +254,7 @@ public static class CacheManager {
                    image != NotExist &&
                    // image != Default && 
                    image != Loading;
-        } catch (NullReferenceException) {
+        } catch (Exception ex) when (ex is NullReferenceException or ObjectDisposedException) {
             return false;
         }
     }

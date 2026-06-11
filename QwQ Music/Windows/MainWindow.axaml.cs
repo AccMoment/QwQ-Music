@@ -46,7 +46,6 @@ public partial class MainWindow : UrsaWindow {
 
     protected override void OnClosing(WindowClosingEventArgs e) {
         try {
-            base.OnClosing(e);
             if (e.CloseReason is WindowCloseReason.ApplicationShutdown) {
                 return;
             }
