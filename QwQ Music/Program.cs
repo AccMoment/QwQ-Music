@@ -12,7 +12,7 @@ using ThreadState = System.Diagnostics.ThreadState;
 namespace QwQ_Music;
 
 public static class Program {
-    public static string VersionText => "2.1.1";
+    public static string VersionText => "2.1.2";
 
     [STAThread]
     public static async Task Main(string[] args) {
