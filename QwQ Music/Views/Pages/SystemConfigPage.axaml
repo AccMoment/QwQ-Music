@@ -85,8 +85,8 @@
                         MinWidth="80"
                         HorizontalAlignment="Right"
                         ItemsSource="{CompiledBinding LogLevels}"
-                        DisplayMemberBinding="{CompiledBinding Value}"
-                        SelectedValueBinding="{CompiledBinding Key}"
+                        DisplayMemberBinding="{CompiledBinding Key}"
+                        SelectedValueBinding="{CompiledBinding Value}"
                         SelectedValue="{CompiledBinding LoggerServiceConfig.Level}" />
                 </Panel>
 

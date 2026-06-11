@@ -1,7 +1,6 @@
 ﻿using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
-using CommunityToolkit.Mvvm.ComponentModel;
 using QwQ_Music.Common.Managers;
 using QwQ_Music.Common.Services.ConfigIO;
 using QwQ_Music.Models.ConfigModels;
@@ -15,10 +14,7 @@ public class I18NService {
     public static I18NService Lang { get; } = new();
 
     private I18NService() {
-        UpdateAvailableLanguagesAsync()
-            .ContinueWith(_ => LoadLanguage())
-            .ContinueWith(LoggerService.HandleException)
-            .ConfigureAwait(false);
+        UpdateAvailableLanguagesAsync().ContinueWith(LoggerService.HandleException).ConfigureAwait(false);
     }
 
     public Translation Translation { get; set; }
@@ -41,7 +37,7 @@ public class I18NService {
             return;
         }
 
-        string[] removed = old.Keys.Except(files).ToArray();
+        string[] removed = [.. old.Keys.Except(files)];
         if (!isForced && old.Count == files.Count && removed.Length == 0) {
             SetAvailableLanguages(old);
             return;
@@ -84,24 +80,22 @@ public class I18NService {
         }
     }
 
-    public void LoadLanguage() {
-        string fileName = ConfigManager.SystemConfig.Language;
+    public void LoadLanguage(string filename) {
         try {
             Translation = new Translation(
                 (new JsonConfigService(I18NJsonContext.Default, StaticConfig.I18NSavePath)
-                     .Load<Dictionary<string, string>>(fileName) ??
+                     .Load<Dictionary<string, string>>(filename) ??
                  new Dictionary<string, string>()).ToFrozenDictionary());
         } catch (TypeInitializationException ex) {
-            LoggerService.Error($"加载语言文件{fileName}失败，可能是翻译文件格式错误", ex);
+            LoggerService.Error($"加载语言文件{filename}失败，可能是翻译文件格式错误", ex);
         } catch (FileNotFoundException ex) {
-            LoggerService.Error($"加载语言文件{fileName}失败，未找到文件。", ex);
+            LoggerService.Error($"加载语言文件{filename}失败，未找到文件。", ex);
         }
 
         if (Translation.Count == 0) {
-            LoggerService.Error($"加载语言文件{fileName}失败，未找到翻译数据。");
             Translation = new Translation(new Dictionary<string, string>().ToFrozenDictionary());
         } else
-            LoggerService.Info($"成功加载语言文件{fileName}，共{Translation.Count}条翻译数据。");
+            LoggerService.Info($"成功加载语言文件{filename}，共{Translation.Count}条翻译数据。");
     }
 }
 

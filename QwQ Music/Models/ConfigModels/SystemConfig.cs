@@ -15,7 +15,7 @@ public partial class SystemConfig : ObservableObject {
     public partial string Language { get; set; } = "zh_CN";
 
     // ReSharper disable once UnusedParameterInPartialMethod
-    partial void OnLanguageChanged(string value) { I18NService.Lang.LoadLanguage(); }
+    partial void OnLanguageChanged(string value) { I18NService.Lang.LoadLanguage(value); }
 
     [ObservableProperty]
     public partial bool IsDebugMode { get; set; }
